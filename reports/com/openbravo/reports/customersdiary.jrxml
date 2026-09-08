@@ -108,7 +108,7 @@
 					<textElement textAlignment="Right">
 						<font fontName="Dialog" size="12" isBold="false" pdfFontName="Helvetica"/>
 					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA["Outstanding:"]]></textFieldExpression>
+					<textFieldExpression class="java.lang.String"><![CDATA["Saldo pendent:"]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>

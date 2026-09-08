@@ -132,6 +132,15 @@ public class PanelReportBean extends JPanelReport {
     }       
     
     public void addQBFFilter(ReportEditorCreator qbff) {
-        qbffilter.addEditor(qbff);
+        ReportEditorCreator reportFilter = qbff instanceof com.openbravo.pos.ticket.ProductFilter
+                ? new ProductFilterReport()
+                : qbff;
+
+        if (reportFilter instanceof JParamsDatesInterval
+                || reportFilter instanceof JParamsLocation) {
+            qbffilter.addEditor(reportFilter);
+        } else {
+            qbffilter.addAdvancedEditor(reportFilter);
+        }
     }    
 }

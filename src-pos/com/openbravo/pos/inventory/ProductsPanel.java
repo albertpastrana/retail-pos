@@ -20,8 +20,10 @@
 package com.openbravo.pos.inventory;
 
 import java.awt.Component;
-import javax.swing.JButton;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.user.EditorListener;
 import com.openbravo.data.user.EditorRecord;
 import com.openbravo.data.user.ListProviderCreator;
@@ -33,83 +35,74 @@ import com.openbravo.pos.ticket.ProductFilter;
 
 /**
  *
- * @author adrianromero
- * Created on 1 de marzo de 2007, 22:15
+ * @author adrianromero Created on 1 de marzo de 2007, 22:15
  *
  */
 public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
-    private ProductsEditor jeditor;
-    private ProductFilter jproductfilter;    
-    
-    private DataLogicSales m_dlSales = null;
-    
-    /** Creates a new instance of ProductsPanel2 */
-    public ProductsPanel() {
-    }
-    
-    protected void init() {   
-        m_dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
-        
-        // el panel del filtro
-        jproductfilter = new ProductFilter();
-        jproductfilter.init(app);
+	private ProductsEditor jeditor;
+	private ProductFilter jproductfilter;
 
-        row = m_dlSales.getProductsRow();
+	private DataLogicSales m_dlSales = null;
 
-        lpr =  new ListProviderCreator(m_dlSales.getProductCatQBF(), jproductfilter);
+	/** Creates a new instance of ProductsPanel2 */
+	public ProductsPanel() {
+	}
 
-        spr = new SaveProvider(
-            m_dlSales.getProductCatUpdate(),
-            m_dlSales.getProductCatInsert(),
-            m_dlSales.getProductCatDelete());
-        
-        // el panel del editor
-        jeditor = new ProductsEditor(m_dlSales, dirty);       
-    }
-    
-    public EditorRecord getEditor() {
-        return jeditor;
-    }
-    
-    @Override
-    public Component getFilter() {
-        return jproductfilter.getComponent();
-    }  
-    
-    @Override
-    public Component getToolbarExtras() {
-        
-        JButton btnScanPal = new JButton();
-        btnScanPal.setText("ScanPal");
-        btnScanPal.setVisible(app.getDeviceScanner() != null);
-        btnScanPal.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnScanPalActionPerformed(evt);
-            }
-        });      
-        
-        return btnScanPal;
-    }
-    
-    private void btnScanPalActionPerformed(java.awt.event.ActionEvent evt) {                                           
-  
-        JDlgUploadProducts.showMessage(this, app.getDeviceScanner(), bd);
-    }  
-    
-    public String getTitle() {
-        return AppLocal.getIntString("Menu.Products");
-    } 
-        
-    @Override
-    public void activate() throws BasicException {
-        
-        jeditor.activate(); 
-        jproductfilter.activate();
-        
-        super.activate();
-    } 
-    
-    public void updateValue(Object value) {
-    }    
+	protected void init() {
+		m_dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+
+		// el panel del filtro
+		jproductfilter = new ProductFilter();
+		jproductfilter.init(app);
+		jproductfilter.addActionListener(new ReloadActionListener());
+
+		row = m_dlSales.getProductsRow();
+
+		lpr = new ListProviderCreator(m_dlSales.getProductCatQBF(), jproductfilter);
+
+		spr = new SaveProvider(m_dlSales.getProductCatUpdate(), m_dlSales.getProductCatInsert(),
+				m_dlSales.getProductCatDelete());
+
+		// el panel del editor
+		jeditor = new ProductsEditor(app, m_dlSales, dirty);
+	}
+
+	public EditorRecord getEditor() {
+		return jeditor;
+	}
+
+	@Override
+	public Component getFilter() {
+		return jproductfilter.getComponent();
+	}
+
+	public String getTitle() {
+		return AppLocal.getIntString("Menu.Products");
+	}
+
+	@Override
+	public void activate() throws BasicException {
+
+		jeditor.activate();
+		jproductfilter.activate();
+
+		super.activate();
+		jeditor.setBrowsableData(bd);
+	}
+
+	public void updateValue(Object value) {
+	}
+
+	private class ReloadActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			try {
+				bd.actionLoad();
+			} catch (BasicException eD) {
+				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotloadlists"),
+						eD);
+				msg.show(ProductsPanel.this);
+			}
+		}
+	}
 }

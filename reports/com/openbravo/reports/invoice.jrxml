@@ -54,7 +54,7 @@
 				<textElement>
 					<font size="14" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Invoice]]></text>
+				<text><![CDATA[Factura]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="360" y="81" width="85" height="13"/>
@@ -86,14 +86,14 @@
 				<textElement>
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Receipt]]></text>
+				<text><![CDATA[Rebut]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-4" x="245" y="34" width="96" height="21"/>
 				<textElement>
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Date]]></text>
+				<text><![CDATA[Data]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
 				<reportElement key="textField-3" x="341" y="34" width="156" height="21"/>
@@ -105,7 +105,7 @@
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[VAT Reg No.]]></text>
+				<text><![CDATA[Núm. d'IVA]]></text>
 			</staticText>
 			<subreport isUsingCache="false">
 				<reportElement key="subreport-1" positionType="Float" x="10" y="91" width="517" height="69"/>
@@ -194,7 +194,7 @@ net.sf.jasperreports.engine.xml.JRXmlLoader.load(getClass().getResourceAsStream(
 				<textElement>
 					<font isBold="false" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Total Tax]]></text>
+				<text><![CDATA[Total impostos]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-9" x="266" y="59" width="57" height="19"/>
@@ -217,7 +217,7 @@ net.sf.jasperreports.engine.xml.JRXmlLoader.load(getClass().getResourceAsStream(
 				<textElement>
 					<font isBold="false" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Payment Method]]></text>
+				<text><![CDATA[Mètode de pagament]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-6" x="33" y="40" width="44" height="19">
@@ -226,7 +226,7 @@ net.sf.jasperreports.engine.xml.JRXmlLoader.load(getClass().getResourceAsStream(
 				<textElement>
 					<font isBold="false" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Message]]></text>
+				<text><![CDATA[Missatge]]></text>
 			</staticText>
 			<textField isBlankWhenNull="false">
 				<reportElement key="textField-8" x="77" y="40" width="136" height="43">

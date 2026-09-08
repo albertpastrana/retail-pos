@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="salesbymodel" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.encoding" value="UTF-8"/>
+	<parameter name="ARG" class="java.lang.Object" isForPrompting="false"/>
+	<field name="REFERENCE" class="java.lang.String"/>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="UNITS" class="java.lang.Double"/>
+	<field name="TOTAL" class="java.lang.Double"/>
+	<variable name="MODELUNITS" class="java.lang.Double" resetType="Group" resetGroup="MODEL" calculation="Sum">
+		<variableExpression><![CDATA[$F{UNITS}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
+	</variable>
+	<variable name="MODELTOTAL" class="java.lang.Double" resetType="Group" resetGroup="MODEL" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
+	</variable>
+	<variable name="REPORTTOTAL" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
+	</variable>
+	<group name="MODEL">
+		<groupExpression><![CDATA[$F{REFERENCE} == null ? "" : $F{REFERENCE}.replaceFirst("^((?:PU)?[0-9]+).*$", "$1")]]></groupExpression>
+		<groupHeader>
+			<band height="25">
+				<textField>
+					<reportElement x="0" y="3" width="535" height="20"/>
+					<textElement><font fontName="Dialog" size="13" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$R{label.model} + ": " + ($F{REFERENCE} == null ? "" : $F{REFERENCE}.replaceFirst("^((?:PU)?[0-9]+).*$", "$1"))]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="25">
+				<line><reportElement x="0" y="1" width="535" height="1"/></line>
+				<textField>
+					<reportElement x="190" y="4" width="185" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$R{label.modeltotal}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="380" y="4" width="55" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.DOUBLE.formatValue($V{MODELUNITS})]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="440" y="4" width="95" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.CURRENCY.formatValue($V{MODELTOTAL})]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background><band/></background>
+	<title>
+		<band height="45">
+			<rectangle radius="5"><reportElement mode="Opaque" x="0" y="0" width="535" height="36" forecolor="#000000" backcolor="#409617"/></rectangle>
+			<textField>
+				<reportElement x="13" y="7" width="510" height="28" forecolor="#FFFFFF"/>
+				<textElement><font fontName="Dialog" size="18" isBold="true"/></textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$R{label.salesbymodel}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader><band/></pageHeader>
+	<columnHeader>
+		<band height="22">
+			<textField><reportElement x="10" y="0" width="100" height="20"/><textElement><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.reference}]]></textFieldExpression></textField>
+			<textField><reportElement x="115" y="0" width="260" height="20"/><textElement><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.name}]]></textFieldExpression></textField>
+			<textField><reportElement x="380" y="0" width="55" height="20"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.units}]]></textFieldExpression></textField>
+			<textField><reportElement x="440" y="0" width="95" height="20"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.total}]]></textFieldExpression></textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20">
+			<textField isBlankWhenNull="true"><reportElement x="10" y="0" width="100" height="18"/><textFieldExpression class="java.lang.String"><![CDATA[$F{REFERENCE}]]></textFieldExpression></textField>
+			<textField isBlankWhenNull="true"><reportElement x="115" y="0" width="260" height="18"/><textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression></textField>
+			<textField><reportElement x="380" y="0" width="55" height="18"/><textElement textAlignment="Right"/><textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.DOUBLE.formatValue($F{UNITS})]]></textFieldExpression></textField>
+			<textField><reportElement x="440" y="0" width="95" height="18"/><textElement textAlignment="Right"/><textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.CURRENCY.formatValue($F{TOTAL})]]></textFieldExpression></textField>
+		</band>
+	</detail>
+	<columnFooter><band/></columnFooter>
+	<pageFooter><band height="15"><textField><reportElement x="495" y="0" width="40" height="15"/><textElement textAlignment="Right"/><textFieldExpression class="java.lang.Integer"><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression></textField></band></pageFooter>
+	<summary>
+		<band height="25">
+			<textField><reportElement x="300" y="4" width="135" height="18"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.reporttotal}]]></textFieldExpression></textField>
+			<textField><reportElement x="440" y="4" width="95" height="18"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.CURRENCY.formatValue($V{REPORTTOTAL})]]></textFieldExpression></textField>
+		</band>
+	</summary>
+</jasperReport>

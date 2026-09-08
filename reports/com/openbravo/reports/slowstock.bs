@@ -1,0 +1,37 @@
+report = new com.openbravo.pos.reports.PanelReportBean();
+
+report.setTitleKey("Menu.SlowStock");
+report.setReport("/com/openbravo/reports/slowstock");
+report.setResourceBundle("com/openbravo/reports/modelreports_messages");
+
+report.setSentence(
+        "SELECT STOCK.LOCATION AS LOCATIONID, LOCATIONS.NAME AS LOCATIONNAME, " +
+        "PRODUCTS.REFERENCE, PRODUCTS.NAME, STOCK.UNITS, MAX(RECEIPTS.DATENEW) AS LASTSALE " +
+        "FROM (SELECT LOCATION, PRODUCT, SUM(UNITS) AS UNITS FROM STOCKCURRENT " +
+        "GROUP BY LOCATION, PRODUCT) STOCK " +
+        "JOIN LOCATIONS ON STOCK.LOCATION = LOCATIONS.ID " +
+        "JOIN PRODUCTS ON STOCK.PRODUCT = PRODUCTS.ID " +
+        "LEFT JOIN TICKETLINES ON TICKETLINES.PRODUCT = PRODUCTS.ID AND TICKETLINES.UNITS > 0 " +
+        "LEFT JOIN TICKETS ON TICKETS.ID = TICKETLINES.TICKET " +
+        "LEFT JOIN RECEIPTS ON RECEIPTS.ID = TICKETS.ID " +
+        "WHERE STOCK.UNITS > 0 AND ?(QBF_FILTER) " +
+        "GROUP BY STOCK.LOCATION, LOCATIONS.NAME, PRODUCTS.REFERENCE, PRODUCTS.NAME, STOCK.UNITS " +
+        "ORDER BY LASTSALE, PRODUCTS.REFERENCE, PRODUCTS.NAME");
+report.addParameter("PRODUCTS.NAME");
+report.addParameter("PRODUCTS.PRICEBUY");
+report.addParameter("PRODUCTS.PRICESELL");
+report.addParameter("PRODUCTS.CATEGORY");
+report.addParameter("PRODUCTS.CODE");
+report.addParameter("PRODUCTS.BRAND");
+report.addQBFFilter(new com.openbravo.pos.ticket.ProductFilter());
+report.addParameter("STOCK.LOCATION");
+report.addQBFFilter(new com.openbravo.pos.reports.JParamsLocationWithFirst());
+
+report.addField("LOCATIONID", com.openbravo.data.loader.Datas.STRING);
+report.addField("LOCATIONNAME", com.openbravo.data.loader.Datas.STRING);
+report.addField("REFERENCE", com.openbravo.data.loader.Datas.STRING);
+report.addField("NAME", com.openbravo.data.loader.Datas.STRING);
+report.addField("UNITS", com.openbravo.data.loader.Datas.DOUBLE);
+report.addField("LASTSALE", com.openbravo.data.loader.Datas.TIMESTAMP);
+
+report;

@@ -30,20 +30,113 @@ import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.SerializerWrite;
 import com.openbravo.data.loader.SerializerWriteBasic;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.util.Calendar;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 public class JParamsDatesInterval extends javax.swing.JPanel implements ReportEditorCreator {
+
+    private static final int PRESET_TODAY = 0;
+    private static final int PRESET_WEEK = 1;
+    private static final int PRESET_MONTH = 2;
+    private static final int PRESET_YEAR = 3;
+    private static final int PRESET_CUSTOM = 4;
+
+    private JComboBox jPreset;
+    private JPanel customDates;
 
     /** Creates new form JParamsClosedPos */
     public JParamsDatesInterval() {
         initComponents();
+        configureCompactLayout();
+        jPreset.setSelectedIndex(PRESET_MONTH);
+        applyPreset(PRESET_MONTH);
     }
     
     public void setStartDate(Date d) {
+        jPreset.setSelectedIndex(PRESET_CUSTOM);
         jTxtStartDate.setText(Formats.TIMESTAMP.formatValue(d));
+        jTxtEndDate.setText(null);
     }
     
     public void setEndDate(Date d) {
+        jPreset.setSelectedIndex(PRESET_CUSTOM);
         jTxtEndDate.setText(Formats.TIMESTAMP.formatValue(d));
+    }
+
+    private void configureCompactLayout() {
+        removeAll();
+        setBorder(null);
+        setPreferredSize(null);
+        setLayout(new BorderLayout(4, 2));
+        jTxtStartDate.setColumns(14);
+        jTxtEndDate.setColumns(14);
+
+        jPreset = new JComboBox(new String[] {
+            AppLocal.getIntString("Report.Date.Today"),
+            AppLocal.getIntString("Report.Date.ThisWeek"),
+            AppLocal.getIntString("Report.Date.ThisMonth"),
+            AppLocal.getIntString("Report.Date.ThisYear"),
+            AppLocal.getIntString("Report.Date.Custom")
+        });
+        jPreset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                applyPreset(jPreset.getSelectedIndex());
+            }
+        });
+
+        JPanel presetPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        presetPanel.add(new JLabel(AppLocal.getIntString("Report.Date.Period")));
+        presetPanel.add(jPreset);
+        add(presetPanel, BorderLayout.NORTH);
+
+        customDates = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        customDates.add(jLabel1);
+        customDates.add(jTxtStartDate);
+        customDates.add(btnDateStart);
+        customDates.add(jLabel2);
+        customDates.add(jTxtEndDate);
+        customDates.add(btnDateEnd);
+        add(customDates, BorderLayout.CENTER);
+    }
+
+    private void applyPreset(int preset) {
+        boolean custom = preset == PRESET_CUSTOM;
+        customDates.setVisible(custom);
+        if (custom) {
+            revalidate();
+            return;
+        }
+
+        Calendar start = Calendar.getInstance();
+        start.setTime(com.openbravo.beans.DateUtils.getToday());
+
+        if (preset == PRESET_WEEK) {
+            int daysSinceMonday = (start.get(Calendar.DAY_OF_WEEK) + 5) % 7;
+            start.add(Calendar.DAY_OF_MONTH, -daysSinceMonday);
+        } else if (preset == PRESET_MONTH) {
+            start.set(Calendar.DAY_OF_MONTH, 1);
+        } else if (preset == PRESET_YEAR) {
+            start.set(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        Calendar end = (Calendar) start.clone();
+        if (preset == PRESET_TODAY) {
+            end.add(Calendar.DAY_OF_MONTH, 1);
+        } else if (preset == PRESET_WEEK) {
+            end.add(Calendar.DAY_OF_MONTH, 7);
+        } else if (preset == PRESET_MONTH) {
+            end.add(Calendar.MONTH, 1);
+        } else {
+            end.add(Calendar.YEAR, 1);
+        }
+
+        jTxtStartDate.setText(Formats.TIMESTAMP.formatValue(start.getTime()));
+        jTxtEndDate.setText(Formats.TIMESTAMP.formatValue(end.getTime()));
+        revalidate();
     }
 
     public void init(AppView app) {

@@ -20,14 +20,14 @@
 				<textElement>
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Product Name]]></text>
+				<text><![CDATA[Nom del producte]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-2" x="176" y="1" width="62" height="14"/>
 				<textElement textAlignment="Right">
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Price]]></text>
+				<text><![CDATA[Preu]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-4" x="430" y="1" width="66" height="14"/>
@@ -41,21 +41,21 @@
 				<textElement textAlignment="Right">
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[Units]]></text>
+				<text><![CDATA[Unitats]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-4" x="294" y="1" width="66" height="14"/>
 				<textElement textAlignment="Right">
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[VAT Rate]]></text>
+				<text><![CDATA[Tipus d'IVA]]></text>
 			</staticText>
 			<staticText>
 				<reportElement key="staticText-4" x="360" y="1" width="66" height="14"/>
 				<textElement textAlignment="Right">
 					<font isBold="true" pdfFontName="Helvetica-Bold"/>
 				</textElement>
-				<text><![CDATA[VAT]]></text>
+				<text><![CDATA[IVA]]></text>
 			</staticText>
 		</band>
 	</pageHeader>

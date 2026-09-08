@@ -196,11 +196,12 @@ public abstract class JPanelReport extends JPanel implements JPanelView, BeanFac
         jPanelFilter.setLayout(new java.awt.BorderLayout());
         jPanelHeader.add(jPanelFilter, java.awt.BorderLayout.CENTER);
 
-        jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+        jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 6, 2));
 
         jToggleFilter.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/1downarrow.png"))); // NOI18N
         jToggleFilter.setSelected(true);
         jToggleFilter.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/1uparrow.png"))); // NOI18N
+        jToggleFilter.setText(AppLocal.getIntString("Button.HideFilters")); // NOI18N
         jToggleFilter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jToggleFilterActionPerformed(evt);
@@ -217,7 +218,7 @@ public abstract class JPanelReport extends JPanel implements JPanelView, BeanFac
         });
         jPanel1.add(jButton1);
 
-        jPanelHeader.add(jPanel1, java.awt.BorderLayout.SOUTH);
+        jPanelHeader.add(jPanel1, java.awt.BorderLayout.EAST);
 
         add(jPanelHeader, java.awt.BorderLayout.NORTH);
     }// </editor-fold>//GEN-END:initComponents
@@ -231,6 +232,8 @@ public abstract class JPanelReport extends JPanel implements JPanelView, BeanFac
     private void jToggleFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleFilterActionPerformed
 
         jPanelFilter.setVisible(jToggleFilter.isSelected());
+        jToggleFilter.setText(AppLocal.getIntString(
+                jToggleFilter.isSelected() ? "Button.HideFilters" : "Button.EditFilters"));
     
     }//GEN-LAST:event_jToggleFilterActionPerformed
 
