@@ -959,6 +959,24 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		};
 	}
 
+	public final List<Object[]> getCashMovements(String money) throws BasicException {
+		return new PreparedSentence(s,
+				"SELECT R.DATENEW, P.PAYMENT, P.TOTAL FROM RECEIPTS R, PAYMENTS P "
+						+ "WHERE P.RECEIPT = R.ID AND R.MONEY = ? AND P.PAYMENT IN ('cashin', 'cashout') "
+						+ "ORDER BY R.DATENEW DESC",
+				SerializerWriteString.INSTANCE,
+				new SerializerReadBasic(new Datas[] { Datas.TIMESTAMP, Datas.STRING, Datas.DOUBLE })).list(money);
+	}
+
+	// Cash sales, refunds and manual movements: what the drawer should hold now
+	public final double getCashTotal(String money) throws BasicException {
+		Object[] total = (Object[]) new PreparedSentence(s,
+				"SELECT SUM(P.TOTAL) FROM RECEIPTS R, PAYMENTS P WHERE P.RECEIPT = R.ID AND R.MONEY = ? "
+						+ "AND P.PAYMENT IN ('cash', 'cashin', 'cashout', 'cashrefund')",
+				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[] { Datas.DOUBLE })).find(money);
+		return total == null || total[0] == null ? 0.0 : ((Double) total[0]).doubleValue();
+	}
+
 	public final double findProductStock(String warehouse, String id, String attsetinstid) throws BasicException {
 
 		PreparedSentence p = attsetinstid == null ? new PreparedSentence(s,
