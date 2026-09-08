@@ -1,5 +1,7 @@
 # Catalogue variants: grouping, stock and sales
 
+Project setup, build, and import tools: [README.md](README.md).
+
 How to treat Ysabel Mora items that share a model (e.g. a t-shirt) but differ by colour, size and EAN — so you can search by name, see stock per variation, and get totals like “100 of this t-shirt, 10 of this size, 50 of that size”.
 
 ## Requirements
