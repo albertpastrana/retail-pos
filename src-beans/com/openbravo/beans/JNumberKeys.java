@@ -31,8 +31,6 @@ public class JNumberKeys extends javax.swing.JPanel {
 
     private boolean minusenabled = true;
     private boolean equalsenabled = true;
-    private boolean linediscountenabled = true;
-    private boolean totaldiscountenabled = true;
 
     /** Creates new form JNumberKeys */
     public JNumberKeys() {
@@ -54,8 +52,6 @@ public class JNumberKeys extends javax.swing.JPanel {
         m_jPlus.addActionListener(new MyKeyNumberListener('+'));
         m_jMinus.addActionListener(new MyKeyNumberListener('-'));
         m_jEquals.addActionListener(new MyKeyNumberListener('='));
-        m_jDiscountTotal.addActionListener(new MyKeyNumberListener(KEY_DISCOUNT_TOTAL));
-        m_jDiscountLine.addActionListener(new MyKeyNumberListener(KEY_DISCOUNT_LINE));
     }
 
     public void setNumbersOnly(boolean value) {
@@ -63,8 +59,6 @@ public class JNumberKeys extends javax.swing.JPanel {
         m_jMinus.setVisible(value);
         m_jPlus.setVisible(value);
         m_jMultiply.setVisible(value);
-        m_jDiscountTotal.setVisible(value);
-        m_jDiscountLine.setVisible(value);
     }
 
     @Override
@@ -87,8 +81,6 @@ public class JNumberKeys extends javax.swing.JPanel {
         m_jPlus.setEnabled(b);
         m_jMinus.setEnabled(minusenabled && b);
         m_jEquals.setEnabled(equalsenabled && b);
-        m_jDiscountTotal.setEnabled(totaldiscountenabled && b);
-        m_jDiscountLine.setEnabled(linediscountenabled && b);
     }
 
     @Override
@@ -113,27 +105,6 @@ public class JNumberKeys extends javax.swing.JPanel {
     public boolean isEqualsEnabled() {
         return equalsenabled;
     }
-
-    public void setDiscountEnabled(boolean b) {
-        setLineDiscountEnabled(b);
-        setTotalDiscountEnabled(b);
-    }
-
-    public void setLineDiscountEnabled(boolean b) {
-        linediscountenabled = b;
-        m_jDiscountLine.setEnabled(linediscountenabled && isEnabled());
-    }
-
-    public void setTotalDiscountEnabled(boolean b) {
-        totaldiscountenabled = b;
-        m_jDiscountTotal.setEnabled(totaldiscountenabled && isEnabled());
-    }
-
-    public void setDiscountLabels(String total, String line) {
-        m_jDiscountTotal.setText(total);
-        m_jDiscountLine.setText(line);
-    }
-
 
     public boolean isNumbersOnly() {
         return m_jEquals.isVisible();
@@ -190,8 +161,6 @@ public class JNumberKeys extends javax.swing.JPanel {
         m_jKey0 = new javax.swing.JButton();
         m_jKeyDot = new javax.swing.JButton();
         m_jEquals = new javax.swing.JButton();
-        m_jDiscountTotal = new javax.swing.JButton();
-        m_jDiscountLine = new javax.swing.JButton();
 
         setLayout(new java.awt.GridBagLayout());
 
@@ -423,42 +392,12 @@ public class JNumberKeys extends javax.swing.JPanel {
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
         add(m_jEquals, gridBagConstraints);
 
-        m_jDiscountTotal.setFocusPainted(false);
-        m_jDiscountTotal.setFocusable(false);
-        m_jDiscountTotal.setMargin(new java.awt.Insets(8, 8, 8, 8));
-        m_jDiscountTotal.setRequestFocusEnabled(false);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
-        add(m_jDiscountTotal, gridBagConstraints);
-
-        m_jDiscountLine.setFocusPainted(false);
-        m_jDiscountLine.setFocusable(false);
-        m_jDiscountLine.setMargin(new java.awt.Insets(8, 8, 8, 8));
-        m_jDiscountLine.setRequestFocusEnabled(false);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 5;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-        add(m_jDiscountLine, gridBagConstraints);
-
     }
     // </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton m_jCE;
-    private javax.swing.JButton m_jDiscountLine;
-    private javax.swing.JButton m_jDiscountTotal;
     private javax.swing.JButton m_jEquals;
     private javax.swing.JButton m_jKey0;
     private javax.swing.JButton m_jKey1;
