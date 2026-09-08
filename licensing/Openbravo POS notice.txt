@@ -22,13 +22,13 @@ Original Developer: Adrian Romero
 B) Some portions of the Openbravo POS Software are provided by third parties. In this distribution, they are:
 
 - Files in folder /images marked marked "(c) Everaldo". � http://www.everaldo.com. (LGPL)
-- Translation of the POS interface in Galician (files marked "(c) mancomun.org"). � 2007 mancomun.org  (GPL) 
-- Files in folders /i18n/ and /possync/ and /ws/types/. Copyright � 2007 openTrends Solucions i Sistemes, S.L (GPL)
-- Payment gateways in /tpv/payment/: PaymentGatewayAuthorizeNet.java and PaymentGatewaySECPay.java � 2003 Authorize.Net and � 2002 SECPay Ltd. respectively. 
-- Files in /src-pos/com/openbravo/pos/util/: JRPrinterAWT300.java and JRViewer300.form and JRViewer300.form - Copyright (C) 2001-2006 JasperSoft Corporation http://www.jaspersoft.com. Distributed under the Lesser General Public License (LGPL)
+- Translation of the POS interface in Galician (files marked "(c) mancomun.org"). � 2007 mancomun.org  (GPL)
+- Files in folders /i18n/. Copyright � 2007 openTrends Solucions i Sistemes, S.L (GPL)
+- Payment gateways in /tpv/payment/: PaymentGatewayAuthorizeNet.java and PaymentGatewaySECPay.java � 2003 Authorize.Net and � 2002 SECPay Ltd. respectively.
+- Files in /src-pos/com/openbravo/pos/util/: JRPrinterAWT300.java and JRViewer300.java - Copyright (C) 2001-2006 JasperSoft Corporation http://www.jaspersoft.com. Distributed under the Lesser General Public License (LGPL)
 
- 
-C) This product uses certain third party software libraries, found in /lib/ and in /web/WEB-INF/lib and in /jetty/
+
+C) This product uses certain third party software libraries, found in /lib/
 
 
 Portions of this code are developed by The Apache Software Foundation (www.apache.org). These files are:
@@ -89,7 +89,5 @@ All available from http://www.rxtx.org/. Copyright 1998-2006 Keane Jarvi. Distri
 - jdt-compiler-3.1.1.jar (a dependency of jasperreports) - Copyright � 2008 The Eclipse Foundation. Distributed under the Common Public License - v 1.0
 
 - jpos1121.jar - available from http://www.javapos.com/. Distributed under the Common Public License
-
-The jetty web server version 6.1.12 is found in the folder /jetty/ and is available from http://www.mortbay.org/jetty/. Copyright (C) 1995-2008 Mort Bay Consulting
 
 If you have questions about the licensing terms for the Openbravo POS Software, please contact us at: legal@openbravo.com

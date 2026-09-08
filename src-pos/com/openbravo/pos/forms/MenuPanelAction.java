@@ -19,10 +19,10 @@
 
 package com.openbravo.pos.forms;
 
+import com.openbravo.pos.util.HiDpiIcon;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.ImageIcon;
 
 /**
  *
@@ -35,7 +35,7 @@ public class MenuPanelAction extends AbstractAction {
 
     /** Creates a new instance of MenuPanelAction */
     public MenuPanelAction(AppView app, String icon, String keytext, String sMyView) {
-        putValue(Action.SMALL_ICON, new ImageIcon(JPrincipalApp.class.getResource(icon)));
+        putValue(Action.SMALL_ICON, new HiDpiIcon(JPrincipalApp.class.getResource(icon)));
         putValue(Action.NAME, AppLocal.getIntString(keytext));
         putValue(AppUserView.ACTION_TASKNAME, sMyView);
         m_App = app;

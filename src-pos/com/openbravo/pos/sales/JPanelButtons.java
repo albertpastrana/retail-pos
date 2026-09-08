@@ -26,7 +26,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.StringReader;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -37,6 +36,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppUser;
+import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class JPanelButtons extends javax.swing.JPanel {
         initComponents();
         
         // Load categories default thumbnail
-        tnbmacro = new ThumbNailBuilder(16, 16, "com/openbravo/images/greenled.png");
+        tnbmacro = new ThumbNailBuilder(32, 32, "com/openbravo/images/greenled.png");
         
         this.panelticket = panelticket;
         
@@ -177,7 +177,7 @@ public class JPanelButtons extends javax.swing.JPanel {
             
             setName(sKey);
             setText(title);
-            setIcon(new ImageIcon(tnbmacro.getThumbNail(panelticket.getResourceAsImage(sImage))));
+            setIcon(new HiDpiIcon(tnbmacro.getThumbNail(panelticket.getResourceAsImage(sImage))));
             setFocusPainted(false);
             setFocusable(false);
             setRequestFocusEnabled(false);
