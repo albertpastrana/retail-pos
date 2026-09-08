@@ -1,4 +1,5 @@
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -14,18 +15,19 @@ public class ApplyStoreResources {
 		Connection c = DriverManager.getConnection("jdbc:derby:" + db);
 		c.setAutoCommit(false);
 		try {
-			String t = "src-pos/com/openbravo/pos/templates/";
-			upsert(c, "Printer.Ticket", 0, t + "Printer.Ticket.xml");
-			upsert(c, "Printer.TicketPreview", 0, t + "Printer.TicketPreview.xml");
-			upsert(c, "Printer.TicketGift", 0, t + "Printer.TicketGift.xml");
-			upsert(c, "Printer.TicketLine", 0, t + "Printer.TicketLine.xml");
-			upsert(c, "Printer.CloseCash", 0, t + "Printer.CloseCash.xml");
-			upsert(c, "Printer.Ticket.Logo", 1, t + "Printer.Ticket.Logo.png");
-			upsert(c, "Window.Logo", 1, t + "Window.Logo.png");
-			upsert(c, "Window.Title", 0, t + "Window.Title.txt");
-			upsert(c, "Ticket.Buttons", 0, t + "Ticket.Buttons.xml");
-			upsert(c, "Button.Print", 1, t + "Button.Print.png");
-			upsert(c, "Button.OpenDrawer", 1, t + "Button.OpenDrawer.png");
+			File t = templatesDir();
+			upsert(c, "Printer.Ticket", 0, new File(t, "Printer.Ticket.xml"));
+			upsert(c, "Printer.TicketPreview", 0, new File(t, "Printer.TicketPreview.xml"));
+			upsert(c, "Printer.TicketGift", 0, new File(t, "Printer.TicketGift.xml"));
+			upsert(c, "Printer.TicketLine", 0, new File(t, "Printer.TicketLine.xml"));
+			upsert(c, "Printer.CloseCash", 0, new File(t, "Printer.CloseCash.xml"));
+			upsert(c, "Printer.Ticket.Logo", 1, new File(t, "Printer.Ticket.Logo.png"));
+			upsert(c, "Window.Logo", 1, new File(t, "Window.Logo.png"));
+			upsert(c, "Window.Title", 0, new File(t, "Window.Title.txt"));
+			upsert(c, "Menu.Root", 0, new File(t, "Menu.Root.txt"));
+			upsert(c, "Ticket.Buttons", 0, new File(t, "Ticket.Buttons.xml"));
+			upsert(c, "Button.Print", 1, new File(t, "Button.Print.png"));
+			upsert(c, "Button.OpenDrawer", 1, new File(t, "Button.OpenDrawer.png"));
 			patchRoles(c);
 			c.commit();
 		} catch (Exception e) {
@@ -40,8 +42,23 @@ public class ApplyStoreResources {
 		}
 	}
 
-	private static void upsert(Connection c, String name, int restype, String file) throws Exception {
-		byte[] content = readAll(file);
+	private static File templatesDir() {
+		String home = System.getProperty("pos.home", System.getProperty("user.dir"));
+		File[] candidates = {
+				new File(home, "src-pos/com/openbravo/pos/templates"),
+				new File("src-pos/com/openbravo/pos/templates"),
+				new File("../src-pos/com/openbravo/pos/templates") };
+		for (File dir : candidates) {
+			if (new File(dir, "Ticket.Buttons.xml").isFile()) {
+				return dir;
+			}
+		}
+		throw new IllegalStateException(
+				"Cannot find src-pos/com/openbravo/pos/templates. Run ./gradlew applyStoreResources from the repo root.");
+	}
+
+	private static void upsert(Connection c, String name, int restype, File file) throws Exception {
+		byte[] content = readAll(file.getPath());
 		PreparedStatement upd = c.prepareStatement("UPDATE RESOURCES SET CONTENT = ?, RESTYPE = ? WHERE NAME = ?");
 		upd.setBytes(1, content);
 		upd.setInt(2, restype);
@@ -64,7 +81,8 @@ public class ApplyStoreResources {
 	}
 
 	private static void patchRoles(Connection c) throws Exception {
-		String[] extra = { "    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n" };
+		String[] extra = { "    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n",
+				"    <class name=\"sales.EditLines\"/>\n" };
 		PreparedStatement sel = c.prepareStatement("SELECT ID, NAME, PERMISSIONS FROM ROLES");
 		ResultSet rs = sel.executeQuery();
 		PreparedStatement upd = c.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?");
@@ -75,7 +93,9 @@ public class ApplyStoreResources {
 			if (raw == null) {
 				continue;
 			}
-			if (!"Administrator".equals(name) && !"Manager".equals(name)) {
+			// Stock databases name these roles "Administrator role" and "Manager
+			// role", so an exact match patches nothing.
+			if (name == null || (!name.startsWith("Administrator") && !name.startsWith("Manager"))) {
 				continue;
 			}
 			String xml = new String(raw, "UTF-8");

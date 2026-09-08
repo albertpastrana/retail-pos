@@ -24,8 +24,8 @@ Useful tasks:
 
 | Task              | Result                                             |
 | ----------------- | -------------------------------------------------- |
-| `./gradlew jar`   | `build/jar/openbravopos.jar`                       |
-| `./gradlew check` | Compile, jar, plus `locales.jar` and `reports.jar` |
+| `./gradlew jar`   | App jar plus locales/reports jars next to `start.sh` |
+| `./gradlew check` | That, plus compile the `data/` database helpers         |
 | `ant jar`         | Same jar layout via the old Ant build              |
 | `ant aio-jar`     | Fat jar (`lib.jar` bundled)                        |
 | `ant cbits`       | Fat jar + Windows `.exe` via Launch4j              |
@@ -92,37 +92,26 @@ Importing the catalogue **does not** create stock. Receive goods via Stock diary
 
 ### Bulk helpers in `data/`
 
-One-off Java mains. Compile against Derby, **with the POS closed**:
+Gradle compiles them against Derby. **Quit the POS first** — with embedded Derby the database directory is locked (`db.lck`), and the tasks refuse to run if that file is present.
+
+| Task                        | What it does                                                                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./gradlew applyStoreResources` | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/openbravopos-database`. |
+| `./gradlew importCatalog`     | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.      |
+| `./gradlew keepCatalog --args='data/openbravopos-database path/to/keep.csv'` | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history. |
+| `updateResource` / `dumpResource` / `dumpAllResources` / `showResource` | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                         |
+
+`--args` replaces the whole argument list, including the database path. Paths are relative to the repo root.
+
+Example with a different Derby directory:
 
 ```sh
-cd data
-javac -encoding UTF-8 -cp ../lib/derby.jar ImportCatalog.java KeepCatalog.java ApplyStoreResources.java
+./gradlew applyStoreResources --args='data/openbravopos-database'
 ```
-
-| Class                                                | What it does                                                                                                                                    |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ImportCatalog`                                      | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.      |
-| `KeepCatalog`                                        | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history. |
-| `ApplyStoreResources`                                | Upserts ticket, logo, and button templates from `src-pos/com/openbravo/pos/templates/` and adds discount permissions to roles                   |
-| `UpdateResource`                                     | `db name file` — replace one `RESOURCES` row                                                                                                    |
-| `DumpResource` / `DumpAllResources` / `ShowResource` | Inspect `RESOURCES`                                                                                                                             |
-
-Example (paths relative to `data/`):
-
-```sh
-java -cp .:../lib/derby.jar ImportCatalog \
-  openbravopos-database \
-  import-categories.tsv \
-  import-products.tsv \
-  ../src-pos/com/openbravo/pos/templates/Ticket.Buttons.xml
-```
-
-On Windows, use `;` instead of `:` in `-cp`.
-
 ## Differences from upstream
 
 - Scan-to-import: unknown barcodes can be pulled from the catalogue TSV at the till
-- Sales keypad: line discount and total discount (Administrator and Manager need `button.discount` and `button.discount.total`; run `ApplyStoreResources` to patch an existing database)
+- Sales keypad: line discount and total discount (Administrator and Manager need `button.discount` and `button.discount.total`; run `./gradlew applyStoreResources` to patch an existing database)
 - Extra reports: **Stock by model**, **Sales by model**, **Dead / slow stock**, **Sales by category** (Administrator and Manager roles)
 - FlatLaf Light look and feel in Configuration → General
 

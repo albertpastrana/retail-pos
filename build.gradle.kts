@@ -25,6 +25,9 @@ sourceSets {
             exclude("**/filesystem.attributes")
         }
     }
+    create("dataHelpers") {
+        java.setSrcDirs(listOf("data"))
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -35,6 +38,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     implementation(fileTree("lib") { include("*.jar") })
+    "dataHelpersImplementation"(files("lib/derby.jar"))
 }
 
 tasks.processResources {
@@ -89,5 +93,88 @@ tasks.assemble {
 }
 
 tasks.check {
-    dependsOn(tasks.jar, localesJar, reportsJar, syncRunJars)
+    dependsOn(tasks.jar, localesJar, reportsJar, syncRunJars, "compileDataHelpersJava")
 }
+
+fun dataHelper(
+    taskName: String,
+    main: String,
+    description: String,
+    defaultArgs: List<String> = emptyList(),
+    requireArgs: Boolean = false,
+    checkLock: Boolean = true,
+) {
+    tasks.register<JavaExec>(taskName) {
+        group = "pos"
+        this.description = description
+        classpath = sourceSets["dataHelpers"].runtimeClasspath
+        mainClass.set(main)
+        workingDir = layout.projectDirectory.asFile
+        systemProperty("pos.home", layout.projectDirectory.asFile.absolutePath)
+        if (defaultArgs.isNotEmpty()) {
+            args(defaultArgs)
+        }
+        doFirst {
+            val taskArgs = args.orEmpty()
+            if (requireArgs && taskArgs.isEmpty()) {
+                throw GradleException("Pass arguments with --args. See: ./gradlew help --task $taskName")
+            }
+            val db = taskArgs.getOrNull(0)
+            if (checkLock && db != null) {
+                val lockFile = workingDir.resolve(db).resolve("db.lck")
+                if (lockFile.exists()) {
+                    throw GradleException("Quit the POS first (Derby lock at $lockFile).")
+                }
+            }
+        }
+    }
+}
+
+dataHelper(
+    "applyStoreResources",
+    "ApplyStoreResources",
+    "Upsert ticket/logo/button templates and add discount permissions to Administrator and Manager.",
+    listOf("data/openbravopos-database"),
+)
+dataHelper(
+    "importCatalog",
+    "ImportCatalog",
+    "Wipe products and stock, then load the TSV catalogue. Destructive. Quit the POS first.",
+    listOf(
+        "data/openbravopos-database",
+        "data/import-categories.tsv",
+        "data/import-products.tsv",
+        "src-pos/com/openbravo/pos/templates/Ticket.Buttons.xml",
+    ),
+)
+dataHelper(
+    "keepCatalog",
+    "KeepCatalog",
+    "Drop products whose REFERENCE is not in a keep CSV. Pass: --args='data/openbravopos-database path/to/keep.csv'",
+    requireArgs = true,
+)
+dataHelper(
+    "updateResource",
+    "UpdateResource",
+    "Replace one RESOURCES row. Pass: --args='data/openbravopos-database NAME file'",
+    requireArgs = true,
+)
+dataHelper(
+    "dumpResource",
+    "DumpResource",
+    "Write named RESOURCES to a directory. Pass: --args='data/openbravopos-database outdir NAME...'",
+    requireArgs = true,
+)
+dataHelper(
+    "dumpAllResources",
+    "DumpAllResources",
+    "Dump all RESOURCES. Pass: --args='org.apache.derby.jdbc.EmbeddedDriver jdbc:derby:data/openbravopos-database outdir'",
+    requireArgs = true,
+    checkLock = false,
+)
+dataHelper(
+    "showResource",
+    "ShowResource",
+    "Print named RESOURCES. Pass: --args='data/openbravopos-database NAME...'",
+    requireArgs = true,
+)
