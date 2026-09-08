@@ -1,1 +1,11 @@
 build/
+*.class
+.DS_Store
+.metals/
+.vscode/
+derby.log
+data/openbravopos-database/
+devdb/
+dev.properties
+external-data/
+data/resdump/
