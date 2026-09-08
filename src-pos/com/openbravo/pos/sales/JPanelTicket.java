@@ -554,7 +554,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					+ AppLocal.getIntString("label.prodpricebuy") + ": "
 					+ Formats.CURRENCY.formatValue(new Double(catalogProduct.getPriceBuy())) + "\n"
 					+ AppLocal.getIntString("label.prodpriceselltax") + ": "
-					+ Formats.CURRENCY.formatValue(new Double(catalogProduct.getPriceSell() * 1.21));
+					+ Formats.CURRENCY.formatValue(new Double(catalogProduct.getPriceSell()
+							* (1.0 + taxeslogic.getTaxRate(catalogProduct.getTaxCategoryID(), m_oTicket.getDate(),
+									m_oTicket.getCustomer()))));
 
 			if (JOptionPane.showConfirmDialog(this, message, AppLocal.getIntString("title.importproduct"),
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
