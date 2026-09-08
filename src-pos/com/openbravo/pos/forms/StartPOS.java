@@ -27,6 +27,7 @@ import com.openbravo.pos.instance.InstanceQuery;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.LookAndFeel;
+import net.sf.jasperreports.engine.util.JRProperties;
 import org.jvnet.substance.SubstanceLookAndFeel;
 import org.jvnet.substance.api.SubstanceSkin;
 
@@ -56,7 +57,23 @@ public class StartPOS {
         }  
     }
     
+    // The JDT compiler bundled with JasperReports 3.1.4 cannot read class files newer
+    // than Java 5, so report expressions only compile on Java 8. Use javac where the
+    // running JDK offers it.
+    private static void setReportCompiler() {
+        try {
+            Class.forName("com.sun.tools.javac.Main");
+            JRProperties.setProperty("net.sf.jasperreports.compiler.class",
+                    "net.sf.jasperreports.engine.design.JRJdk13Compiler");
+        } catch (ClassNotFoundException e) {
+            logger.log(Level.WARNING, "javac not available, reports will only work on Java 8", e);
+        }
+    }
+
     public static void main (final String args[]) {
+
+        setReportCompiler();
+
         if (args.length > 0 && args[0].equals("configure")) {
             String[] newArgs = new String[args.length - 1];
             for (int i = 1, k = 0; i < args.length; i++) {
