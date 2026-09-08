@@ -3,6 +3,11 @@ build/
 .DS_Store
 .metals/
 .vscode/
+/.project
+/.classpath
+/.settings/
+/.metadata/
+/*.launch
 derby.log
 data/openbravopos-database/
 devdb/
