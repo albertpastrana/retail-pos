@@ -56,8 +56,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private DataLogicSystem m_dlSystem;
 
-	private JLabel m_principalnotificator;
-
 	private JPanelView m_jLastView;
 	private Action m_actionfirst;
 
@@ -88,13 +86,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		jPanel2.add(Box.createVerticalStrut(50), 0);
 
 		applyComponentOrientation(appview.getComponentOrientation());
-
-		m_principalnotificator = new JLabel();
-		m_principalnotificator.applyComponentOrientation(getComponentOrientation());
-		m_principalnotificator.setText(m_appuser.getName());
-		m_principalnotificator.setIcon(m_appuser.getIcon());
-		// m_principalnotificator.setBorder(javax.swing.BorderFactory.createCompoundBorder(javax.swing.BorderFactory.createLineBorder(javax.swing.UIManager.getDefaults().getColor("TextField.shadow")),
-		// javax.swing.BorderFactory.createEmptyBorder(1, 5, 1, 5)));
 
 		if (jButton1.getComponentOrientation().isLeftToRight()) {
 			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"));
@@ -295,10 +286,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		m_jPanelLeft.setVisible(value);
 		assignMenuButtonIcon();
 		revalidate();
-	}
-
-	public JComponent getNotificator() {
-		return m_principalnotificator;
 	}
 
 	public void activate() {

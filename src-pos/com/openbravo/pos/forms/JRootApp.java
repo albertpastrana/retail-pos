@@ -42,7 +42,6 @@ import com.openbravo.data.loader.BatchSentence;
 import com.openbravo.data.loader.BatchSentenceResource;
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.scale.DeviceScale;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.regex.Matcher;
 
@@ -59,6 +58,12 @@ public class JRootApp extends JPanel implements AppView {
 	private static final Color HEADER_RULE = new Color(0xD5D5D5);
 	private static final Color HEADER_TEXT = new Color(0x2B2B2B);
 	private static final Color HEADER_TEXT_MUTED = new Color(0x7A7A7A);
+
+	// Two columns of staff buttons, four rows before the grid starts scrolling.
+	private static final int LOGIN_BUTTON_WIDTH = 240;
+	private static final int LOGIN_BUTTON_HEIGHT = 64;
+	private static final int LOGIN_GRID_WIDTH = 2 * LOGIN_BUTTON_WIDTH + 30;
+	private static final int LOGIN_GRID_HEIGHT = 4 * LOGIN_BUTTON_HEIGHT + 45;
 
 	private AppProperties m_props;
 	private Session session;
@@ -257,22 +262,6 @@ public class JRootApp extends JPanel implements AppView {
 		m_jLblTitle.setVisible(imgicon != null);
 		m_jLblSubTitle.setText(m_dlSystem.getResourceAsText("Window.Title"));
 
-		String sWareHouse;
-		try {
-			sWareHouse = m_dlSystem.findLocationName(m_sInventoryLocation);
-		} catch (BasicException e) {
-			sWareHouse = null; // no he encontrado el almacen principal
-		}
-
-		// Show Hostname, Warehouse and URL in taskbar
-		String url;
-		try {
-			url = session.getURL();
-		} catch (SQLException e) {
-			url = "";
-		}
-		m_jHost.setText("<html>" + m_props.getHost() + " - " + sWareHouse + "<br>" + url);
-
 		showLogin();
 
 		return true;
@@ -470,9 +459,9 @@ public class JRootApp extends JPanel implements AppView {
 				btn.setFocusable(false);
 				btn.setRequestFocusEnabled(false);
 				btn.setHorizontalAlignment(SwingConstants.LEADING);
-				btn.setMaximumSize(new Dimension(150, 50));
-				btn.setPreferredSize(new Dimension(150, 50));
-				btn.setMinimumSize(new Dimension(150, 50));
+				btn.setMaximumSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
+				btn.setPreferredSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
+				btn.setMinimumSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
 
 				jPeople.add(btn);
 			}
@@ -531,10 +520,6 @@ public class JRootApp extends JPanel implements AppView {
 
 			m_principalapp = new JPrincipalApp(this, user);
 
-			// The user status notificator
-			jPanel3.add(m_principalapp.getNotificator());
-			jPanel3.revalidate();
-
 			// The main panel
 			m_jPanelContainer.add(m_principalapp, "_" + m_principalapp.getUser().getId());
 			showView("_" + m_principalapp.getUser().getId());
@@ -552,11 +537,6 @@ public class JRootApp extends JPanel implements AppView {
 		} else if (!m_principalapp.deactivate()) {
 			return false;
 		} else {
-			// the status label
-			jPanel3.remove(m_principalapp.getNotificator());
-			jPanel3.revalidate();
-			jPanel3.repaint();
-
 			// remove the card
 			m_jPanelContainer.remove(m_principalapp);
 			m_principalapp = null;
@@ -638,13 +618,10 @@ public class JRootApp extends JPanel implements AppView {
 		jScrollPane1 = new javax.swing.JScrollPane();
 		jPanel2 = new javax.swing.JPanel();
 		jPanel8 = new javax.swing.JPanel();
+		m_jAbout = new javax.swing.JButton();
 		m_jClose = new javax.swing.JButton();
 		jPanel1 = new javax.swing.JPanel();
 		m_txtKeys = new javax.swing.JTextField();
-		m_jPanelDown = new javax.swing.JPanel();
-		panelTask = new javax.swing.JPanel();
-		m_jHost = new javax.swing.JLabel();
-		jPanel3 = new javax.swing.JPanel();
 
 		setPreferredSize(new java.awt.Dimension(1024, 768));
 		setLayout(new java.awt.BorderLayout());
@@ -697,55 +674,39 @@ public class JRootApp extends JPanel implements AppView {
 
 		m_jPanelLogin.setLayout(new java.awt.BorderLayout());
 
+		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(48, 24, 24, 24));
 		jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.Y_AXIS));
 
-		jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-		jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/logo.png"))); // NOI18N
-		jLabel1.setText("<html><center>Openbravo POS is a point of sale application designed for touch screens.<br>"
-				+ "Copyright \u00A9 2007-2009 Openbravo, S.L.<br>" + "http://www.openbravo.com/product/pos<br>" + "<br>"
-				+ "Openbravo POS is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.<br>"
-				+ "<br>"
-				+ "Openbravo POS is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.<br>"
-				+ "<br>"
-				+ "You should have received a copy of the GNU General Public License along with Openbravo POS.  If not, see http://www.gnu.org/licenses/.<br>"
-				+ "</center>");
+		jLabel1.setText(AppLocal.getIntString("Label.WhoWorks")); // NOI18N
+		jLabel1.setFont(jLabel1.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		jLabel1.setForeground(HEADER_TEXT);
 		jLabel1.setAlignmentX(0.5F);
-		jLabel1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jLabel1.setMaximumSize(new java.awt.Dimension(800, 1024));
-		jLabel1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 		jPanel4.add(jLabel1);
+
+		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
+
+		m_jLogonName.setLayout(new java.awt.BorderLayout());
+		m_jLogonName.setAlignmentX(0.5F);
+		m_jLogonName.setMaximumSize(new java.awt.Dimension(LOGIN_GRID_WIDTH, LOGIN_GRID_HEIGHT));
+
+		jScrollPane1.setBorder(null);
+		jScrollPane1.setOpaque(false);
+		jScrollPane1.getViewport().setOpaque(false);
+		jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		jScrollPane1.setPreferredSize(new java.awt.Dimension(LOGIN_GRID_WIDTH, LOGIN_GRID_HEIGHT));
+		m_jLogonName.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+		jPanel4.add(m_jLogonName);
 
 		m_jPanelLogin.add(jPanel4, java.awt.BorderLayout.CENTER);
 
-		m_jLogonName.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		m_jLogonName.setLayout(new java.awt.BorderLayout());
+		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 24, 20, 24));
+		jPanel5.setLayout(new java.awt.BorderLayout());
 
-		jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		jScrollPane1.setPreferredSize(new java.awt.Dimension(510, 118));
-		m_jLogonName.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-		jPanel2.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 0, 5));
-		jPanel2.setLayout(new java.awt.BorderLayout());
-
-		jPanel8.setLayout(new java.awt.GridLayout(0, 1, 5, 5));
-
-		m_jClose.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/exit.png"))); // NOI18N
-		m_jClose.setText(AppLocal.getIntString("Button.Close")); // NOI18N
-		m_jClose.setFocusPainted(false);
-		m_jClose.setFocusable(false);
-		m_jClose.setPreferredSize(new java.awt.Dimension(115, 35));
-		m_jClose.setRequestFocusEnabled(false);
-		m_jClose.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				m_jCloseActionPerformed(evt);
-			}
-		});
-		jPanel8.add(m_jClose);
-
-		jPanel2.add(jPanel8, java.awt.BorderLayout.NORTH);
-
+		// Card swipes are read by a zero-sized field that always holds the focus.
 		jPanel1.setLayout(null);
+		jPanel1.setPreferredSize(new java.awt.Dimension(0, 0));
 
 		m_txtKeys.setPreferredSize(new java.awt.Dimension(0, 0));
 		m_txtKeys.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -756,11 +717,38 @@ public class JRootApp extends JPanel implements AppView {
 		jPanel1.add(m_txtKeys);
 		m_txtKeys.setBounds(0, 0, 0, 0);
 
-		jPanel2.add(jPanel1, java.awt.BorderLayout.CENTER);
+		jPanel2.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 0, 0));
+		jPanel2.add(jPanel1);
 
-		m_jLogonName.add(jPanel2, java.awt.BorderLayout.LINE_END);
+		m_jAbout.setText(AppLocal.getIntString("Button.About")); // NOI18N
+		m_jAbout.setForeground(HEADER_TEXT_MUTED);
+		m_jAbout.setFocusPainted(false);
+		m_jAbout.setFocusable(false);
+		m_jAbout.setRequestFocusEnabled(false);
+		m_jAbout.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				m_jAboutActionPerformed(evt);
+			}
+		});
+		jPanel2.add(m_jAbout);
 
-		jPanel5.add(m_jLogonName);
+		jPanel5.add(jPanel2, java.awt.BorderLayout.LINE_START);
+
+		jPanel8.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 0, 0));
+
+		m_jClose.setText(AppLocal.getIntString("Button.Close")); // NOI18N
+		m_jClose.setForeground(HEADER_TEXT_MUTED);
+		m_jClose.setFocusPainted(false);
+		m_jClose.setFocusable(false);
+		m_jClose.setRequestFocusEnabled(false);
+		m_jClose.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				m_jCloseActionPerformed(evt);
+			}
+		});
+		jPanel8.add(m_jClose);
+
+		jPanel5.add(jPanel8, java.awt.BorderLayout.LINE_END);
 
 		m_jPanelLogin.add(jPanel5, java.awt.BorderLayout.SOUTH);
 
@@ -768,18 +756,6 @@ public class JRootApp extends JPanel implements AppView {
 
 		add(m_jPanelContainer, java.awt.BorderLayout.CENTER);
 
-		m_jPanelDown.setBorder(javax.swing.BorderFactory.createMatteBorder(1, 0, 0, 0,
-				javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")));
-		m_jPanelDown.setLayout(new java.awt.BorderLayout());
-
-		m_jHost.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/display.png"))); // NOI18N
-		m_jHost.setText("*Hostname");
-		panelTask.add(m_jHost);
-
-		m_jPanelDown.add(panelTask, java.awt.BorderLayout.LINE_START);
-		m_jPanelDown.add(jPanel3, java.awt.BorderLayout.LINE_END);
-
-		add(m_jPanelDown, java.awt.BorderLayout.SOUTH);
 	}// </editor-fold>//GEN-END:initComponents
 
 	private void m_jCloseActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jCloseActionPerformed
@@ -787,6 +763,30 @@ public class JRootApp extends JPanel implements AppView {
 		tryToClose();
 
 	}// GEN-LAST:event_m_jCloseActionPerformed
+
+	private void m_jAboutActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jAboutActionPerformed
+
+		showAbout();
+
+	}// GEN-LAST:event_m_jAboutActionPerformed
+
+	private void showAbout() {
+
+		JLabel about = new JLabel("<html><body style='width: 420px'>" + "<b>" + AppLocal.APP_NAME + "</b> "
+				+ AppLocal.APP_VERSION + "<br><br>"
+				+ "Openbravo POS is a point of sale application designed for touch screens.<br>"
+				+ "Copyright \u00A9 2007-2009 Openbravo, S.L.<br>" + "http://www.openbravo.com/product/pos<br><br>"
+				+ "Openbravo POS is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.<br><br>"
+				+ "Openbravo POS is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.<br><br>"
+				+ "You should have received a copy of the GNU General Public License along with Openbravo POS.  If not, see http://www.gnu.org/licenses/.</body></html>");
+		about.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/logo.png")));
+		about.setVerticalTextPosition(SwingConstants.BOTTOM);
+		about.setHorizontalTextPosition(SwingConstants.CENTER);
+		about.applyComponentOrientation(getComponentOrientation());
+
+		JOptionPane.showMessageDialog(this, about, AppLocal.getIntString("Button.About"),
+				JOptionPane.PLAIN_MESSAGE);
+	}
 
 	private void m_txtKeysKeyTyped(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_m_txtKeysKeyTyped
 
@@ -800,13 +800,12 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JLabel jLabel1;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JPanel jPanel2;
-	private javax.swing.JPanel jPanel3;
 	private javax.swing.JPanel jPanel4;
 	private javax.swing.JPanel jPanel5;
 	private javax.swing.JPanel jPanel8;
 	private javax.swing.JScrollPane jScrollPane1;
+	private javax.swing.JButton m_jAbout;
 	private javax.swing.JButton m_jClose;
-	private javax.swing.JLabel m_jHost;
 	private javax.swing.JLabel m_jLblClock;
 	private javax.swing.JLabel m_jLblOperator;
 	private javax.swing.JLabel m_jLblSubTitle;
@@ -814,11 +813,9 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JPanel m_jLogonName;
 	private javax.swing.JPanel m_jPanelBrand;
 	private javax.swing.JPanel m_jPanelContainer;
-	private javax.swing.JPanel m_jPanelDown;
 	private javax.swing.JPanel m_jPanelLogin;
 	private javax.swing.JPanel m_jPanelStatus;
 	private javax.swing.JPanel m_jPanelTitle;
 	private javax.swing.JTextField m_txtKeys;
-	private javax.swing.JPanel panelTask;
 	// End of variables declaration//GEN-END:variables
 }
