@@ -24,7 +24,9 @@ set DIRNAME=%~dp0
 set CP="%DIRNAME%openbravopos.jar"
 set CP=%CP%;"%DIRNAME%lib/*"
 set CP=%CP%;"%DIRNAME%lib.jar"
-set CP=%CP%;"%DIRNAME%lib/locales.jar"
-set CP=%CP%;"%DIRNAME%lib/reports.jar"
+set CP=%CP%;"%DIRNAME%locales.jar"
+set CP=%CP%;"%DIRNAME%locales"
+set CP=%CP%;"%DIRNAME%reports.jar"
+set CP=%CP%;"%DIRNAME%reports"
 
 start /B javaw -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Djava.library.path="%DIRNAME%lib/Windows/i368-mingw32" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.forms.StartPOS %1

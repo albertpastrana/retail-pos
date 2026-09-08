@@ -33,10 +33,9 @@ Useful tasks:
 
 CI runs `./gradlew check` on every push and pull request.
 
-After `./gradlew jar`, copy the app jar next to `start.sh` (locales and reports already live in the repo tree):
+`./gradlew jar` copies `openbravopos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
 
 ```sh
-cp build/jar/openbravopos.jar .
 ./start.sh path/to/config.properties
 ```
 

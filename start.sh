@@ -25,7 +25,9 @@ CP=$DIRNAME/openbravopos.jar
 CP=$CP:$DIRNAME/lib/*
 CP=$CP:$DIRNAME/lib.jar
 CP=$CP:$DIRNAME/locales.jar
+CP=$CP:$DIRNAME/locales
 CP=$CP:$DIRNAME/reports.jar
+CP=$CP:$DIRNAME/reports
 
 # Select the library folder
 case "`uname -s`" in

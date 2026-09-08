@@ -15,3 +15,6 @@ devdb/
 dev.properties
 external-data/
 data/resdump/
+/openbravopos.jar
+/locales.jar
+/reports.jar

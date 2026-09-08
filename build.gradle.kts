@@ -72,10 +72,22 @@ val reportsJar by tasks.registering(Jar::class) {
     from("reports")
 }
 
+val syncRunJars by tasks.registering(Copy::class) {
+    dependsOn(tasks.jar, localesJar, reportsJar)
+    from(layout.buildDirectory.dir("jar")) {
+        include("openbravopos.jar", "locales.jar", "reports.jar")
+    }
+    into(layout.projectDirectory)
+}
+
+tasks.jar {
+    finalizedBy(syncRunJars)
+}
+
 tasks.assemble {
-    dependsOn(localesJar, reportsJar)
+    dependsOn(localesJar, reportsJar, syncRunJars)
 }
 
 tasks.check {
-    dependsOn(tasks.jar, localesJar, reportsJar)
+    dependsOn(tasks.jar, localesJar, reportsJar, syncRunJars)
 }
