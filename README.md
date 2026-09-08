@@ -8,28 +8,35 @@ This file is the project entry point. Catalogue variant rules live in [catalog-v
 
 ## Requirements
 
-- JDK 7 or newer (build targets 1.7)
-- [Apache Ant](https://ant.apache.org/)
-- No Maven. Dependencies are already in `lib/`
+- JDK 17 or newer to run Gradle (the build still emits Java 8 bytecode)
+- The [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) (`./gradlew`); no local Gradle install needed
+- Dependencies are already in `lib/` (not resolved from Maven Central)
+
+Ant (`build.xml`) still works if you already use it.
 
 ## Build
 
 ```sh
-ant jar
+./gradlew jar
 ```
 
-Useful targets:
+Useful tasks:
 
-| Target         | Result                                         |
-| -------------- | ---------------------------------------------- |
-| `ant jar`      | `build/jar/openbravopos.jar` plus classes      |
-| `ant aio-jar`  | Fat jar (`lib.jar` bundled)                    |
-| `ant cbits`    | Default: fat jar + Windows `.exe` via Launch4j |
-| `ant dist.bin` | Binary zip under `build/dist/`                 |
+| Task              | Result                                             |
+| ----------------- | -------------------------------------------------- |
+| `./gradlew jar`   | `build/jar/openbravopos.jar`                       |
+| `./gradlew check` | Compile, jar, plus `locales.jar` and `reports.jar` |
+| `ant jar`         | Same jar layout via the old Ant build              |
+| `ant aio-jar`     | Fat jar (`lib.jar` bundled)                        |
+| `ant cbits`       | Fat jar + Windows `.exe` via Launch4j              |
+| `ant dist.bin`    | Binary zip under `build/dist/`                     |
 
-After `ant jar`, run from the repo root so `lib/`, locales, and reports resolve:
+CI runs `./gradlew check` on every push and pull request.
+
+After `./gradlew jar`, copy the app jar next to `start.sh` (locales and reports already live in the repo tree):
 
 ```sh
+cp build/jar/openbravopos.jar .
 ./start.sh path/to/config.properties
 ```
 

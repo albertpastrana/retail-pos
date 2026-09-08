@@ -11,7 +11,6 @@ import com.openbravo.pos.forms.*;
 import com.openbravo.pos.util.AltEncrypter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.Security;
 import javax.xml.namespace.QName;
 import java.rmi.RemoteException;
 
@@ -34,10 +33,6 @@ public class PaymentGatewayPayPoint implements PaymentGateway {
     /** Creates a new instance of PaymentGatewaySECPay */
     public PaymentGatewayPayPoint(AppProperties props) {
         
-        // Propiedades del sistema
-        System.setProperty("java.protocol.handler.pkgs", "com.sun.net.ssl.internal.www.protocol" );
-        Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
-            
         // Configuracion del pago
         m_sCommerceID = props.getProperty("payment.commerceid");
         

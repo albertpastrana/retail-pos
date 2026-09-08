@@ -1,4 +1,5 @@
 build/
+.gradle/
 *.class
 .DS_Store
 .metals/
