@@ -24,37 +24,37 @@
         <image>Printer.Ticket.Logo</image>
         <line></line>
         <line>
-            <text align="center" length="42">Receipt sample.</text>
+            <text align="center" length="42">Exemple de rebut.</text>
         </line>
         <line>
-            <text align="center" length="42">You can change this template</text>
+            <text align="center" length="42">Podeu canviar aquesta plantilla</text>
         </line>
         <line>
-            <text align="center" length="42">in the resources panel</text>
+            <text align="center" length="42">al panell de recursos</text>
         </line>
         <line></line>
         <line>
-            <text>Date:     ${inventoryrecord.printDate()}</text>
+            <text>Data:     ${inventoryrecord.printDate()}</text>
         </line>
         <line>
-            <text>Reason:   ${inventoryrecord.printReason()}</text>
+            <text>Motiu:    ${inventoryrecord.printReason()}</text>
         </line>
         <line>
-            <text>Location: ${inventoryrecord.printLocation()}</text>
+            <text>Ubicació: ${inventoryrecord.printLocation()}</text>
         </line>
         <line size="1">
             #if ($inventoryrecord.isInput())
-            <text align ="center" length="42">In</text>
+            <text align ="center" length="42">Entrada</text>
             #else
-            <text align ="center" length="42">Out</text>
+            <text align ="center" length="42">Sortida</text>
             #end
         </line>
         <line></line>    
         <line>
-            <text align ="left" length="17">Item</text>
-            <text align ="right" length="10">Price</text>
+            <text align ="left" length="17">Article</text>
+            <text align ="right" length="10">Preu</text>
             <text align ="right" length="5"></text>
-            <text align ="right" length="10">Value</text>
+            <text align ="right" length="10">Valor</text>
         </line>      
         <line>
             <text>------------------------------------------</text>
@@ -77,7 +77,7 @@
         </line>   
         <line></line>            
         <line>
-            <text align="center" length="42">Thank you for your visit.</text>
+            <text align="center" length="42">Gràcies per la seva visita</text>
         </line>   
     </ticket>
 </output>

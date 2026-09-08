@@ -36,284 +36,331 @@ import java.util.Properties;
  */
 public class TicketLineInfo implements SerializableWrite, SerializableRead, Serializable {
 
-    private static final long serialVersionUID = 6608012948284450199L;
-    private String m_sTicket;
-    private int m_iLine;
-    private double multiply;
-    private double price;
-    private TaxInfo tax;
-    private Properties attributes;
-    private String productid;
-    private String attsetinstid;
+	private static final long serialVersionUID = 6608012948284450199L;
+	private String m_sTicket;
+	private int m_iLine;
+	private double multiply;
+	private double price;
+	private TaxInfo tax;
+	private Properties attributes;
+	private String productid;
+	private String attsetinstid;
 
-    /** Creates new TicketLineInfo */
-    public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax, Properties props) {
-        init(productid, null, dMultiply, dPrice, tax, props);
-    }
+	/** Creates new TicketLineInfo */
+	public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax, Properties props) {
+		init(productid, null, dMultiply, dPrice, tax, props);
+	}
 
-    public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax) {
-        init(productid, null, dMultiply, dPrice, tax, new Properties());
-    }
+	public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax) {
+		init(productid, null, dMultiply, dPrice, tax, new Properties());
+	}
 
-    public TicketLineInfo(String productid, String productname, String producttaxcategory, double dMultiply, double dPrice, TaxInfo tax) {
-        Properties props = new Properties();
-        props.setProperty("product.name", productname);
-        props.setProperty("product.taxcategoryid", producttaxcategory);
-        init(productid, null, dMultiply, dPrice, tax, props);
-    }
+	public TicketLineInfo(String productid, String productname, String producttaxcategory, double dMultiply,
+			double dPrice, TaxInfo tax) {
+		Properties props = new Properties();
+		props.setProperty("product.name", productname);
+		props.setProperty("product.taxcategoryid", producttaxcategory);
+		init(productid, null, dMultiply, dPrice, tax, props);
+	}
 
-    public TicketLineInfo(String productname, String producttaxcategory, double dMultiply, double dPrice, TaxInfo tax) {
+	public TicketLineInfo(String productname, String producttaxcategory, double dMultiply, double dPrice, TaxInfo tax) {
 
-        Properties props = new Properties();
-        props.setProperty("product.name", productname);
-        props.setProperty("product.taxcategoryid", producttaxcategory);
-        init(null, null, dMultiply, dPrice, tax, props);
-    }
+		Properties props = new Properties();
+		props.setProperty("product.name", productname);
+		props.setProperty("product.taxcategoryid", producttaxcategory);
+		init(null, null, dMultiply, dPrice, tax, props);
+	}
 
-    public TicketLineInfo() {
-        init(null, null, 0.0, 0.0, null, new Properties());
-    }
+	public TicketLineInfo() {
+		init(null, null, 0.0, 0.0, null, new Properties());
+	}
 
-    public TicketLineInfo(ProductInfoExt product, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
+	public TicketLineInfo(ProductInfoExt product, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
 
-        String pid;
+		String pid;
 
-        if (product == null) {
-            pid = null;
-        } else {
-            pid = product.getID();
-            attributes.setProperty("product.name", product.getName());
-            attributes.setProperty("product.com", product.isCom() ? "true" : "false");
-            if (product.getAttributeSetID() != null) {
-                attributes.setProperty("product.attsetid", product.getAttributeSetID());
-            }
-            attributes.setProperty("product.taxcategoryid", product.getTaxCategoryID());
-            if (product.getCategoryID() != null) {
-                attributes.setProperty("product.categoryid", product.getCategoryID());
-            }
-        }
-        init(pid, null, dMultiply, dPrice, tax, attributes);
-    }
+		if (product == null) {
+			pid = null;
+		} else {
+			pid = product.getID();
+			attributes.setProperty("product.name", product.getName());
+			if (product.getReference() != null) {
+				attributes.setProperty("product.reference", product.getReference());
+			}
+			attributes.setProperty("product.com", product.isCom() ? "true" : "false");
+			if (product.getAttributeSetID() != null) {
+				attributes.setProperty("product.attsetid", product.getAttributeSetID());
+			}
+			attributes.setProperty("product.taxcategoryid", product.getTaxCategoryID());
+			if (product.getCategoryID() != null) {
+				attributes.setProperty("product.categoryid", product.getCategoryID());
+			}
+		}
+		init(pid, null, dMultiply, dPrice, tax, attributes);
+	}
 
-    public TicketLineInfo(ProductInfoExt oProduct, double dPrice, TaxInfo tax, Properties attributes) {
-        this(oProduct, 1.0, dPrice, tax, attributes);
-    }
+	public TicketLineInfo(ProductInfoExt oProduct, double dPrice, TaxInfo tax, Properties attributes) {
+		this(oProduct, 1.0, dPrice, tax, attributes);
+	}
 
-    public TicketLineInfo(TicketLineInfo line) {
-        init(line.productid, line.attsetinstid, line.multiply, line.price, line.tax, (Properties) line.attributes.clone());
-    }
+	public TicketLineInfo(TicketLineInfo line) {
+		init(line.productid, line.attsetinstid, line.multiply, line.price, line.tax,
+				(Properties) line.attributes.clone());
+	}
 
-    private void init(String productid, String attsetinstid, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
+	private void init(String productid, String attsetinstid, double dMultiply, double dPrice, TaxInfo tax,
+			Properties attributes) {
 
-        this.productid = productid;
-        this.attsetinstid = attsetinstid;
-        multiply = dMultiply;
-        price = dPrice;
-        this.tax = tax;
-        this.attributes = attributes;
+		this.productid = productid;
+		this.attsetinstid = attsetinstid;
+		multiply = dMultiply;
+		price = dPrice;
+		this.tax = tax;
+		this.attributes = attributes;
 
-        m_sTicket = null;
-        m_iLine = -1;
-    }
+		m_sTicket = null;
+		m_iLine = -1;
+	}
 
-    void setTicket(String ticket, int line) {
-        m_sTicket = ticket;
-        m_iLine = line;
-    }
+	void setTicket(String ticket, int line) {
+		m_sTicket = ticket;
+		m_iLine = line;
+	}
 
-    public void writeValues(DataWrite dp) throws BasicException {
-        dp.setString(1, m_sTicket);
-        dp.setInt(2, new Integer(m_iLine));
-        dp.setString(3, productid);
-        dp.setString(4, attsetinstid);
+	public void writeValues(DataWrite dp) throws BasicException {
+		dp.setString(1, m_sTicket);
+		dp.setInt(2, new Integer(m_iLine));
+		dp.setString(3, productid);
+		dp.setString(4, attsetinstid);
 
-        dp.setDouble(5, new Double(multiply));
-        dp.setDouble(6, new Double(price));
+		dp.setDouble(5, new Double(multiply));
+		dp.setDouble(6, new Double(price));
 
-        dp.setString(7, tax.getId());
-        try {
-            ByteArrayOutputStream o = new ByteArrayOutputStream();
-            attributes.storeToXML(o, AppLocal.APP_NAME, "UTF-8");
-            dp.setBytes(8, o.toByteArray());
-        } catch (IOException e) {
-            dp.setBytes(8, null);
-        }
-    }
+		dp.setString(7, tax.getId());
+		try {
+			ByteArrayOutputStream o = new ByteArrayOutputStream();
+			attributes.storeToXML(o, AppLocal.APP_NAME, "UTF-8");
+			dp.setBytes(8, o.toByteArray());
+		} catch (IOException e) {
+			dp.setBytes(8, null);
+		}
+	}
 
-    public void readValues(DataRead dr) throws BasicException {
-        m_sTicket = dr.getString(1);
-        m_iLine = dr.getInt(2).intValue();
-        productid = dr.getString(3);
-        attsetinstid = dr.getString(4);
+	public void readValues(DataRead dr) throws BasicException {
+		m_sTicket = dr.getString(1);
+		m_iLine = dr.getInt(2).intValue();
+		productid = dr.getString(3);
+		attsetinstid = dr.getString(4);
 
-        multiply = dr.getDouble(5);
-        price = dr.getDouble(6);
+		multiply = dr.getDouble(5);
+		price = dr.getDouble(6);
 
-        tax = new TaxInfo(dr.getString(7), dr.getString(8), dr.getString(9), dr.getTimestamp(10), dr.getString(11), dr.getString(12), dr.getDouble(13), dr.getBoolean(14), dr.getInt(15));
-        attributes = new Properties();
-        try {
-            byte[] img = dr.getBytes(16);
-            if (img != null) {
-                attributes.loadFromXML(new ByteArrayInputStream(img));
-            }
-        } catch (IOException e) {
-        }
-    }
+		tax = new TaxInfo(dr.getString(7), dr.getString(8), dr.getString(9), dr.getTimestamp(10), dr.getString(11),
+				dr.getString(12), dr.getDouble(13), dr.getBoolean(14), dr.getInt(15));
+		attributes = new Properties();
+		try {
+			byte[] img = dr.getBytes(16);
+			if (img != null) {
+				attributes.loadFromXML(new ByteArrayInputStream(img));
+			}
+		} catch (IOException e) {
+		}
+	}
 
-    public TicketLineInfo copyTicketLine() {
-        TicketLineInfo l = new TicketLineInfo();
-        // l.m_sTicket = null;
-        // l.m_iLine = -1;
-        l.productid = productid;
-        l.attsetinstid = attsetinstid;
-        l.multiply = multiply;
-        l.price = price;
-        l.tax = tax;
-        l.attributes = (Properties) attributes.clone();
-        return l;
-    }
+	public TicketLineInfo copyTicketLine() {
+		TicketLineInfo l = new TicketLineInfo();
+		// l.m_sTicket = null;
+		// l.m_iLine = -1;
+		l.productid = productid;
+		l.attsetinstid = attsetinstid;
+		l.multiply = multiply;
+		l.price = price;
+		l.tax = tax;
+		l.attributes = (Properties) attributes.clone();
+		return l;
+	}
 
-    public int getTicketLine() {
-        return m_iLine;
-    }
+	public int getTicketLine() {
+		return m_iLine;
+	}
 
-    public String getProductID() {
-        return productid;
-    }
+	public String getProductID() {
+		return productid;
+	}
 
-    public String getProductName() {
-        return attributes.getProperty("product.name");
-    }
+	public String getProductName() {
+		return attributes.getProperty("product.name");
+	}
 
-    public String getProductAttSetId() {
-        return attributes.getProperty("product.attsetid");
-    }
+	public String getProductAttSetId() {
+		return attributes.getProperty("product.attsetid");
+	}
 
-    public String getProductAttSetInstDesc() {
-        return attributes.getProperty("product.attsetdesc", "");
-    }
+	public String getProductAttSetInstDesc() {
+		return attributes.getProperty("product.attsetdesc", "");
+	}
 
-    public void setProductAttSetInstDesc(String value) {
-        if (value == null) {
-            attributes.remove(value);
-        } else {
-            attributes.setProperty("product.attsetdesc", value);
-        }
-    }
+	public void setProductAttSetInstDesc(String value) {
+		if (value == null) {
+			attributes.remove(value);
+		} else {
+			attributes.setProperty("product.attsetdesc", value);
+		}
+	}
 
-    public String getProductAttSetInstId() {
-        return attsetinstid;
-    }
+	public String getProductAttSetInstId() {
+		return attsetinstid;
+	}
 
-    public void setProductAttSetInstId(String value) {
-        attsetinstid = value;
-    }
+	public void setProductAttSetInstId(String value) {
+		attsetinstid = value;
+	}
 
-    public boolean isProductCom() {
-        return "true".equals(attributes.getProperty("product.com"));
-    }
+	public boolean isProductCom() {
+		return "true".equals(attributes.getProperty("product.com"));
+	}
 
-    public String getProductTaxCategoryID() {
-        return (attributes.getProperty("product.taxcategoryid"));
-    }
+	public String getProductTaxCategoryID() {
+		return (attributes.getProperty("product.taxcategoryid"));
+	}
 
-    public String getProductCategoryID() {
-        return (attributes.getProperty("product.categoryid"));
-    }
+	public String getProductCategoryID() {
+		return (attributes.getProperty("product.categoryid"));
+	}
 
-    public double getMultiply() {
-        return multiply;
-    }
+	public double getMultiply() {
+		return multiply;
+	}
 
-    public void setMultiply(double dValue) {
-        multiply = dValue;
-    }
+	public void setMultiply(double dValue) {
+		multiply = dValue;
+	}
 
-    public double getPrice() {
-        return price;
-    }
+	public double getPrice() {
+		return price;
+	}
 
-    public void setPrice(double dValue) {
-        price = dValue;
-    }
+	public void setPrice(double dValue) {
+		price = dValue;
+	}
 
-    public double getPriceTax() {
-        return price * (1.0 + getTaxRate());
-    }
+	public double getPriceTax() {
+		return price * (1.0 + getTaxRate());
+	}
 
-    public void setPriceTax(double dValue) {
-        price = dValue / (1.0 + getTaxRate());
-    }
+	public void setPriceTax(double dValue) {
+		price = dValue / (1.0 + getTaxRate());
+	}
 
-    public TaxInfo getTaxInfo() {
-        return tax;
-    }
+	public TaxInfo getTaxInfo() {
+		return tax;
+	}
 
-    public void setTaxInfo(TaxInfo value) {
-        tax = value;
-    }
+	public void setTaxInfo(TaxInfo value) {
+		tax = value;
+	}
 
-    public String getProperty(String key) {
-        return attributes.getProperty(key);
-    }
+	public String getProperty(String key) {
+		return attributes.getProperty(key);
+	}
 
-    public String getProperty(String key, String defaultvalue) {
-        return attributes.getProperty(key, defaultvalue);
-    }
+	public String getProperty(String key, String defaultvalue) {
+		return attributes.getProperty(key, defaultvalue);
+	}
 
-    public void setProperty(String key, String value) {
-        attributes.setProperty(key, value);
-    }
+	public void setProperty(String key, String value) {
+		attributes.setProperty(key, value);
+	}
 
-    public Properties getProperties() {
-        return attributes;
-    }
+	public Properties getProperties() {
+		return attributes;
+	}
 
-    public double getTaxRate() {
-        return tax == null ? 0.0 : tax.getRate();
-    }
+	public double getTaxRate() {
+		return tax == null ? 0.0 : tax.getRate();
+	}
 
-    public double getSubValue() {
-        return price * multiply;
-    }
+	public double getSubValue() {
+		return price * multiply;
+	}
 
-    public double getTax() {
-        return price * multiply * getTaxRate();
-    }
+	public double getTax() {
+		return price * multiply * getTaxRate();
+	}
 
-    public double getValue() {
-        return price * multiply * (1.0 + getTaxRate());
-    }
+	public double getValue() {
+		return price * multiply * (1.0 + getTaxRate());
+	}
 
-    public String printName() {
-        return StringUtils.encodeXML(attributes.getProperty("product.name"));
-    }
+	public String printName() {
+		return StringUtils.encodeXML(attributes.getProperty("product.name"));
+	}
 
-    public String printMultiply() {
-        return Formats.DOUBLE.formatValue(multiply);
-    }
+	/** Product title without the trailing [reference] used on receipts. */
+	public String printTicketName() {
+		String name = attributes.getProperty("product.name", "");
+		int open = name.lastIndexOf(" [");
+		if (open >= 0 && name.endsWith("]")) {
+			name = name.substring(0, open);
+		}
+		return StringUtils.encodeXML(name);
+	}
 
-    public String printPrice() {
-        return Formats.CURRENCY.formatValue(getPrice());
-    }
+	public String printTicketReference() {
+		String ref = attributes.getProperty("product.reference");
+		if (ref == null || ref.length() == 0) {
+			String name = attributes.getProperty("product.name", "");
+			int open = name.lastIndexOf(" [");
+			if (open >= 0 && name.endsWith("]")) {
+				ref = name.substring(open + 2, name.length() - 1);
+			} else {
+				ref = "";
+			}
+		}
+		return StringUtils.encodeXML(ref);
+	}
 
-    public String printPriceTax() {
-        return Formats.CURRENCY.formatValue(getPriceTax());
-    }
+	public String printMultiply() {
+		return Formats.DOUBLE.formatValue(multiply);
+	}
 
-    public String printTax() {
-        return Formats.CURRENCY.formatValue(getTax());
-    }
+	public String printPrice() {
+		return Formats.CURRENCY.formatValue(getPrice());
+	}
 
-    public String printTaxRate() {
-        return Formats.PERCENT.formatValue(getTaxRate());
-    }
+	public String printPriceTax() {
+		return Formats.CURRENCY.formatValue(getPriceTax());
+	}
 
-    public String printSubValue() {
-        return Formats.CURRENCY.formatValue(getSubValue());
-    }
+	/** Line amounts without the currency symbol (kept on the ticket total). */
+	public String printPriceTaxAmount() {
+		return stripCurrency(printPriceTax());
+	}
 
-    public String printValue() {
-        return Formats.CURRENCY.formatValue(getValue());
-    }
+	public String printValueAmount() {
+		return stripCurrency(printValue());
+	}
+
+	public String printTax() {
+		return Formats.CURRENCY.formatValue(getTax());
+	}
+
+	public String printTaxRate() {
+		return Formats.PERCENT.formatValue(getTaxRate());
+	}
+
+	public String printSubValue() {
+		return Formats.CURRENCY.formatValue(getSubValue());
+	}
+
+	public String printValue() {
+		return Formats.CURRENCY.formatValue(getValue());
+	}
+
+	private String stripCurrency(String formatted) {
+		if (formatted == null) {
+			return "";
+		}
+		return formatted.replace("€", "").replace("EUR", "").replace('\u00a4', ' ').trim();
+	}
 }

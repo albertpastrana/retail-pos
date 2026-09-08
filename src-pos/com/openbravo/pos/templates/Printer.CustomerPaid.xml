@@ -22,37 +22,37 @@
 <output>
     <display>
         <line>
-            <text align="left" length="10">Total paid.</text>
+            <text align="left" length="10">Total pagat</text>
             <text align="right" length="10">${ticket.printTotalPaid()}</text>
         </line>
         <line>
-            <text align="center" length="20">Thank you.</text>
+            <text align="center" length="20">Gràcies.</text>
         </line>
     </display>
     <ticket>
         <image>Printer.Ticket.Logo</image>
         <line></line>
         <line>
-            <text align="center" length="42">Receipt sample.</text>
+            <text align="center" length="42">Exemple de rebut.</text>
         </line>
         <line>
-            <text align="center" length="42">You can change this template</text>
+            <text align="center" length="42">Podeu canviar aquesta plantilla</text>
         </line>
         <line>
-            <text align="center" length="42">in the resources panel</text>
+            <text align="center" length="42">al panell de recursos</text>
         </line>
         <line></line>
         <line>
-            <text align="left" length="15">Receipt:</text>
+            <text align="left" length="15">Rebut:</text>
             <text>${ticket.printId()}</text>
         </line>    
         <line>
-            <text align="left" length="15">Date:</text>
+            <text align="left" length="15">Data:</text>
             <text>${ticket.printDate()}</text>
         </line>  
          #if ($ticket.getCustomer())
         <line>
-            <text align="left" length="15">Customer:</text>
+            <text align="left" length="15">Client:</text>
             <text>${ticket.getCustomer().printName()}</text>
         </line>      
         <line>
@@ -62,57 +62,57 @@
         #end       
         <line></line> 
         <line size="1">
-            <text align ="left" length="16" bold="true">Total paid.</text>
+            <text align ="left" length="16" bold="true">Total pagat.</text>
             <text align ="right" length="20" bold="true">${ticket.printTotalPaid()}</text>
         </line>    
         <line>
-            <text align ="left" length="16" bold="true">Pending.</text>
+            <text align ="left" length="16" bold="true">Pendent.</text>
             <text align ="right" length="20" bold="true">${customer.printCurDebt()}</text>
         </line>          
         #foreach ($paymentline in $ticket.payments)      
         #if ($paymentline.name == "cash")
         <line></line>     
         <line>
-            <text bold="true">Cash</text>
+            <text bold="true">Efectiu</text>
         </line>  
         <line>
-            <text align="left" length="22">Tendered:</text>
+            <text align="left" length="22">Lliurat:</text>
             <text align ="right" length="20">${paymentline.printPaid()}</text>
         </line>  
         <line>
-            <text align="left" length="22">Change:</text>
+            <text align="left" length="22">Canvi:</text>
             <text align ="right" length="20">${paymentline.printChange()}</text>
         </line>   
         #end
         #if ($paymentline.name == "magcard")
         <line></line>        
         <line>
-            <text bold="true">Mag card</text>
+            <text bold="true">Targeta</text>
         </line>   
         <line>
             <text align ="right" length="42">${paymentline.printTotal()}</text>
         </line>    
         <line>
-            <text align ="left" length="22">Number:</text>
+            <text align ="left" length="22">Número:</text>
             <text>${paymentline.printCardNumber()}</text>
         </line>
         <line>
-            <text align ="left" length="22">Expiration date:</text>
+            <text align ="left" length="22">Data de caducitat:</text>
             <text>${paymentline.printExpirationDate()}</text>
         </line>
         <line>
-            <text align ="left" length="22">Operation:</text>
+            <text align ="left" length="22">Operació:</text>
             <text>${paymentline.printTransactionID()}</text>
         </line>
         <line>
-            <text align ="left" length="22">Authorization:</text>
+            <text align ="left" length="22">Autorització:</text>
             <text>${paymentline.printAuthorization()}</text>
         </line>
         #end  
         #if ($paymentline.name == "cheque")
         <line></line>     
         <line>
-            <text bold="true">Cheque</text>
+            <text bold="true">Xec</text>
         </line>    
         <line>
             <text align ="right" length="42">${paymentline.printTotal()}</text>
@@ -121,7 +121,7 @@
          #if ($paymentline.name == "paperin")
         <line></line>     
         <line>
-            <text bold="true">Note</text>
+            <text bold="true">Val</text>
         </line>    
         <line>
             <text align ="right" length="42">${paymentline.printTotal()}</text>
@@ -130,12 +130,12 @@
         #end 
         <line></line>            
         <line>
-            <text align="left" length="15">Cashier:</text>
+            <text align="left" length="15">Caixer:</text>
             <text>${ticket.printUser()}</text>
         </line>
         <line></line>            
         <line>
-            <text align="center" length="42">Thank you for your visit.</text>
+            <text align="center" length="42">Gràcies per la seva visita</text>
         </line>    
     </ticket>
     #foreach ($paymentline in $ticket.payments)      

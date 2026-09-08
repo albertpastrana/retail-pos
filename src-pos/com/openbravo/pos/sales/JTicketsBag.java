@@ -22,7 +22,6 @@ package com.openbravo.pos.sales;
 import com.openbravo.pos.sales.simple.JTicketsBagSimple;
 import com.openbravo.pos.forms.*; 
 import javax.swing.*;
-import com.openbravo.pos.sales.restaurant.JTicketsBagRestaurantMap;
 import com.openbravo.pos.sales.shared.JTicketsBagShared;
 
 public abstract class JTicketsBag extends JPanel {
@@ -47,13 +46,11 @@ public abstract class JTicketsBag extends JPanel {
     
     public static JTicketsBag createTicketsBag(String sName, AppView app, TicketsEditor panelticket) {
         
-        if ("standard".equals(sName)) {
-            // return new JTicketsBagMulti(oApp, user, panelticket);
-            return new JTicketsBagShared(app, panelticket);
-        } else if ("restaurant".equals(sName)) {
-            return new JTicketsBagRestaurantMap(app, panelticket);
-        } else { // "simple"
+        if ("simple".equals(sName)) {
             return new JTicketsBagSimple(app, panelticket);
+        } else {
+            // "standard", and former "restaurant" configs: parked tickets
+            return new JTicketsBagShared(app, panelticket);
         }
     }   
 }

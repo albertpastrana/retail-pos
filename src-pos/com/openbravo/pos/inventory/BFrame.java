@@ -14,27 +14,27 @@ public class BFrame extends JFrame {
 	private JLabel label_x, label_y, label_barcode, label_name, label_price, label_tax, label_tax_pc;
 	private JLabel label_name_val, label_price_val, label_leftMargin, label_copies;
 	private JSpinner spinner_copies;
-	private SpinnerNumberModel snm = new SpinnerNumberModel(1,1,65,1);
+	private SpinnerNumberModel snm = new SpinnerNumberModel(1, 1, 65, 1);
 	private ProductsEditor pe = null;
 
-	public BFrame(ProductsEditor p){
+	public BFrame(ProductsEditor p) {
 		this();
 		pe = p;
-		//init vals
-		if(pe != null && !"".equals(pe.getCode())){
+		// init vals
+		if (pe != null && !"".equals(pe.getCode())) {
 			text_barcode.setText(pe.getCode());
 			lookupDetails();
 		}
 	}
 
 	public BFrame() {
-		super("Barcode Printer");
+		super("Impressora de codis de barres");
 
-		this.setPreferredSize(new Dimension(300,200));
+		this.setPreferredSize(new Dimension(300, 200));
 
-		butt_print = new JButton("Print");
-		butt_genRandom = new JButton("Generate Barcode");
-		butt_lookup = new JButton("Lookup");
+		butt_print = new JButton("Imprimeix");
+		butt_genRandom = new JButton("Genera un codi");
+		butt_lookup = new JButton("Cerca");
 
 		text_x = new JTextField();
 		text_y = new JTextField();
@@ -44,35 +44,37 @@ public class BFrame extends JFrame {
 
 		spinner_copies = new JSpinner(snm);
 
-		label_x = new JLabel("X coord:");
-		label_y = new JLabel("Y coord:");
-		label_barcode = new JLabel("Barcode:");
-		label_name = new JLabel("Product name:");
-		label_price = new JLabel("Product price:");
+		label_x = new JLabel("Coord. X:");
+		label_y = new JLabel("Coord. Y:");
+		label_barcode = new JLabel("Codi de barres:");
+		label_name = new JLabel("Nom del producte:");
+		label_price = new JLabel("Preu del producte:");
 		label_name_val = new JLabel();
 		label_price_val = new JLabel();
-		label_leftMargin = new JLabel("Left print margin:");
-		label_copies = new JLabel("Copies:");
-		label_tax = new JLabel("Tax");
+		label_leftMargin = new JLabel("Marge esquerre:");
+		label_copies = new JLabel("Còpies:");
+		label_tax = new JLabel("Impost");
 		label_tax_pc = new JLabel("%");
 
 		Barcodes temp = new Barcodes();
 
 		text_leftMargin.setText(String.valueOf(temp.getLeftMargin()));
 
-		text_barcode.addKeyListener(new KeyListener(){
-			public void keyPressed(KeyEvent ke){
+		text_barcode.addKeyListener(new KeyListener() {
+			public void keyPressed(KeyEvent ke) {
 			}
-			public void keyReleased(KeyEvent ke){
+
+			public void keyReleased(KeyEvent ke) {
 			}
-			public void keyTyped(KeyEvent ke){
-				if(text_barcode.getText().length() == 13){
+
+			public void keyTyped(KeyEvent ke) {
+				if (text_barcode.getText().length() == 13) {
 					lookupDetails();
 				}
 			}
 		});
 
-		this.setLayout(new GridLayout(8,3));
+		this.setLayout(new GridLayout(8, 3));
 
 		this.add(label_x);
 		this.add(text_x);
@@ -106,58 +108,59 @@ public class BFrame extends JFrame {
 		this.add(text_leftMargin);
 		this.add(butt_print);
 
-		butt_genRandom.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent ae){
+		butt_genRandom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
 				String newCode = generateBarcode();
-				if(pe != null){
+				if (pe != null) {
 					pe.setBarcodeAndRef(newCode);
 					setVisible(false);
 				}
 				text_barcode.setText(newCode);
 			}
 		});
-		butt_lookup.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent ae){
+		butt_lookup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
 				lookupDetails();
 			}
 		});
-		butt_print.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent ae){
-				int xco=0, yco=0, barcode=0;
+		butt_print.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				int xco = 0, yco = 0, barcode = 0;
 				String usableBarcode = text_barcode.getText();
-				try{
+				try {
 					xco = new Integer(text_x.getText());
 					yco = new Integer(text_y.getText());
 					new Long(text_barcode.getText());
 
-				}catch(NumberFormatException e){
-					JOptionPane.showMessageDialog(null,"Invalid Number");
+				} catch (NumberFormatException e) {
+					JOptionPane.showMessageDialog(null, "Número no vàlid");
 					return;
 				}
-				if(xco < 1 || xco > 5){
-					JOptionPane.showMessageDialog(null,"X coord out of range (1-5)");
+				if (xco < 1 || xco > 5) {
+					JOptionPane.showMessageDialog(null, "La coordenada X és fora de l'interval (1-5)");
 					return;
 				}
-				if(yco < 1 || yco > 13){
-					JOptionPane.showMessageDialog(null,"y coord out of range (1-13)");
+				if (yco < 1 || yco > 13) {
+					JOptionPane.showMessageDialog(null, "La coordenada Y és fora de l'interval (1-13)");
 					return;
 				}
-				if(usableBarcode.length() == 13){
-					usableBarcode = usableBarcode.substring(0,12);
+				if (usableBarcode.length() == 13) {
+					usableBarcode = usableBarcode.substring(0, 12);
 				}
-				if(label_name_val.getText().length() == 0){
-					JOptionPane.showMessageDialog(null,"Please enter a barcode and use the 'Lookup' button before printing");
+				if (label_name_val.getText().length() == 0) {
+					JOptionPane.showMessageDialog(null,
+							"Introduïu un codi de barres i premeu «Cerca» abans d'imprimir");
 					return;
 				}
-				
+
 				float price = 0;
 				try {
 					price = new Float(label_price_val.getText());
 				} catch (NumberFormatException e) {
 					price = 0;
 				}
-				
-				Barcodes b = new Barcodes(xco-1, yco-1, label_name_val.getText(), price, usableBarcode);
+
+				Barcodes b = new Barcodes(xco - 1, yco - 1, label_name_val.getText(), price, usableBarcode);
 				b.setLeftMargin(new Float(text_leftMargin.getText()));
 				b.doPrint(snm.getNumber().intValue());
 			}
@@ -168,45 +171,47 @@ public class BFrame extends JFrame {
 		this.setVisible(true);
 	}
 
-	private String generateBarcode(){
+	private String generateBarcode() {
 		java.util.Random rand = new java.util.Random();
 		String wholeCode = "333";
-		for (int n = 0; n < 9; n++){
+		for (int n = 0; n < 9; n++) {
 			wholeCode += (new Integer(rand.nextInt(9))).toString();
 		}
-		try{
+		try {
 			EANCode b = new EANCode(wholeCode);
 			wholeCode += b.checksum().getSymbol();
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return wholeCode;
 	}
-	private void lookupDetails(){
 
-		String REGEX = "0{0,2}"+text_barcode.getText()+"{0,1}";
-		String query = "SELECT * FROM products, barcode_table WHERE products.code REGEXP '"+REGEX+"' OR (barcode_table.pid=products.id and barcode_table.code REGEXP '"+REGEX+"') GROUP BY products.id";
+	private void lookupDetails() {
+
+		String REGEX = "0{0,2}" + text_barcode.getText() + "{0,1}";
+		String query = "SELECT * FROM products, barcode_table WHERE products.code REGEXP '" + REGEX
+				+ "' OR (barcode_table.pid=products.id and barcode_table.code REGEXP '" + REGEX
+				+ "') GROUP BY products.id";
 		SQLQueryer sql = new SQLQueryer(pe.session, query);
-		try{
+		try {
 			label_name_val.setText(sql.getAttribute("NAME"));
-			float price = (new Float(sql.getAttribute("PRICESELL"))) * (1+(new Float(text_tax.getText()))/100);
-			price = ((float)((int)(price*100)))/100;
-			if(price < 0.01){
+			float price = (new Float(sql.getAttribute("PRICESELL"))) * (1 + (new Float(text_tax.getText())) / 100);
+			price = ((float) ((int) (price * 100))) / 100;
+			if (price < 0.01) {
 				label_price_val.setText("");
-			}
-			else{
+			} else {
 				label_price_val.setText(String.valueOf(price));
 			}
-		}catch(SQLException e){
-			JOptionPane.showMessageDialog(null,"ERROR:Barcode not found in database\nHas it been added yet?");
-		}
-		catch(Exception e){
-			JOptionPane.showMessageDialog(null,"ERROR:Probably tax number formatting");
+		} catch (SQLException e) {
+			JOptionPane.showMessageDialog(null,
+					"ERROR: No s'ha trobat el codi de barres a la base de dades.\nJa s'hi ha afegit?");
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "ERROR: Comproveu el format del valor de l'impost");
 		}
 	}
 
-	public static void main(String[] args)	{
+	public static void main(String[] args) {
 		new BFrame();
 	}
 }

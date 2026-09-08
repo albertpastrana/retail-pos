@@ -71,7 +71,7 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
     
     public final void updateSharedTicket(final String id, final TicketInfo ticket) throws BasicException {
          
-        Object[] values = new Object[] {id, ticket.getName(), ticket};
+        Object[] values = new Object[] {id, ticket.getSharedTicketName(), ticket};
         Datas[] datas = new Datas[] {Datas.STRING, Datas.STRING, Datas.SERIALIZABLE};
         new PreparedSentence(s
                 , "UPDATE SHAREDTICKETS SET NAME = ?, CONTENT = ? WHERE ID = ?"
@@ -80,7 +80,7 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
     
     public final void insertSharedTicket(final String id, final TicketInfo ticket) throws BasicException {
         
-        Object[] values = new Object[] {id, ticket.getName(), ticket};
+        Object[] values = new Object[] {id, ticket.getSharedTicketName(), ticket};
         Datas[] datas = new Datas[] {Datas.STRING, Datas.STRING, Datas.SERIALIZABLE};
         
         new PreparedSentence(s

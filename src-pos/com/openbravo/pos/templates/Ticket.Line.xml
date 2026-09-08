@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
     Openbravo POS is a point of sales application designed for touch screens.
     Copyright (C) 2007-2009 Openbravo, S.L.
     http://sourceforge.net/projects/openbravopos
@@ -21,9 +21,9 @@
  -->
 
 <line>
-    <column name="label.item" width="125" align="left" value="&lt;html&gt;#if ($ticketline.isProductCom()) &lt;i&gt;*&amp;nbsp;&amp;nbsp;${ticketline.printName()}&lt;/i&gt; #else ${ticketline.printName()} #end&lt;br&gt;${ticketline.getProductAttSetInstDesc()}"/>
-    <column name="label.price" width="80" align="right" value="${ticketline.printPrice()}"/>
-    <column name="label.units" width="50" align="right" value="x${ticketline.printMultiply()}"/>
-    <column name="label.tax" width="100" align="right" value="${ticketline.printTaxRate()}"/>
-    <column name="label.value" width="80" align="right" value="${ticketline.printSubValue()}"/>
+    <column name="label.item" width="250" align="left" value="&lt;html&gt;#if ($ticketline.isProductCom()) &lt;i&gt;*&amp;nbsp;&amp;nbsp;${ticketline.printName()}&lt;/i&gt; #else ${ticketline.printName()} #end&lt;br&gt;${ticketline.getProductAttSetInstDesc()}"/>
+    <column name="label.price" width="65" align="right" value="${ticketline.printPriceTax()}"/>
+    <column name="label.units" width="40" align="right" value="x${ticketline.printMultiply()}"/>
+    <column name="label.tax" width="55" align="right" value="${ticketline.printTaxRate()}"/>
+    <column name="label.value" width="65" align="right" value="${ticketline.printValue()}"/>
 </line>

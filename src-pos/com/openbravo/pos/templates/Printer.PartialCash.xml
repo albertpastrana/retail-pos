@@ -24,11 +24,11 @@
         <image>Printer.Ticket.Logo</image>
         <line></line>
         <line size="1">
-            <text align ="center" length="42" bold="true">Partial cash report</text>            
+            <text align ="center" length="42" bold="true">Informe de caixa parcial</text>            
         </line>
         <line></line>
         <line>
-            <text bold="true">Payments report</text>
+            <text bold="true">Pagaments</text>
         </line>
         <line>
             <text align ="right" length="42">Total</text>
@@ -46,7 +46,7 @@
             <text>------------------------------------------</text>
         </line> 
         <line>
-            <text align ="left" length="32">Payments:</text>
+            <text align ="left" length="32">Pagaments:</text>
             <text align ="right" length="10">${payments.printPayments()}</text>
         </line>
         <line></line>
@@ -56,7 +56,7 @@
         </line>
         <line></line>
         <line>
-            <text bold="true">Taxes report</text>
+            <text bold="true">Impostos</text>
         </line>
         <line>
             <text align ="right" length="42">Total</text>
@@ -74,7 +74,7 @@
             <text>------------------------------------------</text>
         </line>
         <line>
-            <text align ="left" length="32">Receipts:</text>
+            <text align ="left" length="32">Rebuts:</text>
             <text align ="right" length="10">${payments.printSales()}</text>
         </line>
         <line></line>
@@ -89,19 +89,19 @@
         </line>
         <line></line>
         <line>
-            <text length="18">Machine:</text>
+            <text length="18">Màquina:</text>
             <text>${payments.printHost()}</text>
         </line>    
         <line>
-            <text length="18">Sequence:</text>
+            <text length="18">Seqüència:</text>
             <text length="24" align="right">${payments.printSequence()}</text>
         </line> 
         <line>
-            <text length="18">Start date:</text>
+            <text length="18">Data inicial:</text>
             <text length="24" align="right">${payments.printDateStart()}</text>
         </line>  
         <line>
-            <text length="18">End date:</text>
+            <text length="18">Data final:</text>
             <text length="24" align="right">${payments.printDateEnd()}</text>
         </line>  
     </ticket>

@@ -1,0 +1,25 @@
+// 10% total discount (LV/SL)
+
+import com.openbravo.format.Formats;
+import com.openbravo.pos.ticket.TicketLineInfo;
+
+discountrate = 0.10;
+numLines = ticket.getLinesCount();
+total = ticket.getTotal();
+if (numLines > 0 && total > 0.0 && discountrate > 0.0) {
+  taxInfo = ticket.getLine(0).getTaxInfo();
+  sdiscount = Formats.PERCENT.formatValue(discountrate);
+  stotal = Formats.CURRENCY.formatValue(total);
+  ticket.insertLine(numLines,
+    new TicketLineInfo(
+      "Desc. LV/SL 10% (" + stotal + ")",
+      ticket.getLine(0).getProductTaxCategoryID(),
+      1,
+      -total * discountrate,
+      taxInfo
+    )
+  );
+  sales.setSelectedIndex(numLines - 1);
+} else {
+  java.awt.Toolkit.getDefaultToolkit().beep();
+}

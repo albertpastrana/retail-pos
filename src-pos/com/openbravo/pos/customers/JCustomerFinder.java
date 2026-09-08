@@ -34,403 +34,402 @@ import javax.swing.JFrame;
 
 /**
  *
- * @author  adrianromero
+ * @author adrianromero
  */
 public class JCustomerFinder extends javax.swing.JDialog implements EditorCreator {
 
-    private CustomerInfo selectedCustomer;
-    private ListProvider lpr;
-   
-    /** Creates new form JCustomerFinder */
-    private JCustomerFinder(java.awt.Frame parent, boolean modal) {
-        super(parent, modal);
-    }
+	private CustomerInfo selectedCustomer;
+	private ListProvider lpr;
 
-    /** Creates new form JCustomerFinder */
-    private JCustomerFinder(java.awt.Dialog parent, boolean modal) {
-        super(parent, modal);
-    }
-    
-    public static JCustomerFinder getCustomerFinder(Component parent, DataLogicCustomers dlCustomers) {
-        Window window = getWindow(parent);
-        
-        JCustomerFinder myMsg;
-        if (window instanceof Frame) { 
-            myMsg = new JCustomerFinder((Frame) window, true);
-        } else {
-            myMsg = new JCustomerFinder((Dialog) window, true);
-        }
-        myMsg.init(dlCustomers);
-        myMsg.applyComponentOrientation(parent.getComponentOrientation());
-        return myMsg;
-    }
-    
-    public CustomerInfo getSelectedCustomer() {
-        return selectedCustomer;
-    }
+	/** Creates new form JCustomerFinder */
+	private JCustomerFinder(java.awt.Frame parent, boolean modal) {
+		super(parent, modal);
+	}
 
-    private void init(DataLogicCustomers dlCustomers) {
+	/** Creates new form JCustomerFinder */
+	private JCustomerFinder(java.awt.Dialog parent, boolean modal) {
+		super(parent, modal);
+	}
 
-        initComponents();
+	public static JCustomerFinder getCustomerFinder(Component parent, DataLogicCustomers dlCustomers) {
+		Window window = getWindow(parent);
 
-        jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
+		JCustomerFinder myMsg;
+		if (window instanceof Frame) {
+			myMsg = new JCustomerFinder((Frame) window, true);
+		} else {
+			myMsg = new JCustomerFinder((Dialog) window, true);
+		}
+		myMsg.init(dlCustomers);
+		myMsg.applyComponentOrientation(parent.getComponentOrientation());
+		return myMsg;
+	}
 
-        m_jtxtTaxID.addEditorKeys(m_jKeys);
-        m_jtxtSearchKey.addEditorKeys(m_jKeys);
-        m_jtxtName.addEditorKeys(m_jKeys);
+	public CustomerInfo getSelectedCustomer() {
+		return selectedCustomer;
+	}
 
-        m_jtxtTaxID.reset();
-        m_jtxtSearchKey.reset();
-        m_jtxtName.reset();
-        
-        m_jtxtTaxID.activate();
+	private void init(DataLogicCustomers dlCustomers) {
 
-        lpr = new ListProviderCreator(dlCustomers.getCustomerList(), this);
+		initComponents();
 
-        jListCustomers.setCellRenderer(new CustomerRenderer());
+		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
 
-        getRootPane().setDefaultButton(jcmdOK);
+		java.awt.event.ActionListener searchonenter = new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				executeSearch();
+			}
+		};
+		m_jtxtTaxID.addActionListener(searchonenter);
+		m_jtxtSearchKey.addActionListener(searchonenter);
+		m_jtxtName.addActionListener(searchonenter);
 
-        selectedCustomer = null;
-    }
-    
-    public void search(CustomerInfo customer) {
-        
-        if (customer == null || customer.getName() == null || customer.getName().equals("")) {
-            
-            m_jtxtTaxID.reset();
-            m_jtxtSearchKey.reset();
-            m_jtxtName.reset();
+		cleanFields();
 
-            m_jtxtTaxID.activate();    
-            
-            cleanSearch();
-        } else {
-            
-            m_jtxtTaxID.setText(customer.getTaxid());
-            m_jtxtSearchKey.setText(customer.getSearchkey());
-            m_jtxtName.setText(customer.getName());
+		lpr = new ListProviderCreator(dlCustomers.getCustomerList(), this);
 
-            m_jtxtTaxID.activate();
-            
-            executeSearch();
-        }
-    }
-    
-    private void cleanSearch() {
-        jListCustomers.setModel(new MyListData(new ArrayList()));
-    }
-    
-    public void executeSearch() {
-        try {
-            jListCustomers.setModel(new MyListData(lpr.loadData()));
-            if (jListCustomers.getModel().getSize() > 0) {
-                jListCustomers.setSelectedIndex(0);
-            }
-        } catch (BasicException e) {
-            e.printStackTrace();
-        }        
-    }
-    
-    public Object createValue() throws BasicException {
-        
-        Object[] afilter = new Object[6];
-        
-        // TaxID
-        if (m_jtxtTaxID.getText() == null || m_jtxtTaxID.getText().equals("")) {
-            afilter[0] = QBFCompareEnum.COMP_NONE;
-            afilter[1] = null;
-        } else {
-            afilter[0] = QBFCompareEnum.COMP_RE;
-            afilter[1] = "%" + m_jtxtTaxID.getText() + "%";
-        }
-        
-        // SearchKey
-        if (m_jtxtSearchKey.getText() == null || m_jtxtSearchKey.getText().equals("")) {
-            afilter[2] = QBFCompareEnum.COMP_NONE;
-            afilter[3] = null;
-        } else {
-            afilter[2] = QBFCompareEnum.COMP_RE;
-            afilter[3] = "%" + m_jtxtSearchKey.getText() + "%";
-        }
-        
-        // Name
-        if (m_jtxtName.getText() == null || m_jtxtName.getText().equals("")) {
-            afilter[4] = QBFCompareEnum.COMP_NONE;
-            afilter[5] = null;
-        } else {
-            afilter[4] = QBFCompareEnum.COMP_RE;
-            afilter[5] = "%" + m_jtxtName.getText() + "%";
-        }
-        
-        return afilter;
-    } 
+		jListCustomers.setCellRenderer(new CustomerRenderer());
 
-    private static Window getWindow(Component parent) {
-        if (parent == null) {
-            return new JFrame();
-        } else if (parent instanceof Frame || parent instanceof Dialog) {
-            return (Window) parent;
-        } else {
-            return getWindow(parent.getParent());
-        }
-    }
-    
-    private static class MyListData extends javax.swing.AbstractListModel {
-        
-        private java.util.List m_data;
-        
-        public MyListData(java.util.List data) {
-            m_data = data;
-        }
-        
-        public Object getElementAt(int index) {
-            return m_data.get(index);
-        }
-        
-        public int getSize() {
-            return m_data.size();
-        } 
-    }   
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+		getRootPane().setDefaultButton(jcmdOK);
 
-        jPanel2 = new javax.swing.JPanel();
-        m_jKeys = new com.openbravo.editor.JEditorKeys();
-        jPanel3 = new javax.swing.JPanel();
-        jPanel5 = new javax.swing.JPanel();
-        jPanel7 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        m_jtxtName = new com.openbravo.editor.JEditorString();
-        jLabel6 = new javax.swing.JLabel();
-        m_jtxtSearchKey = new com.openbravo.editor.JEditorString();
-        jLabel7 = new javax.swing.JLabel();
-        m_jtxtTaxID = new com.openbravo.editor.JEditorString();
-        jPanel6 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jPanel4 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jListCustomers = new javax.swing.JList();
-        jPanel8 = new javax.swing.JPanel();
-        jPanel1 = new javax.swing.JPanel();
-        jcmdOK = new javax.swing.JButton();
-        jcmdCancel = new javax.swing.JButton();
+		selectedCustomer = null;
+	}
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle(AppLocal.getIntString("form.customertitle")); // NOI18N
+	public void search(CustomerInfo customer) {
 
-        jPanel2.setLayout(new java.awt.BorderLayout());
-        jPanel2.add(m_jKeys, java.awt.BorderLayout.NORTH);
+		if (customer == null || customer.getName() == null || customer.getName().equals("")) {
 
-        getContentPane().add(jPanel2, java.awt.BorderLayout.LINE_END);
+			cleanFields();
 
-        jPanel3.setLayout(new java.awt.BorderLayout());
+			cleanSearch();
+		} else {
 
-        jPanel5.setLayout(new java.awt.BorderLayout());
+			m_jtxtTaxID.setText(customer.getTaxid());
+			m_jtxtSearchKey.setText(customer.getSearchkey());
+			m_jtxtName.setText(customer.getName());
 
-        jLabel5.setText(AppLocal.getIntString("label.prodname")); // NOI18N
+			executeSearch();
+		}
+	}
 
-        jLabel6.setText(AppLocal.getIntString("label.searchkey")); // NOI18N
+	private void cleanFields() {
 
-        jLabel7.setText(AppLocal.getIntString("label.taxid")); // NOI18N
+		m_jtxtTaxID.setText(null);
+		m_jtxtSearchKey.setText(null);
+		m_jtxtName.setText(null);
 
-        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-        jPanel7.setLayout(jPanel7Layout);
-        jPanel7Layout.setHorizontalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel7Layout.createSequentialGroup()
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(m_jtxtSearchKey, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel7Layout.setVerticalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel7)
-                    .addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel6)
-                    .addComponent(m_jtxtSearchKey, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel5)
-                    .addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+		java.awt.EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				m_jtxtTaxID.requestFocus();
+			}
+		});
+	}
 
-        jPanel5.add(jPanel7, java.awt.BorderLayout.CENTER);
+	private void cleanSearch() {
+		jListCustomers.setModel(new MyListData(new ArrayList()));
+	}
 
-        jButton1.setText(AppLocal.getIntString("button.clean")); // NOI18N
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-        jPanel6.add(jButton1);
+	public void executeSearch() {
+		try {
+			jListCustomers.setModel(new MyListData(lpr.loadData()));
+			if (jListCustomers.getModel().getSize() > 0) {
+				jListCustomers.setSelectedIndex(0);
+			}
+		} catch (BasicException e) {
+			e.printStackTrace();
+		}
+	}
 
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/launch.png"))); // NOI18N
-        jButton3.setText(AppLocal.getIntString("button.executefilter")); // NOI18N
-        jButton3.setFocusPainted(false);
-        jButton3.setFocusable(false);
-        jButton3.setRequestFocusEnabled(false);
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
-        jPanel6.add(jButton3);
+	public Object createValue() throws BasicException {
 
-        jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
+		Object[] afilter = new Object[6];
 
-        jPanel3.add(jPanel5, java.awt.BorderLayout.PAGE_START);
+		// TaxID
+		if (m_jtxtTaxID.getText() == null || m_jtxtTaxID.getText().equals("")) {
+			afilter[0] = QBFCompareEnum.COMP_NONE;
+			afilter[1] = null;
+		} else {
+			afilter[0] = QBFCompareEnum.COMP_CONTAINS;
+			afilter[1] = m_jtxtTaxID.getText();
+		}
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        jPanel4.setLayout(new java.awt.BorderLayout());
+		// SearchKey
+		if (m_jtxtSearchKey.getText() == null || m_jtxtSearchKey.getText().equals("")) {
+			afilter[2] = QBFCompareEnum.COMP_NONE;
+			afilter[3] = null;
+		} else {
+			afilter[2] = QBFCompareEnum.COMP_CONTAINS;
+			afilter[3] = m_jtxtSearchKey.getText();
+		}
 
-        jListCustomers.setFocusable(false);
-        jListCustomers.setRequestFocusEnabled(false);
-        jListCustomers.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jListCustomersMouseClicked(evt);
-            }
-        });
-        jListCustomers.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                jListCustomersValueChanged(evt);
-            }
-        });
-        jScrollPane1.setViewportView(jListCustomers);
+		// Name
+		if (m_jtxtName.getText() == null || m_jtxtName.getText().equals("")) {
+			afilter[4] = QBFCompareEnum.COMP_NONE;
+			afilter[5] = null;
+		} else {
+			afilter[4] = QBFCompareEnum.COMP_CONTAINS;
+			afilter[5] = m_jtxtName.getText();
+		}
 
-        jPanel4.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+		return afilter;
+	}
 
-        jPanel3.add(jPanel4, java.awt.BorderLayout.CENTER);
+	private static Window getWindow(Component parent) {
+		if (parent == null) {
+			return new JFrame();
+		} else if (parent instanceof Frame || parent instanceof Dialog) {
+			return (Window) parent;
+		} else {
+			return getWindow(parent.getParent());
+		}
+	}
 
-        jPanel8.setLayout(new java.awt.BorderLayout());
+	private static class MyListData extends javax.swing.AbstractListModel {
 
-        jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-        jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
-        jcmdOK.setEnabled(false);
-        jcmdOK.setFocusPainted(false);
-        jcmdOK.setFocusable(false);
-        jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
-        jcmdOK.setRequestFocusEnabled(false);
-        jcmdOK.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcmdOKActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jcmdOK);
+		private java.util.List m_data;
 
-        jcmdCancel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-        jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
-        jcmdCancel.setFocusPainted(false);
-        jcmdCancel.setFocusable(false);
-        jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
-        jcmdCancel.setRequestFocusEnabled(false);
-        jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcmdCancelActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jcmdCancel);
+		public MyListData(java.util.List data) {
+			m_data = data;
+		}
 
-        jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
+		public Object getElementAt(int index) {
+			return m_data.get(index);
+		}
 
-        jPanel3.add(jPanel8, java.awt.BorderLayout.SOUTH);
+		public int getSize() {
+			return m_data.size();
+		}
+	}
 
-        getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
+	/**
+	 * This method is called from within the constructor to initialize the form.
+	 * WARNING: Do NOT modify this code. The content of this method is always
+	 * regenerated by the Form Editor.
+	 */
+	// <editor-fold defaultstate="collapsed" desc="Generated
+	// Code">//GEN-BEGIN:initComponents
+	private void initComponents() {
 
-        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-613)/2, (screenSize.height-610)/2, 613, 610);
-    }// </editor-fold>//GEN-END:initComponents
-    private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcmdOKActionPerformed
+		jPanel3 = new javax.swing.JPanel();
+		jPanel5 = new javax.swing.JPanel();
+		jPanel7 = new javax.swing.JPanel();
+		jLabel5 = new javax.swing.JLabel();
+		m_jtxtName = new javax.swing.JTextField();
+		jLabel6 = new javax.swing.JLabel();
+		m_jtxtSearchKey = new javax.swing.JTextField();
+		jLabel7 = new javax.swing.JLabel();
+		m_jtxtTaxID = new javax.swing.JTextField();
+		jPanel6 = new javax.swing.JPanel();
+		jButton1 = new javax.swing.JButton();
+		jButton3 = new javax.swing.JButton();
+		jPanel4 = new javax.swing.JPanel();
+		jScrollPane1 = new javax.swing.JScrollPane();
+		jListCustomers = new javax.swing.JList();
+		jPanel8 = new javax.swing.JPanel();
+		jPanel1 = new javax.swing.JPanel();
+		jcmdOK = new javax.swing.JButton();
+		jcmdCancel = new javax.swing.JButton();
 
-        selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
-        dispose();
-        
-    }//GEN-LAST:event_jcmdOKActionPerformed
+		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+		setTitle(AppLocal.getIntString("form.customertitle")); // NOI18N
 
-    private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcmdCancelActionPerformed
+		jPanel3.setLayout(new java.awt.BorderLayout());
 
-        dispose();
-        
-    }//GEN-LAST:event_jcmdCancelActionPerformed
+		jPanel5.setLayout(new java.awt.BorderLayout());
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+		jLabel5.setText(AppLocal.getIntString("label.prodname")); // NOI18N
 
-        executeSearch();
-        
-    }//GEN-LAST:event_jButton3ActionPerformed
+		jLabel6.setText(AppLocal.getIntString("label.searchkey")); // NOI18N
 
-    private void jListCustomersValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListCustomersValueChanged
+		jLabel7.setText(AppLocal.getIntString("label.taxid")); // NOI18N
 
-        jcmdOK.setEnabled(jListCustomers.getSelectedValue() != null);
+		javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+		jPanel7.setLayout(jPanel7Layout);
+		jPanel7Layout.setHorizontalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.addGroup(jPanel7Layout.createSequentialGroup().addContainerGap()
+						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addGroup(jPanel7Layout.createSequentialGroup()
+										.addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
+												javax.swing.GroupLayout.PREFERRED_SIZE))
+								.addGroup(jPanel7Layout.createSequentialGroup()
+										.addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
+												javax.swing.GroupLayout.PREFERRED_SIZE))
+								.addGroup(jPanel7Layout.createSequentialGroup()
+										.addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(m_jtxtSearchKey, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
+												javax.swing.GroupLayout.PREFERRED_SIZE)))
+						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+		jPanel7Layout.setVerticalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.addGroup(jPanel7Layout.createSequentialGroup().addContainerGap()
+						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addComponent(jLabel7).addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE,
+										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addComponent(jLabel6).addComponent(m_jtxtSearchKey,
+										javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
+										javax.swing.GroupLayout.PREFERRED_SIZE))
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addComponent(jLabel5).addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE,
+										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-    }//GEN-LAST:event_jListCustomersValueChanged
+		jPanel5.add(jPanel7, java.awt.BorderLayout.CENTER);
 
-    private void jListCustomersMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jListCustomersMouseClicked
-        
-        if (evt.getClickCount() == 2) {
-            selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
-            dispose();
-        }
-        
-    }//GEN-LAST:event_jListCustomersMouseClicked
+		jButton1.setText(AppLocal.getIntString("button.clean")); // NOI18N
+		jButton1.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				jButton1ActionPerformed(evt);
+			}
+		});
+		jPanel6.add(jButton1);
 
-private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
- 
-        m_jtxtTaxID.reset();
-        m_jtxtSearchKey.reset();
-        m_jtxtName.reset();
+		jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/launch.png"))); // NOI18N
+		jButton3.setText(AppLocal.getIntString("button.executefilter")); // NOI18N
+		jButton3.setFocusPainted(false);
+		jButton3.setFocusable(false);
+		jButton3.setRequestFocusEnabled(false);
+		jButton3.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				jButton3ActionPerformed(evt);
+			}
+		});
+		jPanel6.add(jButton3);
 
-        m_jtxtTaxID.activate();    
+		jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
 
-        cleanSearch();           
-}//GEN-LAST:event_jButton1ActionPerformed
+		jPanel3.add(jPanel5, java.awt.BorderLayout.PAGE_START);
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JList jListCustomers;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel5;
-    private javax.swing.JPanel jPanel6;
-    private javax.swing.JPanel jPanel7;
-    private javax.swing.JPanel jPanel8;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JButton jcmdCancel;
-    private javax.swing.JButton jcmdOK;
-    private com.openbravo.editor.JEditorKeys m_jKeys;
-    private com.openbravo.editor.JEditorString m_jtxtName;
-    private com.openbravo.editor.JEditorString m_jtxtSearchKey;
-    private com.openbravo.editor.JEditorString m_jtxtTaxID;
-    // End of variables declaration//GEN-END:variables
+		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		jPanel4.setLayout(new java.awt.BorderLayout());
+
+		jListCustomers.setFocusable(false);
+		jListCustomers.setRequestFocusEnabled(false);
+		jListCustomers.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseClicked(java.awt.event.MouseEvent evt) {
+				jListCustomersMouseClicked(evt);
+			}
+		});
+		jListCustomers.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+			public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+				jListCustomersValueChanged(evt);
+			}
+		});
+		jScrollPane1.setViewportView(jListCustomers);
+
+		jPanel4.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+		jPanel3.add(jPanel4, java.awt.BorderLayout.CENTER);
+
+		jPanel8.setLayout(new java.awt.BorderLayout());
+
+		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
+		jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		jcmdOK.setEnabled(false);
+		jcmdOK.setFocusPainted(false);
+		jcmdOK.setFocusable(false);
+		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
+		jcmdOK.setRequestFocusEnabled(false);
+		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				jcmdOKActionPerformed(evt);
+			}
+		});
+		jPanel1.add(jcmdOK);
+
+		jcmdCancel
+				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
+		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		jcmdCancel.setFocusPainted(false);
+		jcmdCancel.setFocusable(false);
+		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
+		jcmdCancel.setRequestFocusEnabled(false);
+		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				jcmdCancelActionPerformed(evt);
+			}
+		});
+		jPanel1.add(jcmdCancel);
+
+		jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
+
+		jPanel3.add(jPanel8, java.awt.BorderLayout.SOUTH);
+
+		getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
+
+		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+		setBounds((screenSize.width - 613) / 2, (screenSize.height - 610) / 2, 613, 610);
+	}// </editor-fold>//GEN-END:initComponents
+
+	private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdOKActionPerformed
+
+		selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
+		dispose();
+
+	}// GEN-LAST:event_jcmdOKActionPerformed
+
+	private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdCancelActionPerformed
+
+		dispose();
+
+	}// GEN-LAST:event_jcmdCancelActionPerformed
+
+	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
+
+		executeSearch();
+
+	}// GEN-LAST:event_jButton3ActionPerformed
+
+	private void jListCustomersValueChanged(javax.swing.event.ListSelectionEvent evt) {// GEN-FIRST:event_jListCustomersValueChanged
+
+		jcmdOK.setEnabled(jListCustomers.getSelectedValue() != null);
+
+	}// GEN-LAST:event_jListCustomersValueChanged
+
+	private void jListCustomersMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jListCustomersMouseClicked
+
+		if (evt.getClickCount() == 2) {
+			selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
+			dispose();
+		}
+
+	}// GEN-LAST:event_jListCustomersMouseClicked
+
+	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
+
+		cleanFields();
+
+		cleanSearch();
+	}// GEN-LAST:event_jButton1ActionPerformed
+
+	// Variables declaration - do not modify//GEN-BEGIN:variables
+	private javax.swing.JButton jButton1;
+	private javax.swing.JButton jButton3;
+	private javax.swing.JLabel jLabel5;
+	private javax.swing.JLabel jLabel6;
+	private javax.swing.JLabel jLabel7;
+	private javax.swing.JList jListCustomers;
+	private javax.swing.JPanel jPanel1;
+	private javax.swing.JPanel jPanel3;
+	private javax.swing.JPanel jPanel4;
+	private javax.swing.JPanel jPanel5;
+	private javax.swing.JPanel jPanel6;
+	private javax.swing.JPanel jPanel7;
+	private javax.swing.JPanel jPanel8;
+	private javax.swing.JScrollPane jScrollPane1;
+	private javax.swing.JButton jcmdCancel;
+	private javax.swing.JButton jcmdOK;
+	private javax.swing.JTextField m_jtxtName;
+	private javax.swing.JTextField m_jtxtSearchKey;
+	private javax.swing.JTextField m_jtxtTaxID;
+	// End of variables declaration//GEN-END:variables
 }
