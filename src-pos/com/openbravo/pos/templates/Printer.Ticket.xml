@@ -94,6 +94,11 @@
             <text align ="right" length="3">${ticketline.printMultiply()}</text>
             <text align ="right" length="7">${ticketline.printValueAmount()}</text>
         </line>
+        #if ($ticketline.hasGiftVoucherCodes())
+        <line>
+            <text align="left" length="42" bold="true">Codi: ${ticketline.printGiftVoucherCodes()}</text>
+        </line>
+        #end
         #end
 
         <line>
@@ -202,12 +207,13 @@
         </line>
          #end
          #if ($paymentline.name == "paperin")
-        <line></line>
         <line>
-            <text bold="true">Val</text>
+            <text align="left" length="22" bold="true">Val ${paymentline.printTransactionID()}</text>
+            <text align="right" length="20" bold="true">${paymentline.printTotal()}</text>
         </line>
         <line>
-            <text align ="right" length="42">${paymentline.printTotal()}</text>
+            <text align="left" length="22">Saldo restant:</text>
+            <text align="right" length="20">${paymentline.printVoucherBalance()}</text>
         </line>
          #end
          #if ($paymentline.name == "paperout")

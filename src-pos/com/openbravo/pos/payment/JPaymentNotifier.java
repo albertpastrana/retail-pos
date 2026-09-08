@@ -29,4 +29,8 @@ public interface JPaymentNotifier {
 //    public void setOKEnabled(boolean bValue);
 //    public void setAddEnabled(boolean bValue);    
     public void setStatus(boolean isPositive, boolean isComplete);
+
+    public boolean isVoucherSelected(String code);
+
+    public void addSelectedPayment();
 }

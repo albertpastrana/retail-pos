@@ -220,6 +220,14 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		return "true".equals(attributes.getProperty("product.com"));
 	}
 
+	public boolean isGiftVoucher() {
+		return "gift-vouchers".equals(attributes.getProperty("product.categoryid"));
+	}
+
+	public boolean hasGiftVoucherCodes() {
+		return attributes.getProperty("giftvoucher.codes", "").length() > 0;
+	}
+
 	public String getProductTaxCategoryID() {
 		return (attributes.getProperty("product.taxcategoryid"));
 	}
@@ -270,6 +278,10 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
 	public void setProperty(String key, String value) {
 		attributes.setProperty(key, value);
+	}
+
+	public void removeProperty(String key) {
+		attributes.remove(key);
 	}
 
 	public Properties getProperties() {
@@ -355,6 +367,10 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
 	public String printValue() {
 		return Formats.CURRENCY.formatValue(getValue());
+	}
+
+	public String printGiftVoucherCodes() {
+		return StringUtils.encodeXML(attributes.getProperty("giftvoucher.codes", ""));
 	}
 
 	private String stripCurrency(String formatted) {

@@ -363,6 +363,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		if (executeEventAndRefresh("ticket.addline", new ScriptArg("line", oLine)) == null) {
 
+			TicketLineInfo oVisorLine = oLine;
+
 			if (oLine.isProductCom()) {
 				// Comentario entonces donde se pueda
 				int i = m_ticketlines.getSelectedIndex();
@@ -384,18 +386,51 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					Toolkit.getDefaultToolkit().beep();
 				}
 			} else {
-				// Producto normal, entonces al finalnewline.getMultiply()
-				m_oTicket.addLine(oLine);
-				m_ticketlines.addTicketLine(oLine); // Pintamos la linea en la vista...
+				int i = findSameProductLine(oLine);
+				if (i >= 0) {
+					// Ya esta el producto en el ticket, solo aumentamos las unidades.
+					TicketLineInfo oExisting = m_oTicket.getLine(i);
+					oExisting.setMultiply(oExisting.getMultiply() + oLine.getMultiply());
+					m_oTicket.setLine(i, oExisting);
+					m_ticketlines.setTicketLine(i, oExisting);
+					m_ticketlines.setSelectedIndex(i);
+					oVisorLine = oExisting;
+				} else {
+					// Producto normal, entonces al finalnewline.getMultiply()
+					m_oTicket.addLine(oLine);
+					m_ticketlines.addTicketLine(oLine); // Pintamos la linea en la vista...
+				}
 			}
 
-			visorTicketLine(oLine);
+			visorTicketLine(oVisorLine);
 			printPartialTotals();
 			stateToZero();
 
 			// event receipt
 			executeEventAndRefresh("ticket.change");
 		}
+	}
+
+	private int findSameProductLine(TicketLineInfo oLine) {
+
+		if (oLine.getProductID() == null) {
+			return -1; // productos sin referencia, siempre en una linea nueva
+		}
+
+		for (int i = 0; i < m_oTicket.getLinesCount(); i++) {
+			TicketLineInfo line = m_oTicket.getLine(i);
+			if (!line.isProductCom() && oLine.getProductID().equals(line.getProductID())
+					&& line.getPrice() == oLine.getPrice()
+					&& (line.getMultiply() > 0.0) == (oLine.getMultiply() > 0.0) && !hasComments(i)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private boolean hasComments(int i) {
+		// Los productos auxiliares de debajo solo describen las unidades ya vendidas.
+		return i + 1 < m_oTicket.getLinesCount() && m_oTicket.getLine(i + 1).isProductCom();
 	}
 
 	private void removeTicketLine(int i) {
@@ -1089,21 +1124,25 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 						if (executeEvent(ticket, ticketext, "ticket.save") == null) {
 							// Save the receipt and assign a receipt number
+							boolean saved = true;
 							try {
 								dlSales.saveTicket(ticket, m_App.getInventoryLocation());
 							} catch (BasicException eData) {
 								MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE,
 										AppLocal.getIntString("message.nosaveticket"), eData);
 								msg.show(this);
+								saved = false;
 							}
 
-							executeEvent(ticket, ticketext, "ticket.close",
-									new ScriptArg("print", paymentdialog.isPrintSelected()));
+							if (saved) {
+								executeEvent(ticket, ticketext, "ticket.close",
+										new ScriptArg("print", paymentdialog.isPrintSelected()));
 
-							// Print receipt.
-							printTicket(paymentdialog.isPrintSelected() ? "Printer.Ticket" : "Printer.Ticket2", ticket,
-									ticketext);
-							resultok = true;
+								// Print receipt.
+								printTicket(paymentdialog.isPrintSelected() ? "Printer.Ticket" : "Printer.Ticket2",
+										ticket, ticketext);
+								resultok = true;
+							}
 						}
 					}
 				}

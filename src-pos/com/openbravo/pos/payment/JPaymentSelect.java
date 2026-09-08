@@ -24,6 +24,7 @@ import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
 import javax.swing.JFrame;
+import javax.swing.SwingConstants;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.format.Formats;
@@ -59,6 +60,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		initComponents();
 
 		this.applyComponentOrientation(o);
+		alignTabsLeading();
 
 		getRootPane().setDefaultButton(m_jButtonOK);
 	}
@@ -69,6 +71,12 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		initComponents();
 
 		this.applyComponentOrientation(o);
+		alignTabsLeading();
+	}
+
+	private void alignTabsLeading() {
+		m_jTabPayment.putClientProperty("JTabbedPane.tabAlignment", SwingConstants.LEADING);
+		m_jTabPayment.putClientProperty("JTabbedPane.tabIconPlacement", SwingConstants.LEADING);
 	}
 
 	public void init(AppView app) {
@@ -87,6 +95,15 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 	public List<PaymentInfo> getSelectedPayments() {
 		return m_aPaymentInfo.getPayments();
+	}
+
+	public boolean isVoucherSelected(String code) {
+		for (PaymentInfo payment : m_aPaymentInfo.getPayments()) {
+			if ("paperin".equals(payment.getName()) && code.equals(payment.getTransactionID())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean showDialog(double total, CustomerInfoExt customerext) {
@@ -181,7 +198,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 	public class JPaymentPaperCreator implements JPaymentCreator {
 		public JPaymentInterface createJPayment() {
-			return new JPaymentPaper(JPaymentSelect.this, "paperin");
+			return new JPaymentPaper(JPaymentSelect.this, app);
 		}
 
 		public String getKey() {
@@ -473,13 +490,18 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 	private void m_jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jButtonAddActionPerformed
 
+		addSelectedPayment();
+
+	}// GEN-LAST:event_m_jButtonAddActionPerformed
+
+	public void addSelectedPayment() {
+
 		PaymentInfo returnPayment = ((JPaymentInterface) m_jTabPayment.getSelectedComponent()).executePayment();
 		if (returnPayment != null) {
 			m_aPaymentInfo.add(returnPayment);
 			printState();
 		}
-
-	}// GEN-LAST:event_m_jButtonAddActionPerformed
+	}
 
 	private void m_jTabPaymentStateChanged(javax.swing.event.ChangeEvent evt) {// GEN-FIRST:event_m_jTabPaymentStateChanged
 

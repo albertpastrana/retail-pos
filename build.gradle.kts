@@ -4,7 +4,7 @@ plugins {
     java
 }
 
-version = "2.30.3"
+version = "2.30.4"
 description = "Openbravo POS"
 
 val gitRevision: Provider<String> =

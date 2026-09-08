@@ -30,6 +30,7 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead  
     private double m_dTicket;
     private String m_sName;
     private String m_transactionID;
+    private Double m_voucherBalance;
     
     /** Creates a new instance of PaymentInfoCash */
     public PaymentInfoTicket(double dTicket, String sName) {
@@ -42,21 +43,32 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead  
         m_dTicket = dTicket;
         m_transactionID = transactionID;
     }
+
+    public PaymentInfoTicket(double dTicket, String sName, String transactionID, double voucherBalance) {
+        m_sName = sName;
+        m_dTicket = dTicket;
+        m_transactionID = transactionID;
+        m_voucherBalance = new Double(voucherBalance);
+    }
     
     public PaymentInfoTicket() {
         m_sName = null;
         m_dTicket = 0.0;
         m_transactionID = null;
+        m_voucherBalance = null;
      }
     
     public void readValues(DataRead dr) throws BasicException {
         m_sName = dr.getString(1);
         m_dTicket = dr.getDouble(2).doubleValue();
         m_transactionID = dr.getString(3);
+        m_voucherBalance = dr.getDouble(4);
     }
     
     public PaymentInfo copyPayment(){
-        return new PaymentInfoTicket(m_dTicket, m_sName);
+        return m_voucherBalance == null
+                ? new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID)
+                : new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID, m_voucherBalance.doubleValue());
     }
     public String getName() {
         return m_sName;
@@ -66,6 +78,14 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead  
     }
     public String getTransactionID(){
         return m_transactionID;
+    }
+
+    public String printTransactionID() {
+        return m_transactionID == null ? "" : m_transactionID;
+    }
+
+    public String printVoucherBalance() {
+        return m_voucherBalance == null ? "" : Formats.CURRENCY.formatValue(m_voucherBalance);
     }
     public String printPaid() {
         return Formats.CURRENCY.formatValue(new Double(m_dTicket));

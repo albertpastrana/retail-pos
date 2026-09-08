@@ -72,6 +72,11 @@
         <line>
             <text align ="left" length="42">${ticketline.printTicketReference()}</text>
         </line>
+        #if ($ticketline.hasGiftVoucherCodes())
+        <line>
+            <text align="left" length="42" bold="true">Codi: ${ticketline.printGiftVoucherCodes()}</text>
+        </line>
+        #end
         #end
 
         <line>

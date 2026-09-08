@@ -38,10 +38,12 @@ import com.openbravo.pos.inventory.TaxCustCategoryInfo;
 import com.openbravo.pos.inventory.LocationInfo;
 import com.openbravo.pos.inventory.MovementReason;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
+import com.openbravo.pos.payment.GiftVoucherInfo;
 import com.openbravo.pos.payment.PaymentInfo;
 import com.openbravo.pos.payment.PaymentInfoTicket;
 import com.openbravo.pos.ticket.FindTicketsInfo;
 import com.openbravo.pos.ticket.TicketTaxInfo;
+import com.openbravo.pos.util.RoundUtils;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -122,6 +124,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				"SELECT ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, TAXCAT, CATEGORY, ATTRIBUTESET_ID, IMAGE, ATTRIBUTES "
 						+ "FROM PRODUCTS WHERE ID = ?",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).find(id);
+	}
+
+	public final GiftVoucherInfo findGiftVoucher(String code) throws BasicException {
+		Object[] voucher = (Object[]) new PreparedSentence(s,
+				"SELECT CODE, INITIALVALUE, BALANCE FROM GIFTVOUCHERS WHERE CODE = ?",
+				SerializerWriteString.INSTANCE,
+				new SerializerReadBasic(new Datas[] { Datas.STRING, Datas.DOUBLE, Datas.DOUBLE }))
+						.find(code.trim().toUpperCase());
+		return voucher == null ? null
+				: new GiftVoucherInfo((String) voucher[0], ((Double) voucher[1]).doubleValue(),
+						((Double) voucher[2]).doubleValue());
 	}
 
 	public final ProductInfoExt getProductInfoByCode(String sCode) throws BasicException {
@@ -480,7 +493,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							+ "FROM TICKETLINES L, TAXES T WHERE L.TAXID = T.ID AND L.TICKET = ? ORDER BY L.LINE",
 					SerializerWriteString.INSTANCE, new SerializerReadClass(TicketLineInfo.class))
 							.list(ticket.getId()));
-			ticket.setPayments(new PreparedSentence(s, "SELECT PAYMENT, TOTAL, TRANSID FROM PAYMENTS WHERE RECEIPT = ?",
+			ticket.setPayments(new PreparedSentence(s,
+					"SELECT PM.PAYMENT, PM.TOTAL, PM.TRANSID, V.BALANCE "
+							+ "FROM PAYMENTS PM LEFT JOIN GIFTVOUCHERS V ON PM.TRANSID = V.CODE WHERE PM.RECEIPT = ?",
 					SerializerWriteString.INSTANCE, new SerializerReadClass(PaymentInfoTicket.class))
 							.list(ticket.getId()));
 		}
@@ -544,6 +559,35 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						SerializerWriteBuilder.INSTANCE);
 
 				for (TicketLineInfo l : ticket.getLines()) {
+					if (l.isGiftVoucher() && l.getMultiply() < 0.0) {
+						throw new BasicException(AppLocal.getIntString("message.vouchernorefund"));
+					}
+					if (l.isGiftVoucher() && l.getMultiply() > 0.0) {
+						int voucherCount = (int) Math.round(l.getMultiply());
+						if (voucherCount < 1 || Math.abs(l.getMultiply() - voucherCount) > 0.000001) {
+							throw new BasicException(AppLocal.getIntString("message.voucherwholeunits"));
+						}
+						if (l.getPriceTax() <= 0.0) {
+							throw new BasicException(AppLocal.getIntString("message.voucherpositivevalue"));
+						}
+
+						StringBuilder codes = new StringBuilder();
+						for (int voucherIndex = 0; voucherIndex < voucherCount; voucherIndex++) {
+							String code = createGiftVoucherCode();
+							if (codes.length() > 0) {
+								codes.append(", ");
+							}
+							codes.append(code);
+							new PreparedSentence(s,
+									"INSERT INTO GIFTVOUCHERS (ID, CODE, INITIALVALUE, BALANCE, ISSUEDRECEIPT, ISSUEDLINE, ISSUEDDATE) VALUES (?, ?, ?, ?, ?, ?, ?)",
+									new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.DOUBLE,
+											Datas.DOUBLE, Datas.STRING, Datas.INT, Datas.TIMESTAMP }))
+													.exec(UUID.randomUUID().toString(), code, new Double(l.getPriceTax()),
+															new Double(l.getPriceTax()), ticket.getId(),
+															new Integer(l.getTicketLine()), ticket.getDate());
+						}
+						l.setProperty("giftvoucher.codes", codes.toString());
+					}
 					ticketlineinsert.exec(l);
 					if (l.getProductID() != null) {
 						// update the stock
@@ -559,13 +603,25 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						"INSERT INTO PAYMENTS (ID, RECEIPT, PAYMENT, TOTAL, TRANSID, RETURNMSG) VALUES (?, ?, ?, ?, ?, ?)",
 						SerializerWriteParams.INSTANCE);
 				for (final PaymentInfo p : ticket.getPayments()) {
+					if ("paperin".equals(p.getName())) {
+						if (p.getTransactionID() == null) {
+							throw new BasicException(AppLocal.getIntString("message.vouchercoderequired"));
+						}
+						int redeemed = new PreparedSentence(s,
+								"UPDATE GIFTVOUCHERS SET BALANCE = BALANCE - ? WHERE CODE = ? AND BALANCE >= ?",
+								new SerializerWriteBasic(new Datas[] { Datas.DOUBLE, Datas.STRING, Datas.DOUBLE }))
+										.exec(new Double(p.getTotal()), p.getTransactionID(), new Double(p.getTotal()));
+						if (redeemed != 1) {
+							throw new BasicException(AppLocal.getIntString("message.voucherbalancechanged"));
+						}
+					}
 					paymentinsert.exec(new DataParams() {
 						public void writeValues() throws BasicException {
 							setString(1, UUID.randomUUID().toString());
 							setString(2, ticket.getId());
 							setString(3, p.getName());
 							setDouble(4, p.getTotal());
-							setString(5, ticket.getTransactionID());
+							setString(5, p.getTransactionID());
 							setBytes(6, (byte[]) Formats.BYTEA.parseValue(ticket.getReturnMessage()));
 						}
 					});
@@ -606,13 +662,32 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				return null;
 			}
 		};
-		t.execute();
+		try {
+			t.execute();
+		} catch (BasicException e) {
+			for (TicketLineInfo line : ticket.getLines()) {
+				line.removeProperty("giftvoucher.codes");
+			}
+			throw e;
+		}
+	}
+
+	private String createGiftVoucherCode() {
+		String raw = UUID.randomUUID().toString().replace("-", "").toUpperCase();
+		return raw.substring(0, 4) + "-" + raw.substring(4, 8) + "-" + raw.substring(8, 12);
 	}
 
 	public final void deleteTicket(final TicketInfo ticket, final String location) throws BasicException {
 
 		Transaction t = new Transaction(s) {
 			public Object transact() throws BasicException {
+
+				Integer usedIssuedVouchers = (Integer) new PreparedSentence(s,
+						"SELECT COUNT(*) FROM GIFTVOUCHERS WHERE ISSUEDRECEIPT = ? AND BALANCE <> INITIALVALUE",
+						SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE).find(ticket.getId());
+				if (usedIssuedVouchers != null && usedIssuedVouchers.intValue() > 0) {
+					throw new BasicException(AppLocal.getIntString("message.voucherissuedused"));
+				}
 
 				// update the inventory
 				Date d = new Date();
@@ -645,6 +720,16 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						});
 					}
 				}
+
+				for (PaymentInfo p : ticket.getPayments()) {
+					if ("paperin".equals(p.getName()) && p.getTransactionID() != null) {
+						new PreparedSentence(s, "UPDATE GIFTVOUCHERS SET BALANCE = BALANCE + ? WHERE CODE = ?",
+								new SerializerWriteBasic(new Datas[] { Datas.DOUBLE, Datas.STRING }))
+										.exec(new Double(RoundUtils.round(p.getTotal())), p.getTransactionID());
+					}
+				}
+				new StaticSentence(s, "DELETE FROM GIFTVOUCHERS WHERE ISSUEDRECEIPT = ?",
+						SerializerWriteString.INSTANCE).exec(ticket.getId());
 
 				// and delete the receipt
 				new StaticSentence(s, "DELETE FROM TAXLINES WHERE RECEIPT = ?", SerializerWriteString.INSTANCE)

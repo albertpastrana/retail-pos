@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
     Openbravo POS is a point of sales application designed for touch screens.
     Copyright (C) 2008 Openbravo, S.L.
     http://sourceforge.net/projects/openbravopos
@@ -18,17 +18,17 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
- 
+
 <output>
     <ticket>
         <image>Printer.Ticket.Logo</image>
 
         <line></line>
         <line>
-            <text align ="center" length="42" bold="true">Tancament de caixa</text>            
+            <text align ="center" length="42" bold="true">Tancament de caixa</text>
         </line>
         <line></line>
-        
+
         <line>
             <text bold="true">Pagaments</text>
         </line>
@@ -37,46 +37,43 @@
         </line>
         <line>
             <text>------------------------------------------</text>
-        </line> 
+        </line>
         #foreach ($line in $payments.getPaymentLines())
         <line>
             <text align ="left" length="32">${line.printType()}</text>
             <text align ="right" length="10">${line.printValue()}</text>
-        </line> 
+        </line>
         #end
         <line>
             <text>------------------------------------------</text>
-        </line> 
-        
+        </line>
+
         <line>
             <text align ="left" length="32">Pagaments:</text>
             <text align ="right" length="10">${payments.printPayments()}</text>
         </line>
+        <line></line>
         <line size="1">
             <text align ="left" length="32" bold="true">Total</text>
             <text align ="right" length="10" bold="true">${payments.printPaymentsTotal()}</text>
         </line>
-        
-<!--
+
         <line></line>
         <line>
-            <text bold="true">Taxes</text>
+            <text bold="true">Impostos</text>
         </line>
         <line>
-            <text align ="right" length="32">Subtotal</text>
-            <text align ="right" length="10">Total</text>
+            <text align ="right" length="42">Total</text>
         </line>
--->
         <line>
             <text>------------------------------------------</text>
         </line>
         #foreach ($line in $payments.getSaleLines())
         <line>
-            <text align ="left" length="22">${line.printTax()}</text>
-            <text align ="right" length="10">${line.printSubtotal()}</text>
-            <text align ="right" length="10">${line.printTotal()}</text>
-        </line> 
-        #end        
+            <text align ="left" length="32">${line.printTaxName()}</text>
+            <text align ="right" length="10">${line.printTaxes()}</text>
+        </line>
+        #end
         <line>
             <text>------------------------------------------</text>
         </line>
@@ -84,6 +81,7 @@
             <text align ="left" length="32">Rebuts:</text>
             <text align ="right" length="10">${payments.printSales()}</text>
         </line>
+        <line></line>
         <line size="1">
             <text align ="left" length="22" bold="true">Total</text>
             <text align ="right" length="10" bold="true">${payments.printSalesSubtotal()}</text>
@@ -94,14 +92,14 @@
         <line>
             <text length="18">Màquina:</text>
             <text>${payments.printHost()}</text>
-        </line>    
+        </line>
         <line>
             <text length="18">Data inicial:</text>
             <text>${payments.printDateStart()}</text>
-        </line>  
+        </line>
         <line>
             <text length="18">Data final:</text>
             <text>${payments.printDateEnd()}</text>
-        </line>  
+        </line>
     </ticket>
 </output>
