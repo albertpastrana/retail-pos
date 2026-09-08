@@ -1,0 +1,106 @@
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.UUID;
+
+public class ApplyStoreResources {
+	public static void main(String[] args) throws Exception {
+		String db = args[0];
+		Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+		Connection c = DriverManager.getConnection("jdbc:derby:" + db);
+		c.setAutoCommit(false);
+		try {
+			String t = "src-pos/com/openbravo/pos/templates/";
+			upsert(c, "Printer.Ticket", 0, t + "Printer.Ticket.xml");
+			upsert(c, "Printer.TicketPreview", 0, t + "Printer.TicketPreview.xml");
+			upsert(c, "Printer.TicketGift", 0, t + "Printer.TicketGift.xml");
+			upsert(c, "Printer.TicketLine", 0, t + "Printer.TicketLine.xml");
+			upsert(c, "Printer.CloseCash", 0, t + "Printer.CloseCash.xml");
+			upsert(c, "Printer.Ticket.Logo", 1, t + "Printer.Ticket.Logo.png");
+			upsert(c, "Window.Logo", 1, t + "Window.Logo.png");
+			upsert(c, "Window.Title", 0, t + "Window.Title.txt");
+			upsert(c, "Ticket.Buttons", 0, t + "Ticket.Buttons.xml");
+			upsert(c, "Button.Print", 1, t + "Button.Print.png");
+			upsert(c, "Button.OpenDrawer", 1, t + "Button.OpenDrawer.png");
+			patchRoles(c);
+			c.commit();
+		} catch (Exception e) {
+			c.rollback();
+			throw e;
+		} finally {
+			c.close();
+			try {
+				DriverManager.getConnection("jdbc:derby:;shutdown=true");
+			} catch (Exception ignored) {
+			}
+		}
+	}
+
+	private static void upsert(Connection c, String name, int restype, String file) throws Exception {
+		byte[] content = readAll(file);
+		PreparedStatement upd = c.prepareStatement("UPDATE RESOURCES SET CONTENT = ?, RESTYPE = ? WHERE NAME = ?");
+		upd.setBytes(1, content);
+		upd.setInt(2, restype);
+		upd.setString(3, name);
+		int n = upd.executeUpdate();
+		upd.close();
+		if (n == 0) {
+			PreparedStatement ins = c
+					.prepareStatement("INSERT INTO RESOURCES (ID, NAME, RESTYPE, CONTENT) VALUES (?, ?, ?, ?)");
+			ins.setString(1, UUID.randomUUID().toString());
+			ins.setString(2, name);
+			ins.setInt(3, restype);
+			ins.setBytes(4, content);
+			ins.executeUpdate();
+			ins.close();
+			System.out.println("inserted " + name);
+		} else {
+			System.out.println("updated " + name);
+		}
+	}
+
+	private static void patchRoles(Connection c) throws Exception {
+		String[] extra = { "    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n" };
+		PreparedStatement sel = c.prepareStatement("SELECT ID, NAME, PERMISSIONS FROM ROLES");
+		ResultSet rs = sel.executeQuery();
+		PreparedStatement upd = c.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?");
+		while (rs.next()) {
+			String id = rs.getString(1);
+			String name = rs.getString(2);
+			byte[] raw = rs.getBytes(3);
+			if (raw == null) {
+				continue;
+			}
+			String xml = new String(raw, "UTF-8");
+			String next = xml;
+			for (String line : extra) {
+				next = next.replace(line, "");
+			}
+			if (!next.equals(xml)) {
+				upd.setBytes(1, next.getBytes("UTF-8"));
+				upd.setString(2, id);
+				upd.executeUpdate();
+				System.out.println("patched role " + name);
+			}
+		}
+		rs.close();
+		sel.close();
+		upd.close();
+	}
+
+	private static byte[] readAll(String path) throws Exception {
+		InputStream in = new FileInputStream(path);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buf = new byte[8192];
+		int n;
+		while ((n = in.read(buf)) > 0) {
+			out.write(buf, 0, n);
+		}
+		in.close();
+		return out.toByteArray();
+	}
+}
