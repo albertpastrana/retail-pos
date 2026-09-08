@@ -31,7 +31,8 @@ public class JNumberKeys extends javax.swing.JPanel {
 
     private boolean minusenabled = true;
     private boolean equalsenabled = true;
-    private boolean discountenabled = true;
+    private boolean linediscountenabled = true;
+    private boolean totaldiscountenabled = true;
 
     /** Creates new form JNumberKeys */
     public JNumberKeys() {
@@ -86,8 +87,8 @@ public class JNumberKeys extends javax.swing.JPanel {
         m_jPlus.setEnabled(b);
         m_jMinus.setEnabled(minusenabled && b);
         m_jEquals.setEnabled(equalsenabled && b);
-        m_jDiscountTotal.setEnabled(discountenabled && b);
-        m_jDiscountLine.setEnabled(discountenabled && b);
+        m_jDiscountTotal.setEnabled(totaldiscountenabled && b);
+        m_jDiscountLine.setEnabled(linediscountenabled && b);
     }
 
     @Override
@@ -114,9 +115,18 @@ public class JNumberKeys extends javax.swing.JPanel {
     }
 
     public void setDiscountEnabled(boolean b) {
-        discountenabled = b;
-        m_jDiscountTotal.setEnabled(discountenabled && isEnabled());
-        m_jDiscountLine.setEnabled(discountenabled && isEnabled());
+        setLineDiscountEnabled(b);
+        setTotalDiscountEnabled(b);
+    }
+
+    public void setLineDiscountEnabled(boolean b) {
+        linediscountenabled = b;
+        m_jDiscountLine.setEnabled(linediscountenabled && isEnabled());
+    }
+
+    public void setTotalDiscountEnabled(boolean b) {
+        totaldiscountenabled = b;
+        m_jDiscountTotal.setEnabled(totaldiscountenabled && isEnabled());
     }
 
     public void setDiscountLabels(String total, String line) {

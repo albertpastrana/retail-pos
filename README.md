@@ -122,7 +122,7 @@ On Windows, use `;` instead of `:` in `-cp`.
 ## Differences from upstream
 
 - Scan-to-import: unknown barcodes can be pulled from the catalogue TSV at the till
-- Sales keypad: line discount and total discount (roles need `button.discount` and `button.discount.total`)
+- Sales keypad: line discount and total discount (Administrator and Manager need `button.discount` and `button.discount.total`; run `ApplyStoreResources` to patch an existing database)
 - Extra reports: **Stock by model**, **Sales by model**, **Dead / slow stock**, **Sales by category** (Administrator and Manager roles)
 - FlatLaf Light look and feel in Configuration → General
 

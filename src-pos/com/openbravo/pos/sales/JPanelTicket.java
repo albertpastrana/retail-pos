@@ -232,7 +232,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jDelete.setEnabled(m_App.getAppUserView().getUser().hasPermission("sales.EditLines"));
 		m_jNumberKeys.setMinusEnabled(m_App.getAppUserView().getUser().hasPermission("sales.EditLines"));
 		m_jNumberKeys.setEqualsEnabled(m_App.getAppUserView().getUser().hasPermission("sales.Total"));
-		m_jNumberKeys.setDiscountEnabled(m_App.getAppUserView().getUser().hasPermission("sales.EditLines"));
+		m_jNumberKeys.setLineDiscountEnabled(m_App.getAppUserView().getUser().hasPermission("button.discount"));
+		m_jNumberKeys.setTotalDiscountEnabled(m_App.getAppUserView().getUser().hasPermission("button.discount.total"));
 		m_jbtnconfig.setPermissions(m_App.getAppUserView().getUser());
 
 		m_ticketsbag.activate();
@@ -612,7 +613,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void applyLineDiscount() {
-		if (!m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
+		if (!m_App.getAppUserView().getUser().hasPermission("button.discount")) {
 			Toolkit.getDefaultToolkit().beep();
 			stateToZero();
 			return;
@@ -653,7 +654,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void applyTotalDiscount() {
-		if (!m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
+		if (!m_App.getAppUserView().getUser().hasPermission("button.discount.total")) {
 			Toolkit.getDefaultToolkit().beep();
 			stateToZero();
 			return;

@@ -75,10 +75,21 @@ public class ApplyStoreResources {
 			if (raw == null) {
 				continue;
 			}
+			if (!"Administrator".equals(name) && !"Manager".equals(name)) {
+				continue;
+			}
 			String xml = new String(raw, "UTF-8");
 			String next = xml;
 			for (String line : extra) {
-				next = next.replace(line, "");
+				String marker = line.trim();
+				if (next.contains(marker)) {
+					continue;
+				}
+				int end = next.lastIndexOf("</permissions>");
+				if (end < 0) {
+					continue;
+				}
+				next = next.substring(0, end) + line + next.substring(end);
 			}
 			if (!next.equals(xml)) {
 				upd.setBytes(1, next.getBytes("UTF-8"));
