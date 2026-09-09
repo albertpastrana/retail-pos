@@ -63,7 +63,9 @@ public class AppViewConnection {
                 sDBPassword = cypher.decrypt(sDBPassword.substring(6));
             }   
 
-             return new Session(props.getProperty("db.URL"), sDBUser,sDBPassword);     
+            String dbUrl = props.getProperty("db.URL");
+            DatabaseMigrator.migrate(dbUrl, sDBUser, sDBPassword);
+            return new Session(dbUrl, sDBUser, sDBPassword);
 
         } catch (InstantiationException e) {
             throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), e);
@@ -75,7 +77,9 @@ public class AppViewConnection {
             throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eCNF);
         } catch (SQLException eSQL) {
             throw new BasicException(AppLocal.getIntString("message.databaseconnectionerror"), eSQL);
-        }   
+        } catch (RuntimeException e) {
+            throw new BasicException(AppLocal.getIntString("Database.ScriptError"), e);
+        }
     }
 
     private static boolean isJavaWebStart() {

@@ -39,10 +39,6 @@ import javax.swing.ImageIcon;
  */
 public class DataLogicSystem extends BeanFactoryDataSingle {
 
-	protected String m_sInitScript;
-	private SentenceFind m_version;
-	private SentenceExec m_dummy;
-
 	protected SentenceList m_peoplevisible;
 	protected SentenceFind m_peoplebycard;
 	protected SerializerRead peopleread;
@@ -67,12 +63,6 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 	}
 
 	public void init(Session s) {
-
-		m_sInitScript = "/com/openbravo/pos/scripts/" + s.DB.getName();
-
-		m_version = new PreparedSentence(s, "SELECT VERSION FROM APPLICATIONS WHERE ID = ?",
-				SerializerWriteString.INSTANCE, SerializerReadString.INSTANCE);
-		m_dummy = new StaticSentence(s, "SELECT * FROM PEOPLE WHERE 1 = 0");
 
 		final ThumbNailBuilder tnb = new ThumbNailBuilder(32, 32, "com/openbravo/images/yast_sysadmin.png");
 		peopleread = new SerializerRead() {
@@ -131,20 +121,6 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 				SerializerWriteString.INSTANCE, SerializerReadString.INSTANCE);
 
 		resetResourcesCache();
-	}
-
-	public String getInitScript() {
-		return m_sInitScript;
-	}
-
-	// public abstract BaseSentence getShutdown();
-
-	public final String findVersion() throws BasicException {
-		return (String) m_version.find(AppLocal.APP_ID);
-	}
-
-	public final void execDummy() throws BasicException {
-		m_dummy.exec();
 	}
 
 	public final List listPeopleVisible() throws BasicException {

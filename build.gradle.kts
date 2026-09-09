@@ -32,6 +32,11 @@ sourceSets {
     create("dataHelpers") {
         java.setSrcDirs(listOf("data"))
     }
+    create("integrationTest") {
+        java.setSrcDirs(listOf("src/integrationTest/java"))
+        compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+        runtimeClasspath += output + compileClasspath + sourceSets.main.get().runtimeClasspath
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -41,7 +46,13 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(fileTree("lib") { include("*.jar") })
+    implementation(fileTree("lib") {
+        include("*.jar")
+        exclude("derby.jar")
+    })
+    implementation("org.apache.derby:derby:10.14.2.0")
+    implementation("org.flywaydb:flyway-core:9.22.3")
+    implementation("org.flywaydb:flyway-mysql:9.22.3")
     listOf(
         "net.sourceforge.barbecue:barbecue:1.5-beta1",
         "org.beanshell:bsh-core:2.0b4",
@@ -68,7 +79,10 @@ dependencies {
             isTransitive = false
         }
     }
-    "dataHelpersImplementation"(files("lib/derby.jar"))
+    runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
+    runtimeOnly("org.postgresql:postgresql:42.7.7")
+    "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")
+    "integrationTestImplementation"("junit:junit:4.13.2")
 }
 
 val runtimeLibs by tasks.registering(Sync::class) {
@@ -129,6 +143,28 @@ tasks.assemble {
 
 tasks.check {
     dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs, syncRunJars, "compileDataHelpersJava")
+}
+
+tasks.named("compileDataHelpersJava") {
+    mustRunAfter(syncRunJars)
+}
+
+tasks.named("compileIntegrationTestJava") {
+    mustRunAfter(syncRunJars)
+}
+
+val integrationTest by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Apply Flyway to Derby, MySQL, and PostgreSQL. Start Compose first: docker compose up -d --wait"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath + files("locales")
+    useJUnit()
+    systemProperty("pos.mysql.url", "jdbc:mysql://127.0.0.1:13306/pos")
+    systemProperty("pos.mysql.user", "root")
+    systemProperty("pos.mysql.password", "pos")
+    systemProperty("pos.postgres.url", "jdbc:postgresql://127.0.0.1:15432/pos")
+    systemProperty("pos.postgres.user", "pos")
+    systemProperty("pos.postgres.password", "pos")
 }
 
 fun dataHelper(

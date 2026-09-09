@@ -18,4 +18,12 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - run: ./gradlew check
+      - run: docker compose up -d --wait --wait-timeout 120
+
+      - run: ./gradlew check integrationTest
+
+      - if: failure()
+        run: docker compose logs
+
+      - if: always()
+        run: docker compose down -v

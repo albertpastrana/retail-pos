@@ -118,6 +118,9 @@
                         <distributionDirectory>
                             <origin>../lib</origin>
                         </distributionDirectory>
+                        <distributionDirectory>
+                            <origin>../build/runtime-libs</origin>
+                        </distributionDirectory>
                         <distributionFile>
                             <origin>../build/jar/openbravopos.jar</origin>
                         </distributionFile>

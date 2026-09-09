@@ -10,9 +10,7 @@ This file is the project entry point. Catalogue variant rules live in [catalog-v
 
 - JDK 17 or newer to run Gradle (the build still emits Java 8 bytecode)
 - The [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) (`./gradlew`); no local Gradle install needed
-- Dependencies are already in `lib/` (not resolved from Maven Central)
-
-Ant (`build.xml`) still works if you already use it.
+- Access to Maven Central when dependencies are not already in the Gradle cache
 
 ## Build
 
@@ -22,16 +20,13 @@ Ant (`build.xml`) still works if you already use it.
 
 Useful tasks:
 
-| Task              | Result                                             |
-| ----------------- | -------------------------------------------------- |
-| `./gradlew jar`   | App jar plus locales/reports jars next to `start.sh` |
-| `./gradlew check` | That, plus compile the `data/` database helpers         |
-| `ant jar`         | Same jar layout via the old Ant build              |
-| `ant aio-jar`     | Fat jar (`lib.jar` bundled)                        |
-| `ant cbits`       | Fat jar + Windows `.exe` via Launch4j              |
-| `ant dist.bin`    | Binary zip under `build/dist/`                     |
+| Task                        | Result                                                      |
+| --------------------------- | ----------------------------------------------------------- |
+| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`        |
+| `./gradlew check`           | That, plus compile the `data/` database helpers             |
+| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL |
 
-CI runs `./gradlew check` on every push and pull request.
+CI runs `./gradlew check integrationTest` on every push and pull request.
 
 `./gradlew jar` copies `openbravopos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
 
@@ -55,21 +50,34 @@ Pass a file to use a repo-local config (see `dev.properties` as a template — c
 
 Important keys:
 
-| Key                                     | Purpose                                              |
-| --------------------------------------- | ---------------------------------------------------- |
-| `db.driver` / `db.URL` / `db.driverlib` | Database (Derby, HSQLDB, MySQL, PostgreSQL, Oracle)  |
-| `user.language` / `user.country`        | UI locale; translations live in `locales/`           |
-| `machine.printer`                       | `screen` for on-screen tickets, or an ESC/POS device |
-| `catalog.import.products`               | Path to the products TSV (scan-to-import)            |
-| `catalog.import.categories`             | Path to the categories TSV                           |
+| Key                                     | Purpose                                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `db.driver` / `db.URL` / `db.driverlib` | Database (Derby, MySQL, or PostgreSQL); `db.driverlib` is optional for the bundled drivers |
+| `user.language` / `user.country`        | UI locale; translations live in `locales/`                                                 |
+| `machine.printer`                       | `screen` for on-screen tickets, or an ESC/POS device                                       |
+| `catalog.import.products`               | Path to the products TSV (scan-to-import)                                                  |
+| `catalog.import.categories`             | Path to the categories TSV                                                                 |
 
-First launch against an empty database URL creates the schema. Default users (empty password): Administrator, Manager, Employee, Guest.
+First launch against an empty database URL runs the Flyway migrations and creates the schema. Default users (empty password): Administrator, Manager, Employee, Guest.
+
+Existing databases created by the old per-engine scripts are not supported. They do not have Flyway history and must not be pointed at this build.
 
 **Quit the POS before running any database helper.** With embedded Derby the database directory is locked (`db.lck`); two processes at once fail with a lock error.
 
 ## Database
 
-Schema creation scripts for each supported engine are in `src-pos/com/openbravo/pos/scripts/`. Empty sample databases live under `sampledb/`.
+Versioned migrations are in `src-pos/db/migration/`. `V1__baseline.sql` is shared by Derby, MySQL, and PostgreSQL; the startup code supplies the few database-specific data types and ticket-number definitions as Flyway placeholders. Binary templates and role permissions are loaded by the versioned Java migration.
+
+Do not edit a migration after it has shipped. Add the next `V<n>__description.sql` or Java migration instead.
+
+To prove a new install on MySQL and PostgreSQL as well as Derby:
+
+```sh
+docker compose up -d --wait
+./gradlew integrationTest
+```
+
+Compose publishes PostgreSQL on `127.0.0.1:15432` (user/password/database `pos`) and MySQL on `127.0.0.1:13306` (user `root`, password `pos`, database `pos`). `docker compose down -v` drops those containers so the next run starts from an empty schema.
 
 Resources the till actually uses (ticket layout, logo, buttons, role XML) live in the `RESOURCES` table, not only in `src-pos/com/openbravo/pos/templates/`. Edit templates in git, then push them into the database (Maintenance → Resources, or the helpers below).
 
@@ -94,12 +102,12 @@ Importing the catalogue **does not** create stock. Receive goods via Stock diary
 
 Gradle compiles them against Derby. **Quit the POS first** — with embedded Derby the database directory is locked (`db.lck`), and the tasks refuse to run if that file is present.
 
-| Task                        | What it does                                                                                                                                    |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `./gradlew applyStoreResources` | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/openbravopos-database`. |
-| `./gradlew importCatalog`     | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.      |
-| `./gradlew keepCatalog --args='data/openbravopos-database path/to/keep.csv'` | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history. |
-| `updateResource` / `dumpResource` / `dumpAllResources` / `showResource` | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                         |
+| Task                                                                         | What it does                                                                                                                                     |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `./gradlew applyStoreResources`                                              | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/openbravopos-database`. |
+| `./gradlew importCatalog`                                                    | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.       |
+| `./gradlew keepCatalog --args='data/openbravopos-database path/to/keep.csv'` | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history.  |
+| `updateResource` / `dumpResource` / `dumpAllResources` / `showResource`      | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                          |
 
 `--args` replaces the whole argument list, including the database path. Paths are relative to the repo root.
 
@@ -108,6 +116,7 @@ Example with a different Derby directory:
 ```sh
 ./gradlew applyStoreResources --args='data/openbravopos-database'
 ```
+
 ## Differences from upstream
 
 - Scan-to-import: unknown barcodes can be pulled from the catalogue TSV at the till
@@ -119,15 +128,15 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 
 ## Source layout
 
-| Path         | Contents                                           |
-| ------------ | -------------------------------------------------- |
-| `src-pos/`   | Till UI, sales, inventory, config                  |
-| `src-data/`  | Persistence / session layer                        |
-| `src-beans/` | Shared beans                                       |
-| `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)     |
-| `locales/`   | UI translations                                    |
-| `lib/`       | Third-party jars + native libs                     |
-| `data/`      | Local database, TSV catalogue, resource dump tools |
+| Path         | Contents                                               |
+| ------------ | ------------------------------------------------------ |
+| `src-pos/`   | Till UI, sales, inventory, config                      |
+| `src-data/`  | Persistence / session layer                            |
+| `src-beans/` | Shared beans                                           |
+| `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)         |
+| `locales/`   | UI translations                                        |
+| `lib/`       | Third-party jars still vendored here, plus native libs |
+| `data/`      | Local database, TSV catalogue, resource dump tools     |
 
 ## Upstream
 

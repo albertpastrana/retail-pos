@@ -96,7 +96,7 @@ public abstract class QBFCompareEnum {
 		}
 	};
 
-	// LIKE is case-sensitive in Derby, HSQLDB and PostgreSQL, so a search for
+	// LIKE is case-sensitive in Derby and PostgreSQL, so a search for
 	// cheese would never find Cheese. UPPER on both sides works on every engine.
 	private static String likeIgnoreCase(String sField, String sSQLPattern) {
 		return "UPPER(" + sField + ") LIKE UPPER(" + sSQLPattern + ")";
