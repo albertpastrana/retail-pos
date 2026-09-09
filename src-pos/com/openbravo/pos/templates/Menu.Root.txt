@@ -23,7 +23,7 @@
     group.addPanel("/com/openbravo/images/menu-customers-payment.png", "Menu.CustomersPayment", "com.openbravo.pos.customers.CustomersPayment");
     group.addPanel("/com/openbravo/images/menu-payments.png", "Menu.Payments", "com.openbravo.pos.panels.JPanelPayments");
     group.addPanel("/com/openbravo/images/menu-close-cash.png", "Menu.CloseTPV", "com.openbravo.pos.panels.JPanelCloseMoney");
-    group.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.Closing", "/com/openbravo/reports/closedpos.bs");
+    group.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.Closing", "com.openbravo.pos.panels.JPanelClosedCash");
 
     group = menu.addGroup("Menu.Backoffice");
     submenu = group.addSubmenu("/com/openbravo/images/menu-customers.png", "Menu.Customers", "com.openbravo.pos.forms.MenuCustomers");
@@ -47,6 +47,7 @@
         submenu.addPanel("/com/openbravo/images/menu-slow-stock.png", "Menu.SlowStock", "/com/openbravo/reports/slowstock.bs");
     submenu = group.addSubmenu("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesManagement", "com.openbravo.pos.forms.MenuSalesManagement");
         submenu.addTitle("Menu.SalesManagement.Reports");
+        submenu.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.ClosingReport", "/com/openbravo/reports/closedpos.bs");
         submenu.addPanel("/com/openbravo/images/menu-cash-by-user.png", "Menu.UserSells", "/com/openbravo/reports/usersales.bs");
         submenu.addPanel("/com/openbravo/images/menu-product-sales.png", "Menu.ClosedProducts", "/com/openbravo/reports/closedproducts.bs");
         submenu.addPanel("/com/openbravo/images/menu-taxes-report.png", "Menu.ReportTaxes", "/com/openbravo/reports/taxes.bs");
