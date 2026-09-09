@@ -7,6 +7,10 @@ plugins {
 version = "2.30.4"
 description = "Openbravo POS"
 
+repositories {
+    mavenCentral()
+}
+
 val gitRevision: Provider<String> =
     providers
         .exec {
@@ -38,7 +42,38 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     implementation(fileTree("lib") { include("*.jar") })
+    listOf(
+        "net.sourceforge.barbecue:barbecue:1.5-beta1",
+        "org.beanshell:bsh-core:2.0b4",
+        "commons-beanutils:commons-beanutils:1.7.0",
+        "commons-codec:commons-codec:1.3",
+        "commons-collections:commons-collections:3.1",
+        "commons-digester:commons-digester:1.7",
+        "commons-discovery:commons-discovery:0.2",
+        "commons-lang:commons-lang:2.1",
+        "commons-logging:commons-logging:1.0.4",
+        "com.formdev:flatlaf:3.7.2",
+        "jfree:jcommon:1.0.15",
+        "jfree:jfreechart:1.0.12",
+        "oro:oro:2.0.8",
+        "org.swinglabs:swingx:0.9.5",
+        "org.apache.velocity:velocity:1.5",
+        "wsdl4j:wsdl4j:1.5.1",
+        "axis:axis:1.4",
+        "org.apache.axis:axis-jaxrpc:1.4",
+        "org.apache.axis:axis-saaj:1.4",
+        "net.sf.barcode4j:barcode4j-light:2.0",
+    ).forEach { coord ->
+        implementation(coord) {
+            isTransitive = false
+        }
+    }
     "dataHelpersImplementation"(files("lib/derby.jar"))
+}
+
+val runtimeLibs by tasks.registering(Sync::class) {
+    from(configurations.runtimeClasspath)
+    into(layout.buildDirectory.dir("runtime-libs"))
 }
 
 tasks.processResources {
@@ -77,7 +112,7 @@ val reportsJar by tasks.registering(Jar::class) {
 }
 
 val syncRunJars by tasks.registering(Copy::class) {
-    dependsOn(tasks.jar, localesJar, reportsJar)
+    dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs)
     from(layout.buildDirectory.dir("jar")) {
         include("openbravopos.jar", "locales.jar", "reports.jar")
     }
@@ -93,7 +128,7 @@ tasks.assemble {
 }
 
 tasks.check {
-    dependsOn(tasks.jar, localesJar, reportsJar, syncRunJars, "compileDataHelpersJava")
+    dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs, syncRunJars, "compileDataHelpersJava")
 }
 
 fun dataHelper(

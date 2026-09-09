@@ -23,6 +23,8 @@ set DIRNAME=%~dp0
 
 set CP="%DIRNAME%openbravopos.jar"
 set CP=%CP%;"%DIRNAME%lib/*"
+set CP=%CP%;"%DIRNAME%build/runtime-libs/*"
+set CP=%CP%;"%DIRNAME%runtime-libs/*"
 set CP=%CP%;"%DIRNAME%lib.jar"
 set CP=%CP%;"%DIRNAME%locales.jar"
 set CP=%CP%;"%DIRNAME%locales"

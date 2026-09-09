@@ -148,6 +148,9 @@
                   <fileset dir="${basedir}/lib">
                     <include name="**/*.jar"/>
                   </fileset>
+                  <fileset dir="${basedir}/build/runtime-libs" erroronmissingdir="false">
+                    <include name="*.jar"/>
+                  </fileset>
                 <pathelement location="${dest.classes}/beans"/>
                 <pathelement location="${dest.classes}/data"/>
             </classpath>
@@ -259,6 +262,9 @@
         <copy todir="${basedir}/build/zip/lib">
             <fileset dir="${basedir}/lib"/>
         </copy>
+        <copy todir="${basedir}/build/zip/lib" failonerror="false">
+            <fileset dir="${basedir}/build/runtime-libs" includes="*.jar"/>
+        </copy>
         <copy todir="${basedir}/build/zip/locales">
             <fileset dir="${basedir}/locales"/>
         </copy>
@@ -302,6 +308,9 @@
         </copy>
         <copy todir="${basedir}/build/zip/lib">
             <fileset dir="${basedir}/lib"/>
+        </copy>
+        <copy todir="${basedir}/build/zip/lib" failonerror="false">
+            <fileset dir="${basedir}/build/runtime-libs" includes="*.jar"/>
         </copy>
         <copy file="${basedir}/start.bat" todir="${basedir}/build/zip"/>
         <copy file="${basedir}/configure.bat" todir="${basedir}/build/zip"/>
@@ -386,6 +395,7 @@
         <mkdir dir="${dest.jar}" />
         <zip zipfile="${dest.jar}/lib.jar">
             <zipgroupfileset dir="${lib}" includes="*.jar" />
+            <zipgroupfileset dir="${basedir}/build/runtime-libs" includes="*.jar" erroronmissingdir="false" />
         </zip>
     </target>
 
