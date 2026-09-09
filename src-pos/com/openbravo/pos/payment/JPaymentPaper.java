@@ -112,10 +112,15 @@ public class JPaymentPaper extends JPanel implements JPaymentInterface {
 			balance.setText(Formats.CURRENCY.formatValue(new Double(voucher.getBalance())));
 			amount.setText(Formats.CURRENCY.formatValue(new Double(paymentAmount)));
 			message.setForeground(messageColor);
-			message.setText(paymentAmount >= total
-					? AppLocal.getIntString("message.vouchercoversall")
-					: AppLocal.getIntString("message.voucherpartial",
-							Formats.CURRENCY.formatValue(new Double(total - paymentAmount))));
+			boolean partial = paymentAmount < total;
+			use.setText(partial
+					? AppLocal.getIntString("button.partialpayment",
+							Formats.CURRENCY.formatValue(new Double(paymentAmount)))
+					: AppLocal.getIntString("button.usevoucher"));
+			message.setText(partial
+					? AppLocal.getIntString("message.voucherpartial",
+							Formats.CURRENCY.formatValue(new Double(total - paymentAmount)))
+					: AppLocal.getIntString("message.vouchercoversall"));
 			showDetails(true);
 			notifier.setStatus(paymentAmount > 0.0, paymentAmount >= total);
 		} catch (BasicException e) {

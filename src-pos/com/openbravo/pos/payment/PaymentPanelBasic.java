@@ -19,7 +19,11 @@
 
 package com.openbravo.pos.payment;
 
+import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import javax.swing.*;
 
 public class PaymentPanelBasic extends javax.swing.JPanel implements PaymentPanel {
@@ -27,12 +31,40 @@ public class PaymentPanelBasic extends javax.swing.JPanel implements PaymentPane
     private double m_dTotal;
     private String m_sTransactionID;
     private JPaymentNotifier m_notifier;
+
+    private JLabel m_jAmount;
     
     /** Creates new form PaymentPanelSimple */
     public PaymentPanelBasic(JPaymentNotifier notifier) {
         
         m_notifier = notifier;
         initComponents();
+        layoutInstructions();
+    }
+
+    private void layoutInstructions() {
+
+        remove(jLabel1);
+
+        JLabel icon = new JLabel(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/vcard96.png")));
+        icon.setAlignmentX(CENTER_ALIGNMENT);
+
+        m_jAmount = new JLabel();
+        m_jAmount.setFont(new Font("Dialog", Font.BOLD, 24));
+        m_jAmount.setAlignmentX(CENTER_ALIGNMENT);
+
+        jLabel1.setAlignmentX(CENTER_ALIGNMENT);
+
+        JPanel block = new JPanel();
+        block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
+        block.add(icon);
+        block.add(Box.createVerticalStrut(16));
+        block.add(m_jAmount);
+        block.add(Box.createVerticalStrut(8));
+        block.add(jLabel1);
+
+        setLayout(new GridBagLayout());
+        add(block, new GridBagConstraints());
     }
     
     public JComponent getComponent(){
@@ -43,11 +75,14 @@ public class PaymentPanelBasic extends javax.swing.JPanel implements PaymentPane
         
         m_sTransactionID = sTransaction;
         m_dTotal = dTotal;
-        
+
+        String amount = Formats.CURRENCY.formatValue(new Double(Math.abs(m_dTotal)));
+
+        m_jAmount.setText(amount);
         jLabel1.setText(
                 m_dTotal > 0.0
-                ? AppLocal.getIntString("message.paymentgatewayext")
-                : AppLocal.getIntString("message.paymentgatewayextrefund"));
+                ? AppLocal.getIntString("message.paymentgatewayext", amount)
+                : AppLocal.getIntString("message.paymentgatewayextrefund", amount));
         
         m_notifier.setStatus(true, true);            
     }

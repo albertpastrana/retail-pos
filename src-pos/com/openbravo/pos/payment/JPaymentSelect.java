@@ -61,6 +61,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 		this.applyComponentOrientation(o);
 		alignTabsLeading();
+		highlightSelectedTab();
+		configureSplitPaymentHeader();
 
 		getRootPane().setDefaultButton(m_jButtonOK);
 	}
@@ -72,11 +74,26 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 		this.applyComponentOrientation(o);
 		alignTabsLeading();
+		highlightSelectedTab();
+		configureSplitPaymentHeader();
 	}
 
 	private void alignTabsLeading() {
 		m_jTabPayment.putClientProperty("JTabbedPane.tabAlignment", SwingConstants.LEADING);
 		m_jTabPayment.putClientProperty("JTabbedPane.tabIconPlacement", SwingConstants.LEADING);
+	}
+
+	private void highlightSelectedTab() {
+		m_jTabPayment.putClientProperty("JTabbedPane.tabType", "card");
+		m_jTabPayment.putClientProperty("FlatLaf.style", "selectedBackground: #fff; tabHeight: 44");
+	}
+
+	private void configureSplitPaymentHeader() {
+		jPanel6.remove(m_jButtonAdd);
+		m_jButtonRemove.setIcon(null);
+		m_jButtonRemove.setText(AppLocal.getIntString("button.undopayment"));
+		m_jButtonRemove.setMargin(new java.awt.Insets(8, 12, 8, 12));
+		m_jButtonRemove.setVisible(false);
 	}
 
 	public void init(AppView app) {
@@ -311,7 +328,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 	private void printState() {
 
 		m_jRemaininglEuros.setText(Formats.CURRENCY.formatValue(new Double(m_dTotal - m_aPaymentInfo.getTotal())));
-		m_jButtonRemove.setEnabled(!m_aPaymentInfo.isEmpty());
+		m_jButtonRemove.setVisible(!m_aPaymentInfo.isEmpty());
 		m_jTabPayment.setSelectedIndex(0); // selecciono el primero
 		((JPaymentInterface) m_jTabPayment.getSelectedComponent()).activate(customerext,
 				m_dTotal - m_aPaymentInfo.getTotal(), m_sTransactionID);
