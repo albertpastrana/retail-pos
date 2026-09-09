@@ -52,6 +52,7 @@ import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
 import com.openbravo.pos.payment.JPaymentSelectReceipt;
 import com.openbravo.pos.payment.JPaymentSelectRefund;
+import com.openbravo.pos.ticket.CategoryInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
@@ -66,6 +67,8 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import javax.print.PrintService;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -420,8 +423,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		for (int i = 0; i < m_oTicket.getLinesCount(); i++) {
 			TicketLineInfo line = m_oTicket.getLine(i);
 			if (!line.isProductCom() && oLine.getProductID().equals(line.getProductID())
-					&& line.getPrice() == oLine.getPrice()
-					&& (line.getMultiply() > 0.0) == (oLine.getMultiply() > 0.0) && !hasComments(i)) {
+					&& line.getPrice() == oLine.getPrice() && (line.getMultiply() > 0.0) == (oLine.getMultiply() > 0.0)
+					&& !hasComments(i)) {
 				return i;
 			}
 		}
@@ -569,32 +572,181 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			String productsPath = m_App.getProperties().getProperty("catalog.import.products");
 			String categoriesPath = m_App.getProperties().getProperty("catalog.import.categories");
 			ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, productsPath, categoriesPath);
-			if (catalogProduct == null) {
-				return null;
-			}
-
-			String message = AppLocal.getIntString("message.importproduct") + "\n\n"
-					+ AppLocal.getIntString("label.prodbarcode") + ": " + catalogProduct.getCode() + "\n"
-					+ AppLocal.getIntString("label.prodref") + ": " + catalogProduct.getReference() + "\n"
-					+ AppLocal.getIntString("label.prodname") + ": " + catalogProduct.getName() + "\n"
-					+ AppLocal.getIntString("label.prodcategory") + ": "
-					+ catalogProduct.getProperty("catalog.category.name") + "\n"
-					+ AppLocal.getIntString("label.prodpricebuy") + ": "
-					+ Formats.CURRENCY.formatValue(new Double(catalogProduct.getPriceBuy())) + "\n"
-					+ AppLocal.getIntString("label.prodpriceselltax") + ": "
-					+ Formats.CURRENCY.formatValue(new Double(catalogProduct.getPriceSell()
-							* (1.0 + taxeslogic.getTaxRate(catalogProduct.getTaxCategoryID(), m_oTicket.getDate(),
-									m_oTicket.getCustomer()))));
-
-			if (JOptionPane.showConfirmDialog(this, message, AppLocal.getIntString("title.importproduct"),
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+			ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
+			if (editedProduct == null) {
 				m_bProductImportCancelled = true;
 				return null;
 			}
-
-			product = dlSales.importProductByCode(code, productsPath, categoriesPath);
+			product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), categoriesPath);
 		}
 		return product;
+	}
+
+	private ProductInfoExt editProductForImport(String code, ProductInfoExt catalogProduct) throws BasicException {
+		ProductInfoExt availableProduct = catalogProduct;
+		if (availableProduct == null) {
+			availableProduct = new ProductInfoExt();
+			availableProduct.setCode(code);
+			availableProduct.setReference(code);
+			availableProduct.setName("");
+		}
+		final JTextField barcode = new JTextField(availableProduct.getCode(), 24);
+		barcode.setEditable(false);
+		final JTextField name = new JTextField(availableProduct.getName(), 32);
+		boolean priceAvailable = Boolean.parseBoolean(availableProduct.getProperty("catalog.price.available", "false"));
+		final JTextField priceBuy = new JTextField(
+				priceAvailable ? Formats.CURRENCY.formatValue(Double.valueOf(availableProduct.getPriceBuy())) : "", 12);
+		double taxRate = taxeslogic.getTaxRate("001", m_oTicket.getDate(), m_oTicket.getCustomer());
+		final JTextField priceSellTax = new JTextField(priceAvailable
+				? Formats.CURRENCY.formatValue(Double.valueOf(availableProduct.getPriceSell() * (1.0 + taxRate)))
+				: "", 12);
+
+		final JComboBox<CategoryInfo> category = createImportCategoryCombo(availableProduct);
+
+		String required = AppLocal.getIntString("label.fieldrequired");
+		String optional = AppLocal.getIntString("label.fieldoptional");
+		JPanel fields = new JPanel(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.insets = new Insets(3, 4, 3, 4);
+		constraints.anchor = GridBagConstraints.WEST;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		addImportField(fields, constraints, 0, AppLocal.getIntString("label.prodbarcode"), barcode, null);
+		addImportField(fields, constraints, 1, AppLocal.getIntString("label.prodname"), name, required);
+		addImportField(fields, constraints, 2, AppLocal.getIntString("label.prodcategory"), category, required);
+		addImportField(fields, constraints, 3, AppLocal.getIntString("label.prodpriceselltax"), priceSellTax, required);
+		addImportField(fields, constraints, 4, AppLocal.getIntString("label.prodpricebuy"), priceBuy, optional);
+
+		JPanel content = new JPanel(new BorderLayout(0, 12));
+		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
+		content.add(fields, BorderLayout.CENTER);
+		focusImportField(name.getText().trim().isEmpty() ? name : priceSellTax);
+
+		String title = AppLocal.getIntString("title.importproduct");
+		Object[] options = new Object[] { AppLocal.getIntString("button.addtoreceipt"),
+				AppLocal.getIntString("button.skipitem") };
+		while (true) {
+			int result = JOptionPane.showOptionDialog(this, content, title, JOptionPane.OK_CANCEL_OPTION,
+					JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+			if (result != 0) {
+				return null;
+			}
+
+			ProductInfoExt edited = buildEditedProduct(availableProduct, catalogProduct, name, category, priceBuy,
+					priceSellTax, taxRate);
+			if (edited == null) {
+				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.importproductrequired"), title,
+						JOptionPane.WARNING_MESSAGE);
+				continue;
+			}
+			return edited;
+		}
+	}
+
+	private JLabel buildImportMessage(String code, boolean fromCatalog) {
+		String message = AppLocal
+				.getIntString(fromCatalog ? "message.importproduct" : "message.importproduct.unknown", code);
+		return new JLabel("<html><body style='width: 320px'>" + message + "</body></html>");
+	}
+
+	// JOptionPane grabs focus for its default button, so the caret only lands on
+	// the field once the dialog is on screen.
+	private void focusImportField(final JComponent field) {
+		field.addAncestorListener(new AncestorListener() {
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						field.requestFocusInWindow();
+					}
+				});
+			}
+
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+			}
+		});
+	}
+
+	private ProductInfoExt buildEditedProduct(ProductInfoExt availableProduct, ProductInfoExt catalogProduct,
+			JTextField name, JComboBox<CategoryInfo> category, JTextField priceBuy, JTextField priceSellTax,
+			double taxRate) {
+		Double buy = readImportCurrency(priceBuy.getText(), true);
+		Double sellTax = readImportCurrency(priceSellTax.getText(), false);
+		CategoryInfo selected = (CategoryInfo) category.getSelectedItem();
+		if (name.getText().trim().isEmpty() || selected == null || buy == null || sellTax == null) {
+			return null;
+		}
+
+		ProductInfoExt edited = new ProductInfoExt();
+		edited.setID(catalogProduct == null ? java.util.UUID.randomUUID().toString() : catalogProduct.getID());
+		edited.setCode(availableProduct.getCode());
+		String reference = availableProduct.getReference();
+		edited.setReference(reference == null || reference.trim().isEmpty() ? edited.getCode() : reference.trim());
+		edited.setName(name.getText().trim());
+		edited.setCategoryID(selected.getID());
+		edited.setTaxCategoryID("001");
+		edited.setPriceBuy(buy.doubleValue());
+		edited.setPriceSell(sellTax.doubleValue() / (1.0 + taxRate));
+		String brand = availableProduct.getProperty("catalog.brand", "").trim();
+		if (!brand.isEmpty()) {
+			edited.setProperty("catalog.brand", brand);
+		}
+		return edited;
+	}
+
+	private JComboBox<CategoryInfo> createImportCategoryCombo(ProductInfoExt catalogProduct) throws BasicException {
+		JComboBox<CategoryInfo> category = new JComboBox<CategoryInfo>();
+		category.addItem(null);
+		CategoryInfo selectedCategory = null;
+		java.util.List categories = dlSales.getCategoriesList().list();
+		for (Object item : categories) {
+			CategoryInfo availableCategory = (CategoryInfo) item;
+			category.addItem(availableCategory);
+			if (catalogProduct != null && availableCategory.getID().equals(catalogProduct.getCategoryID())) {
+				selectedCategory = availableCategory;
+			}
+		}
+		if (catalogProduct != null && catalogProduct.getCategoryID() != null
+				&& !catalogProduct.getCategoryID().isEmpty() && selectedCategory == null) {
+			selectedCategory = new CategoryInfo(catalogProduct.getCategoryID(),
+					catalogProduct.getProperty("catalog.category.name", catalogProduct.getCategoryID()), null);
+			category.addItem(selectedCategory);
+		}
+		category.setSelectedItem(selectedCategory);
+		return category;
+	}
+
+	private void addImportField(JPanel panel, GridBagConstraints constraints, int row, String label, JComponent field,
+			String hint) {
+		constraints.gridx = 0;
+		constraints.gridy = row;
+		constraints.weightx = 0.0;
+		panel.add(new JLabel(label + ":"), constraints);
+		constraints.gridx = 1;
+		constraints.weightx = 1.0;
+		panel.add(field, constraints);
+		constraints.gridx = 2;
+		constraints.weightx = 0.0;
+		JLabel hintLabel = new JLabel(hint == null ? "" : hint);
+		hintLabel.setEnabled(false);
+		panel.add(hintLabel, constraints);
+	}
+
+	private Double readImportCurrency(String value, boolean emptyIsZero) {
+		if (value.trim().isEmpty()) {
+			return emptyIsZero ? Double.valueOf(0.0) : null;
+		}
+		try {
+			Double parsed = (Double) Formats.CURRENCY.parseValue(value);
+			return parsed.doubleValue() < 0.0 ? null : parsed;
+		} catch (BasicException e) {
+			return null;
+		}
 	}
 
 	private void incProduct(ProductInfoExt prod) {
@@ -1529,8 +1681,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		});
 		jPanel2.add(m_jList);
 
-		m_jDiscountLine
-				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/discount_line22.png"))); // NOI18N
+		m_jDiscountLine.setIcon(
+				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/discount_line22.png"))); // NOI18N
 		m_jDiscountLine.setToolTipText(AppLocal.getIntString("button.discountline")); // NOI18N
 		m_jDiscountLine.setFocusPainted(false);
 		m_jDiscountLine.setFocusable(false);
