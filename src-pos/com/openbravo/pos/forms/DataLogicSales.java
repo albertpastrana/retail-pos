@@ -125,8 +125,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// Utilidades de productos
 	public final ProductInfoExt getProductInfo(String id) throws BasicException {
 		return (ProductInfoExt) new PreparedSentence(s,
-				"SELECT ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, TAXCAT, CATEGORY, ATTRIBUTESET_ID, IMAGE, ATTRIBUTES "
-						+ "FROM PRODUCTS WHERE ID = ?",
+				"SELECT " + ProductInfoExt.infoColumns() + " FROM PRODUCTS WHERE ID = ?",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).find(id);
 	}
 
@@ -144,8 +143,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		// A code scanned as EAN-13 carries up to two leading zeros that the stored
 		// code does not, so a barcode lookup has to try the padded forms too.
 		return (ProductInfoExt) new PreparedSentence(s,
-				"SELECT ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, TAXCAT, CATEGORY, ATTRIBUTESET_ID, IMAGE, ATTRIBUTES "
-						+ "FROM PRODUCTS WHERE CODE IN (?, ?, ?) "
+				"SELECT " + ProductInfoExt.infoColumns() + " FROM PRODUCTS WHERE CODE IN (?, ?, ?) "
 						+ "OR EXISTS (SELECT 1 FROM BARCODE_TABLE WHERE BARCODE_TABLE.PID = PRODUCTS.ID AND BARCODE_TABLE.CODE IN (?, ?, ?))",
 				new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
 						Datas.STRING, Datas.STRING }),
@@ -534,8 +532,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final ProductInfoExt getProductInfoByReference(String sReference) throws BasicException {
 		return (ProductInfoExt) new PreparedSentence(s,
-				"SELECT ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, TAXCAT, CATEGORY, ATTRIBUTESET_ID, IMAGE, ATTRIBUTES "
-						+ "FROM PRODUCTS WHERE REFERENCE = ?",
+				"SELECT " + ProductInfoExt.infoColumns()
+						+ " FROM PRODUCTS WHERE REFERENCE = ?",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).find(sReference);
 	}
 
@@ -552,16 +550,16 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public List<ProductInfoExt> getProductCatalog(String category) throws BasicException {
 		return new PreparedSentence(s,
-				"SELECT P.ID, P.REFERENCE, P.CODE, P.NAME, P.ISCOM, P.ISSCALE, P.PRICEBUY, P.PRICESELL, P.TAXCAT, P.CATEGORY, P.ATTRIBUTESET_ID, P.IMAGE, P.ATTRIBUTES "
-						+ "FROM PRODUCTS P, PRODUCTS_CAT O WHERE P.ID = O.PRODUCT AND P.CATEGORY = ? "
+				"SELECT " + ProductInfoExt.infoColumns("P")
+						+ " FROM PRODUCTS P, PRODUCTS_CAT O WHERE P.ID = O.PRODUCT AND P.CATEGORY = ? "
 						+ "ORDER BY O.CATORDER, P.NAME",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).list(category);
 	}
 
 	public List<ProductInfoExt> getProductComments(String id) throws BasicException {
 		return new PreparedSentence(s,
-				"SELECT P.ID, P.REFERENCE, P.CODE, P.NAME, P.ISCOM, P.ISSCALE, P.PRICEBUY, P.PRICESELL, P.TAXCAT, P.CATEGORY, P.ATTRIBUTESET_ID, P.IMAGE, P.ATTRIBUTES "
-						+ "FROM PRODUCTS P, PRODUCTS_CAT O, PRODUCTS_COM M WHERE P.ID = O.PRODUCT AND P.ID = M.PRODUCT2 AND M.PRODUCT = ? "
+				"SELECT " + ProductInfoExt.infoColumns("P")
+						+ " FROM PRODUCTS P, PRODUCTS_CAT O, PRODUCTS_COM M WHERE P.ID = O.PRODUCT AND P.ID = M.PRODUCT2 AND M.PRODUCT = ? "
 						+ "AND P.ISCOM = " + s.DB.TRUE() + " " + "ORDER BY O.CATORDER, P.NAME",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).list(id);
 	}
@@ -583,8 +581,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	private SentenceList productListSentence(String where) {
 		return new StaticSentence(s, new QBFBuilder(
-				"SELECT P.ID, P.REFERENCE, P.CODE, P.NAME, P.ISCOM, P.ISSCALE, P.PRICEBUY, P.PRICESELL, P.TAXCAT, P.CATEGORY, P.ATTRIBUTESET_ID, P.IMAGE, P.ATTRIBUTES "
-						+ "FROM PRODUCTS P LEFT JOIN CATEGORIES CAT ON P.CATEGORY = CAT.ID WHERE " + where
+				"SELECT " + ProductInfoExt.infoColumns("P")
+						+ " FROM PRODUCTS P LEFT JOIN CATEGORIES CAT ON P.CATEGORY = CAT.ID WHERE " + where
 						+ " ORDER BY P.REFERENCE",
 				new String[] { "P.NAME", "CAT.NAME", "P.BRAND", "P.CODE" }),
 				new SerializerWriteBasic(new Datas[] { Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,

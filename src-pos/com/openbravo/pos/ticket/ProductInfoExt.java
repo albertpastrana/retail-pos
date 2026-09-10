@@ -47,6 +47,7 @@ public class ProductInfoExt {
     protected String attributesetid;
     protected double m_dPriceBuy;
     protected double m_dPriceSell;
+    protected double salePercent;
     protected BufferedImage m_Image;
     protected Properties attributes;
     
@@ -63,6 +64,7 @@ public class ProductInfoExt {
         attributesetid = null;
         m_dPriceBuy = 0.0;
         m_dPriceSell = 0.0;
+        salePercent = 0.0;
         m_Image = null;
         attributes = new Properties();
     }
@@ -154,6 +156,26 @@ public class ProductInfoExt {
         m_dPriceSell = dPrice;
     }
 
+    public final double getSalePercent() {
+        return salePercent;
+    }
+
+    public final void setSalePercent(double percent) {
+        salePercent = percent;
+    }
+
+    public static String infoColumns() {
+        return infoColumns("");
+    }
+
+    public static String infoColumns(String alias) {
+        String prefix = alias == null || alias.length() == 0 ? "" : alias + ".";
+        return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
+                + prefix + "ISSCALE, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, " + prefix + "TAXCAT, "
+                + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, " + prefix + "ATTRIBUTES, "
+                + prefix + "SALE_PERCENT";
+    }
+
     public final double getPriceSellTax(TaxInfo tax) {
         return m_dPriceSell * (1.0 + tax.getRate());
     }
@@ -202,6 +224,8 @@ public class ProductInfoExt {
             product.attributesetid = dr.getString(11);
             product.m_Image = ImageUtils.readImage(dr.getBytes(12));
             product.attributes = ImageUtils.readProperties(dr.getBytes(13));
+            Double marked = dr.getDouble(14);
+            product.salePercent = marked == null ? 0.0 : marked.doubleValue();
             return product;
         }};
     }

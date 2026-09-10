@@ -81,7 +81,8 @@ public class ApplyStoreResources {
 	private static void patchRoles(Connection c) throws Exception {
 		String[] extra = { "    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n",
 				"    <class name=\"sales.EditLines\"/>\n",
-				"    <class name=\"com.openbravo.pos.panels.JPanelClosedCash\"/>\n" };
+				"    <class name=\"com.openbravo.pos.panels.JPanelClosedCash\"/>\n",
+				"    <class name=\"com.openbravo.pos.inventory.SaleMarkPanel\"/>\n" };
 		PreparedStatement sel = c.prepareStatement("SELECT ID, NAME, PERMISSIONS FROM ROLES");
 		ResultSet rs = sel.executeQuery();
 		PreparedStatement upd = c.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?");

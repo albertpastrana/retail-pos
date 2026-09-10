@@ -56,6 +56,7 @@ import com.openbravo.pos.inventory.TaxRegime;
 import com.openbravo.pos.payment.JPaymentSelectReceipt;
 import com.openbravo.pos.payment.JPaymentSelectRefund;
 import com.openbravo.pos.ticket.CategoryInfo;
+import com.openbravo.pos.ticket.LineDiscount;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
@@ -378,8 +379,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getDate(), m_oTicket.getCustomer());
 
-		addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax,
-				(java.util.Properties) (oProduct.getProperties().clone())));
+		TicketLineInfo line = new TicketLineInfo(oProduct, dMul, dPrice, tax,
+				(java.util.Properties) (oProduct.getProperties().clone()));
+		if (LineDiscount.shouldApplyCatalogSale(oProduct.getPriceSell(), dPrice, oProduct.getSalePercent())) {
+			LineDiscount.applyPercent(line, oProduct.getSalePercent());
+		}
+		addTicketLine(line);
 	}
 
 	protected void addTicketLine(TicketLineInfo oLine) {
@@ -1386,7 +1391,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private String formatDiscountPercentage(double percentage) {
-		return Formats.PERCENT.formatValue(new Double(percentage / 100.0));
+		return LineDiscount.formatPercentage(percentage);
 	}
 
 	private void applyLineDiscount() {
@@ -1414,19 +1419,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 
 		TicketLineInfo line = new TicketLineInfo(m_oTicket.getLine(index));
-		String basePriceValue = line.getProperty("discount.line.baseprice");
-		String baseName = line.getProperty("discount.line.basename");
-		double basePrice = basePriceValue == null ? line.getPrice() : Double.parseDouble(basePriceValue);
-
-		if (baseName == null) {
-			baseName = line.getProductName();
-			line.setProperty("discount.line.basename", baseName);
-			line.setProperty("discount.line.baseprice", Double.toString(basePrice));
-		}
-
-		line.setPrice(basePrice * (1.0 - percentage.doubleValue() / 100.0));
-		line.setProperty("discount.line.percent", Double.toString(percentage.doubleValue()));
-		line.setProperty("product.name", baseName + " (-" + formatDiscountPercentage(percentage.doubleValue()) + ")");
+		LineDiscount.applyPercent(line, percentage.doubleValue());
 		paintTicketLine(index, line);
 	}
 

@@ -49,6 +49,7 @@
     <class name="com.openbravo.pos.forms.MenuStockManagement"/>
     <class name="com.openbravo.pos.inventory.ProductsPanel"/>
     <class name="com.openbravo.pos.inventory.PriceRulesPanel"/>
+    <class name="com.openbravo.pos.inventory.SaleMarkPanel"/>
     <class name="com.openbravo.pos.inventory.CategoriesPanel"/>
     <class name="com.openbravo.pos.inventory.AttributesPanel"/>
     <class name="com.openbravo.pos.inventory.AttributeValuesPanel"/>
