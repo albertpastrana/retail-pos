@@ -58,6 +58,9 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 	private ThumbNailBuilder tnbbutton;
 	private ThumbNailBuilder tnbcat;
 
+	private int buttonwidth;
+	private int buttonheight;
+
 	private CategoryInfo showingcategory = null;
 
 	/** Creates new form JCatalog */
@@ -75,6 +78,9 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 
 		m_jListCategories.addListSelectionListener(this);
 		m_jscrollcat.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
+
+		buttonwidth = width;
+		buttonheight = height;
 
 		tnbcat = new ThumbNailBuilder(32, 32, "com/openbravo/images/folder_yellow.png");
 		tnbbutton = new ThumbNailBuilder(width, height, "com/openbravo/images/package.png");
@@ -190,16 +196,13 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 				java.util.List<CategoryInfo> categories = m_dlSales.getSubcategories(catid);
 				for (CategoryInfo cat : categories) {
 
-					jcurrTab.addButton(new ImageIcon(tnbbutton.getThumbNailText(cat.getImage(), cat.getName())),
-							new SelectedCategory(cat));
+					addCategoryButton(jcurrTab, cat);
 				}
 
 				// Add products
 				java.util.List<ProductInfoExt> products = m_dlSales.getProductCatalog(catid);
 				for (ProductInfoExt prod : products) {
-					jcurrTab.addButton(
-							new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
-							new SelectedAction(prod));
+					addProductButton(jcurrTab, prod);
 				}
 			}
 
@@ -212,17 +215,55 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 		}
 	}
 
+	/**
+	 * Items without an image get a text button instead of the generic package
+	 * thumbnail, which paints the name over the image and clips it.
+	 */
+	private void addProductButton(JCatalogTab tab, ProductInfoExt prod) {
+
+		if (prod.getImage() == null) {
+			tab.addButton(getProductTextLines(prod), buttonwidth, buttonheight, new SelectedAction(prod));
+		} else {
+			tab.addButton(new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
+					new SelectedAction(prod));
+		}
+	}
+
+	private void addCategoryButton(JCatalogTab tab, CategoryInfo cat) {
+
+		if (cat.getImage() == null) {
+			tab.addCategoryButton(new String[] { cat.getName() }, buttonwidth, buttonheight, new SelectedCategory(cat));
+		} else {
+			tab.addButton(new ImageIcon(tnbbutton.getThumbNailText(cat.getImage(), cat.getName())),
+					new SelectedCategory(cat));
+		}
+	}
+
 	private String getProductLabel(ProductInfoExt product) {
 
 		if (pricevisible) {
-			if (taxesincluded) {
-				TaxInfo tax = taxeslogic.getTaxInfo(product.getTaxCategoryID(), new Date());
-				return "<html><center>" + product.getName() + "<br>" + product.printPriceSellTax(tax);
-			} else {
-				return "<html><center>" + product.getName() + "<br>" + product.printPriceSell();
-			}
+			return "<html><center>" + product.getName() + "<br>" + getProductPrice(product);
 		} else {
 			return product.getName();
+		}
+	}
+
+	private String[] getProductTextLines(ProductInfoExt product) {
+
+		if (pricevisible) {
+			return new String[] { product.getName(), getProductPrice(product) };
+		} else {
+			return new String[] { product.getName() };
+		}
+	}
+
+	private String getProductPrice(ProductInfoExt product) {
+
+		if (taxesincluded) {
+			TaxInfo tax = taxeslogic.getTaxInfo(product.getTaxCategoryID(), new Date());
+			return product.printPriceSellTax(tax);
+		} else {
+			return product.printPriceSell();
 		}
 	}
 
@@ -298,9 +339,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 
 						// Add products
 						for (ProductInfoExt prod : products) {
-							jcurrTab.addButton(
-									new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
-									new SelectedAction(prod));
+							addProductButton(jcurrTab, prod);
 						}
 
 						selectIndicatorPanel(new ImageIcon(tnbbutton.getThumbNail(product.getImage())),
