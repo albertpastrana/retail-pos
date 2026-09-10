@@ -32,7 +32,7 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(6, count(connection, "flyway_schema_history"));
+			assertEquals(7, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
@@ -93,7 +93,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(7, count(connection, "flyway_schema_history"));
+			assertEquals(8, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "PRODUCTS"));
@@ -108,7 +108,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(7, count(connection, "flyway_schema_history"));
+			assertEquals(8, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 		} finally {
 			connection.close();

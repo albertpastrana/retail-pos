@@ -84,6 +84,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private Object m_id;
 	private Object pricesell;
 	private boolean priceselllock = false;
+	private PriceRuleService priceRuleService;
+	private TaxRegime priceTaxRegime = TaxRegime.EQUIVALENCE_SURCHARGE;
 
 	private boolean reportlock = false;
 	private double m_pendingFactory = 0.0;
@@ -102,7 +104,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		initComponents();
 
 		// Absolute layout, so the panel has to declare the room its fields need
-		setPreferredSize(new Dimension(580, 510));
+		setPreferredSize(new Dimension(580, 535));
 		addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				layoutProductHeader();
@@ -117,6 +119,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
 			// field will always exist, and we override accessibility
 			// if getting session fails, we handle the null later
+		}
+		if (session != null) {
+			priceRuleService = new PriceRuleService(session);
 		}
 
 		loadimage = dlSales.getProductImage();
@@ -218,6 +223,19 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	}
 
 	public void activate() throws BasicException {
+		if (priceRuleService != null) {
+			try {
+				priceTaxRegime = priceRuleService.getTaxRegime();
+			} catch (SQLException e) {
+				throw new BasicException(AppLocal.getIntString("message.pricerules.loaderror"), e);
+			}
+		}
+		jLabelPriceSecondary.setText(AppLocal.getIntString(
+				priceTaxRegime == TaxRegime.EQUIVALENCE_SURCHARGE ? "label.prodpriceeconomic" : "label.prodpricesell"));
+		boolean normalAccounting = priceTaxRegime == TaxRegime.NORMAL;
+		jLabelMarginNet.setVisible(normalAccounting);
+		m_jmargin.setVisible(normalAccounting);
+		m_jmarginWholesale.setVisible(normalAccounting);
 
 		// Load the taxes logic
 		taxeslogic = new TaxesLogic(taxsent.list());
@@ -589,10 +607,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			}
 			m_jStock.setText(Formats.DOUBLE.formatValue(new Double(newstock)));
 			m_jStockAdd.setText(null);
-			String source = AppLocal.getIntString(
-					wholesale ? "label.prodstocksource.wholesale" : "label.prodstocksource.factory");
-			m_jStockAddResult
-					.setText(AppLocal.getIntString("message.stockadded", units, source, new Double(newstock)));
+			String source = AppLocal
+					.getIntString(wholesale ? "label.prodstocksource.wholesale" : "label.prodstocksource.factory");
+			m_jStockAddResult.setText(AppLocal.getIntString("message.stockadded", units, source, new Double(newstock)));
 			calculateMixCost();
 		}
 	}
@@ -619,6 +636,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			setMarginFromBuy(m_jmargin, readCurrency(m_jPriceBuy.getText()));
 			reportlock = false;
 		}
+		calculateSecondaryPrice();
 		calculateWholesaleMargin();
 		calculateMixCost();
 	}
@@ -702,6 +720,27 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			}
 			reportlock = false;
 		}
+		calculateSecondaryPrice();
+	}
+
+	private void calculateSecondaryPrice() {
+		if (m_jPriceSecondary == null || taxeslogic == null) {
+			return;
+		}
+		if (priceTaxRegime == TaxRegime.NORMAL) {
+			m_jPriceSecondary.setText(Formats.CURRENCY.formatValue(pricesell));
+			return;
+		}
+		Double factoryPrice = readCurrency(m_jPriceBuy.getText());
+		TaxCategoryInfo category = (TaxCategoryInfo) taxcatmodel.getSelectedItem();
+		if (factoryPrice == null || category == null) {
+			m_jPriceSecondary.setText(null);
+			return;
+		}
+		double taxRate = taxeslogic.getTaxRate(category, new Date());
+		double economicCost = PriceRuleService.calculateEconomicCost(factoryPrice.doubleValue(), taxRate,
+				priceTaxRegime);
+		m_jPriceSecondary.setText(Formats.CURRENCY.formatValue(Double.valueOf(economicCost)));
 	}
 
 	private void calculateMarginTax() {
@@ -709,10 +748,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		if (!reportlock) {
 			reportlock = true;
 
-			Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
 			Double dPriceSellTax = readCurrency(m_jPriceSellTax.getText());
-
-			setMarginFromSell(m_jmarginTax, dPriceBuy, dPriceSellTax);
+			setMarginFromSell(m_jmarginTax, grossCostBasis(readCurrency(m_jPriceBuy.getText())), dPriceSellTax);
 			setMarginFromSell(m_jmarginWholesaleTax, readCurrency(m_jPriceBuyWholesale.getText()), dPriceSellTax);
 			reportlock = false;
 		}
@@ -760,7 +797,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		if (!reportlock) {
 			reportlock = true;
 
-			Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
+			Double dPriceBuy = grossCostBasis(readCurrency(m_jPriceBuy.getText()));
 			Double dMarginTax = readPercent(m_jmarginTax.getText());
 
 			if (dMarginTax == null || dPriceBuy == null) {
@@ -773,6 +810,16 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			reportlock = false;
 		}
 
+	}
+
+	private Double grossCostBasis(Double factoryPrice) {
+		TaxCategoryInfo category = (TaxCategoryInfo) taxcatmodel.getSelectedItem();
+		if (factoryPrice == null || category == null || taxeslogic == null) {
+			return null;
+		}
+		double taxRate = taxeslogic.getTaxRate(category, new Date());
+		return Double
+				.valueOf(PriceRuleService.calculateGrossCostBasis(factoryPrice.doubleValue(), taxRate, priceTaxRegime));
 	}
 
 	private void setPriceSell(Object value) {
@@ -971,6 +1018,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax = new javax.swing.JComboBox();
 		m_jmargin = new javax.swing.JTextField();
 		m_jmarginTax = new javax.swing.JTextField();
+		jLabelPriceSecondary = new javax.swing.JLabel();
+		m_jPriceSecondary = new javax.swing.JTextField();
 		m_jPriceSellTax = new javax.swing.JTextField();
 		jLabel16 = new javax.swing.JLabel();
 		m_jCodetype = new javax.swing.JComboBox();
@@ -1257,63 +1306,73 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		jPanel1.add(m_jmarginWholesaleTax);
 		m_jmarginWholesaleTax.setBounds(250, 90, 80, 19);
 
+		jLabelPriceSecondary.setText(AppLocal.getIntString("label.prodpriceeconomic"));
+		jPanel1.add(jLabelPriceSecondary);
+		jLabelPriceSecondary.setBounds(10, 120, 150, 15);
+
+		m_jPriceSecondary.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+		m_jPriceSecondary.setEditable(false);
+		m_jPriceSecondary.setFocusable(false);
+		jPanel1.add(m_jPriceSecondary);
+		m_jPriceSecondary.setBounds(160, 120, 80, 19);
+
 		jLabel5.setText(AppLocal.getIntString("label.prodcategory")); // NOI18N
 		jPanel1.add(jLabel5);
-		jLabel5.setBounds(10, 170, 95, 15);
+		jLabel5.setBounds(10, 195, 95, 15);
 		jPanel1.add(m_jCategory);
-		m_jCategory.setBounds(105, 170, 225, 20);
+		m_jCategory.setBounds(105, 195, 225, 20);
 
 		jLabel7.setText(AppLocal.getIntString("label.taxcategory")); // NOI18N
 		jPanel1.add(jLabel7);
-		jLabel7.setBounds(10, 145, 95, 15);
+		jLabel7.setBounds(10, 170, 95, 15);
 		jPanel1.add(m_jTax);
-		m_jTax.setBounds(105, 145, 225, 20);
+		m_jTax.setBounds(105, 170, 225, 20);
 
 		m_jPriceSellTax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jPriceSellTax);
-		m_jPriceSellTax.setBounds(160, 120, 80, 19);
+		m_jPriceSellTax.setBounds(160, 145, 80, 19);
 
 		jLabel16.setText(AppLocal.getIntString("label.prodpriceselltax")); // NOI18N
 		jPanel1.add(jLabel16);
-		jLabel16.setBounds(10, 120, 150, 15);
+		jLabel16.setBounds(10, 145, 150, 15);
 		jPanel1.add(m_jCodetype);
 		m_jCodetype.setBounds(250, 40, 80, 20);
 
 		jLabel13.setText(AppLocal.getIntString("label.attributes")); // NOI18N
 		jPanel1.add(jLabel13);
-		jLabel13.setBounds(10, 195, 95, 15);
+		jLabel13.setBounds(10, 220, 95, 15);
 		jPanel1.add(m_jAtt);
-		m_jAtt.setBounds(105, 195, 225, 20);
+		m_jAtt.setBounds(105, 220, 225, 20);
 
 		jLabel19.setText(AppLocal.getIntString("label.prodstockcurrent")); // NOI18N
 		jPanel1.add(jLabel19);
-		jLabel19.setBounds(10, 225, 150, 15);
+		jLabel19.setBounds(10, 250, 150, 15);
 
 		m_jStock.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jStock);
-		m_jStock.setBounds(160, 225, 80, 19);
+		m_jStock.setBounds(160, 250, 80, 19);
 
 		m_jStockAdd.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jStockAdd);
-		m_jStockAdd.setBounds(248, 225, 50, 19);
+		m_jStockAdd.setBounds(248, 250, 50, 19);
 
 		m_jStockFactoryButton.setText(AppLocal.getIntString("button.stockaddfactory"));
 		jPanel1.add(m_jStockFactoryButton);
-		m_jStockFactoryButton.setBounds(305, 222, 110, 25);
+		m_jStockFactoryButton.setBounds(305, 247, 110, 25);
 
 		m_jStockWholesaleButton.setText(AppLocal.getIntString("button.stockaddwholesale"));
 		jPanel1.add(m_jStockWholesaleButton);
-		m_jStockWholesaleButton.setBounds(420, 222, 125, 25);
+		m_jStockWholesaleButton.setBounds(420, 247, 125, 25);
 
 		jPanel1.add(m_jStockAddResult);
-		m_jStockAddResult.setBounds(160, 252, 390, 19);
+		m_jStockAddResult.setBounds(160, 277, 390, 19);
 
 		jPanel1.add(m_jMixCost);
-		m_jMixCost.setBounds(160, 272, 390, 19);
+		m_jMixCost.setBounds(160, 297, 390, 19);
 
 		m_jSave.setText(AppLocal.getIntString("Button.Save"));
 		jPanel1.add(m_jSave);
-		m_jSave.setBounds(160, 295, 110, 25);
+		m_jSave.setBounds(160, 320, 110, 25);
 
 		jTabbedPane1.addTab(AppLocal.getIntString("label.prodgeneral"), jPanel1); // NOI18N
 
@@ -1385,7 +1444,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 	private void layoutProductHeader() {
 		int w = Math.max(getWidth(), 580);
-		int h = Math.max(getHeight(), 510);
+		int h = Math.max(getHeight(), 535);
 		int fieldX = 90;
 		int fieldW = Math.max(160, w - fieldX - 10);
 		m_jRef.setBounds(fieldX, 50, 160, 19);
@@ -1418,6 +1477,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel3;
 	private javax.swing.JLabel jLabelPriceBuyWholesale;
+	private javax.swing.JLabel jLabelPriceSecondary;
 	private javax.swing.JLabel jLabelMarginNet;
 	private javax.swing.JLabel jLabelMarginTax;
 	private javax.swing.JLabel jLabel4;
@@ -1444,6 +1504,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JTextField m_jName;
 	private javax.swing.JTextField m_jPriceBuy;
 	private javax.swing.JTextField m_jPriceBuyWholesale;
+	private javax.swing.JTextField m_jPriceSecondary;
 	private javax.swing.JTextField m_jPriceSell;
 	private javax.swing.JTextField m_jPriceSellTax;
 	private javax.swing.JTextField m_jRef;

@@ -5,14 +5,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.openbravo.data.loader.Session;
 
 public final class PriceRuleService {
 
-	public static final double TAX_RATE = 0.21;
+	public static final double DEFAULT_TAX_RATE = 0.21;
 	private static final double PRICE_TOLERANCE = 0.011;
 
 	private final Session session;
@@ -66,6 +68,23 @@ public final class PriceRuleService {
 		return brands;
 	}
 
+	public TaxRegime getTaxRegime() throws SQLException {
+		try (PreparedStatement statement = session.getConnection()
+				.prepareStatement("SELECT TAX_REGIME FROM PRICE_RULES WHERE BRAND IS NULL");
+				ResultSet results = statement.executeQuery()) {
+			return results.next() ? TaxRegime.fromDatabase(results.getString(1))
+					: TaxRegime.EQUIVALENCE_SURCHARGE;
+		}
+	}
+
+	public void saveTaxRegime(TaxRegime regime) throws SQLException {
+		try (PreparedStatement statement = session.getConnection()
+				.prepareStatement("UPDATE PRICE_RULES SET TAX_REGIME = ? WHERE BRAND IS NULL")) {
+			statement.setString(1, regime.name());
+			statement.executeUpdate();
+		}
+	}
+
 	public void save(PriceRule rule) throws SQLException {
 		Connection connection = session.getConnection();
 		int changed;
@@ -94,7 +113,9 @@ public final class PriceRuleService {
 
 	public int countProductsUsingOldRule(String brand, PriceRule oldRule) throws SQLException {
 		int count = 0;
-		String sql = "SELECT PRICEBUY, PRICESELL FROM PRODUCTS WHERE PRICEBUY > 0" + (brand == null
+		TaxRegime regime = getTaxRegime();
+		Map<String, Double> taxRates = findCurrentTaxRates();
+		String sql = "SELECT PRICEBUY, PRICESELL, TAXCAT FROM PRODUCTS WHERE PRICEBUY > 0" + (brand == null
 				? " AND (BRAND IS NULL OR BRAND NOT IN " + "(SELECT BRAND FROM PRICE_RULES WHERE BRAND IS NOT NULL))"
 				: " AND BRAND = ?");
 		try (PreparedStatement statement = session.getConnection().prepareStatement(sql)) {
@@ -103,7 +124,8 @@ public final class PriceRuleService {
 			}
 			try (ResultSet results = statement.executeQuery()) {
 				while (results.next()) {
-					if (matchesRule(results.getDouble(1), results.getDouble(2), oldRule)) {
+					double taxRate = taxRate(taxRates, results.getString(3));
+					if (matchesRule(results.getDouble(1), results.getDouble(2), taxRate, oldRule, regime)) {
 						count++;
 					}
 				}
@@ -116,9 +138,11 @@ public final class PriceRuleService {
 		Connection connection = session.getConnection();
 		boolean oldAutoCommit = connection.getAutoCommit();
 		int changed = 0;
+		TaxRegime regime = getTaxRegime();
+		Map<String, Double> taxRates = findCurrentTaxRates();
 		connection.setAutoCommit(false);
 		try {
-			String sql = "SELECT ID, PRICEBUY, PRICESELL FROM PRODUCTS WHERE PRICEBUY > 0"
+			String sql = "SELECT ID, PRICEBUY, PRICESELL, TAXCAT FROM PRODUCTS WHERE PRICEBUY > 0"
 					+ (brand == null
 							? " AND (BRAND IS NULL OR BRAND NOT IN "
 									+ "(SELECT BRAND FROM PRICE_RULES WHERE BRAND IS NOT NULL))"
@@ -132,8 +156,9 @@ public final class PriceRuleService {
 				try (ResultSet results = select.executeQuery()) {
 					while (results.next()) {
 						double buy = results.getDouble(2);
-						if (matchesRule(buy, results.getDouble(3), oldRule)) {
-							update.setDouble(1, calculateGross(buy, newRule) / (1.0 + TAX_RATE));
+						double taxRate = taxRate(taxRates, results.getString(4));
+						if (matchesRule(buy, results.getDouble(3), taxRate, oldRule, regime)) {
+							update.setDouble(1, calculateGross(buy, taxRate, newRule, regime) / (1.0 + taxRate));
 							update.setString(2, results.getString(1));
 							update.addBatch();
 							changed++;
@@ -152,7 +177,12 @@ public final class PriceRuleService {
 		}
 	}
 
-	public static double calculateGross(double cost, PriceRule rule) {
+	public static double calculateGross(double factoryPrice, PriceRule rule) {
+		return calculateGross(factoryPrice, DEFAULT_TAX_RATE, rule, TaxRegime.EQUIVALENCE_SURCHARGE);
+	}
+
+	public static double calculateGross(double factoryPrice, double taxRate, PriceRule rule, TaxRegime regime) {
+		double cost = calculateGrossCostBasis(factoryPrice, taxRate, regime);
 		double raw = cost * (1.0 + rule.getMarkupPercent() / 100.0);
 		if (PriceRule.ROUND_NONE.equals(rule.getRounding())) {
 			return roundCents(raw);
@@ -163,13 +193,59 @@ public final class PriceRuleService {
 		return roundCharm(raw);
 	}
 
+	public static double calculateEconomicCost(double factoryPrice, double taxRate, TaxRegime regime) {
+		if (regime == TaxRegime.NORMAL) {
+			return factoryPrice;
+		}
+		return factoryPrice * (1.0 + taxRate + equivalenceSurchargeRate(taxRate));
+	}
+
+	public static double calculateGrossCostBasis(double factoryPrice, double taxRate, TaxRegime regime) {
+		if (regime == TaxRegime.NORMAL) {
+			return factoryPrice * (1.0 + taxRate);
+		}
+		return calculateEconomicCost(factoryPrice, taxRate, regime);
+	}
+
+	public static double equivalenceSurchargeRate(double taxRate) {
+		if (Math.abs(taxRate - 0.21) < 0.0001) {
+			return 0.052;
+		}
+		if (Math.abs(taxRate - 0.10) < 0.0001) {
+			return 0.014;
+		}
+		if (Math.abs(taxRate - 0.04) < 0.0001) {
+			return 0.005;
+		}
+		return 0.0;
+	}
+
 	public static double calculateMarginPercent(double cost, double gross) {
 		return gross <= 0.0 ? 0.0 : (gross - cost) / gross * 100.0;
 	}
 
-	private static boolean matchesRule(double cost, double storedNet, PriceRule rule) {
-		double storedGross = storedNet * (1.0 + TAX_RATE);
-		return Math.abs(storedGross - calculateGross(cost, rule)) < PRICE_TOLERANCE;
+	private static boolean matchesRule(double factoryPrice, double storedNet, double taxRate, PriceRule rule,
+			TaxRegime regime) {
+		double storedGross = storedNet * (1.0 + taxRate);
+		return Math.abs(storedGross - calculateGross(factoryPrice, taxRate, rule, regime)) < PRICE_TOLERANCE;
+	}
+
+	private Map<String, Double> findCurrentTaxRates() throws SQLException {
+		Map<String, Double> rates = new HashMap<String, Double>();
+		try (PreparedStatement statement = session.getConnection().prepareStatement(
+				"SELECT CATEGORY, RATE FROM TAXES WHERE CUSTCATEGORY IS NULL "
+						+ "AND VALIDFROM <= CURRENT_TIMESTAMP ORDER BY VALIDFROM");
+				ResultSet results = statement.executeQuery()) {
+			while (results.next()) {
+				rates.put(results.getString(1), Double.valueOf(results.getDouble(2)));
+			}
+		}
+		return rates;
+	}
+
+	private static double taxRate(Map<String, Double> rates, String category) {
+		Double rate = rates.get(category);
+		return rate == null ? 0.0 : rate.doubleValue();
 	}
 
 	private static double roundCharm(double value) {

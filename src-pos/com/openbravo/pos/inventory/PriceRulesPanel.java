@@ -39,6 +39,7 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 	private final JTable table = new JTable(model);
 	private final JButton save = new JButton();
 	private final JButton addBrand = new JButton();
+	private final JComboBox<String> taxRegime = new JComboBox<String>();
 	private final JLabel explanation = new JLabel();
 
 	public PriceRulesPanel() {
@@ -50,6 +51,10 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 		save.addActionListener(this::saveRules);
 		toolbar.add(addBrand);
 		toolbar.add(save);
+		toolbar.add(new JLabel(AppLocal.getIntString("label.pricerule.taxregime") + ":"));
+		taxRegime.addItem(AppLocal.getIntString("label.pricerule.taxregime.equivalence"));
+		taxRegime.addItem(AppLocal.getIntString("label.pricerule.taxregime.normal"));
+		toolbar.add(taxRegime);
 		add(toolbar, BorderLayout.NORTH);
 
 		table.setRowHeight(28);
@@ -97,6 +102,7 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 	private void loadRules() throws BasicException {
 		try {
 			model.setRules(service.findAll());
+			taxRegime.setSelectedIndex(service.getTaxRegime() == TaxRegime.NORMAL ? 1 : 0);
 		} catch (SQLException e) {
 			throw new BasicException(AppLocal.getIntString("message.pricerules.loaderror"), e);
 		}
@@ -134,6 +140,7 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 				}
 			}
 			Map<String, PriceRule> before = model.originalRules();
+			service.saveTaxRegime(selectedTaxRegime());
 			for (RuleRow row : model.rows) {
 				service.save(row.toRule());
 			}
@@ -147,6 +154,10 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 		} catch (Exception e) {
 			showError(e);
 		}
+	}
+
+	private TaxRegime selectedTaxRegime() {
+		return taxRegime.getSelectedIndex() == 1 ? TaxRegime.NORMAL : TaxRegime.EQUIVALENCE_SURCHARGE;
 	}
 
 	private void offerBulkUpdate(PriceRule oldRule, PriceRule newRule) throws SQLException {
