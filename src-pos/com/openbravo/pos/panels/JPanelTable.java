@@ -85,23 +85,30 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 			}
 
 			// Add the editor
-			c = getEditor().getComponent();
+			Component editor = getEditor().getComponent();
 			// An editor that declares its own size keeps it and the record list
 			// takes the remaining space. The others still fill the panel.
-			boolean editorkeepssize = c != null && c.isPreferredSizeSet();
-			if (c != null) {
-				c.applyComponentOrientation(getComponentOrientation());
-				container.add(c, editorkeepssize ? BorderLayout.LINE_END : BorderLayout.CENTER);
+			boolean editorkeepssize = editor != null && editor.isPreferredSizeSet();
+			if (editor != null) {
+				editor.applyComponentOrientation(getComponentOrientation());
 			}
 
 			// el panel este
+			Component list = null;
 			ListCellRenderer cr = getListCellRenderer();
 			if (cr != null) {
 				JListNavigator nl = new JListNavigator(bd);
 				nl.applyComponentOrientation(getComponentOrientation());
-				if (cr != null)
-					nl.setCellRenderer(cr);
-				container.add(nl, editorkeepssize ? BorderLayout.CENTER : BorderLayout.LINE_START);
+				nl.setCellRenderer(cr);
+				list = nl;
+			}
+
+			if (list != null && editor != null) {
+				container.add(splitListAndEditor(list, editor, editorkeepssize), BorderLayout.CENTER);
+			} else if (editor != null) {
+				container.add(editor, BorderLayout.CENTER);
+			} else if (list != null) {
+				container.add(list, BorderLayout.CENTER);
 			}
 
 			// add toolbar extras
@@ -125,6 +132,26 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 			c.applyComponentOrientation(getComponentOrientation());
 			toolbar.add(c);
 		}
+	}
+
+	/**
+	 * The record list and the editor sit either side of a divider the user can
+	 * drag. An editor that declares its own size never shrinks below it, because
+	 * its fields are laid out at absolute positions; the list gives up or takes the
+	 * space instead.
+	 */
+	private Component splitListAndEditor(Component list, Component editor, boolean editorkeepssize) {
+
+		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, list, editor);
+		split.setBorder(null);
+		split.setContinuousLayout(true);
+		split.setOneTouchExpandable(true);
+		split.setResizeWeight(editorkeepssize ? 1.0 : 0.0);
+		list.setMinimumSize(new Dimension(60, 0));
+		editor.setMinimumSize(
+				editorkeepssize ? new Dimension(editor.getPreferredSize().width, 0) : new Dimension(60, 0));
+		split.applyComponentOrientation(getComponentOrientation());
+		return split;
 	}
 
 	public Component getToolbarExtras() {
