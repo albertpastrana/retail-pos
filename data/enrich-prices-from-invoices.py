@@ -242,10 +242,10 @@ def build_additions(
 
         base_cost = decimal_value(invoice["Preu Cost Unitari (EUR)"])
         discount = decimal_value(invoice["Dte %"] or "0")
-        real_cost = base_cost * (Decimal("1") - discount / Decimal("100"))
-        real_cost *= EQUIVALENCE_COST_FACTOR
-        real_cost = real_cost.quantize(Decimal("0.000001"))
-        gross_sell = charm_round(real_cost * DEFAULT_MARKUP_FACTOR)
+        factory_cost = base_cost * (Decimal("1") - discount / Decimal("100"))
+        factory_cost = factory_cost.quantize(Decimal("0.000001"))
+        economic_cost = factory_cost * EQUIVALENCE_COST_FACTOR
+        gross_sell = charm_round(economic_cost * DEFAULT_MARKUP_FACTOR)
         net_sell = (gross_sell / TAX_FACTOR).quantize(Decimal("0.000001"))
         source = (
             f"factura-{invoice['Núm. Factura']}-"
@@ -259,7 +259,7 @@ def build_additions(
                 {
                     "barcode": barcode,
                     "reference": product[1],
-                    "price_buy": f"{real_cost:.6f}",
+                    "price_buy": f"{factory_cost:.6f}",
                     "price_sell": f"{net_sell:.6f}",
                     "brand": product[7],
                     "source": source,
@@ -295,8 +295,8 @@ def write_reference_prices(
     for invoice in invoices:
         base_cost = decimal_value(invoice["Preu Cost Unitari (EUR)"])
         discount = decimal_value(invoice["Dte %"] or "0")
-        real_cost = base_cost * (Decimal("1") - discount / Decimal("100"))
-        real_cost = (real_cost * EQUIVALENCE_COST_FACTOR).quantize(Decimal("0.000001"))
+        factory_cost = base_cost * (Decimal("1") - discount / Decimal("100"))
+        factory_cost = factory_cost.quantize(Decimal("0.000001"))
         matched = find_products(invoice, products_by_brand)
         rows.append(
             {
@@ -305,7 +305,7 @@ def write_reference_prices(
                 "brand": matched[0][7] if matched else infer_brand(invoice),
                 "price_before_tax": f"{base_cost:.2f}",
                 "discount_percent": f"{discount.normalize()}",
-                "price_buy": f"{real_cost:.6f}",
+                "price_buy": f"{factory_cost:.6f}",
                 "supplier": invoice[SUPPLIER],
                 "invoice": invoice["Núm. Factura"],
                 "date": parse_date(invoice["Data"]).strftime("%Y-%m-%d"),

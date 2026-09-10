@@ -11,6 +11,9 @@ build/
 /*.launch
 derby.log
 data/openbravopos-database/
+data/openbravopos-database.bak*/
+data/*.tsv
+data/__pycache__/
 devdb/
 dev.properties
 external-data/
