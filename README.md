@@ -4,7 +4,7 @@ A point-of-sale application for retail shops: touch-screen sales, ESC/POS receip
 
 Forked from [Openbravo POS](https://sourceforge.net/projects/openbravopos/) 2.30.3.
 
-This file is the project entry point. Catalogue variant rules live in [catalog-variants.md](catalog-variants.md).
+This file is the project entry point. Catalogue variant rules live in [catalog-variants.md](catalog-variants.md). ESC/POS printers (Windows, Linux, macOS USB bridge): [escpos-printer.md](escpos-printer.md).
 
 ## Requirements
 
@@ -54,7 +54,7 @@ Important keys:
 | --------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `db.driver` / `db.URL` / `db.driverlib` | Database (Derby, MySQL, or PostgreSQL); `db.driverlib` is optional for the bundled drivers |
 | `user.language` / `user.country`        | UI locale; translations live in `locales/`                                                 |
-| `machine.printer`                       | `screen` for on-screen tickets, or an ESC/POS device                                       |
+| `machine.printer`                       | `screen`, or `epson:file,<path>` for a raw ESC/POS printer ([escpos-printer.md](escpos-printer.md)) |
 | `catalog.import.products`               | Path to the products TSV (scan-to-import)                                                  |
 | `catalog.import.categories`             | Path to the categories TSV                                                                 |
 
