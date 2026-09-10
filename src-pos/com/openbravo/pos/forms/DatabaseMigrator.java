@@ -1,11 +1,17 @@
 package com.openbravo.pos.forms;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.flywaydb.core.Flyway;
 
 final class DatabaseMigrator {
+
+    private static final String DERBY_URL_PREFIX = "jdbc:derby:";
+    private static final String DATABASE_NOT_FOUND = "XJ004";
 
     private static final String BINARY_TYPE = "binary_type";
     private static final String BOOLEAN_TYPE = "boolean_type";
@@ -22,18 +28,50 @@ final class DatabaseMigrator {
         placeholders.put("app_name", AppLocal.APP_NAME);
         placeholders.put("app_version", AppLocal.APP_VERSION);
 
+        if (url.startsWith(DERBY_URL_PREFIX)) {
+            upgradeDerbyStorage(url, user, password);
+        }
+
+        // A database that predates Flyway already holds everything V1 and V2 create,
+        // so adopt it at version 2 rather than replaying the baseline over live data.
         Flyway.configure()
                 .dataSource(url, user, password)
                 .locations("classpath:db/migration")
                 .placeholders(placeholders)
+                .baselineOnMigrate(true)
+                .baselineVersion("2")
                 .load()
                 .migrate();
+    }
+
+    /**
+     * Flyway's schema history table declares a BOOLEAN column, which Derby refuses to
+     * create while the files are still in their pre-10.7 on-disk format. The hard upgrade
+     * is one way, and Derby only rewrites what is actually out of date.
+     */
+    private static void upgradeDerbyStorage(String url, String user, String password) {
+        try {
+            Connection connection = open(url + ";upgrade=true", user, password);
+            connection.close();
+        } catch (SQLException e) {
+            if (!DATABASE_NOT_FOUND.equals(e.getSQLState())) {
+                throw new IllegalStateException("Could not upgrade the Derby database at " + url, e);
+            }
+            // Nothing on disk yet, so there is no format to upgrade and Flyway will create it.
+        }
+    }
+
+    private static Connection open(String url, String user, String password) throws SQLException {
+        if (user == null || user.isEmpty()) {
+            return DriverManager.getConnection(url);
+        }
+        return DriverManager.getConnection(url, user, password);
     }
 
     private static Map<String, String> placeholdersFor(String url) {
         Map<String, String> placeholders = new HashMap<String, String>();
 
-        if (url.startsWith("jdbc:derby:")) {
+        if (url.startsWith(DERBY_URL_PREFIX)) {
             placeholders.put(BINARY_TYPE, "BLOB");
             placeholders.put(BOOLEAN_TYPE, "SMALLINT");
             placeholders.put(TRUE_VALUE, "1");

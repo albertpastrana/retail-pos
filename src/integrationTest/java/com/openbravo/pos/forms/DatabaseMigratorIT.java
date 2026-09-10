@@ -23,6 +23,24 @@ public class DatabaseMigratorIT {
 	}
 
 	@Test
+	public void adoptsDerbySchemaCreatedBeforeFlyway() throws Exception {
+		String url = "jdbc:derby:memory:flywayLegacyIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		dropSchemaHistory(url, null, null);
+
+		DatabaseMigrator.migrate(url, null, null);
+
+		Connection connection = open(url, null, null);
+		try {
+			assertEquals(4, count(connection, "flyway_schema_history"));
+			assertEquals(34, count(connection, "RESOURCES"));
+			assertEquals(4, count(connection, "PRODUCTS"));
+		} finally {
+			connection.close();
+		}
+	}
+
+	@Test
 	public void migratesEmptyMysql() throws Exception {
 		String url = System.getProperty("pos.mysql.url", "jdbc:mysql://127.0.0.1:13306/pos");
 		String user = System.getProperty("pos.mysql.user", "root");
@@ -62,6 +80,20 @@ public class DatabaseMigratorIT {
 		try {
 			assertEquals(5, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
+		} finally {
+			connection.close();
+		}
+	}
+
+	private static void dropSchemaHistory(String url, String user, String password) throws SQLException {
+		Connection connection = open(url, user, password);
+		try {
+			Statement statement = connection.createStatement();
+			try {
+				statement.execute("DROP TABLE " + quotedTable(connection, "flyway_schema_history"));
+			} finally {
+				statement.close();
+			}
 		} finally {
 			connection.close();
 		}

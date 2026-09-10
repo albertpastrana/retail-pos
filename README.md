@@ -60,7 +60,7 @@ Important keys:
 
 First launch against an empty database URL runs the Flyway migrations and creates the schema. Default users (empty password): Administrator, Manager, Employee, Guest.
 
-Existing databases created by the old per-engine scripts are not supported. They do not have Flyway history and must not be pointed at this build.
+A database created by the old per-engine scripts is adopted on first launch: it is baselined at version 2, so the schema and seed data it already holds are left alone and only later migrations apply. Derby databases still in the pre-10.7 file format are hard-upgraded at the same time, which older Derby versions cannot undo — take a copy of the database directory first.
 
 **Quit the POS before running any database helper.** With embedded Derby the database directory is locked (`db.lck`); two processes at once fail with a lock error.
 
