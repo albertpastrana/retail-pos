@@ -49,8 +49,10 @@ import com.openbravo.pos.forms.DataLogicSystem;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
+import com.openbravo.pos.inventory.ProductFormLayout;
+import com.openbravo.pos.inventory.ProductPriceFields;
+import com.openbravo.pos.inventory.ProductPriceMath;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
-import com.openbravo.pos.inventory.PriceRule;
 import com.openbravo.pos.inventory.PriceRuleService;
 import com.openbravo.pos.inventory.TaxRegime;
 import com.openbravo.pos.payment.JPaymentSelectReceipt;
@@ -771,27 +773,28 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		final JTextField reference = new JTextField(initialReference, 16);
 		reference.setCaretPosition(0);
 		final JComboBox<CategoryInfo> category = createImportCategoryCombo(availableProduct);
-		final ImportPriceFields prices = new ImportPriceFields(availableProduct);
+		final ProductPriceFields prices = createImportPrices(availableProduct);
 
 		JPanel fields = new JPanel(new GridBagLayout());
+		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodref") + ":", reference);
+		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodname") + ":", name);
+		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodcategory") + ":", category);
+		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
+		ProductFormLayout.addRow(fields, 4, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
+		ProductFormLayout.addRow(fields, 5, prices.secondaryLabel() + ":", prices.secondary);
+		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
+				prices.priceBlock());
 		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.insets = new Insets(3, 4, 3, 4);
-		constraints.anchor = GridBagConstraints.NORTHWEST;
+		constraints.insets = ProductFormLayout.ROW_INSETS;
+		constraints.anchor = GridBagConstraints.WEST;
 		constraints.fill = GridBagConstraints.HORIZONTAL;
-		addImportField(fields, constraints, 0, AppLocal.getIntString("label.prodref"), reference);
-		addImportField(fields, constraints, 1, AppLocal.getIntString("label.prodname"), name);
-		addImportField(fields, constraints, 2, AppLocal.getIntString("label.prodcategory"), category);
-		addImportField(fields, constraints, 3, AppLocal.getIntString("label.taxcategory"), prices.tax);
-		addImportField(fields, constraints, 4, AppLocal.getIntString("label.prodpricebuy"), prices.buy);
-		addImportField(fields, constraints, 5, prices.secondaryLabel(), prices.secondary);
-		addImportField(fields, constraints, 6, AppLocal.getIntString("label.prodpriceselltax"), prices.priceBlock());
 		constraints.gridx = 1;
 		constraints.gridy = 7;
 		fields.add(prices.offer, constraints);
 
 		JPanel content = new JPanel(new BorderLayout(0, 12));
 		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
-		content.add(topAligned(fields), BorderLayout.CENTER);
+		content.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
 		focusImportField(name.getText().trim().isEmpty() ? name : prices.sellTax);
 
 		String title = AppLocal.getIntString("title.importproduct");
@@ -853,8 +856,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private ProductInfoExt buildEditedProduct(ProductInfoExt availableProduct, ProductInfoExt catalogProduct,
-			JTextField reference, JTextField name, JComboBox<CategoryInfo> category, ImportPriceFields prices) {
-		Double buy = readImportCurrency(prices.buy.getText(), true);
+			JTextField reference, JTextField name, JComboBox<CategoryInfo> category, ProductPriceFields prices) {
+		Double buy = ProductPriceMath.parsePositiveCurrency(prices.buy.getText(), true);
 		Double sell = prices.pricesell;
 		CategoryInfo selected = (CategoryInfo) category.getSelectedItem();
 		TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getSelectedItem();
@@ -879,6 +882,19 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		return edited;
 	}
 
+	private ProductPriceFields createImportPrices(ProductInfoExt product) throws BasicException {
+		String preferred = product.getTaxCategoryID();
+		if (preferred == null || preferred.isEmpty()) {
+			preferred = (String) taxcategoriesmodel.getSelectedKey();
+		}
+		return new ProductPriceFields(product, senttaxcategories.list(), preferred, priceRuleService, priceTaxRegime,
+				new ProductPriceFields.TaxRateLookup() {
+					public double rate(TaxCategoryInfo category) {
+						return taxeslogic.getTaxRate(category, m_oTicket.getDate(), m_oTicket.getCustomer());
+					}
+				});
+	}
+
 	private JComboBox<CategoryInfo> createImportCategoryCombo(ProductInfoExt catalogProduct) throws BasicException {
 		JComboBox<CategoryInfo> category = new JComboBox<CategoryInfo>();
 		category.addItem(null);
@@ -901,24 +917,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		return category;
 	}
 
-	private void addImportField(JPanel panel, GridBagConstraints constraints, int row, String label, JComponent field) {
-		constraints.gridx = 0;
-		constraints.gridy = row;
-		constraints.weightx = 0.0;
-		panel.add(new JLabel(label + ":"), constraints);
-		constraints.gridx = 1;
-		constraints.weightx = 1.0;
-		panel.add(field, constraints);
-	}
-
-	// GridBagLayout centres its rows in whatever height it gets, so the form needs
-	// a north slot to stay pinned to the top of the dialog.
-	private JPanel topAligned(JComponent fields) {
-		JPanel holder = new JPanel(new BorderLayout());
-		holder.add(fields, BorderLayout.NORTH);
-		return holder;
-	}
-
 	private final class VariantImportEditor {
 		private final ProductInfoExt product;
 		private final boolean scanned;
@@ -926,7 +924,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		private final JTextField name;
 		private final JTextField reference;
 		private final JComboBox<CategoryInfo> category;
-		private final ImportPriceFields prices;
+		private final ProductPriceFields prices;
 		private final JPanel panel;
 		private Runnable changeListener;
 		private Runnable priceChangeListener;
@@ -944,7 +942,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			reference = new JTextField(initialReference, 16);
 			reference.setCaretPosition(0);
 			category = createImportCategoryCombo(product);
-			prices = new ImportPriceFields(product);
+			prices = createImportPrices(product);
 			panel = buildPanel(applyPriceModel);
 			DocumentListener changed = new DocumentListener() {
 				@Override
@@ -985,22 +983,22 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		private JPanel buildPanel(JToggleButton.ToggleButtonModel applyPriceModel) {
 			JPanel fields = new JPanel(new GridBagLayout());
-			GridBagConstraints constraints = new GridBagConstraints();
-			constraints.insets = new Insets(3, 4, 3, 4);
-			constraints.anchor = GridBagConstraints.NORTHWEST;
-			constraints.fill = GridBagConstraints.HORIZONTAL;
-			addImportField(fields, constraints, 0, AppLocal.getIntString("label.prodref"), reference);
-			addImportField(fields, constraints, 1, AppLocal.getIntString("label.prodname"), name);
-			addImportField(fields, constraints, 2, AppLocal.getIntString("label.prodcategory"), category);
-			addImportField(fields, constraints, 3, AppLocal.getIntString("label.taxcategory"), prices.tax);
-			addImportField(fields, constraints, 4, AppLocal.getIntString("label.prodpricebuy"), prices.buy);
-			addImportField(fields, constraints, 5, prices.secondaryLabel(), prices.secondary);
-			addImportField(fields, constraints, 6, AppLocal.getIntString("label.prodpriceselltax"),
+			ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodref") + ":", reference);
+			ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodname") + ":", name);
+			ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodcategory") + ":", category);
+			ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
+			ProductFormLayout.addRow(fields, 4, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
+			ProductFormLayout.addRow(fields, 5, prices.secondaryLabel() + ":", prices.secondary);
+			ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
 					prices.priceBlock());
 
 			JCheckBox applyPrice = new JCheckBox(AppLocal.getIntString("label.variants.applyprice"));
 			applyPrice.setModel(applyPriceModel);
 			applyPrice.setToolTipText(AppLocal.getIntString("label.variants.applyprice.hint"));
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.insets = ProductFormLayout.ROW_INSETS;
+			constraints.anchor = GridBagConstraints.WEST;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
 			constraints.gridx = 1;
 			constraints.gridy = 7;
 			fields.add(applyPrice, constraints);
@@ -1017,7 +1015,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 			JPanel result = new JPanel(new BorderLayout(0, 8));
 			result.add(header, BorderLayout.NORTH);
-			result.add(topAligned(fields), BorderLayout.CENTER);
+			result.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
 			return result;
 		}
 
@@ -1129,227 +1127,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			return name.substring(separator + 3, reference > separator ? reference : name.length());
 		}
 		return product.getReference();
-	}
-
-	// The cashier only ever sees the retail price: the net price and the markup on
-	// cost stay internal, and the margin beside the price is the one on retail.
-	private final class ImportPriceFields {
-		private final JTextField buy = new JTextField(12);
-		private final JTextField secondary = new JTextField(12);
-		private final JTextField sellTax = new JTextField(12);
-		private final JLabel margin = new JLabel();
-		private final JComboBox<TaxCategoryInfo> tax = new JComboBox<TaxCategoryInfo>();
-		private final JLabel offer = new JLabel();
-		private boolean reportlock;
-		private boolean sellOverridden;
-		private Double pricesell;
-		private final PriceRule priceRule;
-
-		private ImportPriceFields(ProductInfoExt product) throws BasicException {
-			buy.setHorizontalAlignment(JTextField.RIGHT);
-			secondary.setHorizontalAlignment(JTextField.RIGHT);
-			secondary.setEditable(false);
-			secondary.setFocusable(false);
-			sellTax.setHorizontalAlignment(JTextField.RIGHT);
-			margin.setHorizontalAlignment(SwingConstants.RIGHT);
-			margin.setEnabled(false);
-			String brand = product.getProperty("catalog.brand", "").trim();
-			try {
-				priceRule = priceRuleService.findForBrand(brand);
-			} catch (java.sql.SQLException e) {
-				throw new BasicException(AppLocal.getIntString("message.pricerules.loaderror"), e);
-			}
-
-			java.util.List categories = senttaxcategories.list();
-			TaxCategoryInfo selected = null;
-			String preferred = product.getTaxCategoryID();
-			if (preferred == null || preferred.isEmpty()) {
-				preferred = (String) taxcategoriesmodel.getSelectedKey();
-			}
-			for (Object item : categories) {
-				TaxCategoryInfo available = (TaxCategoryInfo) item;
-				tax.addItem(available);
-				if (preferred != null && preferred.equals(available.getID())) {
-					selected = available;
-				}
-			}
-			tax.setSelectedItem(selected != null ? selected : (categories.isEmpty() ? null : categories.get(0)));
-
-			boolean priceAvailable = Boolean.parseBoolean(product.getProperty("catalog.price.available", "false"));
-			if (priceAvailable) {
-				buy.setText(Formats.CURRENCY.formatValue(Double.valueOf(product.getPriceBuy())));
-			}
-
-			buy.getDocument().addDocumentListener(new DocumentListener() {
-				@Override
-				public void insertUpdate(DocumentEvent e) {
-					onBuyOrTaxChanged();
-				}
-
-				@Override
-				public void removeUpdate(DocumentEvent e) {
-					onBuyOrTaxChanged();
-				}
-
-				@Override
-				public void changedUpdate(DocumentEvent e) {
-					onBuyOrTaxChanged();
-				}
-			});
-			sellTax.getDocument().addDocumentListener(new DocumentListener() {
-				@Override
-				public void insertUpdate(DocumentEvent e) {
-					onSellTaxEdited();
-				}
-
-				@Override
-				public void removeUpdate(DocumentEvent e) {
-					onSellTaxEdited();
-				}
-
-				@Override
-				public void changedUpdate(DocumentEvent e) {
-					onSellTaxEdited();
-				}
-			});
-			tax.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					onBuyOrTaxChanged();
-				}
-			});
-
-			offerFromCost();
-			calculatePriceSellTax();
-			calculateSecondary();
-			calculateMargin();
-		}
-
-		private void onBuyOrTaxChanged() {
-			if (!sellOverridden) {
-				offerFromCost();
-			}
-			calculatePriceSellTax();
-			calculateSecondary();
-			calculateMargin();
-		}
-
-		private void onSellTaxEdited() {
-			if (!reportlock) {
-				sellOverridden = true;
-				reportlock = true;
-				Double dPriceSellTax = readImportCurrency(sellTax.getText(), false);
-				if (dPriceSellTax == null) {
-					setPriceSell(null);
-				} else {
-					setPriceSell(Double.valueOf(dPriceSellTax.doubleValue() / (1.0 + taxRate())));
-				}
-				reportlock = false;
-			}
-			calculateSecondary();
-			calculateMargin();
-		}
-
-		private void calculatePriceSellTax() {
-			if (!reportlock) {
-				reportlock = true;
-				if (pricesell == null) {
-					sellTax.setText(null);
-				} else {
-					sellTax.setText(
-							Formats.CURRENCY.formatValue(Double.valueOf(pricesell.doubleValue() * (1.0 + taxRate()))));
-				}
-				reportlock = false;
-			}
-		}
-
-		private void calculateMargin() {
-			Double commercialMargin = readCommercialMargin();
-			margin.setText(commercialMargin == null ? ""
-					: AppLocal.getIntString("message.import.margin", Formats.PERCENT.formatValue(commercialMargin)));
-		}
-
-		private Double readCommercialMargin() {
-			Double factoryPrice = readImportCurrency(buy.getText(), false);
-			Double gross = readImportCurrency(sellTax.getText(), false);
-			if (factoryPrice == null || gross == null || factoryPrice.doubleValue() <= 0.0
-					|| gross.doubleValue() <= 0.0) {
-				return null;
-			}
-			double cost = PriceRuleService.calculateGrossCostBasis(factoryPrice.doubleValue(), taxRate(),
-					priceTaxRegime);
-			return Double.valueOf((gross.doubleValue() - cost) / gross.doubleValue());
-		}
-
-		private void setCommercialMargin(double commercialMargin) {
-			Double factoryPrice = readImportCurrency(buy.getText(), false);
-			if (factoryPrice == null || factoryPrice.doubleValue() <= 0.0 || commercialMargin >= 1.0) {
-				return;
-			}
-			double cost = PriceRuleService.calculateGrossCostBasis(factoryPrice.doubleValue(), taxRate(),
-					priceTaxRegime);
-			sellTax.setText(Formats.CURRENCY.formatValue(Double.valueOf(cost / (1.0 - commercialMargin))));
-		}
-
-		private void offerFromCost() {
-			Double cost = readImportCurrency(buy.getText(), false);
-			if (cost == null || cost.doubleValue() <= 0.0 || tax.getSelectedItem() == null) {
-				setPriceSell(null);
-				offer.setText(AppLocal.getIntString("message.pricerule.entercost"));
-				return;
-			}
-			double gross = PriceRuleService.calculateGross(cost.doubleValue(), taxRate(), priceRule, priceTaxRegime);
-			setPriceSell(Double.valueOf(gross / (1.0 + taxRate())));
-			offer.setText(AppLocal.getIntString("message.pricerule.offer",
-					Formats.CURRENCY.formatValue(Double.valueOf(gross)),
-					Formats.PERCENT.formatValue(Double.valueOf(priceRule.getMarkupPercent() / 100.0))));
-		}
-
-		private void setPriceSell(Double value) {
-			pricesell = value;
-		}
-
-		private JPanel priceBlock() {
-			JPanel block = new JPanel(new BorderLayout());
-			block.add(sellTax, BorderLayout.NORTH);
-			block.add(margin, BorderLayout.CENTER);
-			return block;
-		}
-
-		private String secondaryLabel() {
-			return AppLocal.getIntString(priceTaxRegime == TaxRegime.EQUIVALENCE_SURCHARGE ? "label.prodpriceeconomic"
-					: "label.prodpricesell");
-		}
-
-		private void calculateSecondary() {
-			Double factoryPrice = readImportCurrency(buy.getText(), false);
-			if (priceTaxRegime == TaxRegime.NORMAL) {
-				secondary.setText(Formats.CURRENCY.formatValue(pricesell));
-			} else if (factoryPrice == null || tax.getSelectedItem() == null) {
-				secondary.setText(null);
-			} else {
-				double economicCost = PriceRuleService.calculateEconomicCost(factoryPrice.doubleValue(), taxRate(),
-						priceTaxRegime);
-				secondary.setText(Formats.CURRENCY.formatValue(Double.valueOf(economicCost)));
-			}
-		}
-
-		private double taxRate() {
-			return taxeslogic.getTaxRate((TaxCategoryInfo) tax.getSelectedItem(), m_oTicket.getDate(),
-					m_oTicket.getCustomer());
-		}
-	}
-
-	private Double readImportCurrency(String value, boolean emptyIsZero) {
-		if (value.trim().isEmpty()) {
-			return emptyIsZero ? Double.valueOf(0.0) : null;
-		}
-		try {
-			Double parsed = (Double) Formats.CURRENCY.parseValue(value);
-			return parsed.doubleValue() < 0.0 ? null : parsed;
-		} catch (BasicException e) {
-			return null;
-		}
 	}
 
 	private void incProduct(ProductInfoExt prod) {
