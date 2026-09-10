@@ -86,7 +86,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private boolean priceselllock = false;
 
 	private boolean reportlock = false;
-	private double m_pendingAdd = 0.0;
+	private double m_pendingFactory = 0.0;
+	private double m_pendingWholesale = 0.0;
+	private Object[] m_purchaseCost;
 
 	public Session session = null;
 
@@ -100,7 +102,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		initComponents();
 
 		// Absolute layout, so the panel has to declare the room its fields need
-		setPreferredSize(new Dimension(580, 450));
+		setPreferredSize(new Dimension(580, 510));
 		addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				layoutProductHeader();
@@ -149,6 +151,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax.addActionListener(dirty);
 		m_jAtt.addActionListener(dirty);
 		m_jPriceBuy.getDocument().addDocumentListener(dirty);
+		m_jPriceBuyWholesale.getDocument().addDocumentListener(dirty);
 		m_jPriceSell.getDocument().addDocumentListener(dirty);
 		m_jImage.addPropertyChangeListener("image", dirty);
 		m_jstockcost.getDocument().addDocumentListener(dirty);
@@ -157,12 +160,17 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jStockAdd.getDocument().addDocumentListener(dirty);
 		m_jStockAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addStock();
+				addStock(false);
 			}
 		});
-		m_jStockAddButton.addActionListener(new ActionListener() {
+		m_jStockFactoryButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				addStock();
+				addStock(false);
+			}
+		});
+		m_jStockWholesaleButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				addStock(true);
 			}
 		});
 		m_jInCatalog.addActionListener(dirty);
@@ -182,6 +190,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		FieldsManager fm = new FieldsManager();
 		m_jPriceBuy.getDocument().addDocumentListener(fm);
+		m_jPriceBuyWholesale.getDocument().addDocumentListener(fm);
 		m_jPriceSell.getDocument().addDocumentListener(new PriceSellManager());
 		m_jTax.addActionListener(fm);
 
@@ -244,6 +253,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		taxcatmodel.setSelectedKey(null);
 		attmodel.setSelectedKey(null);
 		m_jPriceBuy.setText(null);
+		m_jPriceBuyWholesale.setText(null);
+		m_purchaseCost = null;
 		setPriceSell(null);
 		m_jImage.setImage(null);
 		m_jstockcost.setText(null);
@@ -263,6 +274,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax.setEnabled(false);
 		m_jAtt.setEnabled(false);
 		m_jPriceBuy.setEnabled(false);
+		m_jPriceBuyWholesale.setEnabled(false);
+		m_jmarginWholesale.setEnabled(false);
+		m_jmarginWholesaleTax.setEnabled(false);
 		m_jPriceSell.setEnabled(false);
 		m_jPriceSellTax.setEnabled(false);
 		m_jmargin.setEnabled(false);
@@ -272,14 +286,17 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jstockvolume.setEnabled(false);
 		m_jStock.setEnabled(false);
 		m_jStockAdd.setEnabled(false);
-		m_jStockAddButton.setEnabled(false);
+		m_jStockFactoryButton.setEnabled(false);
+		m_jStockWholesaleButton.setEnabled(false);
 		m_jInCatalog.setEnabled(false);
 		m_jCatalogOrder.setEnabled(false);
 		txtAttributes.setEnabled(false);
 
 		calculateMargin();
+		calculateWholesaleMargin();
 		calculatePriceSellTax();
 		calculateMarginTax();
+		calculateMixCost();
 	}
 
 	public void writeValueInsert() {
@@ -299,6 +316,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		taxcatmodel.setSelectedKey(null);
 		attmodel.setSelectedKey(null);
 		m_jPriceBuy.setText(null);
+		m_jPriceBuyWholesale.setText(null);
+		m_purchaseCost = null;
 		setPriceSell(null);
 		m_jImage.setImage(null);
 		m_jstockcost.setText(null);
@@ -318,6 +337,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax.setEnabled(true);
 		m_jAtt.setEnabled(true);
 		m_jPriceBuy.setEnabled(true);
+		m_jPriceBuyWholesale.setEnabled(true);
+		m_jmarginWholesale.setEnabled(true);
+		m_jmarginWholesaleTax.setEnabled(true);
 		m_jPriceSell.setEnabled(true);
 		m_jPriceSellTax.setEnabled(true);
 		m_jmargin.setEnabled(true);
@@ -327,14 +349,17 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jstockvolume.setEnabled(true);
 		m_jStock.setEnabled(true);
 		m_jStockAdd.setEnabled(false);
-		m_jStockAddButton.setEnabled(false);
+		m_jStockFactoryButton.setEnabled(false);
+		m_jStockWholesaleButton.setEnabled(false);
 		m_jInCatalog.setEnabled(true);
 		m_jCatalogOrder.setEnabled(false);
 		txtAttributes.setEnabled(true);
 
 		calculateMargin();
+		calculateWholesaleMargin();
 		calculatePriceSellTax();
 		calculateMarginTax();
+		calculateMixCost();
 	}
 
 	public void writeValueDelete(Object value) {
@@ -352,6 +377,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[6]));
+		m_jPriceBuyWholesale.setText(Formats.CURRENCY.formatValue(findPriceBuyWholesale(m_id)));
+		m_purchaseCost = findPurchaseCost(m_id);
 		setPriceSell(myprod[7]);
 		m_CategoryModel.setSelectedKey(myprod[8]);
 		taxcatmodel.setSelectedKey(myprod[9]);
@@ -375,6 +402,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax.setEnabled(false);
 		m_jAtt.setEnabled(false);
 		m_jPriceBuy.setEnabled(false);
+		m_jPriceBuyWholesale.setEnabled(false);
+		m_jmarginWholesale.setEnabled(false);
+		m_jmarginWholesaleTax.setEnabled(false);
 		m_jPriceSell.setEnabled(false);
 		m_jPriceSellTax.setEnabled(false);
 		m_jmargin.setEnabled(false);
@@ -384,14 +414,17 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jstockvolume.setEnabled(false);
 		m_jStock.setEnabled(false);
 		m_jStockAdd.setEnabled(false);
-		m_jStockAddButton.setEnabled(false);
+		m_jStockFactoryButton.setEnabled(false);
+		m_jStockWholesaleButton.setEnabled(false);
 		m_jInCatalog.setEnabled(false);
 		m_jCatalogOrder.setEnabled(false);
 		txtAttributes.setEnabled(false);
 
 		calculateMargin();
+		calculateWholesaleMargin();
 		calculatePriceSellTax();
 		calculateMarginTax();
+		calculateMixCost();
 	}
 
 	public void writeValueEdit(Object value) {
@@ -408,6 +441,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[6]));
+		m_jPriceBuyWholesale.setText(Formats.CURRENCY.formatValue(findPriceBuyWholesale(m_id)));
+		m_purchaseCost = findPurchaseCost(m_id);
 		setPriceSell(myprod[7]);
 		m_CategoryModel.setSelectedKey(myprod[8]);
 		taxcatmodel.setSelectedKey(myprod[9]);
@@ -431,6 +466,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTax.setEnabled(true);
 		m_jAtt.setEnabled(true);
 		m_jPriceBuy.setEnabled(true);
+		m_jPriceBuyWholesale.setEnabled(true);
+		m_jmarginWholesale.setEnabled(true);
+		m_jmarginWholesaleTax.setEnabled(true);
 		m_jPriceSell.setEnabled(true);
 		m_jPriceSellTax.setEnabled(true);
 		m_jmargin.setEnabled(true);
@@ -440,19 +478,25 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jstockvolume.setEnabled(true);
 		m_jStock.setEnabled(true);
 		m_jStockAdd.setEnabled(true);
-		m_jStockAddButton.setEnabled(true);
+		m_jStockFactoryButton.setEnabled(true);
+		m_jStockWholesaleButton.setEnabled(true);
 		m_jInCatalog.setEnabled(true);
 		m_jCatalogOrder.setEnabled(m_jInCatalog.isSelected());
 		txtAttributes.setEnabled(true);
 
 		calculateMargin();
+		calculateWholesaleMargin();
 		calculatePriceSellTax();
 		calculateMarginTax();
+		calculateMixCost();
 	}
 
 	public Object createValue() throws BasicException {
 
-		Object[] myprod = new Object[20];
+		if (m_jStockAdd.getText() != null && m_jStockAdd.getText().trim().length() > 0) {
+			throw new BasicException(AppLocal.getIntString("message.stockaddselectsource"));
+		}
+		Object[] myprod = new Object[22];
 		myprod[0] = m_id;
 		myprod[1] = m_jRef.getText();
 		myprod[2] = m_jCode.getText();
@@ -470,15 +514,39 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		myprod[14] = Boolean.valueOf(m_jInCatalog.isSelected());
 		myprod[15] = Formats.INT.parseValue(m_jCatalogOrder.getText());
 		myprod[16] = Formats.BYTEA.parseValue(txtAttributes.getText());
-		myprod[19] = takeStockAdd();
 		myprod[17] = Formats.DOUBLE.parseValue(m_jStock.getText());
 		myprod[18] = m_App.getInventoryLocation();
+		myprod[19] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
+		myprod[20] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
+		myprod[21] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
 
 		return myprod;
 	}
 
 	public Component getComponent() {
 		return this;
+	}
+
+	private Double findPriceBuyWholesale(Object id) {
+		if (id == null) {
+			return null;
+		}
+		try {
+			return m_dlSales.findPriceBuyWholesale((String) id);
+		} catch (BasicException e) {
+			return null;
+		}
+	}
+
+	private Object[] findPurchaseCost(Object id) {
+		if (id == null) {
+			return null;
+		}
+		try {
+			return m_dlSales.findPurchaseCost((String) id);
+		} catch (BasicException e) {
+			return null;
+		}
 	}
 
 	private BufferedImage findImage(Object id) {
@@ -498,13 +566,14 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	}
 
 	private void resetStockAdd() {
-		m_pendingAdd = 0.0;
+		m_pendingFactory = 0.0;
+		m_pendingWholesale = 0.0;
 		m_jStockAdd.setText(null);
 		m_jStockAddResult.setText(null);
+		calculateMixCost();
 	}
 
-	// Adding units only raises the stock shown; the movement is written on save
-	private Double takeStockAdd() throws BasicException {
+	private void takeStockAdd(boolean wholesale) throws BasicException {
 
 		Double units = (Double) Formats.DOUBLE.parseValue(m_jStockAdd.getText());
 		if (units != null) {
@@ -513,22 +582,29 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			}
 			Double total = (Double) Formats.DOUBLE.parseValue(m_jStock.getText());
 			double newstock = (total == null ? 0.0 : total.doubleValue()) + units.doubleValue();
-			m_pendingAdd += units.doubleValue();
+			if (wholesale) {
+				m_pendingWholesale += units.doubleValue();
+			} else {
+				m_pendingFactory += units.doubleValue();
+			}
 			m_jStock.setText(Formats.DOUBLE.formatValue(new Double(newstock)));
 			m_jStockAdd.setText(null);
-			m_jStockAddResult.setText(AppLocal.getIntString("message.stockadded", units, new Double(newstock)));
+			String source = AppLocal.getIntString(
+					wholesale ? "label.prodstocksource.wholesale" : "label.prodstocksource.factory");
+			m_jStockAddResult
+					.setText(AppLocal.getIntString("message.stockadded", units, source, new Double(newstock)));
+			calculateMixCost();
 		}
-		return m_pendingAdd > 0.0 ? new Double(m_pendingAdd) : null;
 	}
 
-	private void addStock() {
+	private void addStock(boolean wholesale) {
 		try {
 			if (m_jStockAdd.getText() == null || m_jStockAdd.getText().trim().length() == 0) {
 				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.stockaddpositive"),
 						AppLocal.getIntString("label.prodstockadd"), JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-			takeStockAdd();
+			takeStockAdd(wholesale);
 			m_jStockAdd.requestFocusInWindow();
 		} catch (BasicException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), AppLocal.getIntString("label.prodstockadd"),
@@ -540,18 +616,74 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		if (!reportlock) {
 			reportlock = true;
-
-			Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
-			Double dPriceSell = (Double) pricesell;
-
-			if (dPriceBuy == null || dPriceSell == null) {
-				m_jmargin.setText(null);
-			} else {
-				m_jmargin.setText(Formats.PERCENT
-						.formatValue(new Double(dPriceSell.doubleValue() / dPriceBuy.doubleValue() - 1.0)));
-			}
+			setMarginFromBuy(m_jmargin, readCurrency(m_jPriceBuy.getText()));
 			reportlock = false;
 		}
+		calculateWholesaleMargin();
+		calculateMixCost();
+	}
+
+	private void calculateWholesaleMargin() {
+		if (!reportlock) {
+			reportlock = true;
+			setMarginFromBuy(m_jmarginWholesale, readCurrency(m_jPriceBuyWholesale.getText()));
+			setMarginFromSell(m_jmarginWholesaleTax, readCurrency(m_jPriceBuyWholesale.getText()),
+					readCurrency(m_jPriceSellTax.getText()));
+			reportlock = false;
+		}
+	}
+
+	private void setMarginFromBuy(JTextField field, Double dPriceBuy) {
+		setMarginFromSell(field, dPriceBuy, (Double) pricesell);
+	}
+
+	private void setMarginFromSell(JTextField field, Double dPriceBuy, Double dPriceSell) {
+		if (dPriceBuy == null || dPriceSell == null || dPriceBuy.doubleValue() == 0.0) {
+			field.setText(null);
+		} else {
+			field.setText(
+					Formats.PERCENT.formatValue(new Double(dPriceSell.doubleValue() / dPriceBuy.doubleValue() - 1.0)));
+		}
+	}
+
+	private void calculateMixCost() {
+		if (m_jMixCost == null) {
+			return;
+		}
+		double value = 0.0;
+		double units = 0.0;
+		if (m_purchaseCost != null) {
+			if (m_purchaseCost[0] != null) {
+				value += ((Double) m_purchaseCost[0]).doubleValue();
+			}
+			if (m_purchaseCost[1] != null) {
+				units += ((Double) m_purchaseCost[1]).doubleValue();
+			}
+		}
+		Double factory = readCurrency(m_jPriceBuy.getText());
+		Double wholesale = readCurrency(m_jPriceBuyWholesale.getText());
+		if (m_pendingFactory > 0.0 && factory != null) {
+			value += m_pendingFactory * factory.doubleValue();
+			units += m_pendingFactory;
+		}
+		if (m_pendingWholesale > 0.0) {
+			Double cost = wholesale != null ? wholesale : factory;
+			if (cost != null) {
+				value += m_pendingWholesale * cost.doubleValue();
+				units += m_pendingWholesale;
+			}
+		}
+		Double dPriceSell = (Double) pricesell;
+		if (units <= 0.0 || dPriceSell == null) {
+			m_jMixCost.setText(null);
+			return;
+		}
+		double average = value / units;
+		Double dPriceSellTax = readCurrency(m_jPriceSellTax.getText());
+		String marginTax = dPriceSellTax == null ? ""
+				: Formats.PERCENT.formatValue(new Double(dPriceSellTax.doubleValue() / average - 1.0));
+		m_jMixCost.setText(AppLocal.getIntString("label.prodmixcost", Formats.CURRENCY.formatValue(new Double(average)),
+				Formats.PERCENT.formatValue(new Double(dPriceSell.doubleValue() / average - 1.0)), marginTax));
 	}
 
 	private void calculatePriceSellTax() {
@@ -580,12 +712,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 			Double dPriceBuy = readCurrency(m_jPriceBuy.getText());
 			Double dPriceSellTax = readCurrency(m_jPriceSellTax.getText());
 
-			if (dPriceBuy == null || dPriceSellTax == null) {
-				m_jmarginTax.setText(null);
-			} else {
-				m_jmarginTax.setText(Formats.PERCENT
-						.formatValue(new Double(dPriceSellTax.doubleValue() / dPriceBuy.doubleValue() - 1.0)));
-			}
+			setMarginFromSell(m_jmarginTax, dPriceBuy, dPriceSellTax);
+			setMarginFromSell(m_jmarginWholesaleTax, readCurrency(m_jPriceBuyWholesale.getText()), dPriceSellTax);
 			reportlock = false;
 		}
 	}
@@ -823,12 +951,18 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jTitle = new javax.swing.JLabel();
 		jTabbedPane1 = new javax.swing.JTabbedPane();
 		jPanel1 = new javax.swing.JPanel();
-		jLabel6 = new javax.swing.JButton("Més");
-		genCode = new javax.swing.JButton("Imprimeix");
+		jLabel6 = new javax.swing.JButton(AppLocal.getIntString("button.productbarcodes"));
+		genCode = new javax.swing.JButton(AppLocal.getIntString("button.productlabel"));
 		m_jCode = new javax.swing.JTextField();
 		m_jImage = new com.openbravo.data.gui.JImageEditor();
 		jLabel3 = new javax.swing.JLabel();
 		m_jPriceBuy = new javax.swing.JTextField();
+		jLabelPriceBuyWholesale = new javax.swing.JLabel();
+		m_jPriceBuyWholesale = new javax.swing.JTextField();
+		m_jmarginWholesale = new javax.swing.JTextField();
+		m_jmarginWholesaleTax = new javax.swing.JTextField();
+		jLabelMarginNet = new javax.swing.JLabel();
+		jLabelMarginTax = new javax.swing.JLabel();
 		jLabel4 = new javax.swing.JLabel();
 		m_jPriceSell = new javax.swing.JTextField();
 		jLabel5 = new javax.swing.JLabel();
@@ -845,8 +979,10 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		jLabel19 = new javax.swing.JLabel();
 		m_jStock = new javax.swing.JTextField();
 		m_jStockAdd = new javax.swing.JTextField();
-		m_jStockAddButton = new javax.swing.JButton();
+		m_jStockFactoryButton = new javax.swing.JButton();
+		m_jStockWholesaleButton = new javax.swing.JButton();
 		m_jStockAddResult = new javax.swing.JLabel();
+		m_jMixCost = new javax.swing.JLabel();
 		m_jSave = new javax.swing.JButton();
 		jPanel2 = new javax.swing.JPanel();
 		jLabel9 = new javax.swing.JLabel();
@@ -1066,89 +1202,118 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		jPanel1.add(jLabel6);
 		jPanel1.add(genCode);
-		genCode.setBounds(85, 20, 75, 25);
-		jLabel6.setBounds(10, 20, 75, 25);
+		genCode.setToolTipText(AppLocal.getIntString("tooltip.productlabel"));
+		jLabel6.setToolTipText(AppLocal.getIntString("tooltip.productbarcodes"));
+		genCode.setBounds(115, 20, 80, 25);
+		jLabel6.setBounds(10, 20, 100, 25);
 		jPanel1.add(m_jCode);
-		m_jCode.setBounds(160, 20, 170, 19);
+		m_jCode.setBounds(200, 20, 130, 19);
 		jPanel1.add(m_jImage);
 		m_jImage.setBounds(340, 20, 200, 180);
 
+		jLabelMarginNet.setText(AppLocal.getIntString("label.prodmarginwithouttax"));
+		jLabelMarginNet.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+		jPanel1.add(jLabelMarginNet);
+		jLabelMarginNet.setBounds(170, 47, 75, 15);
+
+		jLabelMarginTax.setText(AppLocal.getIntString("label.prodmarginwithtax"));
+		jLabelMarginTax.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+		jPanel1.add(jLabelMarginTax);
+		jLabelMarginTax.setBounds(245, 47, 85, 15);
+
 		jLabel3.setText(AppLocal.getIntString("label.prodpricebuy")); // NOI18N
 		jPanel1.add(jLabel3);
-		jLabel3.setBounds(10, 50, 150, 15);
+		jLabel3.setBounds(10, 65, 95, 15);
 
 		m_jPriceBuy.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jPriceBuy);
-		m_jPriceBuy.setBounds(160, 50, 80, 19);
-
-		jLabel4.setText(AppLocal.getIntString("label.prodpricesell")); // NOI18N
-		jPanel1.add(jLabel4);
-		jLabel4.setBounds(10, 80, 150, 15);
-
-		m_jPriceSell.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-		jPanel1.add(m_jPriceSell);
-		m_jPriceSell.setBounds(160, 80, 80, 19);
-
-		jLabel5.setText(AppLocal.getIntString("label.prodcategory")); // NOI18N
-		jPanel1.add(jLabel5);
-		jLabel5.setBounds(10, 170, 150, 15);
-		jPanel1.add(m_jCategory);
-		m_jCategory.setBounds(160, 170, 170, 20);
-
-		jLabel7.setText(AppLocal.getIntString("label.taxcategory")); // NOI18N
-		jPanel1.add(jLabel7);
-		jLabel7.setBounds(10, 140, 150, 15);
-		jPanel1.add(m_jTax);
-		m_jTax.setBounds(160, 140, 170, 20);
+		m_jPriceBuy.setBounds(105, 65, 65, 19);
 
 		m_jmargin.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jmargin);
-		m_jmargin.setBounds(250, 80, 80, 19);
-
-		m_jPriceSellTax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-		jPanel1.add(m_jPriceSellTax);
-		m_jPriceSellTax.setBounds(160, 110, 80, 19);
+		m_jmargin.setBounds(175, 65, 70, 19);
 
 		m_jmarginTax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jmarginTax);
-		m_jmarginTax.setBounds(250, 110, 80, 19);
+		m_jmarginTax.setBounds(250, 65, 80, 19);
+
+		jLabelPriceBuyWholesale.setText(AppLocal.getIntString("label.prodpricebuywholesale"));
+		jPanel1.add(jLabelPriceBuyWholesale);
+		jLabelPriceBuyWholesale.setBounds(10, 90, 95, 15);
+
+		m_jPriceBuyWholesale.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+		jPanel1.add(m_jPriceBuyWholesale);
+		m_jPriceBuyWholesale.setBounds(105, 90, 65, 19);
+
+		m_jmarginWholesale.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+		m_jmarginWholesale.setEditable(false);
+		m_jmarginWholesale.setFocusable(false);
+		jPanel1.add(m_jmarginWholesale);
+		m_jmarginWholesale.setBounds(175, 90, 70, 19);
+
+		m_jmarginWholesaleTax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+		m_jmarginWholesaleTax.setEditable(false);
+		m_jmarginWholesaleTax.setFocusable(false);
+		jPanel1.add(m_jmarginWholesaleTax);
+		m_jmarginWholesaleTax.setBounds(250, 90, 80, 19);
+
+		jLabel5.setText(AppLocal.getIntString("label.prodcategory")); // NOI18N
+		jPanel1.add(jLabel5);
+		jLabel5.setBounds(10, 170, 95, 15);
+		jPanel1.add(m_jCategory);
+		m_jCategory.setBounds(105, 170, 225, 20);
+
+		jLabel7.setText(AppLocal.getIntString("label.taxcategory")); // NOI18N
+		jPanel1.add(jLabel7);
+		jLabel7.setBounds(10, 145, 95, 15);
+		jPanel1.add(m_jTax);
+		m_jTax.setBounds(105, 145, 225, 20);
+
+		m_jPriceSellTax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+		jPanel1.add(m_jPriceSellTax);
+		m_jPriceSellTax.setBounds(160, 120, 80, 19);
 
 		jLabel16.setText(AppLocal.getIntString("label.prodpriceselltax")); // NOI18N
 		jPanel1.add(jLabel16);
-		jLabel16.setBounds(10, 110, 150, 15);
+		jLabel16.setBounds(10, 120, 150, 15);
 		jPanel1.add(m_jCodetype);
 		m_jCodetype.setBounds(250, 40, 80, 20);
 
 		jLabel13.setText(AppLocal.getIntString("label.attributes")); // NOI18N
 		jPanel1.add(jLabel13);
-		jLabel13.setBounds(10, 200, 150, 15);
+		jLabel13.setBounds(10, 195, 95, 15);
 		jPanel1.add(m_jAtt);
-		m_jAtt.setBounds(160, 200, 170, 20);
+		m_jAtt.setBounds(105, 195, 225, 20);
 
 		jLabel19.setText(AppLocal.getIntString("label.prodstockcurrent")); // NOI18N
 		jPanel1.add(jLabel19);
-		jLabel19.setBounds(10, 230, 150, 15);
+		jLabel19.setBounds(10, 225, 150, 15);
 
 		m_jStock.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jStock);
-		m_jStock.setBounds(160, 230, 80, 19);
+		m_jStock.setBounds(160, 225, 80, 19);
 
 		m_jStockAdd.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 		jPanel1.add(m_jStockAdd);
-		m_jStockAdd.setBounds(248, 230, 50, 19);
+		m_jStockAdd.setBounds(248, 225, 50, 19);
 
-		m_jStockAddButton.setText(AppLocal.getIntString("button.stockadd")); // NOI18N
-		m_jStockAddButton.setToolTipText(AppLocal.getIntString("label.prodstockadd"));
-		m_jStockAddButton.setMargin(new Insets(0, 0, 0, 0));
-		jPanel1.add(m_jStockAddButton);
-		m_jStockAddButton.setBounds(302, 227, 28, 25);
+		m_jStockFactoryButton.setText(AppLocal.getIntString("button.stockaddfactory"));
+		jPanel1.add(m_jStockFactoryButton);
+		m_jStockFactoryButton.setBounds(305, 222, 110, 25);
+
+		m_jStockWholesaleButton.setText(AppLocal.getIntString("button.stockaddwholesale"));
+		jPanel1.add(m_jStockWholesaleButton);
+		m_jStockWholesaleButton.setBounds(420, 222, 125, 25);
 
 		jPanel1.add(m_jStockAddResult);
-		m_jStockAddResult.setBounds(338, 230, 220, 19);
+		m_jStockAddResult.setBounds(160, 252, 390, 19);
+
+		jPanel1.add(m_jMixCost);
+		m_jMixCost.setBounds(160, 272, 390, 19);
 
 		m_jSave.setText(AppLocal.getIntString("Button.Save"));
 		jPanel1.add(m_jSave);
-		m_jSave.setBounds(160, 270, 110, 25);
+		m_jSave.setBounds(160, 295, 110, 25);
 
 		jTabbedPane1.addTab(AppLocal.getIntString("label.prodgeneral"), jPanel1); // NOI18N
 
@@ -1215,12 +1380,12 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		jTabbedPane1.addTab(AppLocal.getIntString("label.properties"), jPanel3); // NOI18N
 
 		add(jTabbedPane1);
-		jTabbedPane1.setBounds(10, 105, 560, 280);
+		jTabbedPane1.setBounds(10, 105, 560, 320);
 	}// </editor-fold>//GEN-END:initComponents
 
 	private void layoutProductHeader() {
 		int w = Math.max(getWidth(), 580);
-		int h = Math.max(getHeight(), 450);
+		int h = Math.max(getHeight(), 510);
 		int fieldX = 90;
 		int fieldW = Math.max(160, w - fieldX - 10);
 		m_jRef.setBounds(fieldX, 50, 160, 19);
@@ -1252,6 +1417,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JLabel jLabel19;
 	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel3;
+	private javax.swing.JLabel jLabelPriceBuyWholesale;
+	private javax.swing.JLabel jLabelMarginNet;
+	private javax.swing.JLabel jLabelMarginTax;
 	private javax.swing.JLabel jLabel4;
 	private javax.swing.JLabel jLabel5;
 	private javax.swing.JButton jLabel6;
@@ -1275,6 +1443,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JCheckBox m_jInCatalog;
 	private javax.swing.JTextField m_jName;
 	private javax.swing.JTextField m_jPriceBuy;
+	private javax.swing.JTextField m_jPriceBuyWholesale;
 	private javax.swing.JTextField m_jPriceSell;
 	private javax.swing.JTextField m_jPriceSellTax;
 	private javax.swing.JTextField m_jRef;
@@ -1282,12 +1451,16 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JCheckBox m_jScale;
 	private javax.swing.JTextField m_jStock;
 	private javax.swing.JTextField m_jStockAdd;
-	private javax.swing.JButton m_jStockAddButton;
+	private javax.swing.JButton m_jStockFactoryButton;
+	private javax.swing.JButton m_jStockWholesaleButton;
 	private javax.swing.JLabel m_jStockAddResult;
+	private javax.swing.JLabel m_jMixCost;
 	private javax.swing.JComboBox m_jTax;
 	private javax.swing.JLabel m_jTitle;
 	private javax.swing.JTextField m_jmargin;
 	private javax.swing.JTextField m_jmarginTax;
+	private javax.swing.JTextField m_jmarginWholesale;
+	private javax.swing.JTextField m_jmarginWholesaleTax;
 	private javax.swing.JTextField m_jstockcost;
 	private javax.swing.JTextField m_jstockvolume;
 	private javax.swing.JTextArea txtAttributes;

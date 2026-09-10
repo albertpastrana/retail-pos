@@ -92,9 +92,22 @@ TSV files (UTF-8, tab-separated, no header):
 
 Prices in the file are **before tax**; imported products are assigned tax category `001`, whose rate you set in Stock → Taxes. The sales-screen buttons use `taxesincluded=true`, so the till displays prices with tax.
 
+Selling prices for scan-to-import are offered from the purchase cost rather
+than copied from a price file. Configure the default markup, optional
+brand overrides, and rounding under **Stock → Price rules**. The dialog shows
+both markup on cost and margin on the tax-included retail price; staff can
+override the offered price. Changing a saved rule can optionally reprice only
+existing products that still match the previous rule.
+
 ### Scan-to-import (preferred at the till)
 
-If a scanned barcode is missing from `PRODUCTS` but present in the TSV, the sales screen offers to import that one product (and its category if needed). Set `catalog.import.products` and `catalog.import.categories` in the properties file.
+If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching cost when one is available. It then opens an editable create-product dialog prefilled with whatever it found. If the TSV does not contain the barcode, the same dialog opens with only the scanned barcode. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged.
+
+When the catalogue contains several EANs for the same model, the dialog lists
+the whole family with every variant selected. Clicking a row opens that
+variant's fields, so exceptional costs or selling prices (such as 3XL) can be
+edited independently. Saving creates or updates the selected variants but adds
+only the scanned one to the receipt.
 
 Importing the catalogue **does not** create stock. Receive goods via Stock diary so `STOCKCURRENT` fills in.
 

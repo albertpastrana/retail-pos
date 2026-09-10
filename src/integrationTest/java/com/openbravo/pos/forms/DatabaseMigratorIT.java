@@ -32,9 +32,38 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(4, count(connection, "flyway_schema_history"));
+			assertEquals(6, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, count(connection, "PRODUCTS"));
+			assertEquals(1, count(connection, "PRICE_RULES"));
+		} finally {
+			connection.close();
+		}
+	}
+
+	@Test
+	public void ignoresObjectsLeftInOtherSchemas() throws Exception {
+		String url = "jdbc:derby:memory:flywayOtherSchemaIT;create=true";
+		Connection connection = open(url, null, null);
+		try {
+			Statement statement = connection.createStatement();
+			try {
+				statement.execute("CREATE SCHEMA LEFTOVER");
+				statement.execute("CREATE TABLE LEFTOVER.PRICE_RULES (ID VARCHAR(255) NOT NULL PRIMARY KEY)");
+				statement.execute("CREATE TABLE LEFTOVER.PRODUCTS (ID VARCHAR(255), PRICEBUY_WHOLESALE DOUBLE)");
+			} finally {
+				statement.close();
+			}
+		} finally {
+			connection.close();
+		}
+
+		DatabaseMigrator.migrate(url, null, null);
+
+		connection = open(url, null, null);
+		try {
+			assertEquals(1, count(connection, "PRICE_RULES"));
+			assertEquals(0, queryInt(connection, "SELECT COUNT(PRICEBUY_WHOLESALE) FROM PRODUCTS"));
 		} finally {
 			connection.close();
 		}
@@ -64,11 +93,12 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(5, count(connection, "flyway_schema_history"));
+			assertEquals(7, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, count(connection, "PEOPLE"));
+			assertEquals(1, count(connection, "PRICE_RULES"));
 		} finally {
 			connection.close();
 		}
@@ -78,7 +108,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(5, count(connection, "flyway_schema_history"));
+			assertEquals(7, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 		} finally {
 			connection.close();
