@@ -46,6 +46,7 @@ import com.openbravo.pos.ticket.TicketTaxInfo;
 import com.openbravo.pos.util.RoundUtils;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,6 +67,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	private static final Logger LOGGER = Logger.getLogger("com.openbravo.pos.forms.DataLogicSales");
 
 	protected Session s;
+	private Map<String, String[]> catalogPrices;
 
 	protected Datas[] auxiliarDatas;
 	protected Datas[] stockdiaryDatas;
@@ -128,8 +130,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final GiftVoucherInfo findGiftVoucher(String code) throws BasicException {
 		Object[] voucher = (Object[]) new PreparedSentence(s,
-				"SELECT CODE, INITIALVALUE, BALANCE FROM GIFTVOUCHERS WHERE CODE = ?",
-				SerializerWriteString.INSTANCE,
+				"SELECT CODE, INITIALVALUE, BALANCE FROM GIFTVOUCHERS WHERE CODE = ?", SerializerWriteString.INSTANCE,
 				new SerializerReadBasic(new Datas[] { Datas.STRING, Datas.DOUBLE, Datas.DOUBLE }))
 						.find(code.trim().toUpperCase());
 		return voucher == null ? null
@@ -152,15 +153,31 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final ProductInfoExt getCatalogProductByCode(String code, String productsPath, String categoriesPath)
 			throws BasicException {
-		if (productsPath == null || categoriesPath == null) {
+		if (productsPath == null) {
 			return null;
 		}
 
 		try {
 			String[] row = findProduct(code, productsPath);
 			if (row == null) {
-				LOGGER.info("Barcode " + code + " not found in import catalog " + productsPath);
-				return null;
+				String[] priced = findCatalogPrice(code, productsPath);
+				if (priced == null) {
+					LOGGER.info("Barcode " + code + " not found in import catalog " + productsPath);
+					return null;
+				}
+				ProductInfoExt pricedProduct = new ProductInfoExt();
+				pricedProduct.setID(UUID.randomUUID().toString());
+				pricedProduct.setReference(priced[1].isEmpty() ? code : priced[1]);
+				pricedProduct.setCode(code);
+				pricedProduct.setName("");
+				pricedProduct.setPriceBuy(Double.parseDouble(priced[2]));
+				pricedProduct.setPriceSell(Double.parseDouble(priced[3]));
+				pricedProduct.setTaxCategoryID("001");
+				if (priced.length > 4 && !priced[4].isEmpty()) {
+					pricedProduct.setProperty("catalog.brand", priced[4]);
+				}
+				pricedProduct.setProperty("catalog.price.available", "true");
+				return pricedProduct;
 			}
 
 			ProductInfoExt product = new ProductInfoExt();
@@ -169,13 +186,15 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			product.setCode(row[2]);
 			product.setName(row[3]);
 			product.setCategoryID(row[4]);
+			boolean priceAvailable = applyCatalogPrices(row, productsPath);
 			product.setPriceBuy(Double.parseDouble(row[5]));
 			product.setPriceSell(Double.parseDouble(row[6]));
 			product.setTaxCategoryID("001");
 
-			String[] category = readCategories(categoriesPath).get(row[4]);
+			String[] category = categoriesPath == null ? null : readCategories(categoriesPath).get(row[4]);
 			product.setProperty("catalog.category.name", category == null ? row[4] : category[1]);
 			product.setProperty("catalog.brand", row.length > 7 ? row[7] : null);
+			product.setProperty("catalog.price.available", Boolean.toString(priceAvailable));
 			return product;
 		} catch (Exception e) {
 			throw new BasicException("Cannot read barcode " + code + " from import catalog", e);
@@ -194,13 +213,33 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				return null;
 			}
 			LOGGER.info("Importing barcode " + code + " as " + product[1] + " from " + productsPath);
+			applyCatalogPrices(product, productsPath);
 
-			Map<String, String[]> categories = readCategories(categoriesPath);
+			ProductInfoExt productInfo = new ProductInfoExt();
+			productInfo.setID(product[0]);
+			productInfo.setReference(product[1]);
+			productInfo.setCode(product[2]);
+			productInfo.setName(product[3]);
+			productInfo.setCategoryID(product[4]);
+			productInfo.setPriceBuy(Double.parseDouble(product[5]));
+			productInfo.setPriceSell(Double.parseDouble(product[6]));
+			productInfo.setTaxCategoryID("001");
+			return importProduct(productInfo, product.length > 7 ? product[7] : null, categoriesPath);
+		} catch (Exception e) {
+			throw new BasicException("Cannot import barcode " + code, e);
+		}
+	}
+
+	public final ProductInfoExt importProduct(ProductInfoExt product, String brand, String categoriesPath)
+			throws BasicException {
+		try {
+			Map<String, String[]> categories = categoriesPath == null ? new HashMap<String, String[]>()
+					: readCategories(categoriesPath);
 			Connection connection = s.getConnection();
 			boolean oldAutoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
 			try {
-				ensureCategory(connection, product[4], categories);
+				ensureCategory(connection, product.getCategoryID(), categories);
 
 				PreparedStatement insert = connection
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
@@ -208,19 +247,19 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND) "
 								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, "
 								+ "NULL, NULL, NULL, 0, 0, NULL, ?)");
-				insert.setString(1, product[0]);
-				insert.setString(2, product[1]);
-				insert.setString(3, product[2]);
-				insert.setString(4, product[3]);
-				insert.setDouble(5, Double.parseDouble(product[5]));
-				insert.setDouble(6, Double.parseDouble(product[6]));
-				insert.setString(7, product[4]);
-				insert.setString(8, product.length > 7 ? product[7] : null);
+				insert.setString(1, product.getID());
+				insert.setString(2, product.getReference());
+				insert.setString(3, product.getCode());
+				insert.setString(4, product.getName());
+				insert.setDouble(5, product.getPriceBuy());
+				insert.setDouble(6, product.getPriceSell());
+				insert.setString(7, product.getCategoryID());
+				insert.setString(8, brand);
 				insert.executeUpdate();
 				insert.close();
 
 				insert = connection.prepareStatement("INSERT INTO PRODUCTS_CAT (PRODUCT, CATORDER) VALUES (?, NULL)");
-				insert.setString(1, product[0]);
+				insert.setString(1, product.getID());
 				insert.executeUpdate();
 				insert.close();
 				connection.commit();
@@ -230,10 +269,69 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			} finally {
 				connection.setAutoCommit(oldAutoCommit);
 			}
-			return getProductInfoByCode(code);
+			return getProductInfoByCode(product.getCode());
 		} catch (Exception e) {
-			throw new BasicException("Cannot import barcode " + code, e);
+			throw new BasicException("Cannot create product " + product.getCode(), e);
 		}
+	}
+
+	private boolean applyCatalogPrices(String[] product, String productsPath) throws IOException {
+		if (product.length < 7) {
+			return false;
+		}
+		Map<String, String[]> prices = readCatalogPrices(productsPath);
+		String[] priced = prices.get(product[2]);
+		if (priced == null) {
+			priced = prices.get(product[1]);
+		}
+		if (priced != null && priced.length >= 4) {
+			product[5] = priced[2];
+			product[6] = priced[3];
+			return true;
+		}
+		return false;
+	}
+
+	private String[] findCatalogPrice(String code, String productsPath) throws IOException {
+		Map<String, String[]> prices = readCatalogPrices(productsPath);
+		String[] priced = prices.get(code);
+		if (priced == null) {
+			priced = prices.get("0" + code);
+		}
+		if (priced == null) {
+			priced = prices.get("00" + code);
+		}
+		return priced;
+	}
+
+	private Map<String, String[]> readCatalogPrices(String productsPath) throws IOException {
+		if (catalogPrices != null) {
+			return catalogPrices;
+		}
+		catalogPrices = new HashMap<String, String[]>();
+		File pricesFile = new File(new File(productsPath).getParentFile(), "import-prices.tsv");
+		if (!pricesFile.isFile()) {
+			return catalogPrices;
+		}
+		BufferedReader reader = utf8Reader(pricesFile.getPath());
+		try {
+			String line;
+			boolean header = true;
+			while ((line = reader.readLine()) != null) {
+				if (header) {
+					header = false;
+					continue;
+				}
+				String[] priced = line.split("\t", -1);
+				if (priced.length >= 4) {
+					catalogPrices.put(priced[0], priced);
+					catalogPrices.put(priced[1], priced);
+				}
+			}
+		} finally {
+			reader.close();
+		}
+		return catalogPrices;
 	}
 
 	private String[] findProduct(String code, String productsPath) throws IOException {
@@ -581,10 +679,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							new PreparedSentence(s,
 									"INSERT INTO GIFTVOUCHERS (ID, CODE, INITIALVALUE, BALANCE, ISSUEDRECEIPT, ISSUEDLINE, ISSUEDDATE) VALUES (?, ?, ?, ?, ?, ?, ?)",
 									new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.DOUBLE,
-											Datas.DOUBLE, Datas.STRING, Datas.INT, Datas.TIMESTAMP }))
-													.exec(UUID.randomUUID().toString(), code, new Double(l.getPriceTax()),
-															new Double(l.getPriceTax()), ticket.getId(),
-															new Integer(l.getTicketLine()), ticket.getDate());
+											Datas.DOUBLE, Datas.STRING, Datas.INT, Datas.TIMESTAMP })).exec(
+													UUID.randomUUID().toString(), code, new Double(l.getPriceTax()),
+													new Double(l.getPriceTax()), ticket.getId(),
+													new Integer(l.getTicketLine()), ticket.getDate());
 						}
 						l.setProperty("giftvoucher.codes", codes.toString());
 					}
