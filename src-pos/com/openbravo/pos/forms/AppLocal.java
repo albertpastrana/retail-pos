@@ -31,7 +31,7 @@ import com.openbravo.beans.LocaleResources;
  */
 public class AppLocal {
 
-    public static final String APP_NAME = "OpenBravoPOS";
+    public static final String APP_NAME = "Retail POS";
     public static final String APP_ID = "openbravopos";
     public static final String APP_VERSION;
     public static final String GIT_REVISION;

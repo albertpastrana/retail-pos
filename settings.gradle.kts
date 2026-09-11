@@ -1,1 +1,1 @@
-rootProject.name = "openbravopos"
+rootProject.name = "retail-pos"

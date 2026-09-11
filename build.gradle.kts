@@ -5,7 +5,7 @@ plugins {
 }
 
 version = "2.30.4"
-description = "Openbravo POS"
+description = "Retail POS"
 
 repositories {
     mavenCentral()
@@ -108,7 +108,7 @@ tasks.jar {
     manifest {
         attributes(
             "Implementation-Vendor" to "Openbravo SL",
-            "Implementation-Title" to "Openbravo Network POS",
+            "Implementation-Title" to "Retail POS",
             "Implementation-Version" to version,
             "Main-Class" to "com.openbravo.pos.forms.StartPOS",
         )

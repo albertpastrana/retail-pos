@@ -30,7 +30,7 @@ BuildRequires: update-desktop-files
 %endif
 
 %description
-Openbravo POS is a point of sale application designed for touch screens, supports ESC/POS ticket printers, customer displays and barcode scanners. It is multiuser providing product entry forms, reports and charts.
+Retail POS is a point of sale application designed for touch screens, supports ESC/POS ticket printers, customer displays and barcode scanners. It is multiuser providing product entry forms, reports and charts.
 
 %prep
 %setup -q
@@ -95,4 +95,3 @@ desktop-file-install $RPM_BUILD_ROOT%{_bindir}/%{name}.desktop
 %changelog
 * Mon Jul 16 2008 Jordi Mas <jmas@openbravo.com>
 - initial spec file
-
