@@ -124,13 +124,14 @@ existing products that still match the previous rule.
 
 ### Scan-to-import (preferred at the till)
 
-If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching row from `import-prices.tsv`. It then opens an editable create-product dialog prefilled with whatever it found. If neither file contains the barcode, the same dialog opens with only the scanned barcode. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged.
+If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching row from `import-prices.tsv`. It then opens an editable create-product dialog prefilled with whatever it found. If neither file contains the barcode, the same dialog opens with only the scanned barcode. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged. Stock → Products does the same when you search a barcode that is not in the till.
 
 When the catalogue contains several EANs for the same model, the dialog lists
 the whole family with every variant selected. Clicking a row opens that
 variant's fields, so exceptional costs or selling prices (such as 3XL) can be
-edited independently. Saving creates or updates the selected variants but adds
-only the scanned one to the receipt.
+edited independently. Saving creates or updates the selected variants. On the sales screen only the
+scanned one goes on the receipt; on Stock → Products you stay on the scanned
+one.
 
 Importing the catalogue **does not** create stock. Receive goods via Stock diary so `STOCKCURRENT` fills in.
 

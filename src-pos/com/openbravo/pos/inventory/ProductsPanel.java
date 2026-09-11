@@ -102,7 +102,23 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotloadlists"),
 						eD);
 				msg.show(ProductsPanel.this);
+				return;
 			}
+			try {
+				offerCatalogImport();
+			} catch (BasicException eD) {
+				new MessageInf(eD).show(ProductsPanel.this);
+			}
+		}
+	}
+
+	private void offerCatalogImport() throws BasicException {
+		final String barcode = jproductfilter.getBarcode();
+		if (barcode.isEmpty() || m_dlSales.getProductInfoByCode(barcode) != null) {
+			return;
+		}
+		if (CatalogImportDialog.forStock(this, app, m_dlSales).importIfAbsent(barcode) != null) {
+			bd.actionLoad();
 		}
 	}
 }

@@ -122,9 +122,14 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		return this;
 	}
 
+	public String getBarcode() {
+		String barcode = m_jBarcode.getText();
+		return barcode == null ? "" : barcode.trim();
+	}
+
 	public Object createValue() throws BasicException {
 
-		if (m_jBarcode.getText() == null || m_jBarcode.getText().equals("")) {
+		if (getBarcode().equals("")) {
 			String sName = m_jName.getText();
 			Object nameCompare = (sName == null || sName.equals("")) ? QBFCompareEnum.COMP_NONE
 					: m_jCboName.getSelectedItem();
@@ -140,7 +145,7 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 			// Filtro por codigo de barras.
 			return new Object[] { QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 					QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_BLOOKUP,
-					m_jBarcode.getText(), QBFCompareEnum.COMP_NONE, null };
+					getBarcode(), QBFCompareEnum.COMP_NONE, null };
 		}
 	}
 
