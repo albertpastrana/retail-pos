@@ -1049,10 +1049,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						+ "FROM PRODUCTS, PRODUCTS_CAT C " + "WHERE ?(QBF_FILTER) AND PRODUCTS.ID = C.PRODUCT "
 						+ "ORDER BY PRODUCTS.REFERENCE",
 				new String[] { "PRODUCTS.NAME", "PRODUCTS.PRICEBUY", "PRODUCTS.PRICESELL", "PRODUCTS.CATEGORY",
-						"PRODUCTS.CODE", "PRODUCTS.BRAND" }),
+						"PRODUCTS.CODE", "PRODUCTS.BRAND", "PRODUCTS.REFERENCE" }),
 				new SerializerWriteBasic(new Datas[] { Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.DOUBLE,
 						Datas.OBJECT, Datas.DOUBLE, Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
-						Datas.OBJECT, Datas.STRING }),
+						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING }),
 				productsRow.getSerializerRead());
 	}
 
