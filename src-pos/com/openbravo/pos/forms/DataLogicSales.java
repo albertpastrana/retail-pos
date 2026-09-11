@@ -304,7 +304,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 								+ "PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, "
 								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND) "
 								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, "
-								+ "NULL, NULL, NULL, 0, 0, NULL, ?)");
+								+ "NULL, NULL, NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
 				insert.setString(1, product.getID());
 				insert.setString(2, product.getReference());
 				insert.setString(3, product.getCode());
@@ -350,7 +350,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
 									+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, "
 									+ "ATTRIBUTES, BRAND) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
-									+ "NULL, 0, 0, NULL, ?)");
+									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
 					PreparedStatement findCat = connection
 							.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 					PreparedStatement insertCat = connection
