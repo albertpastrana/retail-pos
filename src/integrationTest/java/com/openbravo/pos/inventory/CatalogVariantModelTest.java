@@ -1,6 +1,7 @@
 package com.openbravo.pos.inventory;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -11,6 +12,9 @@ import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.ticket.ProductInfoExt;
 
 public class CatalogVariantModelTest {
+
+	private static final String PRODUCTS = "src/integrationTest/fixtures/catalog/import-products.tsv";
+	private static final String CATEGORIES = "src/integrationTest/fixtures/catalog/import-categories.tsv";
 
 	@Test
 	public void groupsSupplierReferencesByModel() {
@@ -31,15 +35,19 @@ public class CatalogVariantModelTest {
 	@Test
 	public void findsEveryVariantFromOneScannedBarcode() throws Exception {
 		DataLogicSales sales = new DataLogicSales();
-		List<ProductInfoExt> massana = sales.getCatalogProductFamily("8433790116705", "data/import-products.tsv",
-				"data/import-categories.tsv");
-		assertEquals(12, massana.size());
-		assertTrue(containsCode(massana, "8433790120214"));
 
-		List<ProductInfoExt> avet = sales.getCatalogProductFamily("8413092436428", "data/import-products.tsv",
-				"data/import-categories.tsv");
-		assertEquals(8, avet.size());
-		assertTrue(containsCode(avet, "8413092437029"));
+		List<ProductInfoExt> massana = sales.getCatalogProductFamily("9990000000101", PRODUCTS, CATEGORIES);
+		assertEquals(4, massana.size());
+		assertTrue(containsCode(massana, "9990000000104"));
+		// P761238 is another Massana model, and the Gisela row splits to the same
+		// P761237 model string under a different brand.
+		assertFalse(containsCode(massana, "9990000000110"));
+		assertFalse(containsCode(massana, "9990000000301"));
+
+		List<ProductInfoExt> avet = sales.getCatalogProductFamily("9990000000201", PRODUCTS, CATEGORIES);
+		assertEquals(3, avet.size());
+		assertTrue(containsCode(avet, "9990000000203"));
+		assertFalse(containsCode(avet, "9990000000210"));
 	}
 
 	private boolean containsCode(List<ProductInfoExt> products, String code) {
