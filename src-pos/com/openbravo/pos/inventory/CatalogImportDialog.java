@@ -210,12 +210,12 @@ public final class CatalogImportDialog {
 				int selected = table.getSelectedRow();
 				if (!event.getValueIsAdjusting() && selected >= 0) {
 					((CardLayout) cards.getLayout()).show(cards, editors.get(selected).product.getCode());
-					focusPriceField(editors.get(selected).prices.sellTax);
+					focusPriceField(editors.get(selected).stock);
 				}
 			}
 		});
 		table.setRowSelectionInterval(scannedRow, scannedRow);
-		focusImportField(editors.get(scannedRow).prices.sellTax);
+		focusImportField(editors.get(scannedRow).stock);
 
 		JButton selectAll = new JButton(AppLocal.getIntString("button.variants.all"));
 		selectAll.addActionListener(new ActionListener() {
@@ -327,7 +327,7 @@ public final class CatalogImportDialog {
 		JPanel content = new JPanel(new BorderLayout(0, 12));
 		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
 		content.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
-		focusImportField(name.getText().trim().isEmpty() ? name : prices.sellTax);
+		focusImportField(stock);
 
 		String title = AppLocal.getIntString("title.importproduct");
 		Object[] options = new Object[] { confirmLabel(false), AppLocal.getIntString("button.skipitem") };
