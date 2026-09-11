@@ -32,9 +32,10 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(8, count(connection, "flyway_schema_history"));
+			assertEquals(9, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, count(connection, "PRODUCTS"));
+			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
 		} finally {
 			connection.close();
@@ -93,10 +94,11 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(9, count(connection, "flyway_schema_history"));
+			assertEquals(10, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "PRODUCTS"));
+			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(4, count(connection, "PEOPLE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
 		} finally {
@@ -108,7 +110,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(9, count(connection, "flyway_schema_history"));
+			assertEquals(10, count(connection, "flyway_schema_history"));
 			assertEquals(34, count(connection, "RESOURCES"));
 		} finally {
 			connection.close();

@@ -134,6 +134,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.getDocument().addDocumentListener(dirty);
 		m_jComment.addActionListener(dirty);
 		m_jScale.addActionListener(dirty);
+		m_jVoucher.addActionListener(dirty);
 		m_jCategory.addActionListener(dirty);
 		m_jTax.addActionListener(dirty);
 		m_jAtt.addActionListener(dirty);
@@ -249,6 +250,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setText(null);
 		m_jComment.setSelected(false);
 		m_jScale.setSelected(false);
+		m_jVoucher.setSelected(false);
 		m_CategoryModel.setSelectedKey(null);
 		taxcatmodel.setSelectedKey(null);
 		attmodel.setSelectedKey(null);
@@ -270,6 +272,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setEnabled(false);
 		m_jComment.setEnabled(false);
 		m_jScale.setEnabled(false);
+		m_jVoucher.setEnabled(false);
 		m_jCategory.setEnabled(false);
 		m_jTax.setEnabled(false);
 		m_jAtt.setEnabled(false);
@@ -312,6 +315,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setText(null);
 		m_jComment.setSelected(false);
 		m_jScale.setSelected(false);
+		m_jVoucher.setSelected(false);
 		m_CategoryModel.setSelectedKey(null);
 		taxcatmodel.setSelectedKey(null);
 		attmodel.setSelectedKey(null);
@@ -333,6 +337,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setEnabled(true);
 		m_jComment.setEnabled(true);
 		m_jScale.setEnabled(true);
+		m_jVoucher.setEnabled(true);
 		m_jCategory.setEnabled(true);
 		m_jTax.setEnabled(true);
 		m_jAtt.setEnabled(true);
@@ -376,6 +381,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
+		m_jVoucher.setSelected(((Boolean) myprod[17]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[6]));
 		m_jPriceBuyWholesale.setText(Formats.CURRENCY.formatValue(findPriceBuyWholesale(m_id)));
 		m_purchaseCost = findPurchaseCost(m_id);
@@ -398,6 +404,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setEnabled(false);
 		m_jComment.setEnabled(false);
 		m_jScale.setEnabled(false);
+		m_jVoucher.setEnabled(false);
 		m_jCategory.setEnabled(false);
 		m_jTax.setEnabled(false);
 		m_jAtt.setEnabled(false);
@@ -440,6 +447,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
+		m_jVoucher.setSelected(((Boolean) myprod[17]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[6]));
 		m_jPriceBuyWholesale.setText(Formats.CURRENCY.formatValue(findPriceBuyWholesale(m_id)));
 		m_purchaseCost = findPurchaseCost(m_id);
@@ -462,6 +470,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jName.setEnabled(true);
 		m_jComment.setEnabled(true);
 		m_jScale.setEnabled(true);
+		m_jVoucher.setEnabled(true);
 		m_jCategory.setEnabled(true);
 		m_jTax.setEnabled(true);
 		m_jAtt.setEnabled(true);
@@ -496,7 +505,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		if (m_jStockAdd.getText() != null && m_jStockAdd.getText().trim().length() > 0) {
 			throw new BasicException(AppLocal.getIntString("message.stockaddselectsource"));
 		}
-		Object[] myprod = new Object[22];
+		Object[] myprod = new Object[23];
 		myprod[0] = m_id;
 		myprod[1] = m_jRef.getText();
 		myprod[2] = m_jCode.getText();
@@ -514,11 +523,12 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		myprod[14] = Boolean.valueOf(m_jInCatalog.isSelected());
 		myprod[15] = Formats.INT.parseValue(m_jCatalogOrder.getText());
 		myprod[16] = Formats.BYTEA.parseValue(txtAttributes.getText());
-		myprod[17] = Formats.DOUBLE.parseValue(m_jStock.getText());
-		myprod[18] = m_App.getInventoryLocation();
-		myprod[19] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
-		myprod[20] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
-		myprod[21] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
+		myprod[17] = Boolean.valueOf(m_jVoucher.isSelected());
+		myprod[18] = Formats.DOUBLE.parseValue(m_jStock.getText());
+		myprod[19] = m_App.getInventoryLocation();
+		myprod[20] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
+		myprod[21] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
+		myprod[22] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
 
 		return myprod;
 	}
@@ -966,6 +976,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		});
 		m_jComment = new javax.swing.JCheckBox();
 		m_jScale = new javax.swing.JCheckBox();
+		m_jVoucher = new javax.swing.JCheckBox();
 
 		txtAttributes = new javax.swing.JTextArea();
 		txtAttributes.setFont(new Font("DialogInput", Font.PLAIN, 12));
@@ -1025,6 +1036,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		ProductFormLayout.addRow(fields, 5, AppLocal.getIntString("label.prodpriceselltax"),
 				ProductFormLayout.inline(m_jPriceSellTax, jLabelMarginTax, m_jmarginTax));
 		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.attributes"), m_jAtt);
+		ProductFormLayout.addRow(fields, 7, AppLocal.getIntString("label.prodvoucher"),
+				ProductFormLayout.inline(m_jVoucher));
 
 		JPanel tab = new JPanel(new BorderLayout(12, 0));
 		tab.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
@@ -1284,6 +1297,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JTextField m_jRef;
 	private javax.swing.JButton m_jSave;
 	private javax.swing.JCheckBox m_jScale;
+	private javax.swing.JCheckBox m_jVoucher;
 	private javax.swing.JTextField m_jStock;
 	private javax.swing.JTextField m_jStockAdd;
 	private javax.swing.JButton m_jStockFactoryButton;

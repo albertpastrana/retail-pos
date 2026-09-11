@@ -109,7 +109,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				new Field("IMAGE", Datas.IMAGE, Formats.NULL), new Field("STOCKCOST", Datas.DOUBLE, Formats.CURRENCY),
 				new Field("STOCKVOLUME", Datas.DOUBLE, Formats.DOUBLE),
 				new Field("ISCATALOG", Datas.BOOLEAN, Formats.BOOLEAN), new Field("CATORDER", Datas.INT, Formats.INT),
-				new Field("PROPERTIES", Datas.BYTES, Formats.NULL));
+				new Field("PROPERTIES", Datas.BYTES, Formats.NULL),
+				new Field("ISVOUCHER", Datas.BOOLEAN, Formats.BOOLEAN));
 	}
 
 	public void init(Session s) {
@@ -303,8 +304,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
 								+ "PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, "
 								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND) "
-								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, "
-								+ "NULL, NULL, NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
+								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, " + "NULL, NULL, NULL, "
+								+ s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
 				insert.setString(1, product.getID());
 				insert.setString(2, product.getReference());
 				insert.setString(3, product.getCode());
@@ -813,13 +814,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						if (voucherCount < 1 || Math.abs(l.getMultiply() - voucherCount) > 0.000001) {
 							throw new BasicException(AppLocal.getIntString("message.voucherwholeunits"));
 						}
-						if (l.getPriceTax() <= 0.0) {
+						if (l.getPrice() <= 0.0) {
 							throw new BasicException(AppLocal.getIntString("message.voucherpositivevalue"));
 						}
 
 						StringBuilder codes = new StringBuilder();
 						for (int voucherIndex = 0; voucherIndex < voucherCount; voucherIndex++) {
-							String code = insertIssuedGiftVoucher(ticket.getId(), l.getTicketLine(), l.getPriceTax(),
+							String code = insertIssuedGiftVoucher(ticket.getId(), l.getTicketLine(), l.getPrice(),
 									ticket.getDate());
 							if (codes.length() > 0) {
 								codes.append(", ");
@@ -1046,6 +1047,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						+ s.DB.CHAR_NULL()
 						+ ", PRODUCTS.STOCKCOST, PRODUCTS.STOCKVOLUME, CASE WHEN C.PRODUCT IS NULL THEN " + s.DB.FALSE()
 						+ " ELSE " + s.DB.TRUE() + " END, C.CATORDER, PRODUCTS.ATTRIBUTES "
+						+ ", PRODUCTS.ISVOUCHER "
 						+ "FROM PRODUCTS, PRODUCTS_CAT C " + "WHERE ?(QBF_FILTER) AND PRODUCTS.ID = C.PRODUCT "
 						+ "ORDER BY PRODUCTS.REFERENCE",
 				new String[] { "PRODUCTS.NAME", "PRODUCTS.PRICEBUY", "PRODUCTS.PRICESELL", "PRODUCTS.CATEGORY",
@@ -1061,9 +1063,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16 })).exec(params);
+								new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17 })).exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
 					applyStockLevel(values);
@@ -1083,9 +1085,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, ISSCALE = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ? WHERE ID = ?",
+						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, ISSCALE = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ? WHERE ID = ?",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 0 })).exec(params);
+								new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 0 })).exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
 					applyStockLevel(values);
@@ -1131,12 +1133,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// much of that stock comes from units added rather than a correction
 	private void applyStockLevel(Object[] values) throws BasicException {
 
-		Double units = (Double) values[17];
-		String location = (String) values[18];
+		Double units = (Double) values[18];
+		String location = (String) values[19];
 		String product = (String) values[0];
-		Double addedFactory = values.length > 19 ? (Double) values[19] : null;
-		Double wholesale = values.length > 20 ? (Double) values[20] : null;
-		Double addedWholesale = values.length > 21 ? (Double) values[21] : null;
+		Double addedFactory = values.length > 20 ? (Double) values[20] : null;
+		Double wholesale = values.length > 21 ? (Double) values[21] : null;
+		Double addedWholesale = values.length > 22 ? (Double) values[22] : null;
 		Double pricebuy = (Double) values[6];
 		double added = unitsOf(addedFactory) + unitsOf(addedWholesale);
 
@@ -1158,11 +1160,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	private void applyWholesalePrice(Object[] values) throws BasicException {
-		if (values.length <= 20) {
+		if (values.length <= 21) {
 			return;
 		}
 		new PreparedSentence(s, "UPDATE PRODUCTS SET PRICEBUY_WHOLESALE = ? WHERE ID = ?",
-				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[20], values[0]);
+				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[21], values[0]);
 	}
 
 	private static double unitsOf(Double value) {
