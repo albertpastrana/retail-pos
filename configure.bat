@@ -29,4 +29,4 @@ set CP=%CP%;"%DIRNAME%build/runtime-libs/*"
 set CP=%CP%;"%DIRNAME%runtime-libs/*"
 set CP=%CP%;"%DIRNAME%lib.jar"
 
-start /B javaw -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" com.openbravo.pos.config.JFrmConfig
+start /B javaw -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.config.JFrmConfig

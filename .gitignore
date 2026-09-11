@@ -10,6 +10,7 @@ build/
 /.metadata/
 /*.launch
 derby.log
+/logs/
 data/openbravopos-database/
 data/openbravopos-database.bak*/
 data/*.tsv
