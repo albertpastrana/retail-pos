@@ -5,6 +5,7 @@ import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -194,7 +195,7 @@ public final class CatalogImportDialog {
 			};
 		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setRowHeight(24);
+		table.setRowHeight(28);
 		table.getColumnModel().getColumn(0).setMaxWidth(42);
 		table.getColumnModel().getColumn(1).setPreferredWidth(190);
 		table.getColumnModel().getColumn(2).setPreferredWidth(90);
@@ -248,6 +249,7 @@ public final class CatalogImportDialog {
 		JPanel content = new JPanel(new BorderLayout(0, 10));
 		content.add(buildFamilyImportMessage(), BorderLayout.NORTH);
 		content.add(split, BorderLayout.CENTER);
+		enlargeDialogFont(content);
 
 		String title = AppLocal.getIntString("title.importproductfamily");
 		Object[] options = new Object[] { confirmLabel(true), AppLocal.getIntString("button.skipitem") };
@@ -328,6 +330,7 @@ public final class CatalogImportDialog {
 		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
 		content.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
 		focusImportField(stock);
+		enlargeDialogFont(content);
 
 		String title = AppLocal.getIntString("title.importproduct");
 		Object[] options = new Object[] { confirmLabel(false), AppLocal.getIntString("button.skipitem") };
@@ -357,6 +360,24 @@ public final class CatalogImportDialog {
 	private JLabel buildImportMessage(String code, boolean fromCatalog) {
 		String message = AppLocal.getIntString(importMessageKey(fromCatalog), code);
 		return new JLabel("<html><body style='width: 320px'>" + message + "</body></html>");
+	}
+
+	private void enlargeDialogFont(JComponent component) {
+		Font font = component.getFont();
+		if (font != null) {
+			component.setFont(font.deriveFont(16f));
+		}
+		if (component instanceof JTable) {
+			JTable table = (JTable) component;
+			if (table.getTableHeader() != null && table.getTableHeader().getFont() != null) {
+				table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(16f));
+			}
+		}
+		for (Component child : component.getComponents()) {
+			if (child instanceof JComponent) {
+				enlargeDialogFont((JComponent) child);
+			}
+		}
 	}
 
 	// JOptionPane grabs focus for its default button, so the caret only lands on
