@@ -35,12 +35,18 @@ public class CategoryInfo implements IKeyed {
     private static final long serialVersionUID = 8612449444103L;
     private String m_sID;
     private String m_sName;
+    private String m_sParentID;
     private BufferedImage m_Image;
 
     /** Creates new CategoryInfo */
     public CategoryInfo(String id, String name, BufferedImage image) {
+        this(id, name, null, image);
+    }
+
+    public CategoryInfo(String id, String name, String parentid, BufferedImage image) {
         m_sID = id;
         m_sName = name;
+        m_sParentID = parentid;
         m_Image = image;
     }
 
@@ -64,6 +70,10 @@ public class CategoryInfo implements IKeyed {
         m_sName = sName;
     }
 
+    public String getParentID() {
+        return m_sParentID;
+    }
+
     public BufferedImage getImage() {
         return m_Image;
     }
@@ -80,6 +90,13 @@ public class CategoryInfo implements IKeyed {
     public static SerializerRead getSerializerRead() {
         return new SerializerRead() { public Object readValues(DataRead dr) throws BasicException {
             return new CategoryInfo(dr.getString(1), dr.getString(2), ImageUtils.readImage(dr.getBytes(3)));
+        }};
+    }
+
+    /** Reads ID, NAME, PARENTID and IMAGE, in that order. */
+    public static SerializerRead getSerializerReadParented() {
+        return new SerializerRead() { public Object readValues(DataRead dr) throws BasicException {
+            return new CategoryInfo(dr.getString(1), dr.getString(2), dr.getString(3), ImageUtils.readImage(dr.getBytes(4)));
         }};
     }
 }

@@ -608,6 +608,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					return null;
 				}
 				dlSales.importProducts(editedFamily, categoriesPath);
+				for (ProductInfoExt imported : editedFamily) {
+					applyImportedStock(imported);
+				}
 				return dlSales.getProductInfoByCode(code);
 			}
 			ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
@@ -616,6 +619,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				return null;
 			}
 			product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), categoriesPath);
+			applyImportedStock(editedProduct);
 		}
 		return product;
 	}
@@ -739,8 +743,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				ProductInfoExt product = editor.buildProduct();
 				if (product == null) {
 					table.setRowSelectionInterval(i, i);
-					JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.importproductrequired"), title,
-							JOptionPane.WARNING_MESSAGE);
+					String message = editor.stockInvalid ? AppLocal.getIntString("message.stockaddpositive")
+							: AppLocal.getIntString("message.importproductrequired");
+					JOptionPane.showMessageDialog(this, message, title, JOptionPane.WARNING_MESSAGE);
 					selected.clear();
 					break;
 				}
@@ -774,23 +779,27 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		reference.setCaretPosition(0);
 		final JComboBox<CategoryInfo> category = createImportCategoryCombo(availableProduct);
 		final ProductPriceFields prices = createImportPrices(availableProduct);
+		final JTextField stock = ProductFormLayout.numberField(true);
 
+		// What the item is, then what it costs and sells for, then how many. The
+		// price rule goes above the price it suggests, and each read-only number
+		// under the field it comes from.
 		JPanel fields = new JPanel(new GridBagLayout());
-		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodref") + ":", reference);
-		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodname") + ":", name);
-		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodcategory") + ":", category);
-		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-		ProductFormLayout.addRow(fields, 4, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
-		ProductFormLayout.addRow(fields, 5, prices.secondaryLabel() + ":", prices.secondary);
-		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
-				prices.priceBlock());
+		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodname") + ":", name);
+		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory") + ":", category);
+		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodref") + ":", reference);
+		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
+		ProductFormLayout.addRow(fields, 4, prices.secondaryLabel() + ":", prices.secondary);
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.insets = ProductFormLayout.ROW_INSETS;
 		constraints.anchor = GridBagConstraints.WEST;
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 		constraints.gridx = 1;
-		constraints.gridy = 7;
+		constraints.gridy = 5;
 		fields.add(prices.offer, constraints);
+		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":", prices.priceBlock());
+		ProductFormLayout.addRow(fields, 7, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
+		ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.prodstock") + ":", stock);
 
 		JPanel content = new JPanel(new BorderLayout(0, 12));
 		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
@@ -807,8 +816,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				return null;
 			}
 
+			if (hasInvalidImportStock(stock.getText())) {
+				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.stockaddpositive"), title,
+						JOptionPane.WARNING_MESSAGE);
+				continue;
+			}
 			ProductInfoExt edited = buildEditedProduct(availableProduct, catalogProduct, reference, name, category,
-					prices);
+					prices, stock);
 			if (edited == null) {
 				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.importproductrequired"), title,
 						JOptionPane.WARNING_MESSAGE);
@@ -856,12 +870,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private ProductInfoExt buildEditedProduct(ProductInfoExt availableProduct, ProductInfoExt catalogProduct,
-			JTextField reference, JTextField name, JComboBox<CategoryInfo> category, ProductPriceFields prices) {
+			JTextField reference, JTextField name, JComboBox<CategoryInfo> category, ProductPriceFields prices,
+			JTextField stock) {
 		Double buy = ProductPriceMath.parsePositiveCurrency(prices.buy.getText(), true);
 		Double sell = prices.pricesell;
 		CategoryInfo selected = (CategoryInfo) category.getSelectedItem();
 		TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getSelectedItem();
-		if (name.getText().trim().isEmpty() || selected == null || tax == null || buy == null || sell == null) {
+		if (name.getText().trim().isEmpty() || selected == null || tax == null || buy == null || sell == null
+				|| hasInvalidImportStock(stock.getText())) {
 			return null;
 		}
 
@@ -879,7 +895,47 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		if (!brand.isEmpty()) {
 			edited.setProperty("catalog.brand", brand);
 		}
+		assignImportStock(edited, stock.getText());
 		return edited;
+	}
+
+	private boolean hasInvalidImportStock(String text) {
+		if (text == null || text.trim().isEmpty()) {
+			return false;
+		}
+		try {
+			Double units = (Double) Formats.DOUBLE.parseValue(text);
+			return units == null || units.doubleValue() < 0.0;
+		} catch (BasicException e) {
+			return true;
+		}
+	}
+
+	private void assignImportStock(ProductInfoExt product, String text) {
+		if (text == null || text.trim().isEmpty()) {
+			return;
+		}
+		try {
+			Double units = (Double) Formats.DOUBLE.parseValue(text);
+			if (units != null && units.doubleValue() > 0.0) {
+				product.setProperty("import.stock", Double.toString(units.doubleValue()));
+			}
+		} catch (BasicException e) {
+			return;
+		}
+	}
+
+	private void applyImportedStock(ProductInfoExt product) throws BasicException {
+		String raw = product.getProperty("import.stock");
+		if (raw == null || raw.isEmpty()) {
+			return;
+		}
+		double units = Double.parseDouble(raw);
+		ProductInfoExt saved = dlSales.getProductInfoByCode(product.getCode());
+		if (units > 0.0 && saved != null) {
+			dlSales.addProductStock(m_App.getInventoryLocation(), saved.getID(), units,
+					Double.valueOf(product.getPriceBuy()));
+		}
 	}
 
 	private ProductPriceFields createImportPrices(ProductInfoExt product) throws BasicException {
@@ -925,9 +981,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		private final JTextField reference;
 		private final JComboBox<CategoryInfo> category;
 		private final ProductPriceFields prices;
+		private final JTextField stock;
 		private final JPanel panel;
 		private Runnable changeListener;
 		private Runnable priceChangeListener;
+		private boolean stockInvalid;
 
 		private VariantImportEditor(ProductInfoExt product, boolean scanned,
 				JToggleButton.ToggleButtonModel applyPriceModel) throws BasicException {
@@ -943,6 +1001,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			reference.setCaretPosition(0);
 			category = createImportCategoryCombo(product);
 			prices = createImportPrices(product);
+			stock = ProductFormLayout.numberField(true);
 			panel = buildPanel(applyPriceModel);
 			DocumentListener changed = new DocumentListener() {
 				@Override
@@ -983,30 +1042,31 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		private JPanel buildPanel(JToggleButton.ToggleButtonModel applyPriceModel) {
 			JPanel fields = new JPanel(new GridBagLayout());
-			ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodref") + ":", reference);
-			ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodname") + ":", name);
-			ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodcategory") + ":", category);
-			ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-			ProductFormLayout.addRow(fields, 4, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
-			ProductFormLayout.addRow(fields, 5, prices.secondaryLabel() + ":", prices.secondary);
+			ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodname") + ":", name);
+			ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory") + ":", category);
+			ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodref") + ":", reference);
+			ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
+			ProductFormLayout.addRow(fields, 4, prices.secondaryLabel() + ":", prices.secondary);
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.insets = ProductFormLayout.ROW_INSETS;
+			constraints.anchor = GridBagConstraints.WEST;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.gridx = 1;
+			constraints.gridy = 5;
+			fields.add(prices.offer, constraints);
 			ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
 					prices.priceBlock());
 
 			JCheckBox applyPrice = new JCheckBox(AppLocal.getIntString("label.variants.applyprice"));
 			applyPrice.setModel(applyPriceModel);
 			applyPrice.setToolTipText(AppLocal.getIntString("label.variants.applyprice.hint"));
-			GridBagConstraints constraints = new GridBagConstraints();
-			constraints.insets = ProductFormLayout.ROW_INSETS;
-			constraints.anchor = GridBagConstraints.WEST;
-			constraints.fill = GridBagConstraints.HORIZONTAL;
-			constraints.gridx = 1;
 			constraints.gridy = 7;
 			fields.add(applyPrice, constraints);
-			constraints.gridy = 8;
-			fields.add(prices.offer, constraints);
 
-			String heading = variantLabel(product) + (scanned ? " · " + AppLocal.getIntString("label.scanned") : "");
-			JLabel headingLabel = new JLabel("<html><b>" + heading + "</b></html>");
+			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
+			ProductFormLayout.addRow(fields, 9, AppLocal.getIntString("label.prodstock") + ":", stock);
+
+			JLabel headingLabel = new JLabel("<html><b>" + variantLabel(product, scanned) + "</b></html>");
 			JLabel codeLabel = new JLabel(product.getCode());
 			codeLabel.setEnabled(false);
 			JPanel header = new JPanel(new BorderLayout());
@@ -1032,7 +1092,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 
 		private ProductInfoExt buildProduct() {
-			return buildEditedProduct(product, product, reference, name, category, prices);
+			stockInvalid = hasInvalidImportStock(stock.getText());
+			if (stockInvalid) {
+				return null;
+			}
+			return buildEditedProduct(product, product, reference, name, category, prices, stock);
 		}
 	}
 
@@ -1086,7 +1150,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			case 0:
 				return Boolean.valueOf(editor.selected);
 			case 1:
-				return variantLabel(editor.product);
+				return variantLabel(editor.product, editor.scanned);
 			case 2:
 				return editor.prices.buy.getText();
 			case 3:
@@ -1117,6 +1181,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			}
 			fireTableDataChanged();
 		}
+	}
+
+	private String variantLabel(ProductInfoExt product, boolean scanned) {
+		return variantLabel(product) + (scanned ? " " + AppLocal.getIntString("label.scanned") : "");
 	}
 
 	private String variantLabel(ProductInfoExt product) {

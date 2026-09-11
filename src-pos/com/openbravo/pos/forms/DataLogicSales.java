@@ -20,6 +20,8 @@
 package com.openbravo.pos.forms;
 
 import com.openbravo.pos.ticket.CategoryInfo;
+import com.openbravo.pos.ticket.CategoryPath;
+import com.openbravo.pos.ticket.CategoryPathList;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
@@ -142,9 +144,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	public final ProductInfoExt getProductInfoByCode(String sCode) throws BasicException {
 		// A code scanned as EAN-13 carries up to two leading zeros that the stored
 		// code does not, so a barcode lookup has to try the padded forms too.
-		return (ProductInfoExt) new PreparedSentence(s,
-				"SELECT " + ProductInfoExt.infoColumns() + " FROM PRODUCTS WHERE CODE IN (?, ?, ?) "
-						+ "OR EXISTS (SELECT 1 FROM BARCODE_TABLE WHERE BARCODE_TABLE.PID = PRODUCTS.ID AND BARCODE_TABLE.CODE IN (?, ?, ?))",
+		return (ProductInfoExt) new PreparedSentence(s, "SELECT " + ProductInfoExt.infoColumns()
+				+ " FROM PRODUCTS WHERE CODE IN (?, ?, ?) "
+				+ "OR EXISTS (SELECT 1 FROM BARCODE_TABLE WHERE BARCODE_TABLE.PID = PRODUCTS.ID AND BARCODE_TABLE.CODE IN (?, ?, ?))",
 				new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
 						Datas.STRING, Datas.STRING }),
 				ProductInfoExt.getSerializerRead()).find(sCode, "0" + sCode, "00" + sCode, sCode, "0" + sCode,
@@ -191,8 +193,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			product.setPriceSell(0.0);
 			product.setTaxCategoryID("001");
 
-			String[] category = categoriesPath == null ? null : readCategories(categoriesPath).get(row[4]);
-			product.setProperty("catalog.category.name", category == null ? row[4] : category[1]);
+			Map<String, String[]> categories = categoriesPath == null ? new HashMap<String, String[]>()
+					: readCategories(categoriesPath);
+			String[] category = categories.get(row[4]);
+			product.setProperty("catalog.category.name", catalogCategoryPath(category, categories, row[4]));
 			product.setProperty("catalog.brand", row.length > 7 ? row[7] : null);
 			product.setProperty("catalog.price.available", Boolean.toString(priceAvailable));
 			return product;
@@ -249,7 +253,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		product.setPriceSell(0.0);
 		product.setTaxCategoryID("001");
 		String[] category = categories.get(row[4]);
-		product.setProperty("catalog.category.name", category == null ? row[4] : category[1]);
+		product.setProperty("catalog.category.name", catalogCategoryPath(category, categories, row[4]));
 		product.setProperty("catalog.brand", row[7]);
 		product.setProperty("catalog.price.available", Boolean.toString(priceAvailable));
 		return product;
@@ -475,6 +479,20 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		}
 	}
 
+	private static String catalogCategoryPath(String[] category, Map<String, String[]> categories, String fallback) {
+		if (category == null) {
+			return fallback;
+		}
+		String parentName = null;
+		if (category.length > 2 && !category[2].isEmpty()) {
+			String[] parent = categories.get(category[2]);
+			if (parent != null) {
+				parentName = parent[1];
+			}
+		}
+		return CategoryPath.of(parentName, category[1]);
+	}
+
 	private Map<String, String[]> readCategories(String categoriesPath) throws IOException {
 		Map<String, String[]> categories = new HashMap<String, String[]>();
 		BufferedReader reader = utf8Reader(categoriesPath);
@@ -532,8 +550,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final ProductInfoExt getProductInfoByReference(String sReference) throws BasicException {
 		return (ProductInfoExt) new PreparedSentence(s,
-				"SELECT " + ProductInfoExt.infoColumns()
-						+ " FROM PRODUCTS WHERE REFERENCE = ?",
+				"SELECT " + ProductInfoExt.infoColumns() + " FROM PRODUCTS WHERE REFERENCE = ?",
 				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).find(sReference);
 	}
 
@@ -557,11 +574,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	public List<ProductInfoExt> getProductComments(String id) throws BasicException {
-		return new PreparedSentence(s,
-				"SELECT " + ProductInfoExt.infoColumns("P")
-						+ " FROM PRODUCTS P, PRODUCTS_CAT O, PRODUCTS_COM M WHERE P.ID = O.PRODUCT AND P.ID = M.PRODUCT2 AND M.PRODUCT = ? "
-						+ "AND P.ISCOM = " + s.DB.TRUE() + " " + "ORDER BY O.CATORDER, P.NAME",
-				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).list(id);
+		return new PreparedSentence(s, "SELECT " + ProductInfoExt.infoColumns("P")
+				+ " FROM PRODUCTS P, PRODUCTS_CAT O, PRODUCTS_COM M WHERE P.ID = O.PRODUCT AND P.ID = M.PRODUCT2 AND M.PRODUCT = ? "
+				+ "AND P.ISCOM = " + s.DB.TRUE() + " " + "ORDER BY O.CATORDER, P.NAME", SerializerWriteString.INSTANCE,
+				ProductInfoExt.getSerializerRead()).list(id);
 	}
 
 	// Products list
@@ -580,11 +596,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	private SentenceList productListSentence(String where) {
-		return new StaticSentence(s, new QBFBuilder(
-				"SELECT " + ProductInfoExt.infoColumns("P")
+		return new StaticSentence(s,
+				new QBFBuilder("SELECT " + ProductInfoExt.infoColumns("P")
 						+ " FROM PRODUCTS P LEFT JOIN CATEGORIES CAT ON P.CATEGORY = CAT.ID WHERE " + where
-						+ " ORDER BY P.REFERENCE",
-				new String[] { "P.NAME", "CAT.NAME", "P.BRAND", "P.CODE" }),
+						+ " ORDER BY P.REFERENCE", new String[] { "P.NAME", "CAT.NAME", "P.BRAND", "P.CODE" }),
 				new SerializerWriteBasic(new Datas[] { Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
 						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING }),
 				ProductInfoExt.getSerializerRead());
@@ -634,8 +649,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	public final SentenceList getCategoriesList() {
-		return new StaticSentence(s, "SELECT ID, NAME, IMAGE FROM CATEGORIES ORDER BY NAME", null,
-				CategoryInfo.getSerializerRead());
+		return new CategoryPathList(new StaticSentence(s, "SELECT ID, NAME, PARENTID, IMAGE FROM CATEGORIES", null,
+				CategoryInfo.getSerializerReadParented()));
+	}
+
+	/**
+	 * The siblings a category name has to be unique against. Derby enforces that
+	 * with the unique index on (PARENTID, NAME), but MySQL and PostgreSQL compare
+	 * NULL parents as distinct and would let two root categories share a name.
+	 */
+	public final List<CategoryInfo> getCategorySiblings(String parentId) throws BasicException {
+		return parentId == null ? getRootCategories() : getSubcategories(parentId);
 	}
 
 	public final SentenceList getBrandsList() {
