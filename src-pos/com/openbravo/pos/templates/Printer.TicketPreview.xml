@@ -190,7 +190,10 @@
             <text bold="true">Devolució val</text>
         </line>
         <line>
-            <text align ="right" length="42">${paymentline.printTotal()}</text>
+            <text align="left" length="42" bold="true">Codi: ${paymentline.printTransactionID()}</text>
+        </line>
+        <line>
+            <text align ="right" length="42">${paymentline.printPaperTotal()}</text>
         </line>
          #end
          #if ($paymentline.name == "free")

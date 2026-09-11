@@ -795,18 +795,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 						StringBuilder codes = new StringBuilder();
 						for (int voucherIndex = 0; voucherIndex < voucherCount; voucherIndex++) {
-							String code = createGiftVoucherCode();
+							String code = insertIssuedGiftVoucher(ticket.getId(), l.getTicketLine(), l.getPriceTax(),
+									ticket.getDate());
 							if (codes.length() > 0) {
 								codes.append(", ");
 							}
 							codes.append(code);
-							new PreparedSentence(s,
-									"INSERT INTO GIFTVOUCHERS (ID, CODE, INITIALVALUE, BALANCE, ISSUEDRECEIPT, ISSUEDLINE, ISSUEDDATE) VALUES (?, ?, ?, ?, ?, ?, ?)",
-									new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.DOUBLE,
-											Datas.DOUBLE, Datas.STRING, Datas.INT, Datas.TIMESTAMP })).exec(
-													UUID.randomUUID().toString(), code, new Double(l.getPriceTax()),
-													new Double(l.getPriceTax()), ticket.getId(),
-													new Integer(l.getTicketLine()), ticket.getDate());
 						}
 						l.setProperty("giftvoucher.codes", codes.toString());
 					}
@@ -835,6 +829,16 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 										.exec(new Double(p.getTotal()), p.getTransactionID(), new Double(p.getTotal()));
 						if (redeemed != 1) {
 							throw new BasicException(AppLocal.getIntString("message.voucherbalancechanged"));
+						}
+					}
+					if ("paperout".equals(p.getName())) {
+						double value = RoundUtils.round(Math.abs(p.getTotal()));
+						if (value <= 0.0) {
+							throw new BasicException(AppLocal.getIntString("message.voucherpositivevalue"));
+						}
+						String code = insertIssuedGiftVoucher(ticket.getId(), -1, value, ticket.getDate());
+						if (p instanceof PaymentInfoTicket) {
+							((PaymentInfoTicket) p).setTransactionID(code);
 						}
 					}
 					paymentinsert.exec(new DataParams() {
@@ -892,6 +896,26 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			}
 			throw e;
 		}
+	}
+
+	private String insertIssuedGiftVoucher(String receiptId, int issuedLine, double value, Date issuedDate)
+			throws BasicException {
+		BasicException last = null;
+		for (int attempt = 0; attempt < 8; attempt++) {
+			String code = createGiftVoucherCode();
+			try {
+				new PreparedSentence(s,
+						"INSERT INTO GIFTVOUCHERS (ID, CODE, INITIALVALUE, BALANCE, ISSUEDRECEIPT, ISSUEDLINE, ISSUEDDATE) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING, Datas.DOUBLE, Datas.DOUBLE,
+								Datas.STRING, Datas.INT, Datas.TIMESTAMP })).exec(UUID.randomUUID().toString(), code,
+										new Double(value), new Double(value), receiptId, new Integer(issuedLine),
+										issuedDate);
+				return code;
+			} catch (BasicException e) {
+				last = e;
+			}
+		}
+		throw last;
 	}
 
 	private String createGiftVoucherCode() {
