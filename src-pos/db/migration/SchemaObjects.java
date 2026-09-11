@@ -15,15 +15,37 @@ final class SchemaObjects {
 	}
 
 	static boolean tableExists(Connection connection, String table) throws Exception {
+		return actualTableName(connection, table) != null;
+	}
+
+	static boolean indexExists(Connection connection, String table, String index) throws Exception {
+		String actualTable = actualTableName(connection, table);
+		if (actualTable == null) {
+			return false;
+		}
 		DatabaseMetaData metadata = connection.getMetaData();
-		try (ResultSet tables = metadata.getTables(connection.getCatalog(), connection.getSchema(), null,
-				new String[] { "TABLE" })) {
-			while (tables.next()) {
-				if (table.equalsIgnoreCase(tables.getString("TABLE_NAME"))) {
+		try (ResultSet indexes = metadata.getIndexInfo(connection.getCatalog(), connection.getSchema(), actualTable,
+				false, true)) {
+			while (indexes.next()) {
+				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))) {
 					return true;
 				}
 			}
 			return false;
+		}
+	}
+
+	private static String actualTableName(Connection connection, String table) throws Exception {
+		DatabaseMetaData metadata = connection.getMetaData();
+		try (ResultSet tables = metadata.getTables(connection.getCatalog(), connection.getSchema(), null,
+				new String[] { "TABLE" })) {
+			while (tables.next()) {
+				String candidate = tables.getString("TABLE_NAME");
+				if (table.equalsIgnoreCase(candidate)) {
+					return candidate;
+				}
+			}
+			return null;
 		}
 	}
 

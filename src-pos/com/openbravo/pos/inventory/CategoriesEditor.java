@@ -37,6 +37,7 @@ import com.openbravo.data.user.EditorRecord;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.ticket.CategoryInfo;
 import java.util.ArrayList;
 
 /**
@@ -45,6 +46,7 @@ import java.util.ArrayList;
  */
 public class CategoriesEditor extends JPanel implements EditorRecord {
        
+    private DataLogicSales m_dlSales;
     private SentenceList m_sentcat;
     private ComboBoxValModel m_CategoryModel;
     
@@ -57,6 +59,7 @@ public class CategoriesEditor extends JPanel implements EditorRecord {
     public CategoriesEditor(AppView app, DirtyManager dirty) {
         
         DataLogicSales dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+        m_dlSales = dlSales;
              
         initComponents();
              
@@ -146,8 +149,23 @@ public class CategoriesEditor extends JPanel implements EditorRecord {
         cat[1] = m_jName.getText();
         cat[2] = m_CategoryModel.getSelectedKey();
         cat[3] = m_jImage.getImage();
+        
+        checkNameFreeAmongSiblings((String) cat[1], (String) cat[2]);
         return cat;
     }    
+    
+    /**
+     * A name only has to be unique among the children of the same parent, so
+     * "Clàssics" can sit under both "Batins Dona" and "Batins Home".
+     */
+    private void checkNameFreeAmongSiblings(String name, String parentId) throws BasicException {
+        
+        for (CategoryInfo sibling : m_dlSales.getCategorySiblings(parentId)) {
+            if (!sibling.getID().equals(m_id) && sibling.getName().equalsIgnoreCase(name)) {
+                throw new BasicException(AppLocal.getIntString("message.categorynamerepeated"));
+            }
+        }
+    }
     
     public Component getComponent() {
         return this;
