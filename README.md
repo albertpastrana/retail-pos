@@ -124,7 +124,7 @@ existing products that still match the previous rule.
 
 ### Scan-to-import (preferred at the till)
 
-If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching row from `import-prices.tsv`. It then opens an editable create-product dialog prefilled with whatever it found. If neither file contains the barcode, the same dialog opens with only the scanned barcode. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged. Stock → Products does the same when you search a barcode that is not in the till.
+If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching row from `import-prices.tsv`. When found, it opens an editable create-product dialog prefilled with the catalogue data. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged. If the barcode is also absent from the TSV, the sales screen does not open a dialog: it shows a notice below the keypad and logs `event=unknown_barcode code="<barcode>"`. Stock → Products still opens the blank create-product dialog when you search for an unknown barcode.
 
 When the catalogue contains several EANs for the same model, the dialog lists
 the whole family with every variant selected. Clicking a row opens that

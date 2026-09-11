@@ -64,6 +64,7 @@ public final class CatalogImportDialog {
 	private final TaxRegime priceTaxRegime;
 	private final Copy copy;
 	private boolean cancelled;
+	private boolean unknown;
 
 	public CatalogImportDialog(Component parent, AppView app, DataLogicSales dlSales, TaxesLogic taxeslogic,
 			Date taxDate, CustomerInfoExt customer, List taxCategories, String defaultTaxCategoryId,
@@ -98,8 +99,13 @@ public final class CatalogImportDialog {
 		return cancelled;
 	}
 
+	public boolean wasUnknown() {
+		return unknown;
+	}
+
 	public ProductInfoExt importIfAbsent(String code) throws BasicException {
 		cancelled = false;
+		unknown = false;
 		ProductInfoExt product = dlSales.getProductInfoByCode(code);
 		if (product != null) {
 			return product;
@@ -107,6 +113,10 @@ public final class CatalogImportDialog {
 		String productsPath = app.getProperties().getProperty("catalog.import.products");
 		String categoriesPath = app.getProperties().getProperty("catalog.import.categories");
 		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, productsPath, categoriesPath);
+		if (catalogProduct == null && copy == Copy.RECEIPT) {
+			unknown = true;
+			return null;
+		}
 		List<ProductInfoExt> family = catalogProduct == null ? new ArrayList<ProductInfoExt>()
 				: dlSales.getCatalogProductFamily(code, productsPath, categoriesPath);
 		if (family.size() > 1) {

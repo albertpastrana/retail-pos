@@ -70,6 +70,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.print.PrintService;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -84,6 +86,8 @@ import net.sf.jasperreports.engine.xml.JRXmlLoader;
  * @author adrianromero
  */
 public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFactoryApp, TicketsEditor {
+
+	private static final Logger LOGGER = Logger.getLogger(JPanelTicket.class.getName());
 
 	// Variable numerica
 	private final static int NUMBERZERO = 0;
@@ -110,7 +114,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private int m_iNumberStatus;
 	private int m_iNumberStatusInput;
 	private int m_iNumberStatusPor;
-	private boolean m_bProductImportCancelled;
+	private boolean m_bProductImportUnknown;
 
 	private JTicketsBag m_ticketsbag;
 
@@ -522,6 +526,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPor.setText("");
 		m_jPrice.setText("");
 		m_jKeyFactory.setText(null);
+		m_jScanStatus.setText(" ");
 
 		m_iNumberStatus = NUMBER_INPUTZERO;
 		m_iNumberStatusInput = NUMBERZERO;
@@ -534,12 +539,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		try {
 			ProductInfoExt oProduct = findOrImportProduct(sCode);
 			if (oProduct == null) {
-				if (!m_bProductImportCancelled) {
-					Toolkit.getDefaultToolkit().beep();
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noproduct", sCode))
-							.show(this);
-				}
-				stateToZero();
+				productNotFound(sCode);
 			} else {
 				// Se anade directamente una unidad con el precio y todo
 				incProduct(oProduct);
@@ -556,12 +556,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		try {
 			ProductInfoExt oProduct = findOrImportProduct(sCode);
 			if (oProduct == null) {
-				if (!m_bProductImportCancelled) {
-					Toolkit.getDefaultToolkit().beep();
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noproduct", sCode))
-							.show(this);
-				}
-				stateToZero();
+				productNotFound(sCode);
 			} else {
 				// Se anade directamente una unidad con el precio y todo
 				if (taxesincluded) {
@@ -584,10 +579,26 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				m_oTicket.getCustomer(), senttaxcategories.list(), (String) taxcategoriesmodel.getSelectedKey(),
 				priceRuleService, priceTaxRegime, CatalogImportDialog.Copy.RECEIPT);
 		ProductInfoExt product = dialog.importIfAbsent(code);
-		m_bProductImportCancelled = dialog.wasCancelled();
+		m_bProductImportUnknown = dialog.wasUnknown();
 		return product;
 	}
 
+	private void productNotFound(String code) {
+		stateToZero();
+		if (m_bProductImportUnknown) {
+			Toolkit.getDefaultToolkit().beep();
+			String logCode = code.replace("\\", "\\\\").replace("\"", "\\\"").replace("\r", "\\r").replace("\n", "\\n")
+					.replace("\t", "\\t");
+			LOGGER.log(Level.INFO, "event=unknown_barcode code=\"{0}\"", logCode);
+			// HTML so the notice wraps to the keypad width instead of being cut off.
+			m_jScanStatus.setText("<html><div align=\"center\">"
+					+ AppLocal.getIntString("message.unknownbarcode.logged", htmlEscape(code)) + "</div></html>");
+		}
+	}
+
+	private static String htmlEscape(String text) {
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
 
 	private void incProduct(ProductInfoExt prod) {
 
@@ -1426,6 +1437,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPanReadout = new javax.swing.JPanel();
 		m_jPrice = new javax.swing.JLabel();
 		m_jPor = new javax.swing.JLabel();
+		m_jPanScanStatus = new javax.swing.JPanel();
+		m_jScanStatus = new javax.swing.JLabel();
 		m_jEnter = new javax.swing.JButton();
 		m_jKeyFactory = new javax.swing.JTextField();
 		catcontainer = new javax.swing.JPanel();
@@ -1706,6 +1719,22 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_jPanEntries.add(m_jPanReadout);
 
+		// What happened to the last scan, on its own row below the keys so it is not
+		// read as part of them. Like the code and readout rows, the row spans the
+		// column and keeps its height, so the notice is centred and nothing jumps.
+		m_jPanScanStatus.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 5, 8, 5));
+		m_jPanScanStatus.setLayout(new java.awt.BorderLayout());
+		m_jPanScanStatus.setPreferredSize(new java.awt.Dimension(100, 60));
+		m_jPanScanStatus.setMaximumSize(new java.awt.Dimension(32767, 60));
+
+		m_jScanStatus.setFont(new java.awt.Font("Dialog", 1, 13));
+		m_jScanStatus.setForeground(new java.awt.Color(166, 51, 0));
+		m_jScanStatus.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+		m_jScanStatus.setRequestFocusEnabled(false);
+		m_jPanScanStatus.add(m_jScanStatus, java.awt.BorderLayout.CENTER);
+
+		m_jPanEntries.add(m_jPanScanStatus);
+
 		m_jContEntries.add(m_jPanEntries, java.awt.BorderLayout.NORTH);
 
 		m_jPanContainer.add(m_jContEntries, java.awt.BorderLayout.LINE_END);
@@ -1844,6 +1873,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JPanel m_jPanContainer;
 	private javax.swing.JPanel m_jPanEntries;
 	private javax.swing.JPanel m_jPanReadout;
+	private javax.swing.JPanel m_jPanScanStatus;
 	private javax.swing.JPanel m_jPanTicket;
 	private javax.swing.JPanel m_jPanTotals;
 	private javax.swing.JPanel m_jPanelBag;
@@ -1851,6 +1881,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JPanel m_jPanelScripts;
 	private javax.swing.JLabel m_jPor;
 	private javax.swing.JLabel m_jPrice;
+	private javax.swing.JLabel m_jScanStatus;
 	private javax.swing.JLabel m_jSubtotalEuros;
 	private javax.swing.JLabel m_jTaxesEuros;
 	private javax.swing.JLabel m_jTicketId;
