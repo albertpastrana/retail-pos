@@ -31,7 +31,7 @@ report.setSentence("SELECT " +
                 "STOCKCURRENT.ATTRIBUTESETINSTANCE_ID, " +
                 "ATTRIBUTESETINSTANCE.DESCRIPTION, " +
                 "PRODUCTS.CATEGORY, " +
-                "CATEGORIES.NAME AS CATEGORYNAME, " +
+                "CATEGORIES.NAME AS CATEGORYNAME, PARENTCAT.NAME AS PARENTCATEGORYNAME, " +
                 "STOCKCURRENT.UNITS, " +
                 "COALESCE(STOCKLEVEL.STOCKSECURITY, 0) AS STOCKSECURITY, " +
                 "COALESCE(STOCKLEVEL.STOCKMAXIMUM, 0) AS STOCKMAXIMUM " +
@@ -39,11 +39,12 @@ report.setSentence("SELECT " +
                 "JOIN LOCATIONS ON STOCKCURRENT.LOCATION = LOCATIONS.ID " +
                 "JOIN PRODUCTS ON STOCKCURRENT.PRODUCT = PRODUCTS.ID " +
                 "JOIN CATEGORIES ON PRODUCTS.CATEGORY = CATEGORIES.ID  " +
+                "LEFT OUTER JOIN CATEGORIES PARENTCAT ON CATEGORIES.PARENTID = PARENTCAT.ID " +
 				"LEFT JOIN BARCODE_TABLE ON BARCODE_TABLE.PID = PRODUCTS.ID " +
                 "LEFT OUTER JOIN STOCKLEVEL ON STOCKCURRENT.LOCATION = STOCKLEVEL.LOCATION AND STOCKCURRENT.PRODUCT = STOCKLEVEL.PRODUCT " +
 		        "LEFT OUTER JOIN ATTRIBUTESETINSTANCE ON STOCKCURRENT.ATTRIBUTESETINSTANCE_ID = ATTRIBUTESETINSTANCE.ID " +
                 "WHERE ?(QBF_FILTER) " +
-                "ORDER BY CATEGORIES.NAME, PRODUCTS.NAME, STOCKCURRENT.LOCATION");
+                "ORDER BY COALESCE(PARENTCAT.NAME, CATEGORIES.NAME), CATEGORIES.NAME, PRODUCTS.NAME, STOCKCURRENT.LOCATION");
 report.addParameter("PRODUCTS.NAME");
 report.addParameter("PRODUCTS.PRICEBUY");
 report.addParameter("PRODUCTS.PRICESELL");
@@ -62,6 +63,7 @@ report.addField("ATTINSTANCEID", com.openbravo.data.loader.Datas.STRING);
 report.addField("ATTINSTANCEDESC", com.openbravo.data.loader.Datas.STRING);
 report.addField("CATEGORY", com.openbravo.data.loader.Datas.STRING);
 report.addField("CATEGORYNAME", com.openbravo.data.loader.Datas.STRING);
+report.addField("PARENTCATEGORYNAME", com.openbravo.data.loader.Datas.STRING);
 report.addField("UNITS", com.openbravo.data.loader.Datas.DOUBLE);
 report.addField("STOCKSECURITY", com.openbravo.data.loader.Datas.DOUBLE);
 report.addField("STOCKMAXIMUM", com.openbravo.data.loader.Datas.DOUBLE);

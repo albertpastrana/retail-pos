@@ -28,6 +28,7 @@ ORDER BY CATEGORIES.NAME, PRODUCTS.NAME, STOCKCURRENT.LOCATION]]>
 	<field name="NAME" class="java.lang.String"/>
 	<field name="CATEGORY" class="java.lang.String"/>
 	<field name="CATEGORYNAME" class="java.lang.String"/>
+	<field name="PARENTCATEGORYNAME" class="java.lang.String"/>
 	<field name="UNITS" class="java.lang.Double"/>
 	<field name="STOCKSECURITY" class="java.lang.Double"/>
 	<field name="STOCKMAXIMUM" class="java.lang.Double"/>
@@ -69,7 +70,7 @@ ORDER BY CATEGORIES.NAME, PRODUCTS.NAME, STOCKCURRENT.LOCATION]]>
 					<textElement textAlignment="Left" verticalAlignment="Top" rotation="None" lineSpacing="Single">
 						<font fontName="Dialog" size="14" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
 					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$F{CATEGORYNAME}]]></textFieldExpression>
+					<textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.pos.ticket.CategoryPath.of($F{PARENTCATEGORYNAME}, $F{CATEGORYNAME})]]></textFieldExpression>
 				</textField>
 				<line>
 					<reportElement key="line-4" mode="Opaque" x="10" y="34" width="320" height="1" forecolor="#000000" backcolor="#FFFFFF"/>

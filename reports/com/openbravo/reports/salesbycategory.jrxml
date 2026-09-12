@@ -3,8 +3,18 @@
 	<property name="ireport.encoding" value="UTF-8"/>
 	<parameter name="ARG" class="java.lang.Object" isForPrompting="false"/>
 	<field name="CATEGORYNAME" class="java.lang.String"/>
+	<field name="SUBCATEGORYNAME" class="java.lang.String"/>
+	<field name="PARENTID" class="java.lang.String"/>
 	<field name="UNITS" class="java.lang.Double"/>
 	<field name="TOTAL" class="java.lang.Double"/>
+	<variable name="CATEGORYUNITS" class="java.lang.Double" resetType="Group" resetGroup="CATEGORY" calculation="Sum">
+		<variableExpression><![CDATA[$F{UNITS}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
+	</variable>
+	<variable name="CATEGORYTOTAL" class="java.lang.Double" resetType="Group" resetGroup="CATEGORY" calculation="Sum">
+		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
+		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
+	</variable>
 	<variable name="REPORTUNITS" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{UNITS}]]></variableExpression>
 		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
@@ -13,6 +23,38 @@
 		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
 		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
 	</variable>
+	<group name="CATEGORY">
+		<groupExpression><![CDATA[$F{CATEGORYNAME}]]></groupExpression>
+		<groupHeader>
+			<band height="25">
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="3" width="535" height="20"/>
+					<textElement><font fontName="Dialog" size="13" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{CATEGORYNAME}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="25">
+				<line><reportElement x="0" y="1" width="535" height="1"/></line>
+				<textField>
+					<reportElement x="140" y="4" width="190" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$R{label.categorytotal}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="335" y="4" width="80" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.DOUBLE.formatValue($V{CATEGORYUNITS})]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="420" y="4" width="105" height="18"/>
+					<textElement textAlignment="Right"><font fontName="Dialog" size="11" isBold="true"/></textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.CURRENCY.formatValue($V{CATEGORYTOTAL})]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
 	<background><band/></background>
 	<title>
 		<band height="45">
@@ -23,7 +65,7 @@
 	<pageHeader><band/></pageHeader>
 	<columnHeader>
 		<band height="24">
-			<textField><reportElement x="10" y="0" width="320" height="20"/><textElement><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.category}]]></textFieldExpression></textField>
+			<textField><reportElement x="25" y="0" width="305" height="20"/><textElement><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.subcategory}]]></textFieldExpression></textField>
 			<textField><reportElement x="335" y="0" width="80" height="20"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.units}]]></textFieldExpression></textField>
 			<textField><reportElement x="420" y="0" width="105" height="20"/><textElement textAlignment="Right"><font isBold="true"/></textElement><textFieldExpression class="java.lang.String"><![CDATA[$R{label.total}]]></textFieldExpression></textField>
 			<line><reportElement x="0" y="22" width="535" height="1"/></line>
@@ -31,7 +73,7 @@
 	</columnHeader>
 	<detail>
 		<band height="22">
-			<textField isBlankWhenNull="true"><reportElement x="10" y="1" width="320" height="18"/><textFieldExpression class="java.lang.String"><![CDATA[$F{CATEGORYNAME}]]></textFieldExpression></textField>
+			<textField isBlankWhenNull="true"><reportElement x="25" y="1" width="305" height="18"/><textFieldExpression class="java.lang.String"><![CDATA[$F{PARENTID} == null ? "" : $F{SUBCATEGORYNAME}]]></textFieldExpression></textField>
 			<textField><reportElement x="335" y="1" width="80" height="18"/><textElement textAlignment="Right"/><textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.DOUBLE.formatValue($F{UNITS})]]></textFieldExpression></textField>
 			<textField><reportElement x="420" y="1" width="105" height="18"/><textElement textAlignment="Right"/><textFieldExpression class="java.lang.String"><![CDATA[com.openbravo.format.Formats.CURRENCY.formatValue($F{TOTAL})]]></textFieldExpression></textField>
 		</band>
