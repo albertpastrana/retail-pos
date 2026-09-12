@@ -17,6 +17,8 @@ data/*.tsv
 data/__pycache__/
 devdb/
 dev.properties
+till-lan.properties
+.postgres-lan-password
 external-data/
 data/resdump/
 /openbravopos.jar
