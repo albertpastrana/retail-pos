@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: org.flywaydb:*
+        update-types:
+          - version-update:semver-major
+      - dependency-name: org.apache.derby:derby
+        update-types:
+          - version-update:semver-major
+      - dependency-name: com.mysql:mysql-connector-j
+        update-types:
+          - version-update:semver-major
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
