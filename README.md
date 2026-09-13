@@ -4,7 +4,7 @@ A point-of-sale application for retail shops: touch-screen sales, ESC/POS receip
 
 Forked from [Openbravo POS](https://sourceforge.net/projects/openbravopos/) 2.30.3.
 
-This file is the project entry point. Catalogue variant rules live in [catalog-variants.md](catalog-variants.md). ESC/POS printers (Windows, Linux, macOS USB bridge): [escpos-printer.md](escpos-printer.md).
+This file is the project entry point. Catalogue variant rules live in [catalog-variants.md](catalog-variants.md). ESC/POS printers (Windows, Linux, macOS USB bridge): [escpos-printer.md](escpos-printer.md). Planned work: [tickets/](tickets/README.md).
 
 ## Requirements
 

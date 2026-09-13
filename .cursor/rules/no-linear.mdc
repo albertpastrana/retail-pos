@@ -1,0 +1,12 @@
+---
+description: Do not use Linear; work items live under tickets/
+alwaysApply: true
+---
+
+# Tracking
+
+Never create, search, update, or mention Linear issues for this project. Do not use Linear MCP.
+
+Work items are markdown files under `tickets/`. Read `tickets/README.md` and follow it: status is the folder (`todo/`, `in-progress/`, `done/`); one concern per file; English; no invented ticket IDs.
+
+New follow-ups go in `tickets/todo/`. Do not revive `NOTES.md` or start another notes dump.
