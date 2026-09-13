@@ -46,10 +46,6 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(fileTree("lib") {
-        include("*.jar")
-        exclude("derby.jar")
-    })
     implementation("org.apache.derby:derby:10.14.2.0")
     implementation("org.flywaydb:flyway-core:9.22.3")
     implementation("org.flywaydb:flyway-mysql:9.22.3")

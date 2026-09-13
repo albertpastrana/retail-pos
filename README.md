@@ -173,7 +173,7 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 | `src-beans/` | Shared beans                                           |
 | `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)         |
 | `locales/`   | UI translations                                        |
-| `lib/`       | Third-party jars still vendored here, plus native libs |
+| `lib/`       | Native serial-port libraries for supported platforms  |
 | `data/`      | Local database, TSV catalogue, resource dump tools     |
 
 ## Upstream
