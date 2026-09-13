@@ -19,8 +19,14 @@
 
 package com.openbravo.pos.forms;
 
+import java.awt.Font;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 import com.openbravo.pos.config.JFrmConfig;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.instance.InstanceQuery;
@@ -38,6 +44,10 @@ import org.jvnet.substance.api.SubstanceSkin;
 public class StartPOS {
 
 	private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.StartPOS");
+
+	// Staff read the till standing up and at arm's length, so every look and feel
+	// font is bigger than the desktop default.
+	private static final float FONT_SCALE = 1.1f;
 
 	/** Creates a new instance of StartPOS */
 	private StartPOS() {
@@ -68,6 +78,28 @@ public class StartPOS {
 					"net.sf.jasperreports.engine.design.JRJdk13Compiler");
 		} catch (ClassNotFoundException e) {
 			logger.log(Level.WARNING, "javac not available, reports will only work on Java 8", e);
+		}
+	}
+
+	// The scaled fonts go into the UIManager defaults, which win over the look and
+	// feel ones, so this has to run after the look and feel is set and before any
+	// component is created. Read every font first: scaling as we walk the defaults
+	// can read a key that was already scaled and shrink or grow it twice.
+	private static void enlargeFonts() {
+
+		UIDefaults lafdefaults = UIManager.getLookAndFeelDefaults();
+		Map<Object, Font> fonts = new HashMap<Object, Font>();
+
+		for (Object key : Collections.list(lafdefaults.keys())) {
+			Object value = lafdefaults.get(key);
+			if (value instanceof Font) {
+				Font font = (Font) value;
+				fonts.put(key, font.deriveFont(font.getSize2D() * FONT_SCALE));
+			}
+		}
+
+		for (Map.Entry<Object, Font> font : fonts.entrySet()) {
+			UIManager.put(font.getKey(), new FontUIResource(font.getValue()));
 		}
 	}
 
@@ -125,6 +157,8 @@ public class StartPOS {
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Cannot set look and feel", e);
 				}
+
+				enlargeFonts();
 
 				String screenmode = config.getProperty("machine.screenmode");
 				if ("fullscreen".equals(screenmode)) {

@@ -21,6 +21,7 @@ package com.openbravo.pos.sales.shared;
 
 import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.UserInfo;
+import com.openbravo.pos.util.TillButtons;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import javax.swing.*;
@@ -199,15 +200,6 @@ public class JTicketsBagShared extends JTicketsBag {
 		return null;
 	}
 
-	private String getInitials(String name) {
-		String[] nameParts = name.trim().split("\\s+");
-		String initials = nameParts[0].substring(0, 1);
-		if (nameParts.length > 1) {
-			initials += nameParts[nameParts.length - 1].substring(0, 1);
-		}
-		return initials.toUpperCase(Locale.ROOT);
-	}
-
 	private void initSellerButtons() {
 		try {
 			DataLogicSystem dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
@@ -223,13 +215,12 @@ public class JTicketsBagShared extends JTicketsBag {
 				int shortcutKey = getSellerShortcut(position++);
 				String shortcut = shortcutKey == 0 ? null : KeyEvent.getKeyText(shortcutKey);
 
-				JToggleButton button = new JToggleButton(
-						shortcut == null ? getInitials(user.getName()) : getInitials(user.getName()) + " " + shortcut);
+				JToggleButton button = new JToggleButton(user.getIcon());
+				TillButtons.labelUnderIcon(button, shortcut);
 				button.setToolTipText(shortcut == null ? user.getName() : user.getName() + " (" + shortcut + ")");
 				button.getAccessibleContext().setAccessibleName(user.getName());
 				button.setFocusPainted(false);
 				button.setFocusable(false);
-				button.setMargin(new java.awt.Insets(8, 14, 8, 14));
 				button.setRequestFocusEnabled(false);
 				button.addActionListener(new java.awt.event.ActionListener() {
 					public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -300,11 +291,11 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		setLayout(new java.awt.BorderLayout());
 
-		m_jNewTicket.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/editnew.png")));
+		m_jNewTicket.setIcon(TillButtons.icon("/com/openbravo/images/till/plus-circle.png"));
 		m_jNewTicket.setToolTipText(AppLocal.getIntString("tooltiptext.newticket")); // NOI18N
+		TillButtons.labelUnderIcon(m_jNewTicket, AppLocal.getIntString("buttonlabel.newticket")); // NOI18N
 		m_jNewTicket.setFocusPainted(false);
 		m_jNewTicket.setFocusable(false);
-		m_jNewTicket.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jNewTicket.setRequestFocusEnabled(false);
 		m_jNewTicket.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -314,11 +305,11 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		jPanel1.add(m_jNewTicket);
 
-		m_jDelTicket.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/editdelete.png")));
+		m_jDelTicket.setIcon(TillButtons.icon("/com/openbravo/images/till/trash.png"));
 		m_jDelTicket.setToolTipText(AppLocal.getIntString("tooltiptext.deleteticket")); // NOI18N
+		TillButtons.labelUnderIcon(m_jDelTicket, AppLocal.getIntString("buttonlabel.deleteticket")); // NOI18N
 		m_jDelTicket.setFocusPainted(false);
 		m_jDelTicket.setFocusable(false);
-		m_jDelTicket.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jDelTicket.setRequestFocusEnabled(false);
 		m_jDelTicket.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -328,12 +319,11 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		jPanel1.add(m_jDelTicket);
 
-		m_jListTickets
-				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/unsortedList.png")));
+		m_jListTickets.setIcon(TillButtons.icon("/com/openbravo/images/till/list-bullets.png"));
 		m_jListTickets.setToolTipText(AppLocal.getIntString("tooltiptext.listtickets")); // NOI18N
+		TillButtons.labelUnderIcon(m_jListTickets, AppLocal.getIntString("buttonlabel.listtickets")); // NOI18N
 		m_jListTickets.setFocusPainted(false);
 		m_jListTickets.setFocusable(false);
-		m_jListTickets.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jListTickets.setRequestFocusEnabled(false);
 		m_jListTickets.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {

@@ -19,25 +19,37 @@
 
 package com.openbravo.pos.forms;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.*;
 import com.openbravo.format.Formats;
+import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
+import com.openbravo.pos.util.TillButtons;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 
 /**
  *
  * @author adrianromero
  */
 public class DataLogicSystem extends BeanFactoryDataSingle {
+
+	private static final int AVATAR_SIZE = TillButtons.ICON_SOURCE_SIZE;
+	private static final Color[] AVATAR_COLOURS = { new Color(0x1565C0), new Color(0x2E7D32), new Color(0xC62828),
+			new Color(0x6A1B9A), new Color(0xEF6C00), new Color(0x00838F), new Color(0xAD1457), new Color(0x4E342E) };
 
 	protected SentenceList m_peoplevisible;
 	protected SentenceFind m_peoplebycard;
@@ -64,11 +76,12 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 
 	public void init(Session s) {
 
-		final ThumbNailBuilder tnb = new ThumbNailBuilder(32, 32, "com/openbravo/images/yast_sysadmin.png");
+		final ThumbNailBuilder tnb = new ThumbNailBuilder(AVATAR_SIZE, AVATAR_SIZE);
 		peopleread = new SerializerRead() {
 			public Object readValues(DataRead dr) throws BasicException {
+				BufferedImage image = ImageUtils.readImage(dr.getBytes(6));
 				return new AppUser(dr.getString(1), dr.getString(2), dr.getString(3), dr.getString(4), dr.getString(5),
-						new ImageIcon(tnb.getThumbNail(ImageUtils.readImage(dr.getBytes(6)))));
+						image == null ? null : new HiDpiIcon(tnb.getThumbNail(image)));
 			}
 		};
 
@@ -123,8 +136,53 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 		resetResourcesCache();
 	}
 
+	// Staff without a photo get their initials on a colour of their own, one per
+	// row, so login and seller buttons tell them apart at a glance.
+	private static Icon avatarIcon(Color colour, String name) {
+
+		BufferedImage avatar = new BufferedImage(AVATAR_SIZE, AVATAR_SIZE, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = avatar.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+		g.setColor(colour);
+		g.fillOval(0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+		String initials = initials(name);
+		g.setColor(Color.WHITE);
+		g.setFont(new Font("SansSerif", Font.BOLD, initials.length() > 1 ? AVATAR_SIZE * 2 / 5 : AVATAR_SIZE / 2));
+		FontMetrics metrics = g.getFontMetrics();
+		g.drawString(initials, (AVATAR_SIZE - metrics.stringWidth(initials)) / 2,
+				(AVATAR_SIZE - metrics.getHeight()) / 2 + metrics.getAscent());
+
+		g.dispose();
+		return new HiDpiIcon(avatar);
+	}
+
+	private static String initials(String name) {
+
+		if (name == null || name.trim().length() == 0) {
+			return "?";
+		}
+
+		String[] nameParts = name.trim().split("\\s+");
+		String initials = nameParts[0].substring(0, 1);
+		if (nameParts.length > 1) {
+			initials += nameParts[nameParts.length - 1].substring(0, 1);
+		}
+		return initials.toUpperCase(Locale.ROOT);
+	}
+
 	public final List listPeopleVisible() throws BasicException {
-		return m_peoplevisible.list();
+
+		List people = m_peoplevisible.list();
+		for (int i = 0; i < people.size(); i++) {
+			AppUser user = (AppUser) people.get(i);
+			if (user.getIcon() == null) {
+				user.setIcon(avatarIcon(AVATAR_COLOURS[i % AVATAR_COLOURS.length], user.getName()));
+			}
+		}
+		return people;
 	}
 
 	public final AppUser findPeopleByCard(String card) throws BasicException {
