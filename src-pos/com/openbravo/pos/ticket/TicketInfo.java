@@ -507,4 +507,28 @@ public class TicketInfo implements SerializableRead, Externalizable {
 	public String printTotalPaid() {
 		return Formats.CURRENCY.formatValue(new Double(getTotalPaid()));
 	}
+
+	public boolean isLoyaltyEnabled() {
+		return LoyaltyStamps.isEnabled(getProperty(LoyaltyStamps.ENABLED_KEY));
+	}
+
+	public String printLoyaltyName() {
+		return StringUtils.encodeXML(LoyaltyStamps.name(getProperty(LoyaltyStamps.NAME_KEY)));
+	}
+
+	public int getLoyaltyStampsEarned() {
+		return isLoyaltyEnabled() ? LoyaltyStamps.stampsEarned(this) : 0;
+	}
+
+	public boolean hasLoyaltySavings() {
+		return isLoyaltyEnabled() && LoyaltyStamps.savingsEuros(this) > 0.0;
+	}
+
+	public int getLoyaltySavingsEuros() {
+		return (int) Math.round(LoyaltyStamps.savingsEuros(this));
+	}
+
+	public String printLoyaltySavings() {
+		return getLoyaltySavingsEuros() + "€";
+	}
 }

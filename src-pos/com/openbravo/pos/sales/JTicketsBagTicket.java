@@ -21,6 +21,7 @@ package com.openbravo.pos.sales;
 
 import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
+import com.openbravo.pos.ticket.LoyaltyStamps;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -261,6 +262,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 			m_jTicketId.setText(m_ticket.getName());
 
 			try {
+				LoyaltyStamps.applyToTicket(m_ticket,
+						m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);
 				m_TTP.printTicket(script.eval(m_dlSystem.getResourceAsXML("Printer.TicketPreview")).toString());
@@ -474,6 +478,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		if (m_ticket != null) {
 			try {
+				LoyaltyStamps.applyToTicket(m_ticket,
+						m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);
 				m_TTP2.printTicket(script.eval(m_dlSystem.getResourceAsXML("Printer.TicketPreview")).toString());

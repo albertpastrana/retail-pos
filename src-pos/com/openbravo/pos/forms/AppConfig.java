@@ -176,5 +176,8 @@ public class AppConfig implements AppProperties {
 		m_propsconfig.setProperty("paper.standard.mediasizename", "A4");
 
 		m_propsconfig.setProperty("machine.uniqueinstance", "false");
+
+		m_propsconfig.setProperty("loyalty.enabled", "true");
+		m_propsconfig.setProperty("loyalty.name", "victorines");
 	}
 }

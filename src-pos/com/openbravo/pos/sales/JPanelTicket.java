@@ -60,6 +60,7 @@ import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
+import com.openbravo.pos.ticket.LoyaltyStamps;
 import com.openbravo.pos.util.JRPrinterAWT300;
 import com.openbravo.pos.util.ReportUtils;
 import java.io.InputStream;
@@ -242,6 +243,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		if (!m_App.getAppUserView().getUser().hasPermission("button.discount.total")) {
 			jPanel2.remove(m_jDiscountTotal);
 		}
+		if (LoyaltyStamps.isEnabled(m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY))
+				&& m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
+			m_jLoyaltyRedemption.setToolTipText(AppLocal.getIntString("button.loyaltyredemption",
+					LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY))));
+		} else {
+			jPanel2.remove(m_jLoyaltyRedemption);
+		}
 		if (!m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
 			jPanel2.remove(m_jEditLine);
 		}
@@ -270,6 +278,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_oTicket.setUserIfAbsent(m_App.getAppUserView().getUser().getUserInfo());
 			m_oTicket.setActiveCash(m_App.getActiveCashIndex());
 			m_oTicket.setDate(new Date()); // Set the edition date.
+			applyLoyaltyConfig(m_oTicket);
 		}
 
 		executeEvent(m_oTicket, m_oTicketExt, "ticket.show");
@@ -292,6 +301,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_jSubtotalEuros.setText(null);
 			m_jTaxesEuros.setText(null);
 			m_jTotalEuros.setText(null);
+			updateLoyaltyLabel();
 
 			stateToZero();
 
@@ -348,6 +358,24 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_jTaxesEuros.setText(m_oTicket.printTax());
 			m_jTotalEuros.setText(m_oTicket.printTotal());
 		}
+		updateLoyaltyLabel();
+	}
+
+	private void updateLoyaltyLabel() {
+		if (m_App == null || !LoyaltyStamps.isEnabled(m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY))) {
+			m_jPanLoyalty.setVisible(false);
+			return;
+		}
+		m_jPanLoyalty.setVisible(true);
+		if (m_oTicket == null || m_oTicket.getLinesCount() == 0) {
+			m_jLoyalty.setText(" ");
+			return;
+		}
+		m_jLoyalty.setText("<html><div align=\"center\">"
+				+ AppLocal.getIntString("label.loyalty.thispurchase",
+						Integer.valueOf(LoyaltyStamps.stampsEarned(m_oTicket)),
+						LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY)))
+				+ "</div></html>");
 	}
 
 	private void paintTicketLine(int index, TicketLineInfo oLine) {
@@ -714,6 +742,29 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				addTicketLine(discountLine);
 			}
 		}
+	}
+
+	private void applyLoyaltyRedemption() {
+		// A full card can be redeemed as many times as the receipt can absorb: what
+		// is left to pay has to cover this redemption.
+		if (m_oTicket.getTotal() < LoyaltyStamps.REDEMPTION_EUROS) {
+			Toolkit.getDefaultToolkit().beep();
+			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.loyalty.minimumtotal")).show(this);
+			return;
+		}
+
+		TaxCategoryInfo taxCategory = (TaxCategoryInfo) taxcategoriesmodel.getSelectedItem();
+		if (taxCategory == null) {
+			Toolkit.getDefaultToolkit().beep();
+			return;
+		}
+
+		TaxInfo tax = taxeslogic.getTaxInfo(taxCategory.getID(), m_oTicket.getDate(), m_oTicket.getCustomer());
+		String loyaltyName = LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+		TicketLineInfo redemption = new TicketLineInfo(AppLocal.getIntString("button.loyaltyredemption", loyaltyName),
+				taxCategory.getID(), 1.0, includeTaxes(taxCategory.getID(), -LoyaltyStamps.REDEMPTION_EUROS), tax);
+		LoyaltyStamps.markRedemption(redemption);
+		addTicketLine(redemption);
 	}
 
 	private void closeCurrentTicket() {
@@ -1163,6 +1214,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			msg.show(JPanelTicket.this);
 		} else {
 			try {
+				applyLoyaltyConfig(ticket);
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("taxes", taxcollection);
 				script.put("taxeslogic", taxeslogic);
@@ -1276,6 +1328,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	public void printTicket(String resource) {
 		printTicket(resource, m_oTicket, m_oTicketExt);
+	}
+
+	private void applyLoyaltyConfig(TicketInfo ticket) {
+		LoyaltyStamps.applyToTicket(ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
+				m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 	}
 
 	private Object executeEventAndRefresh(String eventkey, ScriptArg... args) {
@@ -1419,6 +1476,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jList = new javax.swing.JButton();
 		m_jDiscountLine = new javax.swing.JButton();
 		m_jDiscountTotal = new javax.swing.JButton();
+		m_jLoyaltyRedemption = new javax.swing.JButton();
 		m_jEditLine = new javax.swing.JButton();
 		m_jPanelCentral = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
@@ -1437,6 +1495,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPanReadout = new javax.swing.JPanel();
 		m_jPrice = new javax.swing.JLabel();
 		m_jPor = new javax.swing.JLabel();
+		m_jPanLoyalty = new javax.swing.JPanel();
+		m_jLoyalty = new javax.swing.JLabel();
 		m_jPanScanStatus = new javax.swing.JPanel();
 		m_jScanStatus = new javax.swing.JLabel();
 		m_jEnter = new javax.swing.JButton();
@@ -1549,6 +1609,21 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			}
 		});
 		jPanel2.add(m_jDiscountTotal);
+
+		m_jLoyaltyRedemption.setIcon(
+				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/loyalty_redemption22.png")));
+		m_jLoyaltyRedemption
+				.setToolTipText(AppLocal.getIntString("button.loyaltyredemption", LoyaltyStamps.DEFAULT_NAME));
+		m_jLoyaltyRedemption.setFocusPainted(false);
+		m_jLoyaltyRedemption.setFocusable(false);
+		m_jLoyaltyRedemption.setMargin(new java.awt.Insets(8, 14, 8, 14));
+		m_jLoyaltyRedemption.setRequestFocusEnabled(false);
+		m_jLoyaltyRedemption.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				m_jLoyaltyRedemptionActionPerformed(evt);
+			}
+		});
+		jPanel2.add(m_jLoyaltyRedemption);
 
 		m_jEditLine.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/color_line.png"))); // NOI18N
 		m_jEditLine.setFocusPainted(false);
@@ -1719,6 +1794,21 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_jPanEntries.add(m_jPanReadout);
 
+		// Three wrapped lines of the notice at the width of the keypad column, so the
+		// count at the end of the sentence is never the part that gets cut off.
+		m_jPanLoyalty.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 5, 0, 5));
+		m_jPanLoyalty.setLayout(new java.awt.BorderLayout());
+		m_jPanLoyalty.setPreferredSize(new java.awt.Dimension(100, 76));
+		m_jPanLoyalty.setMaximumSize(new java.awt.Dimension(32767, 76));
+
+		m_jLoyalty.setFont(new java.awt.Font("Dialog", 1, 13));
+		m_jLoyalty.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+		m_jLoyalty.setText(" ");
+		m_jLoyalty.setRequestFocusEnabled(false);
+		m_jPanLoyalty.add(m_jLoyalty, java.awt.BorderLayout.CENTER);
+
+		m_jPanEntries.add(m_jPanLoyalty);
+
 		// What happened to the last scan, on its own row below the keys so it is not
 		// read as part of them. Like the code and readout rows, the row spans the
 		// column and keeps its height, so the notice is centred and nothing jumps.
@@ -1757,6 +1847,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		stateTransition(JNumberKeys.KEY_DISCOUNT_TOTAL);
 
 	}// GEN-LAST:event_m_jDiscountTotalActionPerformed
+
+	private void m_jLoyaltyRedemptionActionPerformed(java.awt.event.ActionEvent evt) {
+
+		applyLoyaltyRedemption();
+
+	}
 
 	private void m_jEditLineActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jEditLineActionPerformed
 
@@ -1859,6 +1955,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JButton m_jDelete;
 	private javax.swing.JButton m_jDiscountLine;
 	private javax.swing.JButton m_jDiscountTotal;
+	private javax.swing.JButton m_jLoyaltyRedemption;
 	private javax.swing.JButton m_jEditLine;
 	private javax.swing.JButton m_jEnter;
 	private javax.swing.JTextField m_jKeyFactory;
@@ -1873,6 +1970,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JPanel m_jPanContainer;
 	private javax.swing.JPanel m_jPanEntries;
 	private javax.swing.JPanel m_jPanReadout;
+	private javax.swing.JPanel m_jPanLoyalty;
 	private javax.swing.JPanel m_jPanScanStatus;
 	private javax.swing.JPanel m_jPanTicket;
 	private javax.swing.JPanel m_jPanTotals;
@@ -1882,6 +1980,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JLabel m_jPor;
 	private javax.swing.JLabel m_jPrice;
 	private javax.swing.JLabel m_jScanStatus;
+	private javax.swing.JLabel m_jLoyalty;
 	private javax.swing.JLabel m_jSubtotalEuros;
 	private javax.swing.JLabel m_jTaxesEuros;
 	private javax.swing.JLabel m_jTicketId;

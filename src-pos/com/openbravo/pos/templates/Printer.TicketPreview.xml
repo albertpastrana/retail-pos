@@ -217,6 +217,16 @@
          #end
 
         <line></line>
+        #if ($ticket.isLoyaltyEnabled() && $ticket.getLoyaltyStampsEarned() > 0)
+        <line>
+            <text align="center" length="42">Amb aquesta compra sumes ${ticket.getLoyaltyStampsEarned()} ${ticket.printLoyaltyName()}.</text>
+        </line>
+        #end
+        #if ($ticket.isLoyaltyEnabled() && $ticket.hasLoyaltySavings())
+        <line>
+            <text align="center" length="42">Avui estalvies ${ticket.printLoyaltySavings()} amb les ${ticket.printLoyaltyName()}.</text>
+        </line>
+        #end
         <line>
             <text align="center" length="42">Gràcies per la seva visita</text>
         </line>
