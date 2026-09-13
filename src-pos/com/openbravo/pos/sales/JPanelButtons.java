@@ -21,7 +21,6 @@ package com.openbravo.pos.sales;
 
 import com.openbravo.data.loader.LocalRes;
 import java.awt.Component;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -38,6 +37,7 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppUser;
 import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
+import com.openbravo.pos.util.TillButtons;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -63,7 +63,8 @@ public class JPanelButtons extends javax.swing.JPanel {
         initComponents();
         
         // Load categories default thumbnail
-        tnbmacro = new ThumbNailBuilder(32, 32, "com/openbravo/images/greenled.png");
+        tnbmacro = new ThumbNailBuilder(TillButtons.ICON_SOURCE_SIZE, TillButtons.ICON_SOURCE_SIZE,
+                "com/openbravo/images/greenled.png");
         
         this.panelticket = panelticket;
         
@@ -176,12 +177,11 @@ public class JPanelButtons extends javax.swing.JPanel {
         public JButtonFunc(String sKey, String sImage, String title) {
             
             setName(sKey);
-            setText(title);
             setIcon(new HiDpiIcon(tnbmacro.getThumbNail(panelticket.getResourceAsImage(sImage))));
+            TillButtons.labelUnderIcon(this, title);
             setFocusPainted(false);
             setFocusable(false);
             setRequestFocusEnabled(false);
-            setMargin(new Insets(8, 14, 8, 14));  
         }         
     }
     

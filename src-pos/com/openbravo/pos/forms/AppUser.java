@@ -75,6 +75,10 @@ public class AppUser {
         return m_Icon;
     }
 
+    public void setIcon(Icon icon) {
+        m_Icon = icon;
+    }
+
     public String getId() {
         return m_sId;
     }

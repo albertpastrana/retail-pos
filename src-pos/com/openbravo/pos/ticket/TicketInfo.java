@@ -45,6 +45,7 @@ public class TicketInfo implements SerializableRead, Externalizable {
 	public static final int RECEIPT_PAYMENT = 2;
 
 	private static DateFormat m_dateformat = new SimpleDateFormat("hh:mm");
+	private static DateFormat m_sharedticketdateformat = new SimpleDateFormat("dd/MM - HH:mm");
 	private static final String SELLER_ID_PROPERTY = "ticket.seller.id";
 	private static final String SELLER_NAME_PROPERTY = "ticket.seller.name";
 
@@ -205,16 +206,17 @@ public class TicketInfo implements SerializableRead, Externalizable {
 	}
 
 	public String getSharedTicketName() {
-		String ticketName;
-		if (m_Customer != null) {
-			ticketName = m_Customer.getName();
-		} else if (m_iTicketId > 0) {
-			ticketName = Integer.toString(m_iTicketId);
+		String person;
+		if (m_User != null) {
+			person = m_User.getName();
+		} else if (m_Customer != null) {
+			person = m_Customer.getName();
 		} else {
-			ticketName = "#" + m_sId.substring(0, Math.min(8, m_sId.length())).toUpperCase();
+			person = null;
 		}
 
-		return m_User == null ? ticketName : m_User.getName() + " - " + ticketName;
+		String started = m_sharedticketdateformat.format(m_dDate);
+		return person == null ? started : person + " \u00B7 " + started;
 	}
 
 	public java.util.Date getDate() {
