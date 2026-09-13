@@ -245,8 +245,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 		if (LoyaltyStamps.isEnabled(m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY))
 				&& m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
-			m_jLoyaltyRedemption.setToolTipText(AppLocal.getIntString("button.loyaltyredemption",
-					LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY))));
+			String loyaltyName = LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+			m_jLoyaltyRedemption.setToolTipText(AppLocal.getIntString("button.loyaltyredemption", loyaltyName));
+			m_jLoyaltyRedemption.setText(loyaltyName);
 		} else {
 			jPanel2.remove(m_jLoyaltyRedemption);
 		}
@@ -1451,6 +1452,19 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 	}
 
+	// The line column is one square per action: icon on top, a word underneath.
+	// The size is fixed so a longer word in another language cannot stretch the
+	// column and squeeze the receipt.
+	private static void labelUnderIcon(javax.swing.JButton button, String text) {
+		button.setText(text);
+		button.setFont(new java.awt.Font("Dialog", 0, 10));
+		button.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		button.setIconTextGap(2);
+		button.setMargin(new java.awt.Insets(2, 2, 2, 2));
+		button.setPreferredSize(new java.awt.Dimension(56, 56));
+	}
+
 	/**
 	 * This method is called from within the constructor to initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is always
@@ -1559,9 +1573,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_jDelete.setIcon(
 				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/locationbar_erase.png"))); // NOI18N
+		labelUnderIcon(m_jDelete, AppLocal.getIntString("buttonlabel.deleteline")); // NOI18N
 		m_jDelete.setFocusPainted(false);
 		m_jDelete.setFocusable(false);
-		m_jDelete.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jDelete.setRequestFocusEnabled(false);
 		m_jDelete.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1571,9 +1585,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		jPanel2.add(m_jDelete);
 
 		m_jList.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/search22.png"))); // NOI18N
+		labelUnderIcon(m_jList, AppLocal.getIntString("buttonlabel.findproduct")); // NOI18N
 		m_jList.setFocusPainted(false);
 		m_jList.setFocusable(false);
-		m_jList.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jList.setRequestFocusEnabled(false);
 		m_jList.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1585,9 +1599,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jDiscountLine.setIcon(
 				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/discount_line22.png"))); // NOI18N
 		m_jDiscountLine.setToolTipText(AppLocal.getIntString("button.discountline")); // NOI18N
+		labelUnderIcon(m_jDiscountLine, AppLocal.getIntString("buttonlabel.discountline")); // NOI18N
 		m_jDiscountLine.setFocusPainted(false);
 		m_jDiscountLine.setFocusable(false);
-		m_jDiscountLine.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jDiscountLine.setRequestFocusEnabled(false);
 		m_jDiscountLine.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1599,9 +1613,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jDiscountTotal.setIcon(
 				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/discount_total22.png"))); // NOI18N
 		m_jDiscountTotal.setToolTipText(AppLocal.getIntString("button.discounttotal")); // NOI18N
+		labelUnderIcon(m_jDiscountTotal, AppLocal.getIntString("buttonlabel.discounttotal")); // NOI18N
 		m_jDiscountTotal.setFocusPainted(false);
 		m_jDiscountTotal.setFocusable(false);
-		m_jDiscountTotal.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jDiscountTotal.setRequestFocusEnabled(false);
 		m_jDiscountTotal.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1614,9 +1628,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/loyalty_redemption22.png")));
 		m_jLoyaltyRedemption
 				.setToolTipText(AppLocal.getIntString("button.loyaltyredemption", LoyaltyStamps.DEFAULT_NAME));
+		labelUnderIcon(m_jLoyaltyRedemption, LoyaltyStamps.DEFAULT_NAME);
 		m_jLoyaltyRedemption.setFocusPainted(false);
 		m_jLoyaltyRedemption.setFocusable(false);
-		m_jLoyaltyRedemption.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jLoyaltyRedemption.setRequestFocusEnabled(false);
 		m_jLoyaltyRedemption.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1626,9 +1640,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		jPanel2.add(m_jLoyaltyRedemption);
 
 		m_jEditLine.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/color_line.png"))); // NOI18N
+		labelUnderIcon(m_jEditLine, AppLocal.getIntString("buttonlabel.editline")); // NOI18N
 		m_jEditLine.setFocusPainted(false);
 		m_jEditLine.setFocusable(false);
-		m_jEditLine.setMargin(new java.awt.Insets(8, 14, 8, 14));
 		m_jEditLine.setRequestFocusEnabled(false);
 		m_jEditLine.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
