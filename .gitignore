@@ -17,6 +17,7 @@ data/*.tsv
 data/__pycache__/
 devdb/
 dev.properties
+dev-derby.properties
 till-lan.properties
 .postgres-lan-password
 external-data/
