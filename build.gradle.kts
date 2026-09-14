@@ -65,7 +65,7 @@ dependencies {
         "net.sourceforge.barbecue:barbecue:1.5-beta1",
         "org.beanshell:bsh-core:2.0b4",
         "commons-beanutils:commons-beanutils:1.9.4",
-        "commons-codec:commons-codec:1.17.2",
+        "commons-codec:commons-codec:1.22.1",
         "commons-collections:commons-collections:3.2.2",
         "commons-digester:commons-digester:1.8.1",
         "commons-discovery:commons-discovery:0.5",
