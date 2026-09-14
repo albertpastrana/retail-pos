@@ -55,7 +55,7 @@ dependencies {
         "commons-beanutils:commons-beanutils:1.9.4",
         "commons-codec:commons-codec:1.17.2",
         "commons-collections:commons-collections:3.2.2",
-        "commons-digester:commons-digester:1.8.1",
+        "commons-digester:commons-digester:2.1",
         "commons-discovery:commons-discovery:0.5",
         "commons-lang:commons-lang:2.6",
         "commons-logging:commons-logging:1.2",
