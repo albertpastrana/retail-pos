@@ -59,7 +59,7 @@ dependencies {
         "commons-discovery:commons-discovery:0.5",
         "commons-lang:commons-lang:2.6",
         "commons-logging:commons-logging:1.2",
-        "com.lowagie:itext:2.1.0",
+        "com.lowagie:itext:4.2.2",
         "com.formdev:flatlaf:3.7.2",
         "jfree:jcommon:1.0.16",
         "jfree:jfreechart:1.0.13",
