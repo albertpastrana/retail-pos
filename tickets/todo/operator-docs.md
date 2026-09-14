@@ -2,7 +2,7 @@
 
 Captured: 2026-09-14
 
-Related: `tickets/todo/customer-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/todo/live-shared-tickets.md`, `tickets/todo/postgres-lan.md`
+Related: `tickets/todo/customer-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/todo/live-shared-tickets.md`, `tickets/todo/postgres-lan.md`, `tickets/todo/login-vs-seller.md`
 
 ## Goal
 
