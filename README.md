@@ -8,7 +8,7 @@ This file is the project entry point. Catalogue variant rules live in [catalog-v
 
 ## Requirements
 
-- JDK 17 or newer to run Gradle (the build still emits Java 8 bytecode)
+- Any JDK to launch the wrapper; Gradle then runs on JDK 21, downloading it if the machine has none (`gradle/gradle-daemon-jvm.properties`). The build still emits Java 8 bytecode. SDKMAN users: `.sdkmanrc` pins Temurin 21 (`sdk env`, or `sdkman_auto_env=true` so `cd` switches it).
 - The [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) (`./gradlew`); no local Gradle install needed
 - Access to Maven Central when dependencies are not already in the Gradle cache
 
