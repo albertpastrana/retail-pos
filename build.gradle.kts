@@ -14,8 +14,6 @@ repositories {
 
 spotless {
     java {
-        // Source-set Java only; launch4j is vendored and not a source set.
-        targetExclude("launch4j/**")
         // Eclipse formats layout. It does not sort imports (no importOrder /
         // removeUnusedImports) and does not reflow string literals the way
         // google-java-format does.

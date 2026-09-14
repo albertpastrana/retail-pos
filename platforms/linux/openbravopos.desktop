@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Retail POS
-GenericName=POS system
-Comment=Retail POS is a point of sale application
-Exec=openbravopos %F
-Icon=openbravopos
-Type=Application
-Terminal=false
-Categories=Office;

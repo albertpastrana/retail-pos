@@ -182,4 +182,4 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 
 Original project: [SourceForge Openbravo POS](https://sourceforge.net/projects/openbravopos/). The historical wiki and forums linked from older READMEs are largely stale; treat this repo as the source of truth.
 
-License: GNU GPL v3 (see `COPYING` / `licensing/`).
+License: GNU GPL v3 (see `licensing/`).
