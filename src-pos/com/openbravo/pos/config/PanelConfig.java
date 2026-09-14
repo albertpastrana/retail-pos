@@ -27,8 +27,8 @@ import com.openbravo.pos.forms.AppConfig;
  * @author adrianromero
  */
 public interface PanelConfig {
-    public void loadProperties(AppConfig config);    
-    public void saveProperties(AppConfig config);   
-    public boolean hasChanged();
-    public Component getConfigComponent();    
+	public void loadProperties(AppConfig config);
+	public void saveProperties(AppConfig config);
+	public boolean hasChanged();
+	public Component getConfigComponent();
 }

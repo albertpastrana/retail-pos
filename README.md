@@ -22,11 +22,13 @@ Useful tasks:
 
 | Task                        | Result                                                      |
 | --------------------------- | ----------------------------------------------------------- |
-| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`        |
-| `./gradlew check`           | That, plus compile the `data/` database helpers             |
-| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL |
+| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`          |
+| `./gradlew check`           | That, plus data helpers, plus `spotlessCheck`                 |
+| `./gradlew spotlessApply`   | Format Java in the source sets (do not format Java by hand)   |
+| `./gradlew spotlessCheck`   | Fail if Java is not formatted                                 |
+| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL   |
 
-CI runs `./gradlew check integrationTest` on every push and pull request.
+CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrationTest` on every push and pull request.
 
 `./gradlew jar` copies `openbravopos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
 

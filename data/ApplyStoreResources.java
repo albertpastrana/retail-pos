@@ -44,8 +44,8 @@ public class ApplyStoreResources {
 
 	private static File templatesDir() {
 		String home = System.getProperty("pos.home", System.getProperty("user.dir"));
-		File[] candidates = { new File(home, "src-pos/com/openbravo/pos/templates"),
-				new File("src-pos/com/openbravo/pos/templates"), new File("../src-pos/com/openbravo/pos/templates") };
+		File[] candidates = {new File(home, "src-pos/com/openbravo/pos/templates"),
+				new File("src-pos/com/openbravo/pos/templates"), new File("../src-pos/com/openbravo/pos/templates")};
 		for (File dir : candidates) {
 			if (new File(dir, "Ticket.Buttons.xml").isFile()) {
 				return dir;
@@ -79,10 +79,10 @@ public class ApplyStoreResources {
 	}
 
 	private static void patchRoles(Connection c) throws Exception {
-		String[] extra = { "    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n",
+		String[] extra = {"    <class name=\"button.discount\"/>\n", "    <class name=\"button.discount.total\"/>\n",
 				"    <class name=\"sales.EditLines\"/>\n",
 				"    <class name=\"com.openbravo.pos.panels.JPanelClosedCash\"/>\n",
-				"    <class name=\"com.openbravo.pos.inventory.SaleMarkPanel\"/>\n" };
+				"    <class name=\"com.openbravo.pos.inventory.SaleMarkPanel\"/>\n"};
 		PreparedStatement sel = c.prepareStatement("SELECT ID, NAME, PERMISSIONS FROM ROLES");
 		ResultSet rs = sel.executeQuery();
 		PreparedStatement upd = c.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?");

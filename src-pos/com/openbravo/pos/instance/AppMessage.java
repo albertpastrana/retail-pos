@@ -27,6 +27,6 @@ import java.rmi.RemoteException;
  * @author adrianromero
  */
 public interface AppMessage extends Remote {
-    
-    public void restoreWindow() throws RemoteException;    
+
+	public void restoreWindow() throws RemoteException;
 }

@@ -184,7 +184,7 @@ public class DatabaseMigratorIT {
 	private static String quotedTable(Connection connection, String name) throws SQLException {
 		DatabaseMetaData metadata = connection.getMetaData();
 		String quote = metadata.getIdentifierQuoteString();
-		ResultSet tables = metadata.getTables(connection.getCatalog(), null, "%", new String[] { "TABLE" });
+		ResultSet tables = metadata.getTables(connection.getCatalog(), null, "%", new String[]{"TABLE"});
 		try {
 			while (tables.next()) {
 				String actual = tables.getString("TABLE_NAME");

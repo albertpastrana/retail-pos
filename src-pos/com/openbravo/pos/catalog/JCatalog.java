@@ -232,7 +232,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 	private void addCategoryButton(JCatalogTab tab, CategoryInfo cat) {
 
 		if (cat.getImage() == null) {
-			tab.addCategoryButton(new String[] { cat.getName() }, buttonwidth, buttonheight, new SelectedCategory(cat));
+			tab.addCategoryButton(new String[]{cat.getName()}, buttonwidth, buttonheight, new SelectedCategory(cat));
 		} else {
 			tab.addButton(new ImageIcon(tnbbutton.getThumbNailText(cat.getImage(), cat.getName())),
 					new SelectedCategory(cat));
@@ -251,9 +251,9 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 	private String[] getProductTextLines(ProductInfoExt product) {
 
 		if (pricevisible) {
-			return new String[] { product.getName(), getProductPrice(product) };
+			return new String[]{product.getName(), getProductPrice(product)};
 		} else {
-			return new String[] { product.getName() };
+			return new String[]{product.getName()};
 		}
 	}
 

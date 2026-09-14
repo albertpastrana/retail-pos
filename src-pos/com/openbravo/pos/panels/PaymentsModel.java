@@ -43,14 +43,14 @@ public class PaymentsModel {
 	private Double m_dPaymentsTotal;
 	private java.util.List<PaymentsLine> m_lpayments;
 
-	private final static String[] PAYMENTHEADERS = { "Label.Payment", "label.totalcash" };
+	private final static String[] PAYMENTHEADERS = {"Label.Payment", "label.totalcash"};
 
 	private Integer m_iSales;
 	private Double m_dSalesBase;
 	private Double m_dSalesTaxes;
 	private java.util.List<SalesLine> m_lsales;
 
-	private final static String[] SALEHEADERS = { "label.taxcash", "label.totalcash" };
+	private final static String[] SALEHEADERS = {"label.taxcash", "label.totalcash"};
 
 	private PaymentsModel() {
 	}
@@ -97,8 +97,8 @@ public class PaymentsModel {
 				"SELECT COUNT(*), SUM(PAYMENTS.TOTAL) " + "FROM PAYMENTS, RECEIPTS "
 						+ "WHERE PAYMENTS.RECEIPT = RECEIPTS.ID AND RECEIPTS.MONEY = ? "
 						+ "AND PAYMENTS.PAYMENT NOT IN ('paperin', 'paperout')",
-				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[] { Datas.INT, Datas.DOUBLE }))
-						.find(money);
+				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.INT, Datas.DOUBLE}))
+				.find(money);
 
 		if (valtickets == null) {
 			p.m_iPayments = new Integer(0);
@@ -116,7 +116,7 @@ public class PaymentsModel {
 																											// Datas[]
 																											// {Datas.STRING,
 																											// Datas.DOUBLE}))
-						.list(money);
+				.list(money);
 
 		if (l == null) {
 			p.m_lpayments = new ArrayList();
@@ -128,8 +128,8 @@ public class PaymentsModel {
 		Object[] recsales = (Object[]) new StaticSentence(app.getSession(),
 				"SELECT COUNT(DISTINCT RECEIPTS.ID), SUM(TICKETLINES.UNITS * TICKETLINES.PRICE) "
 						+ "FROM RECEIPTS, TICKETLINES WHERE RECEIPTS.ID = TICKETLINES.TICKET AND RECEIPTS.MONEY = ?",
-				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[] { Datas.INT, Datas.DOUBLE }))
-						.find(money);
+				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.INT, Datas.DOUBLE}))
+				.find(money);
 		if (recsales == null) {
 			p.m_iSales = null;
 			p.m_dSalesBase = null;
@@ -142,7 +142,7 @@ public class PaymentsModel {
 		Object[] rectaxes = (Object[]) new StaticSentence(app.getSession(),
 				"SELECT SUM(TAXLINES.AMOUNT) "
 						+ "FROM RECEIPTS, TAXLINES WHERE RECEIPTS.ID = TAXLINES.RECEIPT AND RECEIPTS.MONEY = ?",
-				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[] { Datas.DOUBLE })).find(money);
+				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.DOUBLE})).find(money);
 		if (rectaxes == null) {
 			p.m_dSalesTaxes = null;
 		} else {
@@ -164,7 +164,7 @@ public class PaymentsModel {
 				"SELECT SUM(PAYMENTS.TOTAL) FROM PAYMENTS, RECEIPTS "
 						+ "WHERE PAYMENTS.RECEIPT = RECEIPTS.ID AND RECEIPTS.MONEY = ? "
 						+ "AND PAYMENTS.PAYMENT IN ('cash', 'magcard', 'cheque', 'cashrefund', 'magcardrefund', 'chequerefund')",
-				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[] { Datas.DOUBLE })).find(money);
+				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.DOUBLE})).find(money);
 		double moneyIn = (recbilling == null || recbilling[0] == null) ? 0.0 : ((Double) recbilling[0]).doubleValue();
 		double origBase = p.m_dSalesBase == null ? 0.0 : p.m_dSalesBase.doubleValue();
 		double origTax = p.m_dSalesTaxes == null ? 0.0 : p.m_dSalesTaxes.doubleValue();
@@ -286,12 +286,12 @@ public class PaymentsModel {
 			public Object getValueAt(int row, int column) {
 				PaymentsLine l = m_lpayments.get(row);
 				switch (column) {
-				case 0:
-					return l.getType();
-				case 1:
-					return l.getValue();
-				default:
-					return null;
+					case 0 :
+						return l.getType();
+					case 1 :
+						return l.getValue();
+					default :
+						return null;
 				}
 			}
 		};
@@ -347,12 +347,12 @@ public class PaymentsModel {
 			public Object getValueAt(int row, int column) {
 				SalesLine l = m_lsales.get(row);
 				switch (column) {
-				case 0:
-					return l.getTaxName();
-				case 1:
-					return l.getTaxes();
-				default:
-					return null;
+					case 0 :
+						return l.getTaxName();
+					case 1 :
+						return l.getTaxes();
+					default :
+						return null;
 				}
 			}
 		};

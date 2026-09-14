@@ -29,11 +29,11 @@ import java.awt.Component;
  */
 public interface ParametersConfig {
 
-    public Component getComponent();
-    
-    public void addDirtyManager(DirtyManager dirty);
+	public Component getComponent();
 
-    public void setParameters(StringParser p);
-    public String getParameters();
+	public void addDirtyManager(DirtyManager dirty);
+
+	public void setParameters(StringParser p);
+	public String getParameters();
 
 }

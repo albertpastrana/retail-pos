@@ -117,7 +117,8 @@ public final class CatalogImportDialog {
 			unknown = true;
 			return null;
 		}
-		List<ProductInfoExt> family = catalogProduct == null ? new ArrayList<ProductInfoExt>()
+		List<ProductInfoExt> family = catalogProduct == null
+				? new ArrayList<ProductInfoExt>()
 				: dlSales.getCatalogProductFamily(code, productsPath, categoriesPath);
 		if (family.size() > 1) {
 			List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family);
@@ -179,7 +180,7 @@ public final class CatalogImportDialog {
 
 		final VariantTableModel model = new VariantTableModel(editors);
 		final JTable table = new JTable(model);
-		final boolean[] applyingFamilyPrice = new boolean[] { false };
+		final boolean[] applyingFamilyPrice = new boolean[]{false};
 		for (final VariantImportEditor source : editors) {
 			source.priceChangeListener = new Runnable() {
 				@Override
@@ -262,7 +263,7 @@ public final class CatalogImportDialog {
 		enlargeDialogFont(content);
 
 		String title = AppLocal.getIntString("title.importproductfamily");
-		Object[] options = new Object[] { confirmLabel(true), AppLocal.getIntString("button.skipitem") };
+		Object[] options = new Object[]{confirmLabel(true), AppLocal.getIntString("button.skipitem")};
 		while (true) {
 			int result = JOptionPane.showOptionDialog(parent, content, title, JOptionPane.OK_CANCEL_OPTION,
 					JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
@@ -278,7 +279,8 @@ public final class CatalogImportDialog {
 				ProductInfoExt product = editor.buildProduct();
 				if (product == null) {
 					table.setRowSelectionInterval(i, i);
-					String message = editor.stockInvalid ? AppLocal.getIntString("message.stockaddpositive")
+					String message = editor.stockInvalid
+							? AppLocal.getIntString("message.stockaddpositive")
 							: AppLocal.getIntString("message.importproductrequired");
 					JOptionPane.showMessageDialog(parent, message, title, JOptionPane.WARNING_MESSAGE);
 					selected.clear();
@@ -343,7 +345,7 @@ public final class CatalogImportDialog {
 		enlargeDialogFont(content);
 
 		String title = AppLocal.getIntString("title.importproduct");
-		Object[] options = new Object[] { confirmLabel(false), AppLocal.getIntString("button.skipitem") };
+		Object[] options = new Object[]{confirmLabel(false), AppLocal.getIntString("button.skipitem")};
 		while (true) {
 			int result = JOptionPane.showOptionDialog(parent, content, title, JOptionPane.OK_CANCEL_OPTION,
 					JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
@@ -654,8 +656,8 @@ public final class CatalogImportDialog {
 
 	private final class VariantTableModel extends AbstractTableModel {
 		private final List<VariantImportEditor> editors;
-		private final String[] columns = { "", AppLocal.getIntString("label.variant"),
-				AppLocal.getIntString("label.variants.cost"), AppLocal.getIntString("label.variants.price") };
+		private final String[] columns = {"", AppLocal.getIntString("label.variant"),
+				AppLocal.getIntString("label.variants.cost"), AppLocal.getIntString("label.variants.price")};
 
 		private VariantTableModel(List<VariantImportEditor> editors) {
 			this.editors = editors;
@@ -699,16 +701,16 @@ public final class CatalogImportDialog {
 		public Object getValueAt(int row, int column) {
 			VariantImportEditor editor = editors.get(row);
 			switch (column) {
-			case 0:
-				return Boolean.valueOf(editor.selected);
-			case 1:
-				return variantLabel(editor.product, editor.scanned);
-			case 2:
-				return editor.prices.buy.getText();
-			case 3:
-				return editor.prices.sellTax.getText();
-			default:
-				return "";
+				case 0 :
+					return Boolean.valueOf(editor.selected);
+				case 1 :
+					return variantLabel(editor.product, editor.scanned);
+				case 2 :
+					return editor.prices.buy.getText();
+				case 3 :
+					return editor.prices.sellTax.getText();
+				default :
+					return "";
 			}
 		}
 

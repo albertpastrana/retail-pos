@@ -129,7 +129,8 @@ public class JRootApp extends JPanel implements AppView {
 	}
 
 	private static Image scaleLogo(BufferedImage logo) {
-		return logo.getHeight() == HEADER_LOGO_HEIGHT ? logo
+		return logo.getHeight() == HEADER_LOGO_HEIGHT
+				? logo
 				: logo.getScaledInstance(-1, HEADER_LOGO_HEIGHT, Image.SCALE_SMOOTH);
 	}
 
@@ -164,8 +165,8 @@ public class JRootApp extends JPanel implements AppView {
 						new Date(), null);
 
 				// creamos la caja activa
-				m_dlSystem.execInsertCash(new Object[] { getActiveCashIndex(), m_props.getHost(),
-						getActiveCashSequence(), getActiveCashDateStart(), getActiveCashDateEnd() });
+				m_dlSystem.execInsertCash(new Object[]{getActiveCashIndex(), m_props.getHost(), getActiveCashSequence(),
+						getActiveCashDateStart(), getActiveCashDateEnd()});
 			} else {
 				setActiveCash(sActiveCashIndex, (Integer) valcash[1], (Date) valcash[2], (Date) valcash[3]);
 			}
@@ -289,8 +290,8 @@ public class JRootApp extends JPanel implements AppView {
 						bf = (BeanFactory) bfclass.newInstance();
 					} else {
 						// the old construction for beans...
-						Constructor constMyView = bfclass.getConstructor(new Class[] { AppView.class });
-						Object bean = constMyView.newInstance(new Object[] { this });
+						Constructor constMyView = bfclass.getConstructor(new Class[]{AppView.class});
+						Object bean = constMyView.newInstance(new Object[]{this});
 
 						bf = new BeanFactoryObj(bean);
 					}
@@ -706,8 +707,7 @@ public class JRootApp extends JPanel implements AppView {
 		JLabel about = new JLabel("<html><body style='width: 420px'>" + "<b>" + AppLocal.APP_NAME + "</b> "
 				+ AppLocal.APP_VERSION + "<br><br>"
 				+ "Retail POS is a point of sale application designed for touch screens.<br>"
-				+ "A fork of Openbravo POS.<br>"
-				+ "Copyright \u00A9 2007-2009 Openbravo, S.L.<br><br>"
+				+ "A fork of Openbravo POS.<br>" + "Copyright \u00A9 2007-2009 Openbravo, S.L.<br><br>"
 				+ "Retail POS is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.<br><br>"
 				+ "Retail POS is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.<br><br>"
 				+ "You should have received a copy of the GNU General Public License along with Retail POS.  If not, see http://www.gnu.org/licenses/.</body></html>");
@@ -716,8 +716,7 @@ public class JRootApp extends JPanel implements AppView {
 		about.setHorizontalTextPosition(SwingConstants.CENTER);
 		about.applyComponentOrientation(getComponentOrientation());
 
-		JOptionPane.showMessageDialog(this, about, AppLocal.getIntString("Button.About"),
-				JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(this, about, AppLocal.getIntString("Button.About"), JOptionPane.PLAIN_MESSAGE);
 	}
 
 	private void m_txtKeysKeyTyped(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_m_txtKeysKeyTyped

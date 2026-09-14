@@ -24,6 +24,6 @@ import com.openbravo.basic.BasicException;
 
 public interface ListProvider {
 
-    public List loadData() throws BasicException;    
-    public List refreshData() throws BasicException; 
+	public List loadData() throws BasicException;
+	public List refreshData() throws BasicException;
 }

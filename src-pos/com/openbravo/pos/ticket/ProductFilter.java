@@ -115,9 +115,9 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 	}
 
 	public SerializerWrite getSerializerWrite() {
-		return new SerializerWriteBasic(new Datas[] { Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.DOUBLE,
+		return new SerializerWriteBasic(new Datas[]{Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.DOUBLE,
 				Datas.OBJECT, Datas.DOUBLE, Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING, Datas.OBJECT,
-				Datas.STRING, Datas.OBJECT, Datas.STRING });
+				Datas.STRING, Datas.OBJECT, Datas.STRING});
 	}
 
 	public Component getComponent() {
@@ -133,24 +133,26 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 
 		if (getBarcode().equals("")) {
 			String sName = m_jName.getText();
-			Object nameCompare = (sName == null || sName.equals("")) ? QBFCompareEnum.COMP_NONE
+			Object nameCompare = (sName == null || sName.equals(""))
+					? QBFCompareEnum.COMP_NONE
 					: m_jCboName.getSelectedItem();
 			String sReference = m_jReference.getText();
-			Object referenceCompare = (sReference == null || sReference.equals("")) ? QBFCompareEnum.COMP_NONE
+			Object referenceCompare = (sReference == null || sReference.equals(""))
+					? QBFCompareEnum.COMP_NONE
 					: m_jCboReference.getSelectedItem();
 			// Filtro por formulario
-			return new Object[] { nameCompare, sName, m_jCboPriceBuy.getSelectedItem(),
+			return new Object[]{nameCompare, sName, m_jCboPriceBuy.getSelectedItem(),
 					Formats.CURRENCY.parseValue(m_jPriceBuy.getText()), m_jCboPriceSell.getSelectedItem(),
 					Formats.CURRENCY.parseValue(m_jPriceSell.getText()),
 					m_CategoryModel.getSelectedKey() == null ? QBFCompareEnum.COMP_NONE : 0,
 					m_CategoryModel.getSelectedKey(), QBFCompareEnum.COMP_NONE, null,
 					m_BrandModel.getSelectedItem() == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS,
-					m_BrandModel.getSelectedItem(), referenceCompare, sReference };
+					m_BrandModel.getSelectedItem(), referenceCompare, sReference};
 		} else {
 			// Filtro por codigo de barras.
-			return new Object[] { QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
+			return new Object[]{QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 					QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_BLOOKUP,
-					getBarcode(), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null };
+					getBarcode(), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null};
 		}
 	}
 

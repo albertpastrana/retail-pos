@@ -60,8 +60,8 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 		table.setRowHeight(28);
 		table.setFillsViewportHeight(true);
 		table.getColumnModel().getColumn(1).setCellRenderer(new PercentageRenderer());
-		JComboBox<String> rounding = new JComboBox<String>(new String[] { roundingLabel(PriceRule.ROUND_CHARM),
-				roundingLabel(PriceRule.ROUND_NONE), roundingLabel(PriceRule.ROUND_95) });
+		JComboBox<String> rounding = new JComboBox<String>(new String[]{roundingLabel(PriceRule.ROUND_CHARM),
+				roundingLabel(PriceRule.ROUND_NONE), roundingLabel(PriceRule.ROUND_95)});
 		table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(rounding));
 		add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -165,7 +165,8 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 		if (count == 0) {
 			return;
 		}
-		String scope = newRule.getBrand() == null ? AppLocal.getIntString("label.pricerule.default")
+		String scope = newRule.getBrand() == null
+				? AppLocal.getIntString("label.pricerule.default")
 				: newRule.getBrand();
 		String message = AppLocal.getIntString("message.pricerules.bulk", scope, Integer.valueOf(count));
 		int answer = JOptionPane.showConfirmDialog(this, message, AppLocal.getIntString("title.pricerules.bulk"),
@@ -189,9 +190,9 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 	}
 
 	private static final class RulesModel extends AbstractTableModel {
-		private final String[] columns = { AppLocal.getIntString("label.pricerule.brand"),
+		private final String[] columns = {AppLocal.getIntString("label.pricerule.brand"),
 				AppLocal.getIntString("label.pricerule.markup"), AppLocal.getIntString("label.pricerule.margin"),
-				AppLocal.getIntString("label.pricerule.rounding") };
+				AppLocal.getIntString("label.pricerule.rounding")};
 		private final List<RuleRow> rows = new ArrayList<RuleRow>();
 
 		void setRules(List<PriceRule> rules) {
@@ -260,16 +261,16 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 		public Object getValueAt(int rowIndex, int columnIndex) {
 			RuleRow row = rows.get(rowIndex);
 			switch (columnIndex) {
-			case 0:
-				return row.brand == null ? AppLocal.getIntString("label.pricerule.default") : row.brand;
-			case 1:
-				return Double.valueOf(row.markupPercent);
-			case 2:
-				return Double.valueOf(100.0 * row.markupPercent / (100.0 + row.markupPercent));
-			case 3:
-				return roundingLabel(row.rounding);
-			default:
-				return null;
+				case 0 :
+					return row.brand == null ? AppLocal.getIntString("label.pricerule.default") : row.brand;
+				case 1 :
+					return Double.valueOf(row.markupPercent);
+				case 2 :
+					return Double.valueOf(100.0 * row.markupPercent / (100.0 + row.markupPercent));
+				case 3 :
+					return roundingLabel(row.rounding);
+				default :
+					return null;
 			}
 		}
 

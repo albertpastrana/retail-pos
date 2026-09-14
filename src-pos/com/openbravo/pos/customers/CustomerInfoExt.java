@@ -28,197 +28,197 @@ import java.util.Date;
  * @author adrianromero
  */
 public class CustomerInfoExt extends CustomerInfo {
-    
-    protected String taxcustomerid;
-    protected String notes;
-    protected boolean visible;
-    protected String card;
-    protected Double maxdebt;
-    protected Date curdate;
-    protected Double curdebt;
-    protected String firstname;
-    protected String lastname;
-    protected String email;
-    protected String phone;
-    protected String phone2;
-    protected String fax;
-    protected String address2;
-    protected String postal;
-    protected String city;
-    protected String region;
-    protected String country;
-    
-    /** Creates a new instance of UserInfoBasic */
-    public CustomerInfoExt(String id) {
-        super(id);
-    } 
-  
-    public String getTaxCustCategoryID() {
-        return taxcustomerid;
-    }
-    
-    public void setTaxCustomerID(String taxcustomerid) {
-        this.taxcustomerid = taxcustomerid;
-    }
-    
-    public String getNotes() {
-        return notes;
-    }
 
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+	protected String taxcustomerid;
+	protected String notes;
+	protected boolean visible;
+	protected String card;
+	protected Double maxdebt;
+	protected Date curdate;
+	protected Double curdebt;
+	protected String firstname;
+	protected String lastname;
+	protected String email;
+	protected String phone;
+	protected String phone2;
+	protected String fax;
+	protected String address2;
+	protected String postal;
+	protected String city;
+	protected String region;
+	protected String country;
 
-    public boolean isVisible() {
-        return visible;
-    }
+	/** Creates a new instance of UserInfoBasic */
+	public CustomerInfoExt(String id) {
+		super(id);
+	}
 
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
+	public String getTaxCustCategoryID() {
+		return taxcustomerid;
+	}
 
-    public String getCard() {
-        return card;
-    }
+	public void setTaxCustomerID(String taxcustomerid) {
+		this.taxcustomerid = taxcustomerid;
+	}
 
-    public void setCard(String card) {
-        this.card = card;
-    }
+	public String getNotes() {
+		return notes;
+	}
 
-    public Double getMaxdebt() {
-        return maxdebt;
-    }
-    
-    public String printMaxDebt() {       
-        return Formats.CURRENCY.formatValue(RoundUtils.getValue(getMaxdebt()));
-    }
-    
-    public void setMaxdebt(Double maxdebt) {
-        this.maxdebt = maxdebt;
-    }
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
 
-    public Date getCurdate() {
-        return curdate;
-    }
+	public boolean isVisible() {
+		return visible;
+	}
 
-    public void setCurdate(Date curdate) {
-        this.curdate = curdate;
-    }
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
 
-    public Double getCurdebt() {
-        return curdebt;
-    }
-    
-    public String printCurDebt() {       
-        return Formats.CURRENCY.formatValue(RoundUtils.getValue(getCurdebt()));
-    }
-    
-    public void setCurdebt(Double curdebt) {
-        this.curdebt = curdebt;
-    }
-    
-    public void updateCurDebt(Double amount, Date d) {
-        
-        curdebt = curdebt == null ? amount : curdebt + amount;
+	public String getCard() {
+		return card;
+	}
 
-        if (RoundUtils.compare(curdebt, 0.0) > 0) {
-            if (curdate == null) {
-                // new date
-                curdate = d;
-            }
-        } else if (RoundUtils.compare(curdebt, 0.0) == 0) {
-            curdebt = null;
-            curdate = null;
-        } else { // < 0
-            curdate = null;
-        }
-    }
+	public void setCard(String card) {
+		this.card = card;
+	}
 
-    public String getFirstname() {
-        return firstname;
-    }
+	public Double getMaxdebt() {
+		return maxdebt;
+	}
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
+	public String printMaxDebt() {
+		return Formats.CURRENCY.formatValue(RoundUtils.getValue(getMaxdebt()));
+	}
 
-    public String getLastname() {
-        return lastname;
-    }
+	public void setMaxdebt(Double maxdebt) {
+		this.maxdebt = maxdebt;
+	}
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
+	public Date getCurdate() {
+		return curdate;
+	}
 
-    public String getEmail() {
-        return email;
-    }
+	public void setCurdate(Date curdate) {
+		this.curdate = curdate;
+	}
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+	public Double getCurdebt() {
+		return curdebt;
+	}
 
-    public String getPhone() {
-        return phone;
-    }
+	public String printCurDebt() {
+		return Formats.CURRENCY.formatValue(RoundUtils.getValue(getCurdebt()));
+	}
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+	public void setCurdebt(Double curdebt) {
+		this.curdebt = curdebt;
+	}
 
-    public String getPhone2() {
-        return phone2;
-    }
+	public void updateCurDebt(Double amount, Date d) {
 
-    public void setPhone2(String phone2) {
-        this.phone2 = phone2;
-    }
+		curdebt = curdebt == null ? amount : curdebt + amount;
 
-    public String getFax() {
-        return fax;
-    }
+		if (RoundUtils.compare(curdebt, 0.0) > 0) {
+			if (curdate == null) {
+				// new date
+				curdate = d;
+			}
+		} else if (RoundUtils.compare(curdebt, 0.0) == 0) {
+			curdebt = null;
+			curdate = null;
+		} else { // < 0
+			curdate = null;
+		}
+	}
 
-    public void setFax(String fax) {
-        this.fax = fax;
-    }
+	public String getFirstname() {
+		return firstname;
+	}
 
-    public String getAddress2() {
-        return address2;
-    }
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
 
-    public void setAddress2(String address2) {
-        this.address2 = address2;
-    }
+	public String getLastname() {
+		return lastname;
+	}
 
-    public String getPostal() {
-        return postal;
-    }
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
+	}
 
-    public void setPostal(String postal) {
-        this.postal = postal;
-    }
+	public String getEmail() {
+		return email;
+	}
 
-    public String getCity() {
-        return city;
-    }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-    public void setCity(String city) {
-        this.city = city;
-    }
+	public String getPhone() {
+		return phone;
+	}
 
-    public String getRegion() {
-        return region;
-    }
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
 
-    public void setRegion(String region) {
-        this.region = region;
-    }
+	public String getPhone2() {
+		return phone2;
+	}
 
-    public String getCountry() {
-        return country;
-    }
+	public void setPhone2(String phone2) {
+		this.phone2 = phone2;
+	}
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
+	public String getFax() {
+		return fax;
+	}
+
+	public void setFax(String fax) {
+		this.fax = fax;
+	}
+
+	public String getAddress2() {
+		return address2;
+	}
+
+	public void setAddress2(String address2) {
+		this.address2 = address2;
+	}
+
+	public String getPostal() {
+		return postal;
+	}
+
+	public void setPostal(String postal) {
+		this.postal = postal;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
 }

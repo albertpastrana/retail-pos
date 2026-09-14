@@ -29,17 +29,17 @@ import java.rmi.registry.Registry;
  * @author adrianromero
  */
 public class InstanceQuery {
-    
-    private AppMessage m_appstub;
-    
-    /** Creates a new instance of InstanceQuery */
-    public InstanceQuery() throws RemoteException, NotBoundException {
-        
-        Registry registry = LocateRegistry.getRegistry();           
-        m_appstub = (AppMessage) registry.lookup("AppMessage");
-    }
-    
-    public AppMessage getAppMessage() {
-        return m_appstub;
-    }
+
+	private AppMessage m_appstub;
+
+	/** Creates a new instance of InstanceQuery */
+	public InstanceQuery() throws RemoteException, NotBoundException {
+
+		Registry registry = LocateRegistry.getRegistry();
+		m_appstub = (AppMessage) registry.lookup("AppMessage");
+	}
+
+	public AppMessage getAppMessage() {
+		return m_appstub;
+	}
 }

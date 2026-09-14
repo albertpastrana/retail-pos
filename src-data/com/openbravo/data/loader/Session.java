@@ -59,7 +59,8 @@ public class Session {
 		close();
 
 		// creamos una nueva conexion.
-		m_c = (m_suser == null && m_spassword == null) ? DriverManager.getConnection(m_surl)
+		m_c = (m_suser == null && m_spassword == null)
+				? DriverManager.getConnection(m_surl)
 				: DriverManager.getConnection(m_surl, m_suser, m_spassword);
 		m_c.setAutoCommit(true);
 		m_bInTransaction = false;

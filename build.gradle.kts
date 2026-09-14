@@ -2,6 +2,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     java
+    id("com.diffplug.spotless") version "8.10.1"
 }
 
 version = "2.30.4"
@@ -9,6 +10,17 @@ description = "Retail POS"
 
 repositories {
     mavenCentral()
+}
+
+spotless {
+    java {
+        // Source-set Java only; launch4j is vendored and not a source set.
+        targetExclude("launch4j/**")
+        // Eclipse formats layout. It does not sort imports (no importOrder /
+        // removeUnusedImports) and does not reflow string literals the way
+        // google-java-format does.
+        eclipse()
+    }
 }
 
 val gitRevision: Provider<String> =
@@ -154,6 +166,10 @@ tasks.named("compileDataHelpersJava") {
 }
 
 tasks.named("compileIntegrationTestJava") {
+    mustRunAfter(syncRunJars)
+}
+
+tasks.named("spotlessJava") {
     mustRunAfter(syncRunJars)
 }
 

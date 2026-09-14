@@ -28,16 +28,16 @@ import java.util.Iterator;
  * @author adrianromero
  */
 public class EnumerationIter implements Enumeration {
-    
-    private Iterator i;
 
-    public EnumerationIter(Iterator i) {
-        this.i = i;
-    }
-    public boolean hasMoreElements() {
-        return i.hasNext();
-    }
-    public Object nextElement() {
-        return i.next();
-    } 
+	private Iterator i;
+
+	public EnumerationIter(Iterator i) {
+		this.i = i;
+	}
+	public boolean hasMoreElements() {
+		return i.hasNext();
+	}
+	public Object nextElement() {
+		return i.next();
+	}
 }

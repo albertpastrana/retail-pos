@@ -685,7 +685,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		}
 		double average = value / units;
 		Double dPriceSellTax = ProductPriceMath.parseCurrency(m_jPriceSellTax.getText());
-		String marginTax = dPriceSellTax == null ? ""
+		String marginTax = dPriceSellTax == null
+				? ""
 				: Formats.PERCENT.formatValue(new Double(dPriceSellTax.doubleValue() / average - 1.0));
 		m_jMixCost.setText(AppLocal.getIntString("label.prodmixcost", Formats.CURRENCY.formatValue(new Double(average)),
 				Formats.PERCENT.formatValue(new Double(dPriceSell.doubleValue() / average - 1.0)), marginTax));
@@ -695,7 +696,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		if (!reportlock) {
 			reportlock = true;
-			m_jPriceSellTax.setText(ProductPriceMath.formatCurrency(ProductPriceMath.grossFromNet((Double) pricesell, taxRate())));
+			m_jPriceSellTax.setText(
+					ProductPriceMath.formatCurrency(ProductPriceMath.grossFromNet((Double) pricesell, taxRate())));
 			reportlock = false;
 		}
 		calculateSecondaryPrice();
@@ -707,9 +709,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		}
 		TaxCategoryInfo category = selectedTax();
 		Double tax = category == null ? null : Double.valueOf(taxRate());
-		m_jPriceSecondary.setText(ProductPriceMath.formatCurrency(
-				ProductPriceMath.secondary(priceTaxRegime, ProductPriceMath.parseCurrency(m_jPriceBuy.getText()),
-						(Double) pricesell, tax)));
+		m_jPriceSecondary.setText(ProductPriceMath.formatCurrency(ProductPriceMath.secondary(priceTaxRegime,
+				ProductPriceMath.parseCurrency(m_jPriceBuy.getText()), (Double) pricesell, tax)));
 	}
 
 	private void calculateMarginTax() {
@@ -998,9 +999,12 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		});
 
 		jTabbedPane1 = new javax.swing.JTabbedPane();
-		jTabbedPane1.addTab(AppLocal.getIntString("label.prodgeneral"), ProductFormLayout.scrollable(buildGeneralTab()));
-		jTabbedPane1.addTab(AppLocal.getIntString("label.prodpurchasestock"), ProductFormLayout.scrollable(buildStockTab()));
-		jTabbedPane1.addTab(AppLocal.getIntString("label.prodcatalog"), ProductFormLayout.scrollable(buildCatalogTab()));
+		jTabbedPane1.addTab(AppLocal.getIntString("label.prodgeneral"),
+				ProductFormLayout.scrollable(buildGeneralTab()));
+		jTabbedPane1.addTab(AppLocal.getIntString("label.prodpurchasestock"),
+				ProductFormLayout.scrollable(buildStockTab()));
+		jTabbedPane1.addTab(AppLocal.getIntString("label.prodcatalog"),
+				ProductFormLayout.scrollable(buildCatalogTab()));
 		jTabbedPane1.addTab(AppLocal.getIntString("label.properties"), buildPropertiesTab());
 
 		setLayout(new BorderLayout(0, 8));

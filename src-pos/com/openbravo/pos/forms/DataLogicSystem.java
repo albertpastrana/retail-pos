@@ -48,8 +48,8 @@ import javax.swing.Icon;
 public class DataLogicSystem extends BeanFactoryDataSingle {
 
 	private static final int AVATAR_SIZE = TillButtons.ICON_SOURCE_SIZE;
-	private static final Color[] AVATAR_COLOURS = { new Color(0x1565C0), new Color(0x2E7D32), new Color(0xC62828),
-			new Color(0x6A1B9A), new Color(0xEF6C00), new Color(0x00838F), new Color(0xAD1457), new Color(0x4E342E) };
+	private static final Color[] AVATAR_COLOURS = {new Color(0x1565C0), new Color(0x2E7D32), new Color(0xC62828),
+			new Color(0x6A1B9A), new Color(0xEF6C00), new Color(0x00838F), new Color(0xAD1457), new Color(0x4E342E)};
 
 	protected SentenceList m_peoplevisible;
 	protected SentenceFind m_peoplebycard;
@@ -97,30 +97,30 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 		m_resourcebytes = new PreparedSentence(s, "SELECT CONTENT FROM RESOURCES WHERE NAME = ?",
 				SerializerWriteString.INSTANCE, SerializerReadBytes.INSTANCE);
 
-		Datas[] resourcedata = new Datas[] { Datas.STRING, Datas.STRING, Datas.INT, Datas.BYTES };
+		Datas[] resourcedata = new Datas[]{Datas.STRING, Datas.STRING, Datas.INT, Datas.BYTES};
 		m_resourcebytesinsert = new PreparedSentence(s,
 				"INSERT INTO RESOURCES(ID, NAME, RESTYPE, CONTENT) VALUES (?, ?, ?, ?)",
 				new SerializerWriteBasic(resourcedata));
 		m_resourcebytesupdate = new PreparedSentence(s,
 				"UPDATE RESOURCES SET NAME = ?, RESTYPE = ?, CONTENT = ? WHERE NAME = ?",
-				new SerializerWriteBasicExt(resourcedata, new int[] { 1, 2, 3, 1 }));
+				new SerializerWriteBasicExt(resourcedata, new int[]{1, 2, 3, 1}));
 
 		m_rolepermissions = new PreparedSentence(s, "SELECT PERMISSIONS FROM ROLES WHERE ID = ?",
 				SerializerWriteString.INSTANCE, SerializerReadBytes.INSTANCE);
 
 		m_changepassword = new StaticSentence(s, "UPDATE PEOPLE SET APPPASSWORD = ? WHERE ID = ?",
-				new SerializerWriteBasic(new Datas[] { Datas.STRING, Datas.STRING }));
+				new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.STRING}));
 
 		m_sequencecash = new StaticSentence(s, "SELECT MAX(HOSTSEQUENCE) FROM CLOSEDCASH WHERE HOST = ?",
 				SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE);
 		m_activecash = new StaticSentence(s,
 				"SELECT HOST, HOSTSEQUENCE, DATESTART, DATEEND FROM CLOSEDCASH WHERE MONEY = ?",
 				SerializerWriteString.INSTANCE,
-				new SerializerReadBasic(new Datas[] { Datas.STRING, Datas.INT, Datas.TIMESTAMP, Datas.TIMESTAMP }));
+				new SerializerReadBasic(new Datas[]{Datas.STRING, Datas.INT, Datas.TIMESTAMP, Datas.TIMESTAMP}));
 		m_insertcash = new StaticSentence(s,
 				"INSERT INTO CLOSEDCASH(MONEY, HOST, HOSTSEQUENCE, DATESTART, DATEEND) " + "VALUES (?, ?, ?, ?, ?)",
 				new SerializerWriteBasic(
-						new Datas[] { Datas.STRING, Datas.STRING, Datas.INT, Datas.TIMESTAMP, Datas.TIMESTAMP }));
+						new Datas[]{Datas.STRING, Datas.STRING, Datas.INT, Datas.TIMESTAMP, Datas.TIMESTAMP}));
 
 		m_closedcashlist = new StaticSentence(s,
 				"SELECT CLOSEDCASH.MONEY, CLOSEDCASH.HOST, CLOSEDCASH.HOSTSEQUENCE, CLOSEDCASH.DATESTART, CLOSEDCASH.DATEEND, "
@@ -227,7 +227,7 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 
 	public final void setResource(String name, int type, byte[] data) {
 
-		Object[] value = new Object[] { UUID.randomUUID().toString(), name, new Integer(type), data };
+		Object[] value = new Object[]{UUID.randomUUID().toString(), name, new Integer(type), data};
 		try {
 			if (m_resourcebytesupdate.exec(value) == 0) {
 				m_resourcebytesinsert.exec(value);

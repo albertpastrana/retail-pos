@@ -66,7 +66,8 @@ public class TillButtons {
 		button.setMargin(new Insets(2, 2, 2, 2));
 
 		// A square, unless the name needs more room than the icon does.
-		int width = text == null ? BUTTON_SIZE
+		int width = text == null
+				? BUTTON_SIZE
 				: Math.max(BUTTON_SIZE, button.getFontMetrics(font).stringWidth(text) + 2 * TEXT_MARGIN);
 		button.setPreferredSize(new Dimension(width, BUTTON_SIZE));
 	}

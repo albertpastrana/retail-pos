@@ -30,20 +30,20 @@ import java.rmi.server.UnicastRemoteObject;
  * @author adrianromero
  */
 public class InstanceManager {
-    
-    private Registry m_registry;
-    private AppMessage m_message;
-    
-    /** Creates a new instance of InstanceManager */
-    public InstanceManager(AppMessage message) throws RemoteException, AlreadyBoundException {
 
-        m_registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+	private Registry m_registry;
+	private AppMessage m_message;
 
-        m_message = message;
+	/** Creates a new instance of InstanceManager */
+	public InstanceManager(AppMessage message) throws RemoteException, AlreadyBoundException {
 
-        AppMessage stub = (AppMessage) UnicastRemoteObject.exportObject(m_message, 0);
-        m_registry.bind("AppMessage", stub); 
+		m_registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
 
-        // jLabel1.setText("Server ready");
-    }    
+		m_message = message;
+
+		AppMessage stub = (AppMessage) UnicastRemoteObject.exportObject(m_message, 0);
+		m_registry.bind("AppMessage", stub);
+
+		// jLabel1.setText("Server ready");
+	}
 }

@@ -69,15 +69,15 @@ public class JProductFinder extends javax.swing.JDialog {
 		});
 		m_jProductSelect.add(jproductfilter, BorderLayout.CENTER);
 		switch (productsType) {
-		case PRODUCT_NORMAL:
-			lpr = new ListProviderCreator(dlSales.getProductListNormal(), jproductfilter);
-			break;
-		case PRODUCT_AUXILIAR:
-			lpr = new ListProviderCreator(dlSales.getProductListAuxiliar(), jproductfilter);
-			break;
-		default: // PRODUCT_ALL
-			lpr = new ListProviderCreator(dlSales.getProductList(), jproductfilter);
-			break;
+			case PRODUCT_NORMAL :
+				lpr = new ListProviderCreator(dlSales.getProductListNormal(), jproductfilter);
+				break;
+			case PRODUCT_AUXILIAR :
+				lpr = new ListProviderCreator(dlSales.getProductListAuxiliar(), jproductfilter);
+				break;
+			default : // PRODUCT_ALL
+				lpr = new ListProviderCreator(dlSales.getProductList(), jproductfilter);
+				break;
 
 		}
 

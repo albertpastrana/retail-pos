@@ -377,7 +377,8 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		LAFInfo laf = (LAFInfo) jcboLAF.getSelectedItem();
 		config.setProperty("swing.defaultlaf",
-				laf == null ? System.getProperty("swing.defaultlaf", "javax.swing.plaf.metal.MetalLookAndFeel")
+				laf == null
+						? System.getProperty("swing.defaultlaf", "javax.swing.plaf.metal.MetalLookAndFeel")
 						: laf.getClassName());
 
 		config.setProperty("machine.screenmode", comboValue(jcboMachineScreenmode.getSelectedItem()));

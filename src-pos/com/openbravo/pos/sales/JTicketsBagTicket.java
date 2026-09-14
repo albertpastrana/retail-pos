@@ -214,7 +214,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private void readTicket(int iTicketid, int iTickettype) {
 
 		try {
-			TicketInfo ticket = (iTicketid == -1) ? m_dlSales.loadTicket(iTickettype, m_jTicketEditor.getValueInteger())
+			TicketInfo ticket = (iTicketid == -1)
+					? m_dlSales.loadTicket(iTickettype, m_jTicketEditor.getValueInteger())
 					: m_dlSales.loadTicket(iTickettype, iTicketid);
 
 			if (ticket == null) {
@@ -262,8 +263,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 			m_jTicketId.setText(m_ticket.getName());
 
 			try {
-				LoyaltyStamps.applyToTicket(m_ticket,
-						m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
+				LoyaltyStamps.applyToTicket(m_ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
 						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);
@@ -478,8 +478,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		if (m_ticket != null) {
 			try {
-				LoyaltyStamps.applyToTicket(m_ticket,
-						m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
+				LoyaltyStamps.applyToTicket(m_ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
 						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);

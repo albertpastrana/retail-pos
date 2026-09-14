@@ -36,39 +36,39 @@ import javax.swing.ImageIcon;
  */
 public class HiDpiIcon implements Icon {
 
-    private static final int SOURCE_SCALE = 2;
+	private static final int SOURCE_SCALE = 2;
 
-    private Image image;
-    private int iconwidth;
-    private int iconheight;
+	private Image image;
+	private int iconwidth;
+	private int iconheight;
 
-    public HiDpiIcon(URL resource) {
-        this(new ImageIcon(resource).getImage());
-    }
+	public HiDpiIcon(URL resource) {
+		this(new ImageIcon(resource).getImage());
+	}
 
-    public HiDpiIcon(Image image) {
+	public HiDpiIcon(Image image) {
 
-        this.image = image;
-        iconwidth = image.getWidth(null) / SOURCE_SCALE;
-        iconheight = image.getHeight(null) / SOURCE_SCALE;
-    }
+		this.image = image;
+		iconwidth = image.getWidth(null) / SOURCE_SCALE;
+		iconheight = image.getHeight(null) / SOURCE_SCALE;
+	}
 
-    public void paintIcon(Component c, Graphics g, int x, int y) {
+	public void paintIcon(Component c, Graphics g, int x, int y) {
 
-        Graphics2D g2d = (Graphics2D) g.create();
+		Graphics2D g2d = (Graphics2D) g.create();
 
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.drawImage(image, x, y, iconwidth, iconheight, c);
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2d.drawImage(image, x, y, iconwidth, iconheight, c);
 
-        g2d.dispose();
-    }
+		g2d.dispose();
+	}
 
-    public int getIconWidth() {
-        return iconwidth;
-    }
+	public int getIconWidth() {
+		return iconwidth;
+	}
 
-    public int getIconHeight() {
-        return iconheight;
-    }
+	public int getIconHeight() {
+		return iconheight;
+	}
 }

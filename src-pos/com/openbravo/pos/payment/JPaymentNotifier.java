@@ -17,7 +17,6 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 
-
 package com.openbravo.pos.payment;
 
 /**
@@ -25,12 +24,12 @@ package com.openbravo.pos.payment;
  * @author adrian
  */
 public interface JPaymentNotifier {
-    
-//    public void setOKEnabled(boolean bValue);
-//    public void setAddEnabled(boolean bValue);    
-    public void setStatus(boolean isPositive, boolean isComplete);
 
-    public boolean isVoucherSelected(String code);
+	// public void setOKEnabled(boolean bValue);
+	// public void setAddEnabled(boolean bValue);
+	public void setStatus(boolean isPositive, boolean isComplete);
 
-    public void addSelectedPayment();
+	public boolean isVoucherSelected(String code);
+
+	public void addSelectedPayment();
 }

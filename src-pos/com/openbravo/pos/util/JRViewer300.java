@@ -154,7 +154,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 
 	protected float MIN_ZOOM = 0.5f;
 	protected float MAX_ZOOM = 10f;
-	protected int zooms[] = { 50, 75, 100, 125, 150, 175, 200, 250, 400, 800 };
+	protected int zooms[] = {50, 75, 100, 125, 150, 175, 200, 250, 400, 800};
 	protected int defaultZoomIndex = 2;
 
 	protected int type = TYPE_FILE_NAME;
@@ -399,7 +399,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 	 *
 	 */
 	protected void initSaveContributors() {
-		final String[] DEFAULT_CONTRIBUTORS = { "net.sf.jasperreports.view.save.JRPrintSaveContributor",
+		final String[] DEFAULT_CONTRIBUTORS = {"net.sf.jasperreports.view.save.JRPrintSaveContributor",
 				"net.sf.jasperreports.view.save.JRPdfSaveContributor",
 				"net.sf.jasperreports.view.save.JRRtfSaveContributor",
 				"net.sf.jasperreports.view.save.JROdtSaveContributor",
@@ -408,15 +408,15 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 				"net.sf.jasperreports.view.save.JRMultipleSheetsXlsSaveContributor",
 				"net.sf.jasperreports.view.save.JRCsvSaveContributor",
 				"net.sf.jasperreports.view.save.JRXmlSaveContributor",
-				"net.sf.jasperreports.view.save.JREmbeddedImagesXmlSaveContributor" };
+				"net.sf.jasperreports.view.save.JREmbeddedImagesXmlSaveContributor"};
 
 		for (int i = 0; i < DEFAULT_CONTRIBUTORS.length; i++) {
 			try {
 				Class saveContribClass = JRClassLoader.loadClassForName(DEFAULT_CONTRIBUTORS[i]);
 				Constructor constructor = saveContribClass
-						.getConstructor(new Class[] { Locale.class, ResourceBundle.class });
+						.getConstructor(new Class[]{Locale.class, ResourceBundle.class});
 				JRSaveContributor saveContrib = (JRSaveContributor) constructor
-						.newInstance(new Object[] { getLocale(), resourceBundle });
+						.newInstance(new Object[]{getLocale(), resourceBundle});
 				saveContributors.add(saveContrib);
 			} catch (Exception e) {
 			}
@@ -428,95 +428,96 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 	 */
 	public void gotoHyperlink(JRPrintHyperlink hyperlink) {
 		switch (hyperlink.getHyperlinkType()) {
-		case JRHyperlink.HYPERLINK_TYPE_REFERENCE: {
-			if (isOnlyHyperlinkListener()) {
-				System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-				System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+			case JRHyperlink.HYPERLINK_TYPE_REFERENCE : {
+				if (isOnlyHyperlinkListener()) {
+					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
+					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+				}
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_LOCAL_ANCHOR: {
-			if (hyperlink.getHyperlinkAnchor() != null) {
-				Map anchorIndexes = jasperPrint.getAnchorIndexes();
-				JRPrintAnchorIndex anchorIndex = (JRPrintAnchorIndex) anchorIndexes.get(hyperlink.getHyperlinkAnchor());
-				if (anchorIndex.getPageIndex() != pageIndex) {
-					setPageIndex(anchorIndex.getPageIndex());
+			case JRHyperlink.HYPERLINK_TYPE_LOCAL_ANCHOR : {
+				if (hyperlink.getHyperlinkAnchor() != null) {
+					Map anchorIndexes = jasperPrint.getAnchorIndexes();
+					JRPrintAnchorIndex anchorIndex = (JRPrintAnchorIndex) anchorIndexes
+							.get(hyperlink.getHyperlinkAnchor());
+					if (anchorIndex.getPageIndex() != pageIndex) {
+						setPageIndex(anchorIndex.getPageIndex());
+						refreshPage();
+					}
+					Container container = pnlInScroll.getParent();
+					if (container instanceof JViewport) {
+						JViewport viewport = (JViewport) container;
+
+						int newX = (int) (anchorIndex.getElementAbsoluteX() * realZoom);
+						int newY = (int) (anchorIndex.getElementAbsoluteY() * realZoom);
+
+						int maxX = pnlInScroll.getWidth() - viewport.getWidth();
+						int maxY = pnlInScroll.getHeight() - viewport.getHeight();
+
+						if (newX < 0) {
+							newX = 0;
+						}
+						if (newX > maxX) {
+							newX = maxX;
+						}
+						if (newY < 0) {
+							newY = 0;
+						}
+						if (newY > maxY) {
+							newY = maxY;
+						}
+
+						viewport.setViewPosition(new Point(newX, newY));
+					}
+				}
+
+				break;
+			}
+			case JRHyperlink.HYPERLINK_TYPE_LOCAL_PAGE : {
+				int page = pageIndex + 1;
+				if (hyperlink.getHyperlinkPage() != null) {
+					page = hyperlink.getHyperlinkPage().intValue();
+				}
+
+				if (page >= 1 && page <= jasperPrint.getPages().size() && page != pageIndex + 1) {
+					setPageIndex(page - 1);
 					refreshPage();
+					Container container = pnlInScroll.getParent();
+					if (container instanceof JViewport) {
+						JViewport viewport = (JViewport) container;
+						viewport.setViewPosition(new Point(0, 0));
+					}
 				}
-				Container container = pnlInScroll.getParent();
-				if (container instanceof JViewport) {
-					JViewport viewport = (JViewport) container;
 
-					int newX = (int) (anchorIndex.getElementAbsoluteX() * realZoom);
-					int newY = (int) (anchorIndex.getElementAbsoluteY() * realZoom);
-
-					int maxX = pnlInScroll.getWidth() - viewport.getWidth();
-					int maxY = pnlInScroll.getHeight() - viewport.getHeight();
-
-					if (newX < 0) {
-						newX = 0;
-					}
-					if (newX > maxX) {
-						newX = maxX;
-					}
-					if (newY < 0) {
-						newY = 0;
-					}
-					if (newY > maxY) {
-						newY = maxY;
-					}
-
-					viewport.setViewPosition(new Point(newX, newY));
+				break;
+			}
+			case JRHyperlink.HYPERLINK_TYPE_REMOTE_ANCHOR : {
+				if (isOnlyHyperlinkListener()) {
+					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
+					System.out.println("Hyperlink anchor    : " + hyperlink.getHyperlinkAnchor());
+					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
 				}
+				break;
 			}
-
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_LOCAL_PAGE: {
-			int page = pageIndex + 1;
-			if (hyperlink.getHyperlinkPage() != null) {
-				page = hyperlink.getHyperlinkPage().intValue();
-			}
-
-			if (page >= 1 && page <= jasperPrint.getPages().size() && page != pageIndex + 1) {
-				setPageIndex(page - 1);
-				refreshPage();
-				Container container = pnlInScroll.getParent();
-				if (container instanceof JViewport) {
-					JViewport viewport = (JViewport) container;
-					viewport.setViewPosition(new Point(0, 0));
+			case JRHyperlink.HYPERLINK_TYPE_REMOTE_PAGE : {
+				if (isOnlyHyperlinkListener()) {
+					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
+					System.out.println("Hyperlink page      : " + hyperlink.getHyperlinkPage());
+					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
 				}
+				break;
 			}
-
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_REMOTE_ANCHOR: {
-			if (isOnlyHyperlinkListener()) {
-				System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-				System.out.println("Hyperlink anchor    : " + hyperlink.getHyperlinkAnchor());
-				System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+			case JRHyperlink.HYPERLINK_TYPE_CUSTOM : {
+				if (isOnlyHyperlinkListener()) {
+					System.out.println("Hyperlink of type " + hyperlink.getLinkType());
+					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+				}
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_REMOTE_PAGE: {
-			if (isOnlyHyperlinkListener()) {
-				System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-				System.out.println("Hyperlink page      : " + hyperlink.getHyperlinkPage());
-				System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+			case JRHyperlink.HYPERLINK_TYPE_NONE :
+			default : {
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_CUSTOM: {
-			if (isOnlyHyperlinkListener()) {
-				System.out.println("Hyperlink of type " + hyperlink.getLinkType());
-				System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
-			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_NONE:
-		default: {
-			break;
-		}
 		}
 	}
 
@@ -1179,7 +1180,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 				txtGoTo.setEnabled(btnFirst.isEnabled() || btnLast.isEnabled());
 				txtGoTo.setText("" + (pageIndex + 1));
 				lblStatus.setText(MessageFormat.format(getBundleString("page"),
-						new Object[] { new Integer(pageIndex + 1), new Integer(jasperPrint.getPages().size()) }));
+						new Object[]{new Integer(pageIndex + 1), new Integer(jasperPrint.getPages().size())}));
 			}
 		} else {
 			btnFirst.setEnabled(false);
@@ -1504,45 +1505,45 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 	protected String getFallbackTooltip(JRPrintHyperlink hyperlink) {
 		String toolTip = null;
 		switch (hyperlink.getHyperlinkType()) {
-		case JRHyperlink.HYPERLINK_TYPE_REFERENCE: {
-			toolTip = hyperlink.getHyperlinkReference();
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_LOCAL_ANCHOR: {
-			if (hyperlink.getHyperlinkAnchor() != null) {
-				toolTip = "#" + hyperlink.getHyperlinkAnchor();
+			case JRHyperlink.HYPERLINK_TYPE_REFERENCE : {
+				toolTip = hyperlink.getHyperlinkReference();
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_LOCAL_PAGE: {
-			if (hyperlink.getHyperlinkPage() != null) {
-				toolTip = "#page " + hyperlink.getHyperlinkPage();
+			case JRHyperlink.HYPERLINK_TYPE_LOCAL_ANCHOR : {
+				if (hyperlink.getHyperlinkAnchor() != null) {
+					toolTip = "#" + hyperlink.getHyperlinkAnchor();
+				}
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_REMOTE_ANCHOR: {
-			toolTip = "";
-			if (hyperlink.getHyperlinkReference() != null) {
-				toolTip = toolTip + hyperlink.getHyperlinkReference();
+			case JRHyperlink.HYPERLINK_TYPE_LOCAL_PAGE : {
+				if (hyperlink.getHyperlinkPage() != null) {
+					toolTip = "#page " + hyperlink.getHyperlinkPage();
+				}
+				break;
 			}
-			if (hyperlink.getHyperlinkAnchor() != null) {
-				toolTip = toolTip + "#" + hyperlink.getHyperlinkAnchor();
+			case JRHyperlink.HYPERLINK_TYPE_REMOTE_ANCHOR : {
+				toolTip = "";
+				if (hyperlink.getHyperlinkReference() != null) {
+					toolTip = toolTip + hyperlink.getHyperlinkReference();
+				}
+				if (hyperlink.getHyperlinkAnchor() != null) {
+					toolTip = toolTip + "#" + hyperlink.getHyperlinkAnchor();
+				}
+				break;
 			}
-			break;
-		}
-		case JRHyperlink.HYPERLINK_TYPE_REMOTE_PAGE: {
-			toolTip = "";
-			if (hyperlink.getHyperlinkReference() != null) {
-				toolTip = toolTip + hyperlink.getHyperlinkReference();
+			case JRHyperlink.HYPERLINK_TYPE_REMOTE_PAGE : {
+				toolTip = "";
+				if (hyperlink.getHyperlinkReference() != null) {
+					toolTip = toolTip + hyperlink.getHyperlinkReference();
+				}
+				if (hyperlink.getHyperlinkPage() != null) {
+					toolTip = toolTip + "#page " + hyperlink.getHyperlinkPage();
+				}
+				break;
 			}
-			if (hyperlink.getHyperlinkPage() != null) {
-				toolTip = toolTip + "#page " + hyperlink.getHyperlinkPage();
+			default : {
+				break;
 			}
-			break;
-		}
-		default: {
-			break;
-		}
 		}
 		return toolTip;
 	}
@@ -1685,22 +1686,22 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 	protected void keyNavigate(KeyEvent evt) {
 		boolean refresh = true;
 		switch (evt.getKeyCode()) {
-		case KeyEvent.VK_DOWN:
-		case KeyEvent.VK_PAGE_DOWN:
-			dnNavigate(evt);
-			break;
-		case KeyEvent.VK_UP:
-		case KeyEvent.VK_PAGE_UP:
-			upNavigate(evt);
-			break;
-		case KeyEvent.VK_HOME:
-			homeEndNavigate(0);
-			break;
-		case KeyEvent.VK_END:
-			homeEndNavigate(jasperPrint.getPages().size() - 1);
-			break;
-		default:
-			refresh = false;
+			case KeyEvent.VK_DOWN :
+			case KeyEvent.VK_PAGE_DOWN :
+				dnNavigate(evt);
+				break;
+			case KeyEvent.VK_UP :
+			case KeyEvent.VK_PAGE_UP :
+				upNavigate(evt);
+				break;
+			case KeyEvent.VK_HOME :
+				homeEndNavigate(0);
+				break;
+			case KeyEvent.VK_END :
+				homeEndNavigate(jasperPrint.getPages().size() - 1);
+				break;
+			default :
+				refresh = false;
 		}
 
 		if (refresh) {

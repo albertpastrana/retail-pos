@@ -151,7 +151,7 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 			return;
 		}
 		int ok = JOptionPane.showConfirmDialog(this,
-				AppLocal.getIntString("message.sale.applyconfirm", new Object[] { new Integer(pending.size()), value }),
+				AppLocal.getIntString("message.sale.applyconfirm", new Object[]{new Integer(pending.size()), value}),
 				AppLocal.getIntString("Menu.SaleMark"), JOptionPane.YES_NO_OPTION);
 		if (ok != JOptionPane.YES_OPTION) {
 			return;
@@ -159,7 +159,7 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 		try {
 			sales.setSalePercent(pending.keySet(), value);
 			status.setText(
-					AppLocal.getIntString("message.sale.applied", new Object[] { new Integer(pending.size()), value }));
+					AppLocal.getIntString("message.sale.applied", new Object[]{new Integer(pending.size()), value}));
 			pending.clear();
 			model.fireTableDataChanged();
 		} catch (SQLException e) {
@@ -240,14 +240,14 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 		@Override
 		public String getColumnName(int column) {
 			switch (column) {
-			case 0:
-				return AppLocal.getIntString("label.code");
-			case 1:
-				return AppLocal.getIntString("label.prodname");
-			case 2:
-				return AppLocal.getIntString("label.prodpricesell");
-			default:
-				return AppLocal.getIntString("label.sale.now");
+				case 0 :
+					return AppLocal.getIntString("label.code");
+				case 1 :
+					return AppLocal.getIntString("label.prodname");
+				case 2 :
+					return AppLocal.getIntString("label.prodpricesell");
+				default :
+					return AppLocal.getIntString("label.sale.now");
 			}
 		}
 
@@ -257,15 +257,16 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 			double list = product.getPriceSell();
 			double previewPercent = product.getSalePercent() > 0.0 ? product.getSalePercent() : previewPercent();
 			switch (columnIndex) {
-			case 0:
-				return product.getCode();
-			case 1:
-				return product.getName();
-			case 2:
-				return Formats.CURRENCY.formatValue(new Double(list));
-			default:
-				return previewPercent <= 0.0 ? Formats.CURRENCY.formatValue(new Double(list))
-						: Formats.CURRENCY.formatValue(new Double(list * (1.0 - previewPercent / 100.0)));
+				case 0 :
+					return product.getCode();
+				case 1 :
+					return product.getName();
+				case 2 :
+					return Formats.CURRENCY.formatValue(new Double(list));
+				default :
+					return previewPercent <= 0.0
+							? Formats.CURRENCY.formatValue(new Double(list))
+							: Formats.CURRENCY.formatValue(new Double(list * (1.0 - previewPercent / 100.0)));
 			}
 		}
 

@@ -25,124 +25,150 @@ import java.awt.image.BufferedImage;
 
 public class CodesStar extends Codes {
 
-    // set line interspacing to 4mm
-    public static final byte[] INITSEQUENCE = {0x1B, 0x7A, 0x01};
+	// set line interspacing to 4mm
+	public static final byte[] INITSEQUENCE = {0x1B, 0x7A, 0x01};
 
-    private static final byte[] CHAR_SIZE_0 = {0x1B, 0x69, 0x00, 0x00};
-    private static final byte[] CHAR_SIZE_1 = {0x1B, 0x69, 0x01, 0x00};
-    private static final byte[] CHAR_SIZE_2 = {0x1B, 0x69, 0x00, 0x01};
-    private static final byte[] CHAR_SIZE_3 = {0x1B, 0x69, 0x01, 0x01};
+	private static final byte[] CHAR_SIZE_0 = {0x1B, 0x69, 0x00, 0x00};
+	private static final byte[] CHAR_SIZE_1 = {0x1B, 0x69, 0x01, 0x00};
+	private static final byte[] CHAR_SIZE_2 = {0x1B, 0x69, 0x00, 0x01};
+	private static final byte[] CHAR_SIZE_3 = {0x1B, 0x69, 0x01, 0x01};
 
-    private static final byte[] BOLD_SET = {0x1B, 0x45};
-    private static final byte[] BOLD_RESET = {0x1B, 0x46};
+	private static final byte[] BOLD_SET = {0x1B, 0x45};
+	private static final byte[] BOLD_RESET = {0x1B, 0x46};
 
-    private static final byte[] UNDERLINE_SET = {0x1B, 0x2D, 0x01};
-    private static final byte[] UNDERLINE_RESET = {0x1B, 0x2D, 0x00};
+	private static final byte[] UNDERLINE_SET = {0x1B, 0x2D, 0x01};
+	private static final byte[] UNDERLINE_RESET = {0x1B, 0x2D, 0x00};
 
-    private static final byte[] OPEN_DRAWER = {0x1C};    
-    private static final byte[] PARTIAL_CUT = {0x1B, 0x64, 0x30};
-    private static final byte[] IMAGE_BEGIN = {0x1B, 0x30};
-    private static final byte[] IMAGE_END = {0x1B, 0x7A, 0x01};
-    private static final byte[] IMAGE_HEADER = {0x1B, 0x4B};
-    private static final byte[] NEW_LINE = {0x0D, 0x0A}; // Print and carriage return
-    
-    /** Creates a new instance of CodesStar */
-    public CodesStar() {
-    }
+	private static final byte[] OPEN_DRAWER = {0x1C};
+	private static final byte[] PARTIAL_CUT = {0x1B, 0x64, 0x30};
+	private static final byte[] IMAGE_BEGIN = {0x1B, 0x30};
+	private static final byte[] IMAGE_END = {0x1B, 0x7A, 0x01};
+	private static final byte[] IMAGE_HEADER = {0x1B, 0x4B};
+	private static final byte[] NEW_LINE = {0x0D, 0x0A}; // Print and carriage return
 
-    public byte[] getInitSequence() { return INITSEQUENCE; }
-     
-    public byte[] getSize0() { return CHAR_SIZE_0; }
-    public byte[] getSize1() { return CHAR_SIZE_1; }
-    public byte[] getSize2() { return CHAR_SIZE_2; }
-    public byte[] getSize3() { return CHAR_SIZE_3; }
+	/** Creates a new instance of CodesStar */
+	public CodesStar() {
+	}
 
-    public byte[] getBoldSet() { return BOLD_SET; }
-    public byte[] getBoldReset() { return BOLD_RESET; }
-    public byte[] getUnderlineSet() { return UNDERLINE_SET; }
-    public byte[] getUnderlineReset() { return UNDERLINE_RESET; }
-    
-    public byte[] getOpenDrawer() { return OPEN_DRAWER; }    
-    public byte[] getCutReceipt() { return PARTIAL_CUT; }   
-    public byte[] getNewLine() { return NEW_LINE; } 
-    public byte[] getImageHeader() { return IMAGE_HEADER; }     
-    public int getImageWidth() { return 192; }
-    
-    @Override
-    public byte[] transImage(BufferedImage image) {
+	public byte[] getInitSequence() {
+		return INITSEQUENCE;
+	}
 
-        CenteredImage centeredimage = new CenteredImage(image, getImageWidth());
-                        
-        int iWidth = centeredimage.getWidth();
-        int iHeight = (centeredimage.getHeight() + 7) / 8; //
-        
-        // Array de datos
-        byte[] bData = new byte[
-                IMAGE_BEGIN.length +
-                (getImageHeader().length + 2 + iWidth + getNewLine().length) * iHeight +
-                IMAGE_END.length];
-        
-        // Comando de impresion de imagen
-        
-        int index = 0;
+	public byte[] getSize0() {
+		return CHAR_SIZE_0;
+	}
+	public byte[] getSize1() {
+		return CHAR_SIZE_1;
+	}
+	public byte[] getSize2() {
+		return CHAR_SIZE_2;
+	}
+	public byte[] getSize3() {
+		return CHAR_SIZE_3;
+	}
 
-        System.arraycopy(IMAGE_BEGIN, 0, bData, index, IMAGE_BEGIN.length);
-        index += IMAGE_BEGIN.length;
+	public byte[] getBoldSet() {
+		return BOLD_SET;
+	}
+	public byte[] getBoldReset() {
+		return BOLD_RESET;
+	}
+	public byte[] getUnderlineSet() {
+		return UNDERLINE_SET;
+	}
+	public byte[] getUnderlineReset() {
+		return UNDERLINE_RESET;
+	}
 
-        // Raw data
-        int p;
-        for (int i = 0; i < centeredimage.getHeight(); i += 8) {
-            System.arraycopy(getImageHeader(), 0, bData, index, getImageHeader().length);
-            index += getImageHeader().length;
-            
-             // Line Dimension
-            bData[index ++] = (byte) (iWidth % 256);
-            bData[index ++] = (byte) (iWidth / 256);           
-            
-            for (int j = 0; j < centeredimage.getWidth(); j++) {
-                p = 0x00;
-                for (int d = 0; d < 8; d ++) {
-                    p = p << 1;
-                   if (centeredimage.isBlack(j, i + d)) {
-                        p = p | 0x01;
-                    }
-                }
-                
-                bData[index ++] = (byte) p;
-            }
-            System.arraycopy(getNewLine(), 0, bData, index, getNewLine().length);
-            index += getNewLine().length;
-        
-        }
+	public byte[] getOpenDrawer() {
+		return OPEN_DRAWER;
+	}
+	public byte[] getCutReceipt() {
+		return PARTIAL_CUT;
+	}
+	public byte[] getNewLine() {
+		return NEW_LINE;
+	}
+	public byte[] getImageHeader() {
+		return IMAGE_HEADER;
+	}
+	public int getImageWidth() {
+		return 192;
+	}
 
-        System.arraycopy(IMAGE_END, 0, bData, index, IMAGE_END.length);
-        index += IMAGE_END.length;
+	@Override
+	public byte[] transImage(BufferedImage image) {
 
-        return bData;
-    }
+		CenteredImage centeredimage = new CenteredImage(image, getImageWidth());
 
-    @Override
-    public void printBarcode(PrinterWritter out, String type, String position, String code) {
+		int iWidth = centeredimage.getWidth();
+		int iHeight = (centeredimage.getHeight() + 7) / 8; //
 
-        if (DevicePrinter.BARCODE_EAN13.equals(type)) {
+		// Array de datos
+		byte[] bData = new byte[IMAGE_BEGIN.length
+				+ (getImageHeader().length + 2 + iWidth + getNewLine().length) * iHeight + IMAGE_END.length];
 
-            // out.write(getNewLine());
+		// Comando de impresion de imagen
 
-            out.write(new byte[] {0x1B, 0x1D, 0x61, 0x01}); // Align center
+		int index = 0;
 
-            out.write(new byte[] {0x1B, 0x62, 0x03});
-            if (DevicePrinter.POSITION_NONE.equals(position)) {
-                out.write(new byte[]{0x01});
-            } else {
-                out.write(new byte[]{0x02});
-            }
-            out.write(new byte[]{0x02}); // dots
-            out.write(new byte[]{0x50}); // height
-            out.write(DeviceTicket.transNumber(DeviceTicket.alignBarCode(code,13).substring(0,12)));
-            out.write(new byte[] { 0x1E }); // end char
+		System.arraycopy(IMAGE_BEGIN, 0, bData, index, IMAGE_BEGIN.length);
+		index += IMAGE_BEGIN.length;
 
-            out.write(new byte[] {0x1B, 0x1D, 0x61, 0x00}); // Align left
+		// Raw data
+		int p;
+		for (int i = 0; i < centeredimage.getHeight(); i += 8) {
+			System.arraycopy(getImageHeader(), 0, bData, index, getImageHeader().length);
+			index += getImageHeader().length;
 
-        }
-    }
+			// Line Dimension
+			bData[index++] = (byte) (iWidth % 256);
+			bData[index++] = (byte) (iWidth / 256);
+
+			for (int j = 0; j < centeredimage.getWidth(); j++) {
+				p = 0x00;
+				for (int d = 0; d < 8; d++) {
+					p = p << 1;
+					if (centeredimage.isBlack(j, i + d)) {
+						p = p | 0x01;
+					}
+				}
+
+				bData[index++] = (byte) p;
+			}
+			System.arraycopy(getNewLine(), 0, bData, index, getNewLine().length);
+			index += getNewLine().length;
+
+		}
+
+		System.arraycopy(IMAGE_END, 0, bData, index, IMAGE_END.length);
+		index += IMAGE_END.length;
+
+		return bData;
+	}
+
+	@Override
+	public void printBarcode(PrinterWritter out, String type, String position, String code) {
+
+		if (DevicePrinter.BARCODE_EAN13.equals(type)) {
+
+			// out.write(getNewLine());
+
+			out.write(new byte[]{0x1B, 0x1D, 0x61, 0x01}); // Align center
+
+			out.write(new byte[]{0x1B, 0x62, 0x03});
+			if (DevicePrinter.POSITION_NONE.equals(position)) {
+				out.write(new byte[]{0x01});
+			} else {
+				out.write(new byte[]{0x02});
+			}
+			out.write(new byte[]{0x02}); // dots
+			out.write(new byte[]{0x50}); // height
+			out.write(DeviceTicket.transNumber(DeviceTicket.alignBarCode(code, 13).substring(0, 12)));
+			out.write(new byte[]{0x1E}); // end char
+
+			out.write(new byte[]{0x1B, 0x1D, 0x61, 0x00}); // Align left
+
+		}
+	}
 }

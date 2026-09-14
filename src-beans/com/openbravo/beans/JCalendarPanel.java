@@ -28,331 +28,334 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 
 public class JCalendarPanel extends javax.swing.JPanel {
-    
-    // private static ResourceBundle m_Intl;
-    private static LocaleResources m_resources;
 
-    private static GregorianCalendar m_CalendarHelper = new GregorianCalendar(); // solo de ayuda
-    
-    private Date m_date;    
-    private JButtonDate[] m_ListDates;
-    private JLabel[] m_jDays;
-    
-    private JButtonDate m_jCurrent;
-    private JButtonDate m_jBtnMonthInc;
-    private JButtonDate m_jBtnMonthDec;
-    private JButtonDate m_jBtnYearInc;
-    private JButtonDate m_jBtnYearDec;
-    private JButtonDate m_jBtnToday;
-    
-    private DateFormat fmtMonthYear = new SimpleDateFormat("MMMMM yyyy");
-    
-    /** Creates new form JCalendarPanel2 */
-    public JCalendarPanel() {
-        this(new Date());
-    }
+	// private static ResourceBundle m_Intl;
+	private static LocaleResources m_resources;
 
-    public JCalendarPanel(Date dDate) {
-        
-        super();
-    
-        if (m_resources == null) {
-            m_resources = new LocaleResources();
-            m_resources.addBundleName("beans_messages");
-        }
-        
-        initComponents();
-        initComponents2();
-        
-//        m_CalendarHelper = new GregorianCalendar();            
-//        m_CalendarHelper.setTime(dDate);
-        m_date = dDate;
-        
-        // pintamos
-        renderMonth();
-        renderDay();
-    }
+	private static GregorianCalendar m_CalendarHelper = new GregorianCalendar(); // solo de ayuda
 
-    public void setDate(Date dNewDate) {        
-                     
-        // cambiamos la fecha
-        Date dOldDate = m_date;  
-        m_date = dNewDate;
+	private Date m_date;
+	private JButtonDate[] m_ListDates;
+	private JLabel[] m_jDays;
 
-        // pintamos
-        renderMonth();
-        renderDay();
+	private JButtonDate m_jCurrent;
+	private JButtonDate m_jBtnMonthInc;
+	private JButtonDate m_jBtnMonthDec;
+	private JButtonDate m_jBtnYearInc;
+	private JButtonDate m_jBtnYearDec;
+	private JButtonDate m_jBtnToday;
 
-        // decimos al mundo que ha cambiado la propiedad fecha
-        firePropertyChange("Date", dOldDate, dNewDate);
-    }
+	private DateFormat fmtMonthYear = new SimpleDateFormat("MMMMM yyyy");
 
-    public Date getDate() {
-        return m_date;
-    }
-    
-    public void setEnabled(boolean bValue) {
-           
-        super.setEnabled(bValue);   
-        
-        // pintamos
-        renderMonth();
-        renderDay();
-    }
-    
-    private void renderMonth() {
-        
-//        GregorianCalendar oCalRender = new GregorianCalendar();
-//        oCalRender.setTime(m_CalendarHelper.getTime());
-                
-        for (int j = 0; j < 7; j++) {
-            m_jDays[j].setEnabled(isEnabled());
-        }    
-        
-        // Borramos todos los dias
-        for(int i = 0; i < 42; i++) {
-            JButtonDate jAux = m_ListDates[i];
-            jAux.DateInf = null;
-            jAux.setEnabled(false);
-            jAux.setText(null);
-            jAux.setForeground((Color)UIManager.getDefaults().get("TextPane.foreground"));
-            jAux.setBackground((Color)UIManager.getDefaults().get("TextPane.background"));
-            jAux.setBorder(null);
-        }
-        
-        if (m_date == null) {
-            m_jLblMonth.setEnabled(isEnabled());
-            m_jLblMonth.setText(null);
-        } else {
-            m_CalendarHelper.setTime(m_date);
-            
-            m_jLblMonth.setEnabled(isEnabled());
-            m_jLblMonth.setText(fmtMonthYear.format(m_CalendarHelper.getTime()));
-            
-            int iCurrentMonth = m_CalendarHelper.get(Calendar.MONTH);
-            m_CalendarHelper.set(Calendar.DAY_OF_MONTH, 1);
+	/** Creates new form JCalendarPanel2 */
+	public JCalendarPanel() {
+		this(new Date());
+	}
 
-            while(m_CalendarHelper.get(Calendar.MONTH) == iCurrentMonth) {
+	public JCalendarPanel(Date dDate) {
 
-                JButtonDate jAux = getLabelByDate(m_CalendarHelper.getTime());
-                jAux.DateInf = m_CalendarHelper.getTime();
-                jAux.setEnabled(isEnabled());
-                jAux.setText(String.valueOf(m_CalendarHelper.get(Calendar.DAY_OF_MONTH)));
+		super();
 
-                m_CalendarHelper.add(Calendar.DATE, 1);
-            }
-        }
+		if (m_resources == null) {
+			m_resources = new LocaleResources();
+			m_resources.addBundleName("beans_messages");
+		}
 
-        m_jCurrent = null;
-    }
+		initComponents();
+		initComponents2();
 
-    private void renderDay() {
-        
-        m_jBtnToday.setEnabled(isEnabled());
-        
-        if (m_date == null) {
-            m_jBtnMonthDec.setEnabled(false);
-            m_jBtnMonthInc.setEnabled(isEnabled());
-            m_jBtnYearDec.setEnabled(isEnabled());
-            m_jBtnYearInc.setEnabled(isEnabled());
-        } else {
-            m_CalendarHelper.setTime(m_date);
+		// m_CalendarHelper = new GregorianCalendar();
+		// m_CalendarHelper.setTime(dDate);
+		m_date = dDate;
 
-            m_CalendarHelper.add(Calendar.MONTH, -1);
-            m_jBtnMonthDec.DateInf = m_CalendarHelper.getTime();
-            m_jBtnMonthDec.setEnabled(isEnabled());
-            m_CalendarHelper.add(Calendar.MONTH, 2);
-            m_jBtnMonthInc.DateInf = m_CalendarHelper.getTime();
-            m_jBtnMonthInc.setEnabled(isEnabled());
+		// pintamos
+		renderMonth();
+		renderDay();
+	}
 
-            m_CalendarHelper.setTime(m_date);
-            m_CalendarHelper.add(Calendar.YEAR, -1);
-            m_jBtnYearDec.DateInf = m_CalendarHelper.getTime();
-            m_jBtnYearDec.setEnabled(isEnabled());
-            m_CalendarHelper.add(Calendar.YEAR, 2);
-            m_jBtnYearInc.DateInf = m_CalendarHelper.getTime();
-            m_jBtnYearInc.setEnabled(isEnabled());
-        
-            if(m_jCurrent != null) {
-                m_jCurrent.setForeground((Color)UIManager.getDefaults().get("TextPane.foreground"));
-                m_jCurrent.setBackground((Color)UIManager.getDefaults().get("TextPane.background"));
-                m_jCurrent.setBorder(null);
-            }
+	public void setDate(Date dNewDate) {
 
-            JButtonDate jAux = getLabelByDate(m_date);
-            jAux.setBackground((Color)UIManager.getDefaults().get("TextPane.selectionBackground"));
-            jAux.setForeground((Color)UIManager.getDefaults().get("TextPane.selectionForeground"));
-            jAux.setBorder(new LineBorder((Color)UIManager.getDefaults().get("TitledBorder.titleColor")));
-            m_jCurrent = jAux;
-        }
-    }
+		// cambiamos la fecha
+		Date dOldDate = m_date;
+		m_date = dNewDate;
 
-    private JButtonDate getLabelByDate(Date d) {
-        
-        GregorianCalendar oCalRender = new GregorianCalendar();
-        oCalRender.setTime(d);
-        int iDayOfMonth = oCalRender.get(Calendar.DAY_OF_MONTH);
-        
-        oCalRender.set(Calendar.DAY_OF_MONTH, 1);
-       
-        int iCol = oCalRender.get(Calendar.DAY_OF_WEEK) - oCalRender.getFirstDayOfWeek();
-        if (iCol < 0) {
-            iCol += 7;
-        }
-        return m_ListDates[iCol + iDayOfMonth - 1];
-    }
+		// pintamos
+		renderMonth();
+		renderDay();
 
-    private class DateClick implements ActionListener {
+		// decimos al mundo que ha cambiado la propiedad fecha
+		firePropertyChange("Date", dOldDate, dNewDate);
+	}
 
-        public void actionPerformed(ActionEvent e) {
-            JButtonDate oLbl = (JButtonDate)e.getSource();
-            if(oLbl.DateInf != null) {
-                setDate(oLbl.DateInf);
-            }
-        }
-    }
+	public Date getDate() {
+		return m_date;
+	}
 
-    private static class JButtonDate extends JButton {
+	public void setEnabled(boolean bValue) {
 
-        public Date DateInf;
+		super.setEnabled(bValue);
 
-        public JButtonDate(ActionListener datehandler) {
-            super();
-            initComponent();
-            addActionListener(datehandler);
-        }
-        public JButtonDate(String sText, ActionListener datehandler) {
-            super(sText);
-            initComponent();
-            addActionListener(datehandler);
-        }    
-        public JButtonDate(Icon icon, ActionListener datehandler) {
-            super(icon);
-            initComponent();
-            addActionListener(datehandler);
-        }   
-        
-        private void initComponent() {
-            DateInf = null;
-            setRequestFocusEnabled(false);
-            setFocusPainted(false);
-            setFocusable(false);
-        }
-    }
+		// pintamos
+		renderMonth();
+		renderDay();
+	}
 
-    private void initComponents2() {
+	private void renderMonth() {
 
-        ActionListener dateclick = new DateClick();
-        
-        m_jBtnYearDec = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/2uparrow.png")), dateclick);
-        m_jBtnMonthDec = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/1uparrow.png")), dateclick);
-        m_jBtnToday = new JButtonDate(m_resources.getString("Button.Today"), dateclick);
-        m_jBtnMonthInc = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/1downarrow.png")), dateclick);
-        m_jBtnYearInc = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/2downarrow.png")), dateclick);
-               
-        m_jBtnToday.DateInf = new Date();
-        m_jActions.add(m_jBtnYearDec);
-        m_jActions.add(m_jBtnMonthDec);
-        m_jActions.add(m_jBtnToday);
-        m_jActions.add(m_jBtnMonthInc);
-        m_jActions.add(m_jBtnYearInc);
-        
-        m_ListDates = new JButtonDate[42];
-        for(int i = 0; i < 42; i++) {
-            JButtonDate jAux = new JButtonDate(dateclick);
-            // jAux.setFont(new Font("Dialog", 1, 24));
-            jAux.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-            jAux.setText(null);
-            jAux.setOpaque(true);
-            jAux.setForeground((Color)UIManager.getDefaults().get("TextPane.foreground"));
-            jAux.setBackground((Color)UIManager.getDefaults().get("TextPane.background"));
-            jAux.setBorder(null);
-            m_ListDates[i] = jAux;
-            m_jDates.add(jAux);
-        }
-        
-        m_jDays = new JLabel[7];
-        for(int iHead = 0; iHead < 7; iHead++) {
-            JLabel JAuxHeader = new JLabel();
-            //JAuxHeader.setFont(new Font("Dialog", 1, 24));
-            JAuxHeader.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-            m_jDays[iHead] = JAuxHeader;
-            m_jWeekDays.add(JAuxHeader);
-        }
-        
-        DateFormat fmtWeekDay = new SimpleDateFormat("E");
-        Calendar oCalRender = new GregorianCalendar();
-        int iCol;
-        for (int j = 0; j < 7; j++) {
-            oCalRender.add(Calendar.DATE, 1);
-            iCol = oCalRender.get(Calendar.DAY_OF_WEEK) - oCalRender.getFirstDayOfWeek();
-            if (iCol < 0) {
-                iCol += 7;
-            }
-            m_jDays[iCol].setText(fmtWeekDay.format(oCalRender.getTime()));
-        }      
-    }
+		// GregorianCalendar oCalRender = new GregorianCalendar();
+		// oCalRender.setTime(m_CalendarHelper.getTime());
 
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+		for (int j = 0; j < 7; j++) {
+			m_jDays[j].setEnabled(isEnabled());
+		}
 
-        jPanel1 = new javax.swing.JPanel();
-        m_jMonth = new javax.swing.JPanel();
-        m_jWeekDays = new javax.swing.JPanel();
-        m_jDates = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        m_jLblMonth = new javax.swing.JLabel();
-        jPanel3 = new javax.swing.JPanel();
-        m_jActions = new javax.swing.JPanel();
+		// Borramos todos los dias
+		for (int i = 0; i < 42; i++) {
+			JButtonDate jAux = m_ListDates[i];
+			jAux.DateInf = null;
+			jAux.setEnabled(false);
+			jAux.setText(null);
+			jAux.setForeground((Color) UIManager.getDefaults().get("TextPane.foreground"));
+			jAux.setBackground((Color) UIManager.getDefaults().get("TextPane.background"));
+			jAux.setBorder(null);
+		}
 
-        setLayout(new java.awt.BorderLayout());
+		if (m_date == null) {
+			m_jLblMonth.setEnabled(isEnabled());
+			m_jLblMonth.setText(null);
+		} else {
+			m_CalendarHelper.setTime(m_date);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jPanel1.setLayout(new java.awt.BorderLayout());
+			m_jLblMonth.setEnabled(isEnabled());
+			m_jLblMonth.setText(fmtMonthYear.format(m_CalendarHelper.getTime()));
 
-        m_jMonth.setLayout(new java.awt.BorderLayout());
+			int iCurrentMonth = m_CalendarHelper.get(Calendar.MONTH);
+			m_CalendarHelper.set(Calendar.DAY_OF_MONTH, 1);
 
-        m_jWeekDays.setLayout(new java.awt.GridLayout(1, 7));
-        m_jMonth.add(m_jWeekDays, java.awt.BorderLayout.NORTH);
+			while (m_CalendarHelper.get(Calendar.MONTH) == iCurrentMonth) {
 
-        m_jDates.setBackground(javax.swing.UIManager.getDefaults().getColor("TextPane.background"));
-        m_jDates.setLayout(new java.awt.GridLayout(6, 7));
-        m_jMonth.add(m_jDates, java.awt.BorderLayout.CENTER);
+				JButtonDate jAux = getLabelByDate(m_CalendarHelper.getTime());
+				jAux.DateInf = m_CalendarHelper.getTime();
+				jAux.setEnabled(isEnabled());
+				jAux.setText(String.valueOf(m_CalendarHelper.get(Calendar.DAY_OF_MONTH)));
 
-        jPanel1.add(m_jMonth, java.awt.BorderLayout.CENTER);
+				m_CalendarHelper.add(Calendar.DATE, 1);
+			}
+		}
 
-        m_jLblMonth.setFont(new java.awt.Font("Dialog", 1, 14));
-        jPanel2.add(m_jLblMonth);
+		m_jCurrent = null;
+	}
 
-        jPanel1.add(jPanel2, java.awt.BorderLayout.NORTH);
+	private void renderDay() {
 
-        add(jPanel1, java.awt.BorderLayout.CENTER);
+		m_jBtnToday.setEnabled(isEnabled());
 
-        jPanel3.setLayout(new java.awt.BorderLayout());
+		if (m_date == null) {
+			m_jBtnMonthDec.setEnabled(false);
+			m_jBtnMonthInc.setEnabled(isEnabled());
+			m_jBtnYearDec.setEnabled(isEnabled());
+			m_jBtnYearInc.setEnabled(isEnabled());
+		} else {
+			m_CalendarHelper.setTime(m_date);
 
-        m_jActions.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 0, 5));
-        m_jActions.setLayout(new java.awt.GridLayout(0, 1, 0, 5));
-        jPanel3.add(m_jActions, java.awt.BorderLayout.NORTH);
+			m_CalendarHelper.add(Calendar.MONTH, -1);
+			m_jBtnMonthDec.DateInf = m_CalendarHelper.getTime();
+			m_jBtnMonthDec.setEnabled(isEnabled());
+			m_CalendarHelper.add(Calendar.MONTH, 2);
+			m_jBtnMonthInc.DateInf = m_CalendarHelper.getTime();
+			m_jBtnMonthInc.setEnabled(isEnabled());
 
-        add(jPanel3, java.awt.BorderLayout.LINE_END);
-    }// </editor-fold>//GEN-END:initComponents
-    
-    
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel m_jActions;
-    private javax.swing.JPanel m_jDates;
-    private javax.swing.JLabel m_jLblMonth;
-    private javax.swing.JPanel m_jMonth;
-    private javax.swing.JPanel m_jWeekDays;
-    // End of variables declaration//GEN-END:variables
-    
+			m_CalendarHelper.setTime(m_date);
+			m_CalendarHelper.add(Calendar.YEAR, -1);
+			m_jBtnYearDec.DateInf = m_CalendarHelper.getTime();
+			m_jBtnYearDec.setEnabled(isEnabled());
+			m_CalendarHelper.add(Calendar.YEAR, 2);
+			m_jBtnYearInc.DateInf = m_CalendarHelper.getTime();
+			m_jBtnYearInc.setEnabled(isEnabled());
+
+			if (m_jCurrent != null) {
+				m_jCurrent.setForeground((Color) UIManager.getDefaults().get("TextPane.foreground"));
+				m_jCurrent.setBackground((Color) UIManager.getDefaults().get("TextPane.background"));
+				m_jCurrent.setBorder(null);
+			}
+
+			JButtonDate jAux = getLabelByDate(m_date);
+			jAux.setBackground((Color) UIManager.getDefaults().get("TextPane.selectionBackground"));
+			jAux.setForeground((Color) UIManager.getDefaults().get("TextPane.selectionForeground"));
+			jAux.setBorder(new LineBorder((Color) UIManager.getDefaults().get("TitledBorder.titleColor")));
+			m_jCurrent = jAux;
+		}
+	}
+
+	private JButtonDate getLabelByDate(Date d) {
+
+		GregorianCalendar oCalRender = new GregorianCalendar();
+		oCalRender.setTime(d);
+		int iDayOfMonth = oCalRender.get(Calendar.DAY_OF_MONTH);
+
+		oCalRender.set(Calendar.DAY_OF_MONTH, 1);
+
+		int iCol = oCalRender.get(Calendar.DAY_OF_WEEK) - oCalRender.getFirstDayOfWeek();
+		if (iCol < 0) {
+			iCol += 7;
+		}
+		return m_ListDates[iCol + iDayOfMonth - 1];
+	}
+
+	private class DateClick implements ActionListener {
+
+		public void actionPerformed(ActionEvent e) {
+			JButtonDate oLbl = (JButtonDate) e.getSource();
+			if (oLbl.DateInf != null) {
+				setDate(oLbl.DateInf);
+			}
+		}
+	}
+
+	private static class JButtonDate extends JButton {
+
+		public Date DateInf;
+
+		public JButtonDate(ActionListener datehandler) {
+			super();
+			initComponent();
+			addActionListener(datehandler);
+		}
+		public JButtonDate(String sText, ActionListener datehandler) {
+			super(sText);
+			initComponent();
+			addActionListener(datehandler);
+		}
+		public JButtonDate(Icon icon, ActionListener datehandler) {
+			super(icon);
+			initComponent();
+			addActionListener(datehandler);
+		}
+
+		private void initComponent() {
+			DateInf = null;
+			setRequestFocusEnabled(false);
+			setFocusPainted(false);
+			setFocusable(false);
+		}
+	}
+
+	private void initComponents2() {
+
+		ActionListener dateclick = new DateClick();
+
+		m_jBtnYearDec = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/2uparrow.png")),
+				dateclick);
+		m_jBtnMonthDec = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/1uparrow.png")),
+				dateclick);
+		m_jBtnToday = new JButtonDate(m_resources.getString("Button.Today"), dateclick);
+		m_jBtnMonthInc = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/1downarrow.png")),
+				dateclick);
+		m_jBtnYearInc = new JButtonDate(new ImageIcon(getClass().getResource("/com/openbravo/images/2downarrow.png")),
+				dateclick);
+
+		m_jBtnToday.DateInf = new Date();
+		m_jActions.add(m_jBtnYearDec);
+		m_jActions.add(m_jBtnMonthDec);
+		m_jActions.add(m_jBtnToday);
+		m_jActions.add(m_jBtnMonthInc);
+		m_jActions.add(m_jBtnYearInc);
+
+		m_ListDates = new JButtonDate[42];
+		for (int i = 0; i < 42; i++) {
+			JButtonDate jAux = new JButtonDate(dateclick);
+			// jAux.setFont(new Font("Dialog", 1, 24));
+			jAux.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+			jAux.setText(null);
+			jAux.setOpaque(true);
+			jAux.setForeground((Color) UIManager.getDefaults().get("TextPane.foreground"));
+			jAux.setBackground((Color) UIManager.getDefaults().get("TextPane.background"));
+			jAux.setBorder(null);
+			m_ListDates[i] = jAux;
+			m_jDates.add(jAux);
+		}
+
+		m_jDays = new JLabel[7];
+		for (int iHead = 0; iHead < 7; iHead++) {
+			JLabel JAuxHeader = new JLabel();
+			// JAuxHeader.setFont(new Font("Dialog", 1, 24));
+			JAuxHeader.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+			m_jDays[iHead] = JAuxHeader;
+			m_jWeekDays.add(JAuxHeader);
+		}
+
+		DateFormat fmtWeekDay = new SimpleDateFormat("E");
+		Calendar oCalRender = new GregorianCalendar();
+		int iCol;
+		for (int j = 0; j < 7; j++) {
+			oCalRender.add(Calendar.DATE, 1);
+			iCol = oCalRender.get(Calendar.DAY_OF_WEEK) - oCalRender.getFirstDayOfWeek();
+			if (iCol < 0) {
+				iCol += 7;
+			}
+			m_jDays[iCol].setText(fmtWeekDay.format(oCalRender.getTime()));
+		}
+	}
+
+	/**
+	 * This method is called from within the constructor to initialize the form.
+	 * WARNING: Do NOT modify this code. The content of this method is always
+	 * regenerated by the Form Editor.
+	 */
+	// <editor-fold defaultstate="collapsed" desc="Generated
+	// Code">//GEN-BEGIN:initComponents
+	private void initComponents() {
+
+		jPanel1 = new javax.swing.JPanel();
+		m_jMonth = new javax.swing.JPanel();
+		m_jWeekDays = new javax.swing.JPanel();
+		m_jDates = new javax.swing.JPanel();
+		jPanel2 = new javax.swing.JPanel();
+		m_jLblMonth = new javax.swing.JLabel();
+		jPanel3 = new javax.swing.JPanel();
+		m_jActions = new javax.swing.JPanel();
+
+		setLayout(new java.awt.BorderLayout());
+
+		jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+		jPanel1.setLayout(new java.awt.BorderLayout());
+
+		m_jMonth.setLayout(new java.awt.BorderLayout());
+
+		m_jWeekDays.setLayout(new java.awt.GridLayout(1, 7));
+		m_jMonth.add(m_jWeekDays, java.awt.BorderLayout.NORTH);
+
+		m_jDates.setBackground(javax.swing.UIManager.getDefaults().getColor("TextPane.background"));
+		m_jDates.setLayout(new java.awt.GridLayout(6, 7));
+		m_jMonth.add(m_jDates, java.awt.BorderLayout.CENTER);
+
+		jPanel1.add(m_jMonth, java.awt.BorderLayout.CENTER);
+
+		m_jLblMonth.setFont(new java.awt.Font("Dialog", 1, 14));
+		jPanel2.add(m_jLblMonth);
+
+		jPanel1.add(jPanel2, java.awt.BorderLayout.NORTH);
+
+		add(jPanel1, java.awt.BorderLayout.CENTER);
+
+		jPanel3.setLayout(new java.awt.BorderLayout());
+
+		m_jActions.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 0, 5));
+		m_jActions.setLayout(new java.awt.GridLayout(0, 1, 0, 5));
+		jPanel3.add(m_jActions, java.awt.BorderLayout.NORTH);
+
+		add(jPanel3, java.awt.BorderLayout.LINE_END);
+	}// </editor-fold>//GEN-END:initComponents
+
+	// Variables declaration - do not modify//GEN-BEGIN:variables
+	private javax.swing.JPanel jPanel1;
+	private javax.swing.JPanel jPanel2;
+	private javax.swing.JPanel jPanel3;
+	private javax.swing.JPanel m_jActions;
+	private javax.swing.JPanel m_jDates;
+	private javax.swing.JLabel m_jLblMonth;
+	private javax.swing.JPanel m_jMonth;
+	private javax.swing.JPanel m_jWeekDays;
+	// End of variables declaration//GEN-END:variables
+
 }

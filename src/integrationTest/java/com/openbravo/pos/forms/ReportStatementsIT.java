@@ -40,8 +40,7 @@ public class ReportStatementsIT {
 	 * Both select columns they do not group by, which only MySQL tolerates. They
 	 * were already broken on Derby and PostgreSQL before this test existed.
 	 */
-	private static final List<String> KNOWN_BROKEN = java.util.Arrays.asList("productsaletotals.bs",
-			"soldproducts.bs");
+	private static final List<String> KNOWN_BROKEN = java.util.Arrays.asList("productsaletotals.bs", "soldproducts.bs");
 
 	private static final long WAIT_MS = 60000L;
 
@@ -100,10 +99,10 @@ public class ReportStatementsIT {
 	}
 
 	/**
-	 * The filter placeholder is expanded by QBFBuilder at runtime from whatever
-	 * the operator typed; "1=1" stands in for it here. Sentences glued together
-	 * from runtime calls rather than plain literals are skipped, since there is
-	 * no statement to read without running the script.
+	 * The filter placeholder is expanded by QBFBuilder at runtime from whatever the
+	 * operator typed; "1=1" stands in for it here. Sentences glued together from
+	 * runtime calls rather than plain literals are skipped, since there is no
+	 * statement to read without running the script.
 	 */
 	private static Map<String, String> reportStatements() throws IOException {
 		Map<String, String> statements = new LinkedHashMap<String, String>();

@@ -223,7 +223,8 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
 	public boolean isGiftVoucher() {
 		String voucher = attributes.getProperty("product.voucher");
-		return voucher == null ? "gift-vouchers".equals(attributes.getProperty("product.categoryid"))
+		return voucher == null
+				? "gift-vouchers".equals(attributes.getProperty("product.categoryid"))
 				: "true".equals(voucher);
 	}
 

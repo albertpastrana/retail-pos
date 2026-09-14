@@ -31,40 +31,40 @@ import com.openbravo.beans.LocaleResources;
  */
 public class AppLocal {
 
-    public static final String APP_NAME = "Retail POS";
-    public static final String APP_ID = "openbravopos";
-    public static final String APP_VERSION;
-    public static final String GIT_REVISION;
+	public static final String APP_NAME = "Retail POS";
+	public static final String APP_ID = "openbravopos";
+	public static final String APP_VERSION;
+	public static final String GIT_REVISION;
 
-    // private static List<ResourceBundle> m_messages;
-    private static LocaleResources m_resources;
+	// private static List<ResourceBundle> m_messages;
+	private static LocaleResources m_resources;
 
-    static {
-        m_resources = new LocaleResources();
-        m_resources.addBundleName("pos_messages");
-        Properties versionProps = new Properties();
-        try {
+	static {
+		m_resources = new LocaleResources();
+		m_resources.addBundleName("pos_messages");
+		Properties versionProps = new Properties();
+		try {
 			versionProps.load(AppLocal.class.getClassLoader().getResourceAsStream("version.properties"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        APP_VERSION = versionProps.getProperty("APP_VERSION", "0.0.0");
-        GIT_REVISION = versionProps.getProperty("GIT_REVISION", "r0");
-    }
+		APP_VERSION = versionProps.getProperty("APP_VERSION", "0.0.0");
+		GIT_REVISION = versionProps.getProperty("GIT_REVISION", "r0");
+	}
 
-    /** Creates a new instance of AppLocal */
-    private AppLocal() {
-    }
+	/** Creates a new instance of AppLocal */
+	private AppLocal() {
+	}
 
-    public static String getIntString(String sKey) {
-        return m_resources.getString(sKey);
-    }
+	public static String getIntString(String sKey) {
+		return m_resources.getString(sKey);
+	}
 
-    public static String getIntString(String sKey, Object ... sValues) {
-        return m_resources.getString(sKey, sValues);
-    }
+	public static String getIntString(String sKey, Object... sValues) {
+		return m_resources.getString(sKey, sValues);
+	}
 
-    public static String getBaseTitle() {
-    	return AppLocal.APP_NAME + " - " + AppLocal.APP_VERSION + " - " + AppLocal.GIT_REVISION;
-    }
+	public static String getBaseTitle() {
+		return AppLocal.APP_NAME + " - " + AppLocal.APP_VERSION + " - " + AppLocal.GIT_REVISION;
+	}
 }

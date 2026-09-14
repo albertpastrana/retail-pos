@@ -23,5 +23,5 @@ import com.openbravo.basic.BasicException;
 
 public interface EditorCreator {
 
-    public Object createValue() throws BasicException;
+	public Object createValue() throws BasicException;
 }
