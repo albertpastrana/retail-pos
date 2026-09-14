@@ -1,5 +1,7 @@
 build/
 .gradle/
+.env.local
+.icon-work/
 *.class
 .DS_Store
 .metals/
