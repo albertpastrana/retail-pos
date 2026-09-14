@@ -1,0 +1,8 @@
+---
+description: Format Java with Spotless, not by hand
+alwaysApply: true
+---
+
+# Java format
+
+After editing Java, run `./gradlew spotlessApply`. Do not format Java by hand. Do not disable `spotlessCheck` or set `enforceCheck = false`.
