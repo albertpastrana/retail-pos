@@ -2,9 +2,11 @@ package com.openbravo.pos.ticket;
 
 /**
  * Paper loyalty stamps. The till only counts how many to stamp; the card stays
- * on paper. One stamp per 10 € of eligible spend. Sale or discounted lines,
- * gift vouchers and redemption lines do not count. A receipt can carry several
- * redemptions, one per full card.
+ * on paper. One stamp per 10 € of eligible spend. A total discount on the
+ * receipt makes the whole receipt ineligible. Sale or line discounted lines and
+ * gift vouchers do not count; redemptions and any other negative line come off
+ * the eligible spend. A receipt can carry several redemptions, one per full
+ * card.
  */
 public final class LoyaltyStamps {
 
@@ -44,13 +46,25 @@ public final class LoyaltyStamps {
 	}
 
 	public static double eligibleEuros(TicketInfo ticket) {
+		if (hasTotalDiscount(ticket)) {
+			return 0.0;
+		}
 		double sum = 0.0;
 		for (TicketLineInfo line : ticket.getLines()) {
-			if (countsForStamp(line)) {
+			if (countsForStamp(line) || reducesStampSpend(line)) {
 				sum += line.getValue();
 			}
 		}
-		return sum;
+		return Math.max(0.0, roundCents(sum));
+	}
+
+	public static boolean hasTotalDiscount(TicketInfo ticket) {
+		for (TicketLineInfo line : ticket.getLines()) {
+			if ("total".equals(line.getProperty("discount.scope"))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static double savingsEuros(TicketInfo ticket) {
@@ -75,16 +89,21 @@ public final class LoyaltyStamps {
 		if (line.isProductCom() || line.isGiftVoucher()) {
 			return false;
 		}
-		if ("total".equals(line.getProperty("discount.scope"))) {
-			return false;
-		}
 		if (line.getProperty("discount.line.percent") != null) {
 			return false;
 		}
-		if (isRedemption(line)) {
+		return line.getValue() > 0.0;
+	}
+
+	/**
+	 * What the customer no longer pays: redemptions and any other negative line
+	 * typed at the till. A gift voucher handed over is a payment, not a discount.
+	 */
+	static boolean reducesStampSpend(TicketLineInfo line) {
+		if (line.isProductCom() || line.isGiftVoucher()) {
 			return false;
 		}
-		return line.getValue() > 0.0;
+		return line.getValue() < 0.0;
 	}
 
 	private static double roundCents(double euros) {
