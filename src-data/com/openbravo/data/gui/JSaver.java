@@ -56,22 +56,22 @@ public class JSaver extends JPanel implements StateListener {
 	public void updateState(int iState) {
 		m_iState = iState;
 		switch (iState) {
-		case BrowsableEditableData.ST_INSERT:
-			jbtnNew.setEnabled(m_bd.canInsertData());
-			jbtnDelete.setEnabled(false);
-			break;
-		case BrowsableEditableData.ST_DELETE:
-			jbtnNew.setEnabled(m_bd.canInsertData());
-			jbtnDelete.setEnabled(false);
-			break;
-		case BrowsableEditableData.ST_NORECORD:
-			jbtnNew.setEnabled(m_bd.canInsertData());
-			jbtnDelete.setEnabled(false);
-			break;
-		case BrowsableEditableData.ST_UPDATE:
-			jbtnNew.setEnabled(m_bd.canInsertData());
-			jbtnDelete.setEnabled(m_bd.canDeleteData());
-			break;
+			case BrowsableEditableData.ST_INSERT :
+				jbtnNew.setEnabled(m_bd.canInsertData());
+				jbtnDelete.setEnabled(false);
+				break;
+			case BrowsableEditableData.ST_DELETE :
+				jbtnNew.setEnabled(m_bd.canInsertData());
+				jbtnDelete.setEnabled(false);
+				break;
+			case BrowsableEditableData.ST_NORECORD :
+				jbtnNew.setEnabled(m_bd.canInsertData());
+				jbtnDelete.setEnabled(false);
+				break;
+			case BrowsableEditableData.ST_UPDATE :
+				jbtnNew.setEnabled(m_bd.canInsertData());
+				jbtnDelete.setEnabled(m_bd.canDeleteData());
+				break;
 		}
 		updateSaveEnabled();
 	}
@@ -79,18 +79,18 @@ public class JSaver extends JPanel implements StateListener {
 	private void updateSaveEnabled() {
 		boolean dirty = m_dirty.isDirty();
 		switch (m_iState) {
-		case BrowsableEditableData.ST_INSERT:
-			jbtnSave.setEnabled(dirty && m_bd.canInsertData());
-			break;
-		case BrowsableEditableData.ST_DELETE:
-			jbtnSave.setEnabled(dirty && m_bd.canDeleteData());
-			break;
-		case BrowsableEditableData.ST_UPDATE:
-			jbtnSave.setEnabled(dirty && m_bd.canUpdateData());
-			break;
-		default:
-			jbtnSave.setEnabled(false);
-			break;
+			case BrowsableEditableData.ST_INSERT :
+				jbtnSave.setEnabled(dirty && m_bd.canInsertData());
+				break;
+			case BrowsableEditableData.ST_DELETE :
+				jbtnSave.setEnabled(dirty && m_bd.canDeleteData());
+				break;
+			case BrowsableEditableData.ST_UPDATE :
+				jbtnSave.setEnabled(dirty && m_bd.canUpdateData());
+				break;
+			default :
+				jbtnSave.setEnabled(false);
+				break;
 		}
 	}
 

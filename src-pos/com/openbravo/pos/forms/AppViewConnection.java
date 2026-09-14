@@ -35,60 +35,62 @@ import com.openbravo.pos.util.AltEncrypter;
  * @author adrianromero
  */
 public class AppViewConnection {
-    
-    /** Creates a new instance of AppViewConnection */
-    private AppViewConnection() {
-    }
-    
-    public static Session createSession(AppProperties props) throws BasicException {
-               
-        try{
 
-            // register the database driver
-            if (isJavaWebStart()) {
-                Class.forName(props.getProperty("db.driver"), true, Thread.currentThread().getContextClassLoader());
-            } else {
-                String driverLib = props.getProperty("db.driverlib");
-                if (driverLib != null) { // If driverlib prop is empty, assume the classes are available and will be loaded by SPI
-                    ClassLoader cloader = new URLClassLoader(new URL[] {new File(driverLib).toURI().toURL()});
-                    DriverManager.registerDriver(new DriverWrapper((Driver) Class.forName(props.getProperty("db.driver"), true, cloader).newInstance()));
-                }
-            }
+	/** Creates a new instance of AppViewConnection */
+	private AppViewConnection() {
+	}
 
-            String sDBUser = props.getProperty("db.user");
-            String sDBPassword = props.getProperty("db.password");        
-            if (sDBUser != null && sDBPassword != null && sDBPassword.startsWith("crypt:")) {
-                // the password is encrypted
-                AltEncrypter cypher = new AltEncrypter("cypherkey" + sDBUser);
-                sDBPassword = cypher.decrypt(sDBPassword.substring(6));
-            }   
+	public static Session createSession(AppProperties props) throws BasicException {
 
-            String dbUrl = props.getProperty("db.URL");
-            DatabaseMigrator.migrate(dbUrl, sDBUser, sDBPassword);
-            return new Session(dbUrl, sDBUser, sDBPassword);
+		try {
 
-        } catch (InstantiationException e) {
-            throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), e);
-        } catch (IllegalAccessException eIA) {
-            throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eIA);
-        } catch (MalformedURLException eMURL) {
-            throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eMURL);
-        } catch (ClassNotFoundException eCNF) {
-            throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eCNF);
-        } catch (SQLException eSQL) {
-            throw new BasicException(AppLocal.getIntString("message.databaseconnectionerror"), eSQL);
-        } catch (RuntimeException e) {
-            throw new BasicException(AppLocal.getIntString("Database.ScriptError"), e);
-        }
-    }
+			// register the database driver
+			if (isJavaWebStart()) {
+				Class.forName(props.getProperty("db.driver"), true, Thread.currentThread().getContextClassLoader());
+			} else {
+				String driverLib = props.getProperty("db.driverlib");
+				if (driverLib != null) { // If driverlib prop is empty, assume the classes are available and will be
+											// loaded by SPI
+					ClassLoader cloader = new URLClassLoader(new URL[]{new File(driverLib).toURI().toURL()});
+					DriverManager.registerDriver(new DriverWrapper(
+							(Driver) Class.forName(props.getProperty("db.driver"), true, cloader).newInstance()));
+				}
+			}
 
-    private static boolean isJavaWebStart() {
+			String sDBUser = props.getProperty("db.user");
+			String sDBPassword = props.getProperty("db.password");
+			if (sDBUser != null && sDBPassword != null && sDBPassword.startsWith("crypt:")) {
+				// the password is encrypted
+				AltEncrypter cypher = new AltEncrypter("cypherkey" + sDBUser);
+				sDBPassword = cypher.decrypt(sDBPassword.substring(6));
+			}
 
-        try {
-            Class.forName("javax.jnlp.ServiceManager");
-            return true;
-        } catch (ClassNotFoundException ue) {
-            return false;
-        }
-    }
+			String dbUrl = props.getProperty("db.URL");
+			DatabaseMigrator.migrate(dbUrl, sDBUser, sDBPassword);
+			return new Session(dbUrl, sDBUser, sDBPassword);
+
+		} catch (InstantiationException e) {
+			throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), e);
+		} catch (IllegalAccessException eIA) {
+			throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eIA);
+		} catch (MalformedURLException eMURL) {
+			throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eMURL);
+		} catch (ClassNotFoundException eCNF) {
+			throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), eCNF);
+		} catch (SQLException eSQL) {
+			throw new BasicException(AppLocal.getIntString("message.databaseconnectionerror"), eSQL);
+		} catch (RuntimeException e) {
+			throw new BasicException(AppLocal.getIntString("Database.ScriptError"), e);
+		}
+	}
+
+	private static boolean isJavaWebStart() {
+
+		try {
+			Class.forName("javax.jnlp.ServiceManager");
+			return true;
+		} catch (ClassNotFoundException ue) {
+			return false;
+		}
+	}
 }

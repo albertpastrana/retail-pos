@@ -24,12 +24,12 @@ package com.openbravo.data.model;
  * @author adrian
  */
 public class PrimaryKey extends Column {
-    
-    public PrimaryKey(String name) {
-        super(name);
-    }
-    
-    public boolean isPK() {
-        return true;
-    }
+
+	public PrimaryKey(String name) {
+		super(name);
+	}
+
+	public boolean isPK() {
+		return true;
+	}
 }

@@ -21,5 +21,5 @@ package com.openbravo.pos.payment;
 
 public interface PaymentGateway {
 
-    public void execute(PaymentInfoMagcard payinfo);
+	public void execute(PaymentInfoMagcard payinfo);
 }

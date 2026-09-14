@@ -87,7 +87,8 @@ public class JFrmConfig extends javax.swing.JFrame {
 	}// </editor-fold>//GEN-END:initComponents
 
 	/**
-	 * @param args the command line arguments
+	 * @param args
+	 *            the command line arguments
 	 */
 	public static void main(final String args[]) {
 		FileLogging.install();

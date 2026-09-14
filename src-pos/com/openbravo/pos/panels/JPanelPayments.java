@@ -63,8 +63,7 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String[] MOVEMENTHEADERS = { "label.paymentdate", "label.paymentreason",
-			"label.paymenttotal" };
+	private static final String[] MOVEMENTHEADERS = {"label.paymentdate", "label.paymentreason", "label.paymenttotal"};
 
 	private static final Color COLOR_IN = new Color(0, 128, 0);
 	private static final Color COLOR_OUT = new Color(178, 34, 34);
@@ -120,7 +119,8 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 
 	private void loadData() throws BasicException {
 
-		m_jCashTotal.setText(Formats.CURRENCY.formatValue(new Double(m_dlSales.getCashTotal(m_App.getActiveCashIndex()))));
+		m_jCashTotal
+				.setText(Formats.CURRENCY.formatValue(new Double(m_dlSales.getCashTotal(m_App.getActiveCashIndex()))));
 
 		m_movements = m_dlSales.getCashMovements(m_App.getActiveCashIndex());
 		m_movementsmodel.fireTableDataChanged();
@@ -163,9 +163,8 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 
 	private void saveMovement(boolean cashin, double amount) {
 
-		Object[] movement = new Object[] { UUID.randomUUID().toString(), m_App.getActiveCashIndex(), new Date(),
-				UUID.randomUUID().toString(), cashin ? "cashin" : "cashout",
-				new Double(cashin ? amount : -amount) };
+		Object[] movement = new Object[]{UUID.randomUUID().toString(), m_App.getActiveCashIndex(), new Date(),
+				UUID.randomUUID().toString(), cashin ? "cashin" : "cashout", new Double(cashin ? amount : -amount)};
 
 		try {
 			m_dlSales.getPaymentMovementInsert().exec(movement);
@@ -313,7 +312,7 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 		private static final long serialVersionUID = 1L;
 
 		public MovementRenderer() {
-			super(new Formats[] { Formats.TIMESTAMP, new FormatsMovement(), Formats.CURRENCY });
+			super(new Formats[]{Formats.TIMESTAMP, new FormatsMovement(), Formats.CURRENCY});
 		}
 
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,

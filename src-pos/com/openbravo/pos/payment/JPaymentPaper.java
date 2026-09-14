@@ -71,7 +71,8 @@ public class JPaymentPaper extends JPanel implements JPaymentInterface {
 		if (voucherCode == null || !voucherCode.equals(enteredCode)) {
 			validateCode();
 		}
-		return voucherCode == null ? null
+		return voucherCode == null
+				? null
 				: new PaymentInfoTicket(paymentAmount, "paperin", voucherCode, remainingBalance);
 	}
 

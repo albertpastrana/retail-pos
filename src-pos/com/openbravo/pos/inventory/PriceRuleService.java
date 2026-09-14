@@ -72,8 +72,7 @@ public final class PriceRuleService {
 		try (PreparedStatement statement = session.getConnection()
 				.prepareStatement("SELECT TAX_REGIME FROM PRICE_RULES WHERE BRAND IS NULL");
 				ResultSet results = statement.executeQuery()) {
-			return results.next() ? TaxRegime.fromDatabase(results.getString(1))
-					: TaxRegime.EQUIVALENCE_SURCHARGE;
+			return results.next() ? TaxRegime.fromDatabase(results.getString(1)) : TaxRegime.EQUIVALENCE_SURCHARGE;
 		}
 	}
 
@@ -142,11 +141,10 @@ public final class PriceRuleService {
 		Map<String, Double> taxRates = findCurrentTaxRates();
 		connection.setAutoCommit(false);
 		try {
-			String sql = "SELECT ID, PRICEBUY, PRICESELL, TAXCAT FROM PRODUCTS WHERE PRICEBUY > 0"
-					+ (brand == null
-							? " AND (BRAND IS NULL OR BRAND NOT IN "
-									+ "(SELECT BRAND FROM PRICE_RULES WHERE BRAND IS NOT NULL))"
-							: " AND BRAND = ?");
+			String sql = "SELECT ID, PRICEBUY, PRICESELL, TAXCAT FROM PRODUCTS WHERE PRICEBUY > 0" + (brand == null
+					? " AND (BRAND IS NULL OR BRAND NOT IN "
+							+ "(SELECT BRAND FROM PRICE_RULES WHERE BRAND IS NOT NULL))"
+					: " AND BRAND = ?");
 			try (PreparedStatement select = connection.prepareStatement(sql);
 					PreparedStatement update = connection
 							.prepareStatement("UPDATE PRODUCTS SET PRICESELL = ? WHERE ID = ?")) {
@@ -232,8 +230,8 @@ public final class PriceRuleService {
 
 	private Map<String, Double> findCurrentTaxRates() throws SQLException {
 		Map<String, Double> rates = new HashMap<String, Double>();
-		try (PreparedStatement statement = session.getConnection().prepareStatement(
-				"SELECT CATEGORY, RATE FROM TAXES WHERE CUSTCATEGORY IS NULL "
+		try (PreparedStatement statement = session.getConnection()
+				.prepareStatement("SELECT CATEGORY, RATE FROM TAXES WHERE CUSTCATEGORY IS NULL "
 						+ "AND VALIDFROM <= CURRENT_TIMESTAMP ORDER BY VALIDFROM");
 				ResultSet results = statement.executeQuery()) {
 			while (results.next()) {
@@ -253,7 +251,7 @@ public final class PriceRuleService {
 			return roundTo95(value);
 		}
 		int euros = (int) Math.floor(value);
-		double[] endings = { 0.25, 0.50, 0.75, 0.95 };
+		double[] endings = {0.25, 0.50, 0.75, 0.95};
 		for (double ending : endings) {
 			double candidate = euros + ending;
 			if (candidate + 0.0000001 >= value) {

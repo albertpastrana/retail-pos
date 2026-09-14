@@ -14,8 +14,8 @@ import javax.swing.event.DocumentListener;
 
 /**
  * One labelled row per field, pinned to the top of whatever panel it sits in.
- * The till dialog and the product editor share this so a price looks the same in
- * both places.
+ * The till dialog and the product editor share this so a price looks the same
+ * in both places.
  */
 public final class ProductFormLayout {
 

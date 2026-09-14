@@ -11,7 +11,7 @@ import org.flywaydb.core.api.migration.Context;
 
 public class V17__phosphor_button_icons extends BaseJavaMigration {
 
-	private static final String[][] ICONS = { { "35", "Button.Print" }, { "34", "Button.OpenDrawer" } };
+	private static final String[][] ICONS = {{"35", "Button.Print"}, {"34", "Button.OpenDrawer"}};
 
 	private static final String TEMPLATES = "/com/openbravo/pos/templates/";
 

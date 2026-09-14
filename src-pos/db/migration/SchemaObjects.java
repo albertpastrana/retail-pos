@@ -38,7 +38,7 @@ final class SchemaObjects {
 	private static String actualTableName(Connection connection, String table) throws Exception {
 		DatabaseMetaData metadata = connection.getMetaData();
 		try (ResultSet tables = metadata.getTables(connection.getCatalog(), connection.getSchema(), null,
-				new String[] { "TABLE" })) {
+				new String[]{"TABLE"})) {
 			while (tables.next()) {
 				String candidate = tables.getString("TABLE_NAME");
 				if (table.equalsIgnoreCase(candidate)) {

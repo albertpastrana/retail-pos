@@ -23,5 +23,5 @@ import com.openbravo.basic.BasicException;
 
 public interface Finder {
 
-    public boolean match(Object obj) throws BasicException;
+	public boolean match(Object obj) throws BasicException;
 }

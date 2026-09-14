@@ -35,206 +35,204 @@ import javax.imageio.ImageIO;
 
 /**
  *
- * @author  adrianromero
+ * @author adrianromero
  */
 public class JRootFrame extends javax.swing.JFrame implements AppMessage {
 
-    private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.JRootFrame");
+	private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.JRootFrame");
 
-    private static final String WINDOW_X = "machine.window.x";
-    private static final String WINDOW_Y = "machine.window.y";
-    private static final String WINDOW_WIDTH = "machine.window.width";
-    private static final String WINDOW_HEIGHT = "machine.window.height";
-    private static final String WINDOW_MAXIMIZED = "machine.window.maximized";
+	private static final String WINDOW_X = "machine.window.x";
+	private static final String WINDOW_Y = "machine.window.y";
+	private static final String WINDOW_WIDTH = "machine.window.width";
+	private static final String WINDOW_HEIGHT = "machine.window.height";
+	private static final String WINDOW_MAXIMIZED = "machine.window.maximized";
 
-    // Share of the desktop the window takes the first time it runs.
-    private static final double DEFAULT_SCREEN_SHARE = 0.9;
+	// Share of the desktop the window takes the first time it runs.
+	private static final double DEFAULT_SCREEN_SHARE = 0.9;
 
-    // Gestor de que haya solo una instancia corriendo en cada maquina.
-    private InstanceManager m_instmanager = null;
+	// Gestor de que haya solo una instancia corriendo en cada maquina.
+	private InstanceManager m_instmanager = null;
 
-    private JRootApp m_rootapp;
-    private AppConfig m_props;
+	private JRootApp m_rootapp;
+	private AppConfig m_props;
 
-    // Read from the shutdown hook thread, written on the event thread.
-    private volatile Rectangle restorebounds;
-    private volatile boolean maximized;
+	// Read from the shutdown hook thread, written on the event thread.
+	private volatile Rectangle restorebounds;
+	private volatile boolean maximized;
 
-    /** Creates new form JRootFrame */
-    public JRootFrame() {
+	/** Creates new form JRootFrame */
+	public JRootFrame() {
 
-        initComponents();
-    }
+		initComponents();
+	}
 
-    public void initFrame(AppConfig props) {
+	public void initFrame(AppConfig props) {
 
-        m_props = props;
+		m_props = props;
 
-        m_rootapp = new JRootApp();
+		m_rootapp = new JRootApp();
 
-        if (m_rootapp.initApp(m_props)) {
+		if (m_rootapp.initApp(m_props)) {
 
+			if ("true".equals(props.getProperty("machine.uniqueinstance"))) {
+				// Register the running application
+				try {
+					m_instmanager = new InstanceManager(this);
+				} catch (Exception e) {
+				}
+			}
 
-            if ("true".equals(props.getProperty("machine.uniqueinstance"))) {
-                // Register the running application
-                try {
-                    m_instmanager = new InstanceManager(this);
-                } catch (Exception e) {
-                }
-            }
+			// Show the application
+			add(m_rootapp, BorderLayout.CENTER);
 
-            // Show the application
-            add(m_rootapp, BorderLayout.CENTER);
+			try {
+				this.setIconImage(
+						ImageIO.read(JRootFrame.class.getResourceAsStream("/com/openbravo/images/favicon.png")));
+			} catch (IOException e) {
+			}
+			setTitle(AppLocal.getBaseTitle());
+			pack();
+			restoreGeometry();
 
-            try {
-                this.setIconImage(ImageIO.read(JRootFrame.class.getResourceAsStream("/com/openbravo/images/favicon.png")));
-            } catch (IOException e) {
-            }
-            setTitle(AppLocal.getBaseTitle());
-            pack();
-            restoreGeometry();
+			setVisible(true);
+		} else {
+			new JFrmConfig(props).setVisible(true); // Show the configuration window.
+		}
+	}
 
-            setVisible(true);
-        } else {
-            new JFrmConfig(props).setVisible(true); // Show the configuration window.
-        }
-    }
+	private void restoreGeometry() {
 
-    private void restoreGeometry() {
+		Rectangle bounds = savedBounds();
+		setBounds(bounds == null ? defaultBounds() : bounds);
+		rememberGeometry();
 
-        Rectangle bounds = savedBounds();
-        setBounds(bounds == null ? defaultBounds() : bounds);
-        rememberGeometry();
+		if ("true".equals(m_props.getProperty(WINDOW_MAXIMIZED))) {
+			setExtendedState(JFrame.MAXIMIZED_BOTH);
+		}
 
-        if ("true".equals(m_props.getProperty(WINDOW_MAXIMIZED))) {
-            setExtendedState(JFrame.MAXIMIZED_BOTH);
-        }
+		addComponentListener(new java.awt.event.ComponentAdapter() {
+			public void componentResized(java.awt.event.ComponentEvent evt) {
+				rememberGeometry();
+			}
+			public void componentMoved(java.awt.event.ComponentEvent evt) {
+				rememberGeometry();
+			}
+		});
 
-        addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                rememberGeometry();
-            }
-            public void componentMoved(java.awt.event.ComponentEvent evt) {
-                rememberGeometry();
-            }
-        });
+		// Cmd+Q on macOS exits without ever closing the window, so the save
+		// hangs off the exit itself rather than off any close handler.
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				saveGeometry();
+			}
+		});
+	}
 
-        // Cmd+Q on macOS exits without ever closing the window, so the save
-        // hangs off the exit itself rather than off any close handler.
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                saveGeometry();
-            }
-        });
-    }
+	private void rememberGeometry() {
 
-    private void rememberGeometry() {
+		maximized = (getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH;
 
-        maximized = (getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH;
+		// Maximized bounds are the desktop, not a size worth restoring to.
+		if (!maximized) {
+			restorebounds = getBounds();
+		}
+	}
 
-        // Maximized bounds are the desktop, not a size worth restoring to.
-        if (!maximized) {
-            restorebounds = getBounds();
-        }
-    }
+	private void saveGeometry() {
 
-    private void saveGeometry() {
+		m_props.setProperty(WINDOW_X, Integer.toString(restorebounds.x));
+		m_props.setProperty(WINDOW_Y, Integer.toString(restorebounds.y));
+		m_props.setProperty(WINDOW_WIDTH, Integer.toString(restorebounds.width));
+		m_props.setProperty(WINDOW_HEIGHT, Integer.toString(restorebounds.height));
+		m_props.setProperty(WINDOW_MAXIMIZED, Boolean.toString(maximized));
 
-        m_props.setProperty(WINDOW_X, Integer.toString(restorebounds.x));
-        m_props.setProperty(WINDOW_Y, Integer.toString(restorebounds.y));
-        m_props.setProperty(WINDOW_WIDTH, Integer.toString(restorebounds.width));
-        m_props.setProperty(WINDOW_HEIGHT, Integer.toString(restorebounds.height));
-        m_props.setProperty(WINDOW_MAXIMIZED, Boolean.toString(maximized));
+		try {
+			m_props.save();
+		} catch (IOException e) {
+			logger.log(Level.WARNING, "Cannot save the window geometry", e);
+		}
+	}
 
-        try {
-            m_props.save();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Cannot save the window geometry", e);
-        }
-    }
+	private Rectangle savedBounds() {
 
-    private Rectangle savedBounds() {
+		try {
+			Rectangle bounds = new Rectangle(Integer.parseInt(m_props.getProperty(WINDOW_X)),
+					Integer.parseInt(m_props.getProperty(WINDOW_Y)),
+					Integer.parseInt(m_props.getProperty(WINDOW_WIDTH)),
+					Integer.parseInt(m_props.getProperty(WINDOW_HEIGHT)));
+			return onSomeScreen(bounds) ? bounds : null;
+		} catch (NumberFormatException e) {
+			// Nothing stored yet, or the file was edited by hand.
+			return null;
+		}
+	}
 
-        try {
-            Rectangle bounds = new Rectangle(
-                    Integer.parseInt(m_props.getProperty(WINDOW_X)),
-                    Integer.parseInt(m_props.getProperty(WINDOW_Y)),
-                    Integer.parseInt(m_props.getProperty(WINDOW_WIDTH)),
-                    Integer.parseInt(m_props.getProperty(WINDOW_HEIGHT)));
-            return onSomeScreen(bounds) ? bounds : null;
-        } catch (NumberFormatException e) {
-            // Nothing stored yet, or the file was edited by hand.
-            return null;
-        }
-    }
+	private static Rectangle defaultBounds() {
 
-    private static Rectangle defaultBounds() {
+		Rectangle desktop = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+		int width = (int) (desktop.width * DEFAULT_SCREEN_SHARE);
+		int height = (int) (desktop.height * DEFAULT_SCREEN_SHARE);
 
-        Rectangle desktop = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
-        int width = (int) (desktop.width * DEFAULT_SCREEN_SHARE);
-        int height = (int) (desktop.height * DEFAULT_SCREEN_SHARE);
+		return new Rectangle(desktop.x + (desktop.width - width) / 2, desktop.y + (desktop.height - height) / 2, width,
+				height);
+	}
 
-        return new Rectangle(
-                desktop.x + (desktop.width - width) / 2,
-                desktop.y + (desktop.height - height) / 2,
-                width, height);
-    }
+	// A monitor that has been unplugged since the last run would put the window
+	// where nobody can reach it.
+	private static boolean onSomeScreen(Rectangle bounds) {
 
-    // A monitor that has been unplugged since the last run would put the window
-    // where nobody can reach it.
-    private static boolean onSomeScreen(Rectangle bounds) {
+		for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+			if (device.getDefaultConfiguration().getBounds().intersects(bounds)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-        for (GraphicsDevice device : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
-            if (device.getDefaultConfiguration().getBounds().intersects(bounds)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	public void restoreWindow() throws RemoteException {
+		java.awt.EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				if (getExtendedState() == JFrame.ICONIFIED) {
+					setExtendedState(JFrame.NORMAL);
+				}
+				requestFocus();
+			}
+		});
+	}
 
-    public void restoreWindow() throws RemoteException {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                if (getExtendedState() == JFrame.ICONIFIED) {
-                    setExtendedState(JFrame.NORMAL);
-                }
-                requestFocus();
-            }
-        });
-    }
+	/**
+	 * This method is called from within the constructor to initialize the form.
+	 * WARNING: Do NOT modify this code. The content of this method is always
+	 * regenerated by the Form Editor.
+	 */
+	// <editor-fold defaultstate="collapsed" desc="Generated
+	// Code">//GEN-BEGIN:initComponents
+	private void initComponents() {
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+		setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+		addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowClosed(java.awt.event.WindowEvent evt) {
+				formWindowClosed(evt);
+			}
+			public void windowClosing(java.awt.event.WindowEvent evt) {
+				formWindowClosing(evt);
+			}
+		});
+	}// </editor-fold>//GEN-END:initComponents
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                formWindowClosing(evt);
-            }
-        });
-    }// </editor-fold>//GEN-END:initComponents
+	private void formWindowClosing(java.awt.event.WindowEvent evt) {// GEN-FIRST:event_formWindowClosing
 
-    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+		m_rootapp.tryToClose();
 
-        m_rootapp.tryToClose();
+	}// GEN-LAST:event_formWindowClosing
 
-    }//GEN-LAST:event_formWindowClosing
+	private void formWindowClosed(java.awt.event.WindowEvent evt) {// GEN-FIRST:event_formWindowClosed
 
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+		System.exit(0);
 
-        System.exit(0);
+	}// GEN-LAST:event_formWindowClosed
 
-    }//GEN-LAST:event_formWindowClosed
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    // End of variables declaration//GEN-END:variables
+	// Variables declaration - do not modify//GEN-BEGIN:variables
+	// End of variables declaration//GEN-END:variables
 
 }

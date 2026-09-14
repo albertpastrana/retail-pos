@@ -100,9 +100,10 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	/**
 	 * Creates a new instance of DevicePrinterPrinter
 	 *
-	 * @param printername      - name of printer that will be called in the system
-	 * @param isReceiptPrinter - string with boolean values if the printer is a
-	 *                         receipt
+	 * @param printername
+	 *            - name of printer that will be called in the system
+	 * @param isReceiptPrinter
+	 *            - string with boolean values if the printer is a receipt
 	 */
 	public DevicePrinterPrinter(Component parent, String printername, int imageable_x, int imageable_y,
 			int imageable_width, int imageable_height, String mediasizename) {
@@ -168,7 +169,8 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	/**
 	 * Method that is responsible for printing an image
 	 *
-	 * @param image a buffered image object
+	 * @param image
+	 *            a buffered image object
 	 */
 	@Override
 	public void printImage(BufferedImage image) {
@@ -178,9 +180,12 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	/**
 	 * Method that is responsible for printing a barcode
 	 *
-	 * @param type     a type of a barcode
-	 * @param position coordinates of a barcode on a receipt
-	 * @param code     the code of a productmiale
+	 * @param type
+	 *            a type of a barcode
+	 * @param position
+	 *            coordinates of a barcode on a receipt
+	 * @param code
+	 *            the code of a productmiale
 	 */
 	@Override
 	public void printBarCode(String type, String position, String code) {
@@ -190,7 +195,8 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	/**
 	 * Method that is responsible for starting a new line on a receipt
 	 *
-	 * @param iTextSize a size of text in the line
+	 * @param iTextSize
+	 *            a size of text in the line
 	 */
 	@Override
 	public void beginLine(int iTextSize) {
@@ -200,8 +206,10 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	/**
 	 * Method that is responsible for printing text
 	 *
-	 * @param iStyle style of text
-	 * @param sText  text to print
+	 * @param iStyle
+	 *            style of text
+	 * @param sText
+	 *            text to print
 	 */
 	@Override
 	public void printText(int iStyle, String sText) {

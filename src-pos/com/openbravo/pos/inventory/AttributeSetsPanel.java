@@ -36,35 +36,30 @@ import com.openbravo.pos.panels.JPanelTable2;
  */
 public class AttributeSetsPanel extends JPanelTable2 {
 
-    private EditorRecord editor;
+	private EditorRecord editor;
 
-    /** Creates a new instance of JPanelCategories */
-    public AttributeSetsPanel() {
-    }
+	/** Creates a new instance of JPanelCategories */
+	public AttributeSetsPanel() {
+	}
 
-    protected void init() {
+	protected void init() {
 
-        row = new Row(
-                new Field("ID", Datas.STRING, Formats.STRING),
-                new Field(AppLocal.getIntString("Label.Name"), Datas.STRING, Formats.STRING, true, true, true)
-        );
+		row = new Row(new Field("ID", Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("Label.Name"), Datas.STRING, Formats.STRING, true, true, true));
 
-        Table table = new Table(
-                "ATTRIBUTESET",
-                new PrimaryKey("ID"),
-                new Column("NAME"));
+		Table table = new Table("ATTRIBUTESET", new PrimaryKey("ID"), new Column("NAME"));
 
-        lpr = row.getListProvider(app.getSession(), table);
-        spr = row.getSaveProvider(app.getSession(), table);
+		lpr = row.getListProvider(app.getSession(), table);
+		spr = row.getSaveProvider(app.getSession(), table);
 
-        editor = new AttributeSetsEditor(dirty);
-    }
+		editor = new AttributeSetsEditor(dirty);
+	}
 
-    public EditorRecord getEditor() {
-        return editor;
-    }
+	public EditorRecord getEditor() {
+		return editor;
+	}
 
-    public String getTitle() {
-        return AppLocal.getIntString("Menu.AttributeSets");
-    }
+	public String getTitle() {
+		return AppLocal.getIntString("Menu.AttributeSets");
+	}
 }

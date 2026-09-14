@@ -27,76 +27,81 @@ import com.openbravo.data.loader.SerializerRead;
 
 /**
  *
- * @author  Adrian
- * @version 
+ * @author Adrian
+ * @version
  */
 public class CategoryInfo implements IKeyed {
 
-    private static final long serialVersionUID = 8612449444103L;
-    private String m_sID;
-    private String m_sName;
-    private String m_sParentID;
-    private BufferedImage m_Image;
+	private static final long serialVersionUID = 8612449444103L;
+	private String m_sID;
+	private String m_sName;
+	private String m_sParentID;
+	private BufferedImage m_Image;
 
-    /** Creates new CategoryInfo */
-    public CategoryInfo(String id, String name, BufferedImage image) {
-        this(id, name, null, image);
-    }
+	/** Creates new CategoryInfo */
+	public CategoryInfo(String id, String name, BufferedImage image) {
+		this(id, name, null, image);
+	}
 
-    public CategoryInfo(String id, String name, String parentid, BufferedImage image) {
-        m_sID = id;
-        m_sName = name;
-        m_sParentID = parentid;
-        m_Image = image;
-    }
+	public CategoryInfo(String id, String name, String parentid, BufferedImage image) {
+		m_sID = id;
+		m_sName = name;
+		m_sParentID = parentid;
+		m_Image = image;
+	}
 
-    public Object getKey() {
-        return m_sID;
-    }
+	public Object getKey() {
+		return m_sID;
+	}
 
-    public void setID(String sID) {
-        m_sID = sID;
-    }
+	public void setID(String sID) {
+		m_sID = sID;
+	}
 
-    public String getID() {
-        return m_sID;
-    }
+	public String getID() {
+		return m_sID;
+	}
 
-    public String getName() {
-        return m_sName;
-    }
+	public String getName() {
+		return m_sName;
+	}
 
-    public void setName(String sName) {
-        m_sName = sName;
-    }
+	public void setName(String sName) {
+		m_sName = sName;
+	}
 
-    public String getParentID() {
-        return m_sParentID;
-    }
+	public String getParentID() {
+		return m_sParentID;
+	}
 
-    public BufferedImage getImage() {
-        return m_Image;
-    }
+	public BufferedImage getImage() {
+		return m_Image;
+	}
 
-    public void setImage(BufferedImage img) {
-        m_Image = img;
-    }
+	public void setImage(BufferedImage img) {
+		m_Image = img;
+	}
 
-    @Override
-    public String toString() {
-        return m_sName;
-    }
+	@Override
+	public String toString() {
+		return m_sName;
+	}
 
-    public static SerializerRead getSerializerRead() {
-        return new SerializerRead() { public Object readValues(DataRead dr) throws BasicException {
-            return new CategoryInfo(dr.getString(1), dr.getString(2), ImageUtils.readImage(dr.getBytes(3)));
-        }};
-    }
+	public static SerializerRead getSerializerRead() {
+		return new SerializerRead() {
+			public Object readValues(DataRead dr) throws BasicException {
+				return new CategoryInfo(dr.getString(1), dr.getString(2), ImageUtils.readImage(dr.getBytes(3)));
+			}
+		};
+	}
 
-    /** Reads ID, NAME, PARENTID and IMAGE, in that order. */
-    public static SerializerRead getSerializerReadParented() {
-        return new SerializerRead() { public Object readValues(DataRead dr) throws BasicException {
-            return new CategoryInfo(dr.getString(1), dr.getString(2), dr.getString(3), ImageUtils.readImage(dr.getBytes(4)));
-        }};
-    }
+	/** Reads ID, NAME, PARENTID and IMAGE, in that order. */
+	public static SerializerRead getSerializerReadParented() {
+		return new SerializerRead() {
+			public Object readValues(DataRead dr) throws BasicException {
+				return new CategoryInfo(dr.getString(1), dr.getString(2), dr.getString(3),
+						ImageUtils.readImage(dr.getBytes(4)));
+			}
+		};
+	}
 }

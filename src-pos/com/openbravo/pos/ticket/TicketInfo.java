@@ -265,7 +265,8 @@ public class TicketInfo implements SerializableRead, Externalizable {
 	}
 
 	public String getTransactionID() {
-		return (getPayments().size() > 0) ? (getPayments().get(getPayments().size() - 1)).getTransactionID()
+		return (getPayments().size() > 0)
+				? (getPayments().get(getPayments().size() - 1)).getTransactionID()
 				: StringUtils.getCardNumber(); // random transaction ID
 	}
 
@@ -466,25 +467,25 @@ public class TicketInfo implements SerializableRead, Externalizable {
 		return Formats.TIMESTAMP.formatValue(m_dDate);
 	}
 
-    public String printDateShort() {
-        if (m_dDate == null) {
-            return "";
-        }
-        return new SimpleDateFormat("dd/MM/yy HH:mm").format(m_dDate);
-    }
+	public String printDateShort() {
+		if (m_dDate == null) {
+			return "";
+		}
+		return new SimpleDateFormat("dd/MM/yy HH:mm").format(m_dDate);
+	}
 
-    public String printUser() {
-        return m_User == null ? "" : m_User.getName();
-    }
+	public String printUser() {
+		return m_User == null ? "" : m_User.getName();
+	}
 
-    public String printUserFirstName() {
-        String name = printUser();
-        if (name == null || name.length() == 0) {
-            return "";
-        }
-        int space = name.indexOf(' ');
-        return space < 0 ? name : name.substring(0, space);
-    }
+	public String printUserFirstName() {
+		String name = printUser();
+		if (name == null || name.length() == 0) {
+			return "";
+		}
+		int space = name.indexOf(' ');
+		return space < 0 ? name : name.substring(0, space);
+	}
 
 	public String printCustomer() {
 		return m_Customer == null ? "" : m_Customer.getName();

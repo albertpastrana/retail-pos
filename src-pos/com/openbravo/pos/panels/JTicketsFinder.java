@@ -134,8 +134,8 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 	}
 
 	private void initCombos() {
-		String[] values = new String[] { AppLocal.getIntString("label.sales"), AppLocal.getIntString("label.refunds"),
-				AppLocal.getIntString("label.all") };
+		String[] values = new String[]{AppLocal.getIntString("label.sales"), AppLocal.getIntString("label.refunds"),
+				AppLocal.getIntString("label.all")};
 		jComboBoxTicket.setModel(new DefaultComboBoxModel(values));
 
 		jcboMoney.setModel(ListQBFModelNumber.getMandatoryNumber());
@@ -625,7 +625,8 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 		finder.setVisible(true);
 
 		try {
-			jtxtCustomer.setText(finder.getSelectedCustomer() == null ? null
+			jtxtCustomer.setText(finder.getSelectedCustomer() == null
+					? null
 					: dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()).toString());
 		} catch (BasicException e) {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"),

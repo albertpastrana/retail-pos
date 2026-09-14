@@ -44,159 +44,158 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 public class JPanelButtons extends javax.swing.JPanel {
 
-    private static Logger logger = Logger.getLogger("com.openbravo.pos.sales.JPanelButtons");
+	private static Logger logger = Logger.getLogger("com.openbravo.pos.sales.JPanelButtons");
 
-    private static SAXParser m_sp = null;
-    
-    private Properties props;
-    private Map<String, String> events;
-    
-    private ThumbNailBuilder tnbmacro;
-    
-    private JPanelTicket panelticket;
-    
-    /** Creates new form JPanelButtons */
-    public JPanelButtons(String sConfigKey, JPanelTicket panelticket) {
-        initComponents();
-        
-        // Load categories default thumbnail
-        tnbmacro = new ThumbNailBuilder(TillButtons.ICON_SOURCE_SIZE, TillButtons.ICON_SOURCE_SIZE,
-                "com/openbravo/images/greenled.png");
-        
-        this.panelticket = panelticket;
-        
-        props = new Properties();
-        events = new HashMap<String, String>();
-        
-        String sConfigRes = panelticket.getResourceAsXML(sConfigKey);
-        
-        if (sConfigRes != null) {
-            try {
-                if (m_sp == null) {
-                    SAXParserFactory spf = SAXParserFactory.newInstance();
-                    m_sp = spf.newSAXParser();
-                }
-                m_sp.parse(new InputSource(new StringReader(sConfigRes)), new ConfigurationHandler());
+	private static SAXParser m_sp = null;
 
-            } catch (ParserConfigurationException ePC) {
-                logger.log(Level.WARNING, LocalRes.getIntString("exception.parserconfig"), ePC);
-            } catch (SAXException eSAX) {
-                logger.log(Level.WARNING, LocalRes.getIntString("exception.xmlfile"), eSAX);
-            } catch (IOException eIO) {
-                logger.log(Level.WARNING, LocalRes.getIntString("exception.iofile"), eIO);
-            }
-        }     
-    
-    }
-    
-    public void setPermissions(AppUser user) {
-        for (Component c : this.getComponents()) {
-            String sKey = c.getName();
-            if (sKey == null || sKey.equals("")) {
-                c.setEnabled(true);
-            } else {
-                c.setEnabled(user.hasPermission(c.getName()));
-            }
-        }
-    }
-    
-    public String getProperty(String key) {
-        return props.getProperty(key);
-    }
-    
-     public String getProperty(String key, String defaultvalue) {
-        return props.getProperty(key, defaultvalue);
-    }
-     
-    public String getEvent(String key) {
-        return events.get(key);
-    }
-    
-    private class ConfigurationHandler extends DefaultHandler {       
-        @Override
-        public void startDocument() throws SAXException {}
-        @Override
-        public void endDocument() throws SAXException {}    
-        @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException{
-            if ("button".equals(qName)){
-                
-                
-                // The button title text
-                String titlekey = attributes.getValue("titlekey");
-                if (titlekey == null) {
-                    titlekey = attributes.getValue("name");
-                }
-                String title = titlekey == null
-                        ? attributes.getValue("title")
-                        : AppLocal.getIntString(titlekey);
-                
-                // adding the button to the panel
-                JButton btn = new JButtonFunc(attributes.getValue("key"), 
-                        attributes.getValue("image"), 
-                        title);
-                
-                 // The template resource or the code resource
-                final String template = attributes.getValue("template");
-                if (template == null) {
-                    final String code = attributes.getValue("code");
-                    btn.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent evt) {
-                            panelticket.evalScriptAndRefresh(code);
-                        }
-                    });
-                } else {
-                    btn.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent evt) {
-                            panelticket.printTicket(template);
-                        }
-                    });     
-                }
-                add(btn);
-                
-            } else if ("event".equals(qName)) {
-                events.put(attributes.getValue("key"), attributes.getValue("code"));
-            } else {
-                String value = attributes.getValue("value");
-                if (value != null) {                  
-                    props.setProperty(qName, attributes.getValue("value"));
-                }
-            }
-        }      
-        @Override
-        public void endElement(String uri, String localName, String qName) throws SAXException {}
-        @Override
-        public void characters(char[] ch, int start, int length) throws SAXException {}
-    }  
-        
-    private class JButtonFunc extends JButton {
-       
-        public JButtonFunc(String sKey, String sImage, String title) {
-            
-            setName(sKey);
-            setIcon(new HiDpiIcon(tnbmacro.getThumbNail(panelticket.getResourceAsImage(sImage))));
-            TillButtons.labelUnderIcon(this, title);
-            setFocusPainted(false);
-            setFocusable(false);
-            setRequestFocusEnabled(false);
-        }         
-    }
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
-    private void initComponents() {
+	private Properties props;
+	private Map<String, String> events;
 
-    }// </editor-fold>//GEN-END:initComponents
-    
-    
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    // End of variables declaration//GEN-END:variables
-    
+	private ThumbNailBuilder tnbmacro;
+
+	private JPanelTicket panelticket;
+
+	/** Creates new form JPanelButtons */
+	public JPanelButtons(String sConfigKey, JPanelTicket panelticket) {
+		initComponents();
+
+		// Load categories default thumbnail
+		tnbmacro = new ThumbNailBuilder(TillButtons.ICON_SOURCE_SIZE, TillButtons.ICON_SOURCE_SIZE,
+				"com/openbravo/images/greenled.png");
+
+		this.panelticket = panelticket;
+
+		props = new Properties();
+		events = new HashMap<String, String>();
+
+		String sConfigRes = panelticket.getResourceAsXML(sConfigKey);
+
+		if (sConfigRes != null) {
+			try {
+				if (m_sp == null) {
+					SAXParserFactory spf = SAXParserFactory.newInstance();
+					m_sp = spf.newSAXParser();
+				}
+				m_sp.parse(new InputSource(new StringReader(sConfigRes)), new ConfigurationHandler());
+
+			} catch (ParserConfigurationException ePC) {
+				logger.log(Level.WARNING, LocalRes.getIntString("exception.parserconfig"), ePC);
+			} catch (SAXException eSAX) {
+				logger.log(Level.WARNING, LocalRes.getIntString("exception.xmlfile"), eSAX);
+			} catch (IOException eIO) {
+				logger.log(Level.WARNING, LocalRes.getIntString("exception.iofile"), eIO);
+			}
+		}
+
+	}
+
+	public void setPermissions(AppUser user) {
+		for (Component c : this.getComponents()) {
+			String sKey = c.getName();
+			if (sKey == null || sKey.equals("")) {
+				c.setEnabled(true);
+			} else {
+				c.setEnabled(user.hasPermission(c.getName()));
+			}
+		}
+	}
+
+	public String getProperty(String key) {
+		return props.getProperty(key);
+	}
+
+	public String getProperty(String key, String defaultvalue) {
+		return props.getProperty(key, defaultvalue);
+	}
+
+	public String getEvent(String key) {
+		return events.get(key);
+	}
+
+	private class ConfigurationHandler extends DefaultHandler {
+		@Override
+		public void startDocument() throws SAXException {
+		}
+		@Override
+		public void endDocument() throws SAXException {
+		}
+		@Override
+		public void startElement(String uri, String localName, String qName, Attributes attributes)
+				throws SAXException {
+			if ("button".equals(qName)) {
+
+				// The button title text
+				String titlekey = attributes.getValue("titlekey");
+				if (titlekey == null) {
+					titlekey = attributes.getValue("name");
+				}
+				String title = titlekey == null ? attributes.getValue("title") : AppLocal.getIntString(titlekey);
+
+				// adding the button to the panel
+				JButton btn = new JButtonFunc(attributes.getValue("key"), attributes.getValue("image"), title);
+
+				// The template resource or the code resource
+				final String template = attributes.getValue("template");
+				if (template == null) {
+					final String code = attributes.getValue("code");
+					btn.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent evt) {
+							panelticket.evalScriptAndRefresh(code);
+						}
+					});
+				} else {
+					btn.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent evt) {
+							panelticket.printTicket(template);
+						}
+					});
+				}
+				add(btn);
+
+			} else if ("event".equals(qName)) {
+				events.put(attributes.getValue("key"), attributes.getValue("code"));
+			} else {
+				String value = attributes.getValue("value");
+				if (value != null) {
+					props.setProperty(qName, attributes.getValue("value"));
+				}
+			}
+		}
+		@Override
+		public void endElement(String uri, String localName, String qName) throws SAXException {
+		}
+		@Override
+		public void characters(char[] ch, int start, int length) throws SAXException {
+		}
+	}
+
+	private class JButtonFunc extends JButton {
+
+		public JButtonFunc(String sKey, String sImage, String title) {
+
+			setName(sKey);
+			setIcon(new HiDpiIcon(tnbmacro.getThumbNail(panelticket.getResourceAsImage(sImage))));
+			TillButtons.labelUnderIcon(this, title);
+			setFocusPainted(false);
+			setFocusable(false);
+			setRequestFocusEnabled(false);
+		}
+	}
+
+	/**
+	 * This method is called from within the constructor to initialize the form.
+	 * WARNING: Do NOT modify this code. The content of this method is always
+	 * regenerated by the Form Editor.
+	 */
+	// <editor-fold defaultstate="collapsed" desc=" Generated Code
+	// ">//GEN-BEGIN:initComponents
+	private void initComponents() {
+
+	}// </editor-fold>//GEN-END:initComponents
+
+	// Variables declaration - do not modify//GEN-BEGIN:variables
+	// End of variables declaration//GEN-END:variables
+
 }

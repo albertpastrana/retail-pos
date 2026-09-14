@@ -30,15 +30,17 @@ import javax.swing.ImageIcon;
  */
 public class ScaleDialog implements Scale {
 
-    private Component parent;
+	private Component parent;
 
-    public ScaleDialog(Component parent) {
-        this.parent = parent;
-    }
+	public ScaleDialog(Component parent) {
+		this.parent = parent;
+	}
 
-    public Double readWeight() throws ScaleException {
-        
-        // Set title for grams Kilos, ounzes, pounds, ...
-        return JNumberDialog.showEditNumber(parent, AppLocal.getIntString("label.scale"), AppLocal.getIntString("label.scaleinput"), new ImageIcon(ScaleDialog.class.getResource("/com/openbravo/images/ark2.png")));
-    }
+	public Double readWeight() throws ScaleException {
+
+		// Set title for grams Kilos, ounzes, pounds, ...
+		return JNumberDialog.showEditNumber(parent, AppLocal.getIntString("label.scale"),
+				AppLocal.getIntString("label.scaleinput"),
+				new ImageIcon(ScaleDialog.class.getResource("/com/openbravo/images/ark2.png")));
+	}
 }

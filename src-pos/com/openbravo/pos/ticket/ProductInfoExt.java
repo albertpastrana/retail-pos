@@ -34,215 +34,217 @@ import java.util.Properties;
  */
 public class ProductInfoExt {
 
-    private static final long serialVersionUID = 7587696873036L;
+	private static final long serialVersionUID = 7587696873036L;
 
-    protected String m_ID;
-    protected String m_sRef;
-    protected String m_sCode;
-    protected String m_sName;
-    protected boolean m_bCom;
-    protected boolean m_bScale;
-    protected boolean m_bVoucher;
-    protected String categoryid;
-    protected String taxcategoryid;
-    protected String attributesetid;
-    protected double m_dPriceBuy;
-    protected double m_dPriceSell;
-    protected double salePercent;
-    protected BufferedImage m_Image;
-    protected Properties attributes;
-    
-    /** Creates new ProductInfo */
-    public ProductInfoExt() {
-        m_ID = null;
-        m_sRef = "0000";
-        m_sCode = "0000";
-        m_sName = null;
-        m_bCom = false;
-        m_bScale = false;
-        m_bVoucher = false;
-        categoryid = null;
-        taxcategoryid = null;
-        attributesetid = null;
-        m_dPriceBuy = 0.0;
-        m_dPriceSell = 0.0;
-        salePercent = 0.0;
-        m_Image = null;
-        attributes = new Properties();
-    }
+	protected String m_ID;
+	protected String m_sRef;
+	protected String m_sCode;
+	protected String m_sName;
+	protected boolean m_bCom;
+	protected boolean m_bScale;
+	protected boolean m_bVoucher;
+	protected String categoryid;
+	protected String taxcategoryid;
+	protected String attributesetid;
+	protected double m_dPriceBuy;
+	protected double m_dPriceSell;
+	protected double salePercent;
+	protected BufferedImage m_Image;
+	protected Properties attributes;
 
-    public final String getID() {
-        return m_ID;
-    }
+	/** Creates new ProductInfo */
+	public ProductInfoExt() {
+		m_ID = null;
+		m_sRef = "0000";
+		m_sCode = "0000";
+		m_sName = null;
+		m_bCom = false;
+		m_bScale = false;
+		m_bVoucher = false;
+		categoryid = null;
+		taxcategoryid = null;
+		attributesetid = null;
+		m_dPriceBuy = 0.0;
+		m_dPriceSell = 0.0;
+		salePercent = 0.0;
+		m_Image = null;
+		attributes = new Properties();
+	}
 
-    public final void setID(String id) {
-        m_ID = id;
-    }
+	public final String getID() {
+		return m_ID;
+	}
 
-    public final String getReference() {
-        return m_sRef;
-    }
+	public final void setID(String id) {
+		m_ID = id;
+	}
 
-    public final void setReference(String sRef) {
-        m_sRef = sRef;
-    }
+	public final String getReference() {
+		return m_sRef;
+	}
 
-    public final String getCode() {
-        return m_sCode;
-    }
+	public final void setReference(String sRef) {
+		m_sRef = sRef;
+	}
 
-    public final void setCode(String sCode) {
-        m_sCode = sCode;
-    }
+	public final String getCode() {
+		return m_sCode;
+	}
 
-    public final String getName() {
-        return m_sName;
-    }
+	public final void setCode(String sCode) {
+		m_sCode = sCode;
+	}
 
-    public final void setName(String sName) {
-        m_sName = sName;
-    }
+	public final String getName() {
+		return m_sName;
+	}
 
-    public final boolean isCom() {
-        return m_bCom;
-    }
+	public final void setName(String sName) {
+		m_sName = sName;
+	}
 
-    public final void setCom(boolean bValue) {
-        m_bCom = bValue;
-    }
+	public final boolean isCom() {
+		return m_bCom;
+	}
 
-    public final boolean isScale() {
-        return m_bScale;
-    }
+	public final void setCom(boolean bValue) {
+		m_bCom = bValue;
+	}
 
-    public final void setScale(boolean bValue) {
-        m_bScale = bValue;
-    }
+	public final boolean isScale() {
+		return m_bScale;
+	}
 
-    public final boolean isVoucher() {
-        return m_bVoucher;
-    }
+	public final void setScale(boolean bValue) {
+		m_bScale = bValue;
+	}
 
-    public final void setVoucher(boolean bValue) {
-        m_bVoucher = bValue;
-    }
+	public final boolean isVoucher() {
+		return m_bVoucher;
+	}
 
-    public final String getCategoryID() {
-        return categoryid;
-    }
+	public final void setVoucher(boolean bValue) {
+		m_bVoucher = bValue;
+	}
 
-    public final void setCategoryID(String sCategoryID) {
-        categoryid = sCategoryID;
-    }
+	public final String getCategoryID() {
+		return categoryid;
+	}
 
-    public final String getTaxCategoryID() {
-        return taxcategoryid;
-    }
+	public final void setCategoryID(String sCategoryID) {
+		categoryid = sCategoryID;
+	}
 
-    public final void setTaxCategoryID(String value) {
-        taxcategoryid = value;
-    }
+	public final String getTaxCategoryID() {
+		return taxcategoryid;
+	}
 
-    public final String getAttributeSetID() {
-        return attributesetid;
-    }
-    public final void setAttributeSetID(String value) {
-        attributesetid = value;
-    }
+	public final void setTaxCategoryID(String value) {
+		taxcategoryid = value;
+	}
 
-    public final double getPriceBuy() {
-        return m_dPriceBuy;
-    }
+	public final String getAttributeSetID() {
+		return attributesetid;
+	}
+	public final void setAttributeSetID(String value) {
+		attributesetid = value;
+	}
 
-    public final void setPriceBuy(double dPrice) {
-        m_dPriceBuy = dPrice;
-    }
+	public final double getPriceBuy() {
+		return m_dPriceBuy;
+	}
 
-    public final double getPriceSell() {
-        return m_dPriceSell;
-    }
+	public final void setPriceBuy(double dPrice) {
+		m_dPriceBuy = dPrice;
+	}
 
-    public final void setPriceSell(double dPrice) {
-        m_dPriceSell = dPrice;
-    }
+	public final double getPriceSell() {
+		return m_dPriceSell;
+	}
 
-    public final double getSalePercent() {
-        return salePercent;
-    }
+	public final void setPriceSell(double dPrice) {
+		m_dPriceSell = dPrice;
+	}
 
-    public final void setSalePercent(double percent) {
-        salePercent = percent;
-    }
+	public final double getSalePercent() {
+		return salePercent;
+	}
 
-    public static String infoColumns() {
-        return infoColumns("");
-    }
+	public final void setSalePercent(double percent) {
+		salePercent = percent;
+	}
 
-    public static String infoColumns(String alias) {
-        String prefix = alias == null || alias.length() == 0 ? "" : alias + ".";
-        return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
-                + prefix + "ISSCALE, " + prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, "
-                + prefix + "TAXCAT, " + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, "
-                + prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT";
-    }
+	public static String infoColumns() {
+		return infoColumns("");
+	}
 
-    public final double getPriceSellTax(TaxInfo tax) {
-        return m_dPriceSell * (1.0 + tax.getRate());
-    }
+	public static String infoColumns(String alias) {
+		String prefix = alias == null || alias.length() == 0 ? "" : alias + ".";
+		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
+				+ prefix + "ISSCALE, " + prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, "
+				+ prefix + "TAXCAT, " + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, "
+				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT";
+	}
 
-    public String printPriceSell() {
-        return Formats.CURRENCY.formatValue(new Double(getPriceSell()));
-    }
+	public final double getPriceSellTax(TaxInfo tax) {
+		return m_dPriceSell * (1.0 + tax.getRate());
+	}
 
-    public String printPriceSellTax(TaxInfo tax) {
-        return Formats.CURRENCY.formatValue(new Double(getPriceSellTax(tax)));
-    }
-    
-    public BufferedImage getImage() {
-        return m_Image;
-    }
-    public void setImage(BufferedImage img) {
-        m_Image = img;
-    }
-    
-    public String getProperty(String key) {
-        return attributes.getProperty(key);
-    }
-    public String getProperty(String key, String defaultvalue) {
-        return attributes.getProperty(key, defaultvalue);
-    }
-    public void setProperty(String key, String value) {
-        attributes.setProperty(key, value);
-    }
-    public Properties getProperties() {
-        return attributes;
-    }
+	public String printPriceSell() {
+		return Formats.CURRENCY.formatValue(new Double(getPriceSell()));
+	}
 
-    public static SerializerRead getSerializerRead() {
-        return new SerializerRead() { public Object readValues(DataRead dr) throws BasicException {
-            ProductInfoExt product = new ProductInfoExt();
-            product.m_ID = dr.getString(1);
-            product.m_sRef = dr.getString(2);
-            product.m_sCode = dr.getString(3);
-            product.m_sName = dr.getString(4);
-            product.m_bCom = dr.getBoolean(5).booleanValue();
-            product.m_bScale = dr.getBoolean(6).booleanValue();
-            product.m_bVoucher = dr.getBoolean(7).booleanValue();
-            product.m_dPriceBuy = dr.getDouble(8).doubleValue();
-            product.m_dPriceSell = dr.getDouble(9).doubleValue();
-            product.taxcategoryid = dr.getString(10);
-            product.categoryid = dr.getString(11);
-            product.attributesetid = dr.getString(12);
-            product.m_Image = ImageUtils.readImage(dr.getBytes(13));
-            product.attributes = ImageUtils.readProperties(dr.getBytes(14));
-            Double marked = dr.getDouble(15);
-            product.salePercent = marked == null ? 0.0 : marked.doubleValue();
-            return product;
-        }};
-    }
+	public String printPriceSellTax(TaxInfo tax) {
+		return Formats.CURRENCY.formatValue(new Double(getPriceSellTax(tax)));
+	}
 
-    @Override
-    public final String toString() {
-        return m_sRef + " - " + m_sName;
-    }
+	public BufferedImage getImage() {
+		return m_Image;
+	}
+	public void setImage(BufferedImage img) {
+		m_Image = img;
+	}
+
+	public String getProperty(String key) {
+		return attributes.getProperty(key);
+	}
+	public String getProperty(String key, String defaultvalue) {
+		return attributes.getProperty(key, defaultvalue);
+	}
+	public void setProperty(String key, String value) {
+		attributes.setProperty(key, value);
+	}
+	public Properties getProperties() {
+		return attributes;
+	}
+
+	public static SerializerRead getSerializerRead() {
+		return new SerializerRead() {
+			public Object readValues(DataRead dr) throws BasicException {
+				ProductInfoExt product = new ProductInfoExt();
+				product.m_ID = dr.getString(1);
+				product.m_sRef = dr.getString(2);
+				product.m_sCode = dr.getString(3);
+				product.m_sName = dr.getString(4);
+				product.m_bCom = dr.getBoolean(5).booleanValue();
+				product.m_bScale = dr.getBoolean(6).booleanValue();
+				product.m_bVoucher = dr.getBoolean(7).booleanValue();
+				product.m_dPriceBuy = dr.getDouble(8).doubleValue();
+				product.m_dPriceSell = dr.getDouble(9).doubleValue();
+				product.taxcategoryid = dr.getString(10);
+				product.categoryid = dr.getString(11);
+				product.attributesetid = dr.getString(12);
+				product.m_Image = ImageUtils.readImage(dr.getBytes(13));
+				product.attributes = ImageUtils.readProperties(dr.getBytes(14));
+				Double marked = dr.getDouble(15);
+				product.salePercent = marked == null ? 0.0 : marked.doubleValue();
+				return product;
+			}
+		};
+	}
+
+	@Override
+	public final String toString() {
+		return m_sRef + " - " + m_sName;
+	}
 }

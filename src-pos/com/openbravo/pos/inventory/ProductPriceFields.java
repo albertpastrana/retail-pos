@@ -145,7 +145,8 @@ public final class ProductPriceFields {
 
 	private void refreshMargin() {
 		Double commercialMargin = readCommercialMargin();
-		margin.setText(commercialMargin == null ? ""
+		margin.setText(commercialMargin == null
+				? ""
 				: AppLocal.getIntString("message.import.margin", Formats.PERCENT.formatValue(commercialMargin)));
 	}
 
@@ -165,7 +166,8 @@ public final class ProductPriceFields {
 	private void refreshSecondary() {
 		Double factory = ProductPriceMath.parsePositiveCurrency(buy.getText(), false);
 		Double taxRate = tax.getSelectedItem() == null ? null : Double.valueOf(taxRate());
-		secondary.setText(ProductPriceMath.formatCurrency(ProductPriceMath.secondary(regime, factory, pricesell, taxRate)));
+		secondary.setText(
+				ProductPriceMath.formatCurrency(ProductPriceMath.secondary(regime, factory, pricesell, taxRate)));
 	}
 
 	private double taxRate() {

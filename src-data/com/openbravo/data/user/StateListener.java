@@ -17,14 +17,13 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 
-
 package com.openbravo.data.user;
 
 /**
  *
- * @author  adrian
+ * @author adrian
  */
 public interface StateListener extends java.util.EventListener {
- 
-    public void updateState(int iState);   
+
+	public void updateState(int iState);
 }

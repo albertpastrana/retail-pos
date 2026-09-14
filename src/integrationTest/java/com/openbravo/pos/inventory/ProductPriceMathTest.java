@@ -9,17 +9,17 @@ public class ProductPriceMathTest {
 
 	@Test
 	public void secondaryIsEconomicCostUnderEquivalence() {
-		assertEquals(12.62, ProductPriceMath
-				.secondary(TaxRegime.EQUIVALENCE_SURCHARGE, Double.valueOf(10.0), Double.valueOf(20.0),
-						Double.valueOf(0.21))
-				.doubleValue(), 0.0001);
+		assertEquals(12.62, ProductPriceMath.secondary(TaxRegime.EQUIVALENCE_SURCHARGE, Double.valueOf(10.0),
+				Double.valueOf(20.0), Double.valueOf(0.21)).doubleValue(), 0.0001);
 	}
 
 	@Test
 	public void secondaryIsNetSellUnderNormalAccounting() {
-		assertEquals(20.0, ProductPriceMath
-				.secondary(TaxRegime.NORMAL, Double.valueOf(10.0), Double.valueOf(20.0), Double.valueOf(0.21))
-				.doubleValue(), 0.0001);
+		assertEquals(20.0,
+				ProductPriceMath
+						.secondary(TaxRegime.NORMAL, Double.valueOf(10.0), Double.valueOf(20.0), Double.valueOf(0.21))
+						.doubleValue(),
+				0.0001);
 	}
 
 	@Test

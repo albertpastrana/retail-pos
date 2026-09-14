@@ -17,32 +17,31 @@
 //    You should have received a copy of the GNU General Public License
 //    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 
-
 package com.openbravo.data.loader;
 
 /**
  *
- * @author  adrian
+ * @author adrian
  */
 public class KeyGetterBasic implements IKeyGetter {
-    
-    private int [] m_aElems;
-    
-    /** Creates a new instance of KeyGetterBasic */
-    public KeyGetterBasic(int[] aElems) {
-        m_aElems = aElems;
-    }
-    
-    public Object getKey(Object value) {
-        if (value == null) {
-            return null;
-        } else {
-            Object[] avalue = (Object []) value;
-            Object[] akey = new Object[m_aElems.length];
-            for (int i = 0; i < m_aElems.length; i++) {
-                akey[i] = avalue[m_aElems[i]];
-            }
-            return akey;
-        }
-    }   
+
+	private int[] m_aElems;
+
+	/** Creates a new instance of KeyGetterBasic */
+	public KeyGetterBasic(int[] aElems) {
+		m_aElems = aElems;
+	}
+
+	public Object getKey(Object value) {
+		if (value == null) {
+			return null;
+		} else {
+			Object[] avalue = (Object[]) value;
+			Object[] akey = new Object[m_aElems.length];
+			for (int i = 0; i < m_aElems.length; i++) {
+				akey[i] = avalue[m_aElems[i]];
+			}
+			return akey;
+		}
+	}
 }

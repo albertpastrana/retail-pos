@@ -66,7 +66,8 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 	}
 
 	public PaymentInfo copyPayment() {
-		return m_voucherBalance == null ? new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID)
+		return m_voucherBalance == null
+				? new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID)
 				: new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID, m_voucherBalance.doubleValue());
 	}
 

@@ -6,8 +6,8 @@ import com.openbravo.pos.forms.AppLocal;
 
 /**
  * The numbers behind a product price: factory cost, VAT, the till price, and
- * the two kinds of margin the shop uses. The editor and the till dialog both
- * go through here so they cannot disagree.
+ * the two kinds of margin the shop uses. The editor and the till dialog both go
+ * through here so they cannot disagree.
  */
 public final class ProductPriceMath {
 
@@ -58,8 +58,8 @@ public final class ProductPriceMath {
 		if (factory == null || taxRate == null) {
 			return null;
 		}
-		return Double.valueOf(
-				PriceRuleService.calculateEconomicCost(factory.doubleValue(), taxRate.doubleValue(), regime));
+		return Double
+				.valueOf(PriceRuleService.calculateEconomicCost(factory.doubleValue(), taxRate.doubleValue(), regime));
 	}
 
 	public static Double grossFromNet(Double net, double taxRate) {
@@ -94,8 +94,7 @@ public final class ProductPriceMath {
 		if (grossCost == null || marginTax == null) {
 			return null;
 		}
-		return Double.valueOf(
-				grossCost.doubleValue() * (1.0 + marginTax.doubleValue()) / (1.0 + taxRate));
+		return Double.valueOf(grossCost.doubleValue() * (1.0 + marginTax.doubleValue()) / (1.0 + taxRate));
 	}
 
 	public static Double grossCostBasis(Double factory, Double taxRate, TaxRegime regime) {
