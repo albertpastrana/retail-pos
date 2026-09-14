@@ -16,49 +16,78 @@ public class LoyaltyStampsTest {
 	}
 
 	@Test
-	public void ignoresSaleAndLineDiscountAndVoucherAndRedemption() {
+	public void ignoresSaleAndLineDiscountAndVoucherButSubtractsRedemption() {
 		TicketLineInfo sale = line("Rebaixat", 20.0);
 		LineDiscount.applyPercent(sale, 20.0);
 
 		TicketLineInfo voucher = line("Val", 50.0);
 		voucher.setProperty("product.voucher", "true");
 
-		TicketLineInfo totalOff = line("Descompte total 10%", -5.0);
-		totalOff.setProperty("discount.scope", "total");
-
 		TicketLineInfo redeem = line("Descompte fidelització", -5.0);
 		LoyaltyStamps.markRedemption(redeem);
 
-		TicketInfo ticket = ticket(line("Normal", 10.0), sale, voucher, totalOff, redeem);
+		TicketInfo ticket = ticket(line("Normal", 20.0), sale, voucher, redeem);
+		assertEquals(15.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
 		assertEquals(1, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(5.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
 	}
 
 	@Test
-	public void genericFiveEuroNegativeLineIsNotLoyaltySavings() {
+	public void redemptionComesOffTheEligibleSpend() {
+		TicketLineInfo redemption = line("Descompte victorines", -5.0);
+		LoyaltyStamps.markRedemption(redemption);
+		TicketInfo ticket = ticket(line("Pijama", 82.0), redemption);
+		assertEquals(77.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
+		assertEquals(7, LoyaltyStamps.stampsEarned(ticket));
+	}
+
+	@Test
+	public void genericNegativeLineComesOffTheEligibleSpendWithoutBeingLoyaltySavings() {
 		TicketInfo ticket = ticket(line("Normal", 12.0), line("", -5.0));
-		assertEquals(1, LoyaltyStamps.stampsEarned(ticket));
+		assertEquals(7.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
+		assertEquals(0, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(0.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
 		assertFalse(ticket.hasLoyaltySavings());
 	}
 
 	@Test
-	public void totalDiscountIsNotLoyaltySavings() {
+	public void negativeLinesNeverPushTheEligibleSpendBelowZero() {
+		TicketLineInfo discounted = line("Rebaixat", 30.0);
+		LineDiscount.applyPercent(discounted, 20.0);
+		TicketLineInfo redemption = line("Descompte victorines", -5.0);
+		LoyaltyStamps.markRedemption(redemption);
+		TicketInfo ticket = ticket(discounted, redemption);
+		assertEquals(0.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
+		assertEquals(0, LoyaltyStamps.stampsEarned(ticket));
+	}
+
+	@Test
+	public void totalDiscountMakesTheWholeReceiptIneligible() {
 		TicketLineInfo iva = line("Descompte total 6%", -3.10);
 		iva.setProperty("discount.scope", "total");
 		TicketLineInfo reduced = line("Descompte total 6%", -1.90);
 		reduced.setProperty("discount.scope", "total");
 		TicketInfo ticket = ticket(line("Normal", 40.0), iva, reduced);
-		assertEquals(4, LoyaltyStamps.stampsEarned(ticket));
+		assertTrue(LoyaltyStamps.hasTotalDiscount(ticket));
+		assertEquals(0, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(0.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
 		assertFalse(ticket.hasLoyaltySavings());
+	}
+
+	@Test
+	public void payingWithAGiftVoucherStillEarnsStampsOnTheGoods() {
+		TicketLineInfo voucher = line("Val", -50.0);
+		voucher.setProperty("product.voucher", "true");
+		TicketInfo ticket = ticket(line("Pijama", 82.0), voucher);
+		assertEquals(82.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
+		assertEquals(8, LoyaltyStamps.stampsEarned(ticket));
 	}
 
 	@Test
 	public void markedRedemptionUsesConfiguredStampName() {
 		TicketLineInfo redemption = line("Descompte Segells", -5.0);
 		LoyaltyStamps.markRedemption(redemption);
-		TicketInfo ticket = ticket(line("Normal", 12.0), redemption);
+		TicketInfo ticket = ticket(line("Normal", 22.0), redemption);
 		LoyaltyStamps.applyToTicket(ticket, "true", "Segells");
 		assertEquals(1, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(5.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
@@ -96,7 +125,7 @@ public class LoyaltyStampsTest {
 		TicketLineInfo second = line("Descompte fidelització", -5.0);
 		LoyaltyStamps.markRedemption(second);
 		TicketInfo ticket = ticket(line("Normal", 40.0), first, second);
-		assertEquals(4, LoyaltyStamps.stampsEarned(ticket));
+		assertEquals(3, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(10.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
 		assertEquals("10€", ticket.printLoyaltySavings());
 	}

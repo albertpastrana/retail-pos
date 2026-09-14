@@ -400,11 +400,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_jLoyalty.setText(" ");
 			return;
 		}
-		m_jLoyalty.setText("<html><div align=\"center\">"
-				+ AppLocal.getIntString("label.loyalty.thispurchase",
-						Integer.valueOf(LoyaltyStamps.stampsEarned(m_oTicket)),
-						LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY)))
-				+ "</div></html>");
+		String loyaltyName = LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+		String notice = LoyaltyStamps.hasTotalDiscount(m_oTicket)
+				? AppLocal.getIntString("label.loyalty.totaldiscount", loyaltyName)
+				: AppLocal.getIntString("label.loyalty.thispurchase",
+						Integer.valueOf(LoyaltyStamps.stampsEarned(m_oTicket)), loyaltyName);
+		m_jLoyalty.setText("<html><div align=\"center\">" + notice + "</div></html>");
 	}
 
 	private void paintTicketLine(int index, TicketLineInfo oLine) {
