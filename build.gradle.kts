@@ -94,9 +94,9 @@ dependencies {
         }
     }
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
-    runtimeOnly("org.postgresql:postgresql:42.7.7")
+    runtimeOnly("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")
-    "dataHelpersImplementation"("org.postgresql:postgresql:42.7.7")
+    "dataHelpersImplementation"("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("com.mysql:mysql-connector-j:8.4.0")
     "integrationTestImplementation"("junit:junit:4.13.2")
 }
