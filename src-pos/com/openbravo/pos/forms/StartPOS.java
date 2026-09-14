@@ -34,8 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.LookAndFeel;
 import net.sf.jasperreports.engine.util.JRProperties;
-import org.jvnet.substance.SubstanceLookAndFeel;
-import org.jvnet.substance.api.SubstanceSkin;
 
 /**
  *
@@ -151,8 +149,6 @@ public class StartPOS {
 
 					if (laf instanceof LookAndFeel) {
 						UIManager.setLookAndFeel((LookAndFeel) laf);
-					} else if (laf instanceof SubstanceSkin) {
-						SubstanceLookAndFeel.setSkin((SubstanceSkin) laf);
 					}
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Cannot set look and feel", e);

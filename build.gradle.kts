@@ -46,30 +46,32 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(fileTree("lib") {
-        include("*.jar")
-        exclude("derby.jar")
-    })
     implementation("org.apache.derby:derby:10.14.2.0")
     implementation("org.flywaydb:flyway-core:9.22.3")
     implementation("org.flywaydb:flyway-mysql:9.22.3")
     listOf(
         "net.sourceforge.barbecue:barbecue:1.5-beta1",
         "org.beanshell:bsh-core:2.0b4",
-        "commons-beanutils:commons-beanutils:1.7.0",
-        "commons-codec:commons-codec:1.3",
-        "commons-collections:commons-collections:3.1",
-        "commons-digester:commons-digester:1.7",
-        "commons-discovery:commons-discovery:0.2",
-        "commons-lang:commons-lang:2.1",
-        "commons-logging:commons-logging:1.0.4",
+        "commons-beanutils:commons-beanutils:1.9.4",
+        "commons-codec:commons-codec:1.17.2",
+        "commons-collections:commons-collections:3.2.2",
+        "commons-digester:commons-digester:1.8.1",
+        "commons-discovery:commons-discovery:0.5",
+        "commons-lang:commons-lang:2.6",
+        "commons-logging:commons-logging:1.2",
+        "com.lowagie:itext:2.1.0",
         "com.formdev:flatlaf:3.7.2",
-        "jfree:jcommon:1.0.15",
-        "jfree:jfreechart:1.0.12",
+        "jfree:jcommon:1.0.16",
+        "jfree:jfreechart:1.0.13",
+        "net.sf.jasperreports:jasperreports:3.7.6",
+        "org.apache.poi:poi:3.2-FINAL",
+        "org.eclipse.jdt:core:3.1.1",
+        "org.javapos:javapos:1.12.2",
+        "org.rxtx:rxtx:2.1.7",
         "oro:oro:2.0.8",
         "org.swinglabs:swingx:0.9.5",
-        "org.apache.velocity:velocity:1.5",
-        "wsdl4j:wsdl4j:1.5.1",
+        "org.apache.velocity:velocity:1.7",
+        "wsdl4j:wsdl4j:1.6.3",
         "axis:axis:1.4",
         "org.apache.axis:axis-jaxrpc:1.4",
         "org.apache.axis:axis-saaj:1.4",

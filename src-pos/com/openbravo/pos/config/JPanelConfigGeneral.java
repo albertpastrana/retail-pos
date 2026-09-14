@@ -27,12 +27,8 @@ import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.util.ReportUtils;
 import com.openbravo.pos.util.StringParser;
-import java.util.Map;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
-import org.jvnet.substance.SubstanceLookAndFeel;
-import org.jvnet.substance.api.SubstanceSkin;
-import org.jvnet.substance.skin.SkinInfo;
 
 /**
  *
@@ -114,14 +110,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
 		for (int i = 0; i < lafs.length; i++) {
 			jcboLAF.addItem(new LAFInfo(lafs[i].getName(), lafs[i].getClassName()));
-		}
-
-		// Substance skins
-		// new SubstanceLookAndFeel(); // TODO: Remove in Substance 5.0. Workaround for
-		// Substance 4.3 to initialize static variables
-		Map<String, SkinInfo> skins = SubstanceLookAndFeel.getAllSkins();
-		for (SkinInfo skin : skins.values()) {
-			jcboLAF.addItem(new LAFInfo(skin.getDisplayName(), skin.getClassName()));
 		}
 
 		jcboLAF.addActionListener(new java.awt.event.ActionListener() {
@@ -489,8 +477,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 						if (laf instanceof LookAndFeel) {
 							UIManager.setLookAndFeel((LookAndFeel) laf);
-						} else if (laf instanceof SubstanceSkin) {
-							SubstanceLookAndFeel.setSkin((SubstanceSkin) laf);
 						}
 
 						SwingUtilities.updateComponentTreeUI(JPanelConfigGeneral.this.getTopLevelAncestor());
