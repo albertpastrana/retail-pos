@@ -66,7 +66,7 @@ dependencies {
         "net.sf.jasperreports:jasperreports:3.7.6",
         "org.apache.poi:poi:3.2-FINAL",
         "org.eclipse.jdt:core:3.1.1",
-        "org.javapos:javapos:1.12.2",
+        "org.javapos:javapos:1.15.8",
         "org.rxtx:rxtx:2.1.7",
         "oro:oro:2.0.8",
         "org.swinglabs:swingx:0.9.5",
