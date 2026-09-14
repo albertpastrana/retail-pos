@@ -73,7 +73,7 @@ dependencies {
         "com.formdev:flatlaf:3.7.2",
         "jfree:jcommon:1.0.16",
         "jfree:jfreechart:1.0.13",
-        "net.sf.jasperreports:jasperreports:3.7.6",
+        "net.sf.jasperreports:jasperreports:7.0.8",
         "org.apache.poi:poi:3.2-FINAL",
         "org.eclipse.jdt:core:3.1.1",
         "org.javapos:javapos:1.12.2",
