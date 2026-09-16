@@ -41,6 +41,7 @@ import com.openbravo.pos.payment.JPaymentSelect;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ListKeyed;
 import com.openbravo.data.loader.SentenceList;
+import com.openbravo.data.loader.Transaction;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.customers.DataLogicCustomers;
 import com.openbravo.pos.customers.JCustomerFinder;
@@ -119,6 +120,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private int m_iNumberStatusInput;
 	private int m_iNumberStatusPor;
 	private boolean m_bProductImportUnknown;
+	private transient Runnable ticketChangeListener;
 
 	private JTicketsBag m_ticketsbag;
 
@@ -321,6 +323,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	public TicketInfo getActiveTicket() {
 		return m_oTicket;
+	}
+
+	public void setTicketChangeListener(Runnable listener) {
+		ticketChangeListener = listener;
+	}
+
+	private void notifyTicketChanged() {
+		if (ticketChangeListener != null) {
+			ticketChangeListener.run();
+		}
 	}
 
 	private void refreshTicket() {
@@ -799,9 +811,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private void closeCurrentTicket() {
 		if (m_oTicket.getLinesCount() > 0) {
+			if (!m_ticketsbag.preparePayment()) {
+				return;
+			}
 			if (closeTicket(m_oTicket, m_oTicketExt)) {
 				m_ticketsbag.deleteTicket();
 			} else {
+				m_ticketsbag.cancelPayment();
 				refreshTicket();
 			}
 		} else {
@@ -892,6 +908,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 									.show(this);
 						} else {
 							m_oTicket.setCustomer(newcustomer);
+							notifyTicketChanged();
 						}
 					} catch (BasicException e) {
 						Toolkit.getDefaultToolkit().beep();
@@ -1197,7 +1214,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 							// Save the receipt and assign a receipt number
 							boolean saved = true;
 							try {
-								dlSales.saveTicket(ticket, m_App.getInventoryLocation());
+								new Transaction<Object>(m_App.getSession()) {
+									@Override
+									protected Object transact() throws BasicException {
+										dlSales.saveTicket(ticket, m_App.getInventoryLocation());
+										m_ticketsbag.completePayment();
+										return null;
+									}
+								}.execute();
 							} catch (BasicException eData) {
 								MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE,
 										AppLocal.getIntString("message.nosaveticket"), eData);
@@ -1367,16 +1391,20 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private Object executeEventAndRefresh(String eventkey, ScriptArg... args) {
 
 		String resource = m_jbtnconfig.getEvent(eventkey);
+		Object result;
 		if (resource == null) {
-			return null;
+			result = null;
 		} else {
 			ScriptObject scr = new ScriptObject(m_oTicket, m_oTicketExt);
 			scr.setSelectedIndex(m_ticketlines.getSelectedIndex());
-			Object result = evalScript(scr, resource, args);
+			result = evalScript(scr, resource, args);
 			refreshTicket();
 			setSelectedIndex(scr.getSelectedIndex());
-			return result;
 		}
+		if ("ticket.change".equals(eventkey)) {
+			notifyTicketChanged();
+		}
+		return result;
 	}
 
 	private Object executeEvent(TicketInfo ticket, Object ticketext, String eventkey, ScriptArg... args) {
@@ -1954,6 +1982,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 
 		refreshTicket();
+		notifyTicketChanged();
 
 	}// GEN-LAST:event_btnCustomerActionPerformed
 

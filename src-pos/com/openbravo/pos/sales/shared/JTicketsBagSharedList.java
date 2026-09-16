@@ -109,7 +109,7 @@ public class JTicketsBagSharedList extends javax.swing.JDialog {
 				}
 			});
 
-			setText(ticket.getName());
+			setText(ticket.getHost() == null ? ticket.getName() : ticket.getName() + " \u00B7 " + ticket.getHost());
 		}
 	}
 
