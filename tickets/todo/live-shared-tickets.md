@@ -20,6 +20,18 @@ Workaround with no code: on till-2, New ticket (or leave sales) parks; central�
 
 Possible first slice: persist on the first line, do not delete on open, simple lock — hide payment later.
 
+## Current implementation
+
+The first slice is implemented:
+
+- The first line creates a shared row and every ticket change updates it.
+- The list shows the till that currently owns each live ticket.
+- Opening a ticket transfers ownership; stale writes and payment attempts are rejected.
+- Starting Sales creates an empty local ticket instead of taking the first shared ticket.
+- Payment locks the row, and saving the receipt removes the shared row in the same database transaction.
+
+Still open: configure the scanner till so it cannot take payment, then validate the full flow on the two shop computers.
+
 ### Intended flow
 
 - Start: nobody grabs another till’s parked ticket; each till starts empty (or its own).

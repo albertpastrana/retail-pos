@@ -38,10 +38,25 @@ public abstract class JTicketsBag extends JPanel {
 	}
 
 	public abstract void activate();
+
 	public abstract boolean deactivate();
+
 	public abstract void deleteTicket();
 
+	public boolean preparePayment() {
+		return true;
+	}
+
+	public void cancelPayment() {
+		// Ticket modes without shared rows have no payment lock to release.
+	}
+
+	public void completePayment() throws com.openbravo.basic.BasicException {
+		// Ticket modes without shared rows have nothing to remove.
+	}
+
 	protected abstract JComponent getBagComponent();
+
 	protected abstract JComponent getNullComponent();
 
 	public static JTicketsBag createTicketsBag(String sName, AppView app, TicketsEditor panelticket) {
