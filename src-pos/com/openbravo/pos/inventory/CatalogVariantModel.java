@@ -15,8 +15,9 @@ public final class CatalogVariantModel {
 			return "";
 		}
 		String value = reference.trim();
-		if ("Avetset".equals(brand) || "Massana".equals(brand) || "Abanderado".equals(brand)
-				|| "Playtex".equals(brand)) {
+		if ("Avetset".equals(brand) || "Massana".equals(brand) || "Petrus".equals(brand) || "Dusen".equals(brand)
+				|| "Señoretta".equals(brand) || "Egatex".equals(brand) || "Soy".equals(brand) || "Muslher".equals(brand)
+				|| "Abanderado".equals(brand) || "Playtex".equals(brand)) {
 			return before(value, '-');
 		}
 		if ("Gisela".equals(brand)) {

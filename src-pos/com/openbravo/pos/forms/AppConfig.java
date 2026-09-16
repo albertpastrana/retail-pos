@@ -179,5 +179,8 @@ public class AppConfig implements AppProperties {
 
 		m_propsconfig.setProperty("loyalty.enabled", "true");
 		m_propsconfig.setProperty("loyalty.name", "victorines");
+
+		m_propsconfig.setProperty("backup.daily", "false");
+		m_propsconfig.setProperty("backup.dir", "");
 	}
 }

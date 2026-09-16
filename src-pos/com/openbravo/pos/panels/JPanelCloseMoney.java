@@ -40,6 +40,7 @@ import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.scripting.ScriptEngine;
 import com.openbravo.pos.scripting.ScriptException;
 import com.openbravo.pos.scripting.ScriptFactory;
+import com.openbravo.pos.forms.DatabaseBackup;
 import com.openbravo.pos.forms.DataLogicSystem;
 import com.openbravo.pos.printer.TicketParser;
 import com.openbravo.pos.printer.TicketPrinterException;
@@ -535,6 +536,8 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 				// Mostramos el mensaje
 				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.closecashok"),
 						AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
+
+				DatabaseBackup.runDailyBackupIfDue(m_App.getProperties());
 			} catch (BasicException e) {
 				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"),
 						e);

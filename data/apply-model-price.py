@@ -56,7 +56,16 @@ def product_model(row: list[str]) -> str:
     reference, brand = row[1], row[7]
     if brand in {"Abanderado", "Gisela", "Playtex"}:
         return reference.split()[0]
-    if brand in {"Avetset", "Massana"}:
+    if brand in {
+        "Avetset",
+        "Massana",
+        "Petrus",
+        "Dusen",
+        "Señoretta",
+        "Egatex",
+        "Soy",
+        "Muslher",
+    }:
         return reference.split("-")[0]
     if brand == "Selene":
         return reference.split()[0]

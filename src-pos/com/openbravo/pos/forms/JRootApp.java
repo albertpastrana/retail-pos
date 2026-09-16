@@ -204,6 +204,14 @@ public class JRootApp extends JPanel implements AppView {
 
 		showLogin();
 
+		DatabaseBackup.runDailyBackupIfDue(m_props);
+		java.util.Timer backupTimer = new java.util.Timer("DailyDatabaseBackupScheduler", true);
+		backupTimer.scheduleAtFixedRate(new java.util.TimerTask() {
+			public void run() {
+				DatabaseBackup.runDailyBackupIfDue(m_props);
+			}
+		}, 3600000L, 3600000L);
+
 		return true;
 	}
 

@@ -19,10 +19,15 @@
 
 package com.openbravo.pos.config;
 
-import com.openbravo.data.user.DirtyManager;
 import java.awt.Component;
+import java.io.File;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import com.openbravo.basic.BasicException;
+import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.forms.DatabaseBackup;
 import com.openbravo.pos.util.AltEncrypter;
 import com.openbravo.pos.util.DirectoryEvent;
 
@@ -46,6 +51,32 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jtxtDbUser.getDocument().addDocumentListener(dirty);
 
 		jbtnDbDriverLib.addActionListener(new DirectoryEvent(jtxtDbDriverLib));
+
+		jtxtBackupDir.getDocument().addDocumentListener(dirty);
+		jchkBackupDaily.addActionListener(dirty);
+
+		jbtnBackupDir.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				JFileChooser fc = new JFileChooser();
+				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				String current = jtxtBackupDir.getText();
+				if (current != null && !current.trim().isEmpty()) {
+					File currentDir = new File(current.trim());
+					if (currentDir.exists()) {
+						fc.setSelectedFile(currentDir);
+					}
+				}
+				if (fc.showOpenDialog(JPanelConfigDatabase.this) == JFileChooser.APPROVE_OPTION) {
+					jtxtBackupDir.setText(fc.getSelectedFile().getAbsolutePath());
+				}
+			}
+		});
+
+		jbtnBackupNow.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				performBackupNow();
+			}
+		});
 	}
 
 	public boolean hasChanged() {
@@ -72,6 +103,9 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jtxtDbUser.setText(sDBUser);
 		jtxtDbPassword.setText(sDBPassword);
 
+		jchkBackupDaily.setSelected("true".equalsIgnoreCase(config.getProperty("backup.daily")));
+		jtxtBackupDir.setText(config.getProperty("backup.dir"));
+
 		dirty.setDirty(false);
 	}
 
@@ -84,7 +118,37 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		AltEncrypter cypher = new AltEncrypter("cypherkey" + jtxtDbUser.getText());
 		config.setProperty("db.password", "crypt:" + cypher.encrypt(new String(jtxtDbPassword.getPassword())));
 
+		config.setProperty("backup.daily", Boolean.toString(jchkBackupDaily.isSelected()));
+		config.setProperty("backup.dir", jtxtBackupDir.getText());
+
 		dirty.setDirty(false);
+	}
+
+	private void performBackupNow() {
+		String dir = jtxtBackupDir.getText();
+		if (dir == null || dir.trim().isEmpty()) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupnodir"),
+					AppLocal.getIntString("message.title"), JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		java.awt.Cursor oldCursor = getCursor();
+		setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
+		try {
+			AppConfig currentConfig = new AppConfig(
+					new File(System.getProperty("user.home"), AppLocal.APP_ID + ".properties"));
+			currentConfig.load();
+			saveProperties(currentConfig);
+
+			File backupFile = DatabaseBackup.backup(currentConfig);
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupok", backupFile.getAbsolutePath()),
+					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
+		} catch (BasicException ex) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupfailed", ex.getMessage()),
+					AppLocal.getIntString("message.title"), JOptionPane.ERROR_MESSAGE);
+		} finally {
+			setCursor(oldCursor);
+		}
 	}
 
 	/**
@@ -108,6 +172,13 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jtxtDbUser = new javax.swing.JTextField();
 		jLabel4 = new javax.swing.JLabel();
 		jtxtDbPassword = new javax.swing.JPasswordField();
+
+		jPanelBackup = new javax.swing.JPanel();
+		jchkBackupDaily = new javax.swing.JCheckBox();
+		jLabelBackupDir = new javax.swing.JLabel();
+		jtxtBackupDir = new javax.swing.JTextField();
+		jbtnBackupDir = new javax.swing.JButton();
+		jbtnBackupNow = new javax.swing.JButton();
 
 		jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("Label.Database"))); // NOI18N
 
@@ -180,15 +251,62 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 										javax.swing.GroupLayout.PREFERRED_SIZE))
 						.addContainerGap(14, Short.MAX_VALUE)));
 
+		jPanelBackup.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("label.backup"))); // NOI18N
+
+		jchkBackupDaily.setText(AppLocal.getIntString("label.backupdaily")); // NOI18N
+
+		jLabelBackupDir.setText(AppLocal.getIntString("label.backupdir")); // NOI18N
+
+		jbtnBackupDir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/fileopen.png"))); // NOI18N
+
+		jbtnBackupNow.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/ark2.png"))); // NOI18N
+		jbtnBackupNow.setText(AppLocal.getIntString("button.backupnow")); // NOI18N
+
+		javax.swing.GroupLayout jPanelBackupLayout = new javax.swing.GroupLayout(jPanelBackup);
+		jPanelBackup.setLayout(jPanelBackupLayout);
+		jPanelBackupLayout.setHorizontalGroup(jPanelBackupLayout
+				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.addGroup(jPanelBackupLayout.createSequentialGroup().addContainerGap()
+						.addGroup(jPanelBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addComponent(jchkBackupDaily)
+								.addGroup(jPanelBackupLayout.createSequentialGroup()
+										.addComponent(jLabelBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE, 130,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(jtxtBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE, 328,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(jbtnBackupDir)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+										.addComponent(jbtnBackupNow)))
+						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+		jPanelBackupLayout.setVerticalGroup(jPanelBackupLayout
+				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.addGroup(jPanelBackupLayout.createSequentialGroup().addContainerGap().addComponent(jchkBackupDaily)
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addGroup(jPanelBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+								.addComponent(jLabelBackupDir)
+								.addComponent(jtxtBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE,
+										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+								.addComponent(jbtnBackupDir).addComponent(jbtnBackupNow))
+						.addContainerGap(14, Short.MAX_VALUE)));
+
 		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
 		this.setLayout(layout);
 		layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(layout.createSequentialGroup().addContainerGap().addComponent(jPanel1,
-						javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+				.addGroup(layout.createSequentialGroup().addContainerGap()
+						.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE,
+										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(jPanelBackup, javax.swing.GroupLayout.DEFAULT_SIZE,
+										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 						.addContainerGap()));
 		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 				.addGroup(layout.createSequentialGroup().addContainerGap()
 						.addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE,
+								javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addComponent(jPanelBackup, javax.swing.GroupLayout.PREFERRED_SIZE,
 								javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
 						.addContainerGap(14, Short.MAX_VALUE)));
 	}// </editor-fold>//GEN-END:initComponents
@@ -206,6 +324,13 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 	private javax.swing.JPasswordField jtxtDbPassword;
 	private javax.swing.JTextField jtxtDbURL;
 	private javax.swing.JTextField jtxtDbUser;
+
+	private javax.swing.JPanel jPanelBackup;
+	private javax.swing.JCheckBox jchkBackupDaily;
+	private javax.swing.JLabel jLabelBackupDir;
+	private javax.swing.JTextField jtxtBackupDir;
+	private javax.swing.JButton jbtnBackupDir;
+	private javax.swing.JButton jbtnBackupNow;
 	// End of variables declaration//GEN-END:variables
 
 }

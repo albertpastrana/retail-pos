@@ -82,6 +82,7 @@
     <class name="com.openbravo.pos.admin.PeoplePanel"/>
     <class name="com.openbravo.pos.admin.RolesPanel"/>
     <class name="com.openbravo.pos.admin.ResourcesPanel"/>
+    <class name="com.openbravo.pos.admin.BackupDatabaseAction"/>
     <class name="/com/openbravo/reports/people.bs"/>
     <class name="Menu.ChangePassword"/>
     <class name="com.openbravo.pos.panels.JPanelPrinter"/>

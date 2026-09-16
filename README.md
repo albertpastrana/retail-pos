@@ -22,11 +22,11 @@ Useful tasks:
 
 | Task                        | Result                                                      |
 | --------------------------- | ----------------------------------------------------------- |
-| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`          |
-| `./gradlew check`           | That, plus data helpers, plus `spotlessCheck`                 |
-| `./gradlew spotlessApply`   | Format Java in the source sets (do not format Java by hand)   |
-| `./gradlew spotlessCheck`   | Fail if Java is not formatted                                 |
-| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL   |
+| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`        |
+| `./gradlew check`           | That, plus data helpers, plus `spotlessCheck`               |
+| `./gradlew spotlessApply`   | Format Java in the source sets (do not format Java by hand) |
+| `./gradlew spotlessCheck`   | Fail if Java is not formatted                               |
+| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL |
 
 CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrationTest` on every push and pull request.
 
@@ -168,15 +168,15 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 
 ## Source layout
 
-| Path         | Contents                                               |
-| ------------ | ------------------------------------------------------ |
-| `src-pos/`   | Till UI, sales, inventory, config                      |
-| `src-data/`  | Persistence / session layer                            |
-| `src-beans/` | Shared beans                                           |
-| `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)         |
-| `locales/`   | UI translations                                        |
-| `lib/`       | Native serial-port libraries for supported platforms  |
-| `data/`      | Local database, TSV catalogue, resource dump tools     |
+| Path         | Contents                                             |
+| ------------ | ---------------------------------------------------- |
+| `src-pos/`   | Till UI, sales, inventory, config                    |
+| `src-data/`  | Persistence / session layer                          |
+| `src-beans/` | Shared beans                                         |
+| `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)       |
+| `locales/`   | UI translations                                      |
+| `lib/`       | Native serial-port libraries for supported platforms |
+| `data/`      | Local database, TSV catalogue, resource dump tools   |
 
 ## Upstream
 
