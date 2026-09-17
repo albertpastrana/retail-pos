@@ -16,3 +16,4 @@
     <class name="Menu.ChangePassword"/>
     <class name="button.print"/>
 </permissions>
+    <class name="payment.debt"/>
