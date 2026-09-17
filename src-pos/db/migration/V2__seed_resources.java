@@ -15,7 +15,7 @@ public class V2__seed_resources extends BaseJavaMigration {
 	private static final String TEMPLATE_PATH = "/com/openbravo/pos/templates/";
 
 	private static final String[][] ROLES = {{"0", "Role.Administrator.xml"}, {"1", "Role.Manager.xml"},
-			{"2", "Role.Seller.xml"}};
+			{"2", "Role.Employee.xml"}, {"3", "Role.Guest.xml"}};
 
 	private static final ResourceSeed[] RESOURCES = {resource("0", "Printer.Start", 0, "Printer.Start.xml"),
 			resource("1", "Printer.Ticket", 0, "Printer.Ticket.xml"),

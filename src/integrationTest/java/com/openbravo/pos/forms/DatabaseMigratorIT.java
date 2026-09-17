@@ -104,7 +104,7 @@ public class DatabaseMigratorIT {
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Seller'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
-			assertEquals(3, count(connection, "PEOPLE"));
+			assertEquals(4, count(connection, "PEOPLE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
 		} finally {
 			connection.close();
