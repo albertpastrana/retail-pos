@@ -1,4 +1,4 @@
-name: openbravopos
+name: retail-pos
 
 services:
   postgres:

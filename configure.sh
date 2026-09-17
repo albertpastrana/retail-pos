@@ -21,7 +21,7 @@
 
 DIRNAME=`dirname $0`
 
-CP=$DIRNAME/openbravopos.jar
+CP=$DIRNAME/retail-pos.jar
 CP=$CP:$DIRNAME/locales.jar
 CP=$CP:$DIRNAME/locales
 CP=$CP:$DIRNAME/lib/*
