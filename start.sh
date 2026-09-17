@@ -21,7 +21,7 @@
 
 DIRNAME=`dirname $0`
 
-CP=$DIRNAME/openbravopos.jar
+CP=$DIRNAME/retail-pos.jar
 CP=$CP:$DIRNAME/lib/*
 CP=$CP:$DIRNAME/build/runtime-libs/*
 CP=$CP:$DIRNAME/runtime-libs/*
@@ -48,5 +48,8 @@ Darwin) LIBRARYPATH=/lib/Mac_OS_X;;
 CYGWIN*|MINGW32*) LIBRARYPATH=/lib/Windows/i368-mingw32;;
 esac
 
-# start Openbravo POS
-java -cp $CP -Djava.util.logging.config.file=$DIRNAME/logging.properties -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Djava.library.path=$DIRNAME$LIBRARYPATH -Ddirname.path=$DIRNAME/ com.openbravo.pos.forms.StartPOS "$@"
+# start Retail POS. Portable packages use the bundled runtime; source
+# checkouts continue to use java from PATH.
+JAVA=$DIRNAME/runtime/bin/java
+if [ ! -x "$JAVA" ]; then JAVA=java; fi
+"$JAVA" -cp "$CP" -Djava.util.logging.config.file="$DIRNAME/logging.properties" -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Djava.library.path="$DIRNAME$LIBRARYPATH" -Ddirname.path="$DIRNAME/" com.openbravo.pos.forms.StartPOS "$@"

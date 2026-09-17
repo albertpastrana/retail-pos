@@ -30,7 +30,7 @@ Useful tasks:
 
 CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrationTest` on every push and pull request.
 
-`./gradlew jar` copies `openbravopos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
+`./gradlew jar` copies `retail-pos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
 
 ```sh
 ./start.sh path/to/config.properties
@@ -38,11 +38,15 @@ CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrati
 
 On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
 
+## Releases
+
+Pushing a tag such as `v2.30.5` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS, each with a bundled JRE, and publishes them with SHA256 checksums to the GitHub Release. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
+
 ## Configuration
 
 Everything below is per-installation: locale, tax rates, receipt layout, shop details. Nothing is baked into the build.
 
-If you pass no argument, the app reads `~/openbravopos.properties`.
+If you pass no argument, the app reads `~/retail-pos.properties`.
 
 Pass a file to use a repo-local config (see `dev.properties` as a template — copy it; do not commit machine-specific paths):
 
@@ -143,9 +147,9 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 
 | Task                                                                                    | What it does                                                                                                                                     |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `./gradlew applyStoreResources`                                                         | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/openbravopos-database`. |
+| `./gradlew applyStoreResources`                                                         | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/retail-pos-database`. |
 | `./gradlew importCatalog`                                                               | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.       |
-| `./gradlew keepCatalog --args='data/openbravopos-database path/to/keep.csv'`            | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history.  |
+| `./gradlew keepCatalog --args='data/retail-pos-database path/to/keep.csv'`            | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history.  |
 | `python3 data/apply-model-price.py Avet 3267 --cost 3.66 --price 5.95 --apply --insert` | Sets cost and ticket price on every variant of a model, then inserts them.                                                                       |
 | `updateResource` / `dumpResource` / `dumpAllResources` / `showResource`                 | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                          |
 
@@ -154,7 +158,7 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 Example with a different Derby directory:
 
 ```sh
-./gradlew applyStoreResources --args='data/openbravopos-database'
+./gradlew applyStoreResources --args='data/retail-pos-database'
 ```
 
 ## Differences from upstream

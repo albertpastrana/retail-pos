@@ -21,7 +21,7 @@ REM    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 
 set DIRNAME=%~dp0
 
-set CP="%DIRNAME%openbravopos.jar"
+set CP="%DIRNAME%retail-pos.jar"
 set CP=%CP%;"%DIRNAME%lib/*"
 set CP=%CP%;"%DIRNAME%build/runtime-libs/*"
 set CP=%CP%;"%DIRNAME%runtime-libs/*"
@@ -31,4 +31,9 @@ set CP=%CP%;"%DIRNAME%locales"
 set CP=%CP%;"%DIRNAME%reports.jar"
 set CP=%CP%;"%DIRNAME%reports"
 
-start /B javaw -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Djava.library.path="%DIRNAME%lib/Windows/i368-mingw32" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.forms.StartPOS %1
+if exist "%DIRNAME%runtime\bin\javaw.exe" (
+    set JAVA="%DIRNAME%runtime\bin\javaw.exe"
+) else (
+    set JAVA=javaw
+)
+start "Retail POS" /B %JAVA% -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Djava.library.path="%DIRNAME%lib/Windows/i368-mingw32" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.forms.StartPOS %1

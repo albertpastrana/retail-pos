@@ -5,7 +5,7 @@ plugins {
     id("com.diffplug.spotless") version "8.10.1"
 }
 
-version = "2.30.4"
+version = providers.gradleProperty("appVersion").orElse("2.30.4").get()
 description = "Retail POS"
 
 repositories {
@@ -115,11 +115,11 @@ tasks.processResources {
 }
 
 tasks.jar {
-    archiveFileName.set("openbravopos.jar")
+    archiveFileName.set("retail-pos.jar")
     destinationDirectory.set(layout.buildDirectory.dir("jar"))
     manifest {
         attributes(
-            "Implementation-Vendor" to "Openbravo SL",
+            "Implementation-Vendor" to "Retail POS",
             "Implementation-Title" to "Retail POS",
             "Implementation-Version" to version,
             "Main-Class" to "com.openbravo.pos.forms.StartPOS",
@@ -142,7 +142,7 @@ val reportsJar by tasks.registering(Jar::class) {
 val syncRunJars by tasks.registering(Copy::class) {
     dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs)
     from(layout.buildDirectory.dir("jar")) {
-        include("openbravopos.jar", "locales.jar", "reports.jar")
+        include("retail-pos.jar", "locales.jar", "reports.jar")
     }
     into(layout.projectDirectory)
 }
@@ -223,14 +223,14 @@ dataHelper(
     "applyStoreResources",
     "ApplyStoreResources",
     "Upsert ticket/logo/button templates and add discount permissions to Administrator and Manager.",
-    listOf("data/openbravopos-database"),
+    listOf("data/retail-pos-database"),
 )
 dataHelper(
     "importCatalog",
     "ImportCatalog",
     "Wipe products and stock, then load the TSV catalogue. Destructive. Quit the POS first.",
     listOf(
-        "data/openbravopos-database",
+        "data/retail-pos-database",
         "data/import-categories.tsv",
         "data/import-products.tsv",
         "src-pos/com/openbravo/pos/templates/Ticket.Buttons.xml",
@@ -246,31 +246,31 @@ dataHelper(
 dataHelper(
     "keepCatalog",
     "KeepCatalog",
-    "Drop products whose REFERENCE is not in a keep CSV. Pass: --args='data/openbravopos-database path/to/keep.csv'",
+    "Drop products whose REFERENCE is not in a keep CSV. Pass: --args='data/retail-pos-database path/to/keep.csv'",
     requireArgs = true,
 )
 dataHelper(
     "updateResource",
     "UpdateResource",
-    "Replace one RESOURCES row. Pass: --args='data/openbravopos-database NAME file'",
+    "Replace one RESOURCES row. Pass: --args='data/retail-pos-database NAME file'",
     requireArgs = true,
 )
 dataHelper(
     "dumpResource",
     "DumpResource",
-    "Write named RESOURCES to a directory. Pass: --args='data/openbravopos-database outdir NAME...'",
+    "Write named RESOURCES to a directory. Pass: --args='data/retail-pos-database outdir NAME...'",
     requireArgs = true,
 )
 dataHelper(
     "dumpAllResources",
     "DumpAllResources",
-    "Dump all RESOURCES. Pass: --args='org.apache.derby.jdbc.EmbeddedDriver jdbc:derby:data/openbravopos-database outdir'",
+    "Dump all RESOURCES. Pass: --args='org.apache.derby.jdbc.EmbeddedDriver jdbc:derby:data/retail-pos-database outdir'",
     requireArgs = true,
     checkLock = false,
 )
 dataHelper(
     "showResource",
     "ShowResource",
-    "Print named RESOURCES. Pass: --args='data/openbravopos-database NAME...'",
+    "Print named RESOURCES. Pass: --args='data/retail-pos-database NAME...'",
     requireArgs = true,
 )

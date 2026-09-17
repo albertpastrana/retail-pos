@@ -1,4 +1,5 @@
 build/
+/dist/
 .gradle/
 .env.local
 .icon-work/
@@ -13,8 +14,8 @@ build/
 /*.launch
 derby.log
 /logs/
-data/openbravopos-database/
-data/openbravopos-database.bak*/
+data/retail-pos-database/
+data/retail-pos-database.bak*/
 data/*.tsv
 data/__pycache__/
 devdb/
@@ -24,6 +25,6 @@ till-lan.properties
 .postgres-lan-password
 external-data/
 data/resdump/
-/openbravopos.jar
+/retail-pos.jar
 /locales.jar
 /reports.jar
