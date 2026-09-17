@@ -24,17 +24,15 @@ import com.openbravo.data.loader.DataParams;
 import com.openbravo.data.loader.DataRead;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.PreparedSentence;
-import com.openbravo.data.loader.QBFBuilder;
-import com.openbravo.data.loader.SentenceList;
 import com.openbravo.data.loader.SerializerRead;
-import com.openbravo.data.loader.SerializerWriteBasic;
 import com.openbravo.data.loader.SerializerWriteParams;
 import com.openbravo.data.loader.Session;
-import com.openbravo.data.loader.StaticSentence;
 import com.openbravo.data.loader.TableDefinition;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.BeanFactoryDataSingle;
+import java.util.List;
+import java.util.UUID;
 
 /**
  *
@@ -75,32 +73,84 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 
 	}
 
-	// CustomerList list
-	public SentenceList getCustomerList() {
-		return new StaticSentence(s,
-				new QBFBuilder("SELECT ID, TAXID, SEARCHKEY, NAME, ADDRESS FROM CUSTOMERS WHERE VISIBLE = "
-						+ s.DB.TRUE() + " AND ?(QBF_FILTER) ORDER BY NAME", new String[]{"TAXID", "SEARCHKEY", "NAME"}),
-				new SerializerWriteBasic(new Datas[]{Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
-						Datas.OBJECT, Datas.STRING}),
-				new SerializerRead() {
+	public List<CustomerInfo> searchCustomers(final String value) throws BasicException {
+		final String search = value == null ? "" : value.trim();
+		final String nameSearch = "%" + search + "%";
+		String normalizedSearch = CustomerInfo.normalizePhone(search);
+		final String phoneSearch = normalizedSearch.isEmpty() ? "!" : "%" + normalizedSearch + "%";
+		return new PreparedSentence(s,
+				"SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE VISIBLE = " + s.DB.TRUE()
+						+ " AND (NAME LIKE ? OR PHONE LIKE ?) ORDER BY NAME",
+				SerializerWriteParams.INSTANCE, new SerializerRead() {
 					public Object readValues(DataRead dr) throws BasicException {
 						CustomerInfo c = new CustomerInfo(dr.getString(1));
-						c.setTaxid(dr.getString(2));
-						c.setSearchkey(dr.getString(3));
-						c.setName(dr.getString(4));
-						c.setAddress(dr.getString(5));
+						c.setName(dr.getString(2));
+						c.setPhone(dr.getString(3));
 						return c;
+					}
+				}).list(new DataParams() {
+					public void writeValues() throws BasicException {
+						setString(1, nameSearch);
+						setString(2, phoneSearch);
 					}
 				});
 	}
 
-	public int updateCustomerExt(final CustomerInfoExt customer) throws BasicException {
-
-		return new PreparedSentence(s, "UPDATE CUSTOMERS SET NOTES = ? WHERE ID = ?", SerializerWriteParams.INSTANCE)
-				.exec(new DataParams() {
+	public CustomerInfoExt createCustomer(final String name, final String phone) throws BasicException {
+		final String id = UUID.randomUUID().toString();
+		final String normalizedPhone = CustomerInfo.normalizePhone(phone);
+		new PreparedSentence(s,
+				"INSERT INTO CUSTOMERS (ID, SEARCHKEY, NAME, PHONE, VISIBLE, MAXDEBT) VALUES (?, ?, ?, ?, "
+						+ s.DB.TRUE() + ", ?)",
+				SerializerWriteParams.INSTANCE).exec(new DataParams() {
 					public void writeValues() throws BasicException {
-						setString(1, customer.getNotes());
-						setString(2, customer.getId());
+						setString(1, id);
+						setString(2, id);
+						setString(3, name.trim());
+						setString(4, normalizedPhone);
+						setDouble(5, 0.0);
+					}
+				});
+		CustomerInfoExt customer = new CustomerInfoExt(id);
+		customer.setName(name.trim());
+		customer.setPhone(normalizedPhone);
+		customer.setVisible(true);
+		customer.setMaxdebt(0.0);
+		return customer;
+	}
+
+	public List<CustomerInfoExt> searchCustomerSummaries(final String value) throws BasicException {
+		final String search = value == null ? "" : value.trim();
+		final String normalizedSearch = CustomerInfo.normalizePhone(search);
+		final String phoneSearch = normalizedSearch.isEmpty() ? "!" : "%" + normalizedSearch + "%";
+		return new PreparedSentence(s,
+				"SELECT ID, NAME, PHONE, CURDEBT, VISIBLE FROM CUSTOMERS WHERE VISIBLE = " + s.DB.TRUE()
+						+ " AND (NAME LIKE ? OR PHONE LIKE ?) ORDER BY NAME",
+				SerializerWriteParams.INSTANCE, new SerializerRead() {
+					public Object readValues(DataRead dr) throws BasicException {
+						CustomerInfoExt c = new CustomerInfoExt(dr.getString(1));
+						c.setName(dr.getString(2));
+						c.setPhone(dr.getString(3));
+						c.setCurdebt(dr.getDouble(4));
+						c.setVisible(dr.getBoolean(5).booleanValue());
+						return c;
+					}
+				}).list(new DataParams() {
+					public void writeValues() throws BasicException {
+						setString(1, "%" + search + "%");
+						setString(2, phoneSearch);
+					}
+				});
+	}
+
+	public int updateCustomer(final CustomerInfoExt customer) throws BasicException {
+		return new PreparedSentence(s, "UPDATE CUSTOMERS SET NAME = ?, PHONE = ?, VISIBLE = ? WHERE ID = ?",
+				SerializerWriteParams.INSTANCE).exec(new DataParams() {
+					public void writeValues() throws BasicException {
+						setString(1, customer.getName());
+						setString(2, CustomerInfo.normalizePhone(customer.getPhone()));
+						setBoolean(3, customer.isVisible());
+						setString(4, customer.getId());
 					}
 				});
 	}

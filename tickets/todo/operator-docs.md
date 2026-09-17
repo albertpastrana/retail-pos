@@ -24,7 +24,7 @@ Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close 
 - Sale with scanner (known EAN): scan → lines → pay → receipt
 - Find a product without EAN (name / model, size, colour)
 - Change quantity, delete line, line / total discount
-- Customer on the ticket (card / search); no customer, no loyalty. Target: one field + name+card create + chip (`tickets/todo/customer-on-ticket.md`)
+- Customer on the ticket (name / phone search); no customer, no loyalty. Target: one search field + name-and-phone create + chip (`tickets/todo/customer-on-ticket.md`)
 - Pay: cash, card, mixed, gift voucher
 - Open drawer without a sale
 - Refund / edited ticket (`TicketEdit`)
@@ -36,7 +36,7 @@ Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close 
 - Orders / out of stock: product or EAN + qty + note → Stock (review / ordered / arrived). Not the stock diary.
 - Sales (`SALE_PERCENT`): % on the product, how it looks on the ticket, does not earn stamps.
 - Gift voucher (`ISVOUCHER`): sell vs redeem. Not the −5 € loyalty line.
-- Customers: one field (name / phone / scanner `c…`); create name+card; chip (debt, later loyalty); same sheet at till and backoffice. Debt stays; search key/fax/tax category not on create. Pay from the sheet.
+- Customers: one field (name / phone); create name+phone; chip (debt); same sheet at till and backoffice. Debt stays; search key/fax/tax category not on create. Pay from the sheet.
 - Loyalty: customer with card; 10 € eligible base (remainder stored); sale / discount / voucher / redemption line do not count; ticket text “this ticket: +N · total: X/12”; 12 → −5 € (one per ticket); refund undoes the movement; at close cash it is a discount, not a payment.
 - Two tills (1+3): today you must park on till-2 for central to see it; opening sales can grab the other till’s ticket. Target: persist on first line, list all open, lock by `machine.hostname`, pay only on central.
 

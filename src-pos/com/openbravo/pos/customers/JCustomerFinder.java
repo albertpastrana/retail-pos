@@ -1,435 +1,177 @@
-//    Openbravo POS is a point of sales application designed for touch screens.
-//    Copyright (C) 2007-2009 Openbravo, S.L.
-//    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 package com.openbravo.pos.customers;
 
 import com.openbravo.basic.BasicException;
-import com.openbravo.data.loader.QBFCompareEnum;
-import com.openbravo.data.user.EditorCreator;
-import com.openbravo.data.user.ListProvider;
-import com.openbravo.data.user.ListProviderCreator;
 import com.openbravo.pos.forms.AppLocal;
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
-import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.GridLayout;
 import java.awt.Window;
-import java.util.ArrayList;
-import javax.swing.JFrame;
+import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
-/**
- *
- * @author adrianromero
- */
-public class JCustomerFinder extends javax.swing.JDialog implements EditorCreator {
+public class JCustomerFinder extends JDialog {
 
+	private final DataLogicCustomers dlCustomers;
+	private final JTextField searchField = new JTextField();
+	private final DefaultListModel<CustomerInfo> customersModel = new DefaultListModel<CustomerInfo>();
+	private final JList<CustomerInfo> customers = new JList<CustomerInfo>(customersModel);
+	private final JButton removeButton = new JButton();
 	private CustomerInfo selectedCustomer;
-	private ListProvider lpr;
+	private boolean removeRequested;
 
-	/** Creates new form JCustomerFinder */
-	private JCustomerFinder(java.awt.Frame parent, boolean modal) {
-		super(parent, modal);
-	}
+	private JCustomerFinder(Window parent, DataLogicCustomers dlCustomers) {
+		super(parent, ModalityType.APPLICATION_MODAL);
+		this.dlCustomers = dlCustomers;
+		setTitle(AppLocal.getIntString("customer.title"));
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setLayout(new BorderLayout(8, 8));
+		setResizable(false);
 
-	/** Creates new form JCustomerFinder */
-	private JCustomerFinder(java.awt.Dialog parent, boolean modal) {
-		super(parent, modal);
+		JPanel search = new JPanel(new BorderLayout(5, 5));
+		search.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+		search.add(new JLabel(AppLocal.getIntString("customer.find")), BorderLayout.WEST);
+		search.add(searchField, BorderLayout.CENTER);
+		JButton searchButton = new JButton(AppLocal.getIntString("customer.search"));
+		search.add(searchButton, BorderLayout.EAST);
+		add(search, BorderLayout.NORTH);
+
+		customers.setVisibleRowCount(7);
+		add(new JScrollPane(customers), BorderLayout.CENTER);
+
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JButton newButton = new JButton(AppLocal.getIntString("customer.new"));
+		JButton cancelButton = new JButton(AppLocal.getIntString("Button.Cancel"));
+		JButton selectButton = new JButton(AppLocal.getIntString("customer.select"));
+		removeButton.setText(AppLocal.getIntString("customer.remove"));
+		actions.add(newButton);
+		removeButton.setVisible(false);
+		actions.add(removeButton);
+		actions.add(cancelButton);
+		actions.add(selectButton);
+		add(actions, BorderLayout.SOUTH);
+
+		searchButton.addActionListener(e -> executeSearch());
+		searchField.addActionListener(e -> executeSearch());
+		selectButton.addActionListener(e -> selectCustomer());
+		customers.addListSelectionListener(e -> selectButton.setEnabled(customers.getSelectedValue() != null));
+		customers.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (event.getClickCount() == 2) {
+					selectCustomer();
+				}
+			}
+		});
+		newButton.addActionListener(e -> createCustomer());
+		removeButton.addActionListener(e -> {
+			removeRequested = true;
+			selectedCustomer = null;
+			dispose();
+		});
+		cancelButton.addActionListener(e -> dispose());
+		selectButton.setEnabled(false);
+		pack();
+		setSize(620, 430);
 	}
 
 	public static JCustomerFinder getCustomerFinder(Component parent, DataLogicCustomers dlCustomers) {
 		Window window = getWindow(parent);
-
-		JCustomerFinder myMsg;
-		if (window instanceof Frame) {
-			myMsg = new JCustomerFinder((Frame) window, true);
-		} else {
-			myMsg = new JCustomerFinder((Dialog) window, true);
-		}
-		myMsg.init(dlCustomers);
-		myMsg.applyComponentOrientation(parent.getComponentOrientation());
-		return myMsg;
+		return new JCustomerFinder(window, dlCustomers);
 	}
 
 	public CustomerInfo getSelectedCustomer() {
 		return selectedCustomer;
 	}
 
-	private void init(DataLogicCustomers dlCustomers) {
-
-		initComponents();
-
-		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
-
-		java.awt.event.ActionListener searchonenter = new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				executeSearch();
-			}
-		};
-		m_jtxtTaxID.addActionListener(searchonenter);
-		m_jtxtSearchKey.addActionListener(searchonenter);
-		m_jtxtName.addActionListener(searchonenter);
-
-		cleanFields();
-
-		lpr = new ListProviderCreator(dlCustomers.getCustomerList(), this);
-
-		jListCustomers.setCellRenderer(new CustomerRenderer());
-
-		getRootPane().setDefaultButton(jcmdOK);
-
-		selectedCustomer = null;
+	public boolean isRemoveRequested() {
+		return removeRequested;
 	}
 
 	public void search(CustomerInfo customer) {
-
-		if (customer == null || customer.getName() == null || customer.getName().equals("")) {
-
-			cleanFields();
-
-			cleanSearch();
-		} else {
-
-			m_jtxtTaxID.setText(customer.getTaxid());
-			m_jtxtSearchKey.setText(customer.getSearchkey());
-			m_jtxtName.setText(customer.getName());
-
-			executeSearch();
+		selectedCustomer = null;
+		removeRequested = false;
+		searchField.setText(null);
+		if (customer != null) {
+			searchField.setText(customer.getName());
 		}
+		if (customer != null) {
+			removeButton.setVisible(true);
+		}
+		customersModel.clear();
+		searchField.requestFocusInWindow();
 	}
 
-	private void cleanFields() {
-
-		m_jtxtTaxID.setText(null);
-		m_jtxtSearchKey.setText(null);
-		m_jtxtName.setText(null);
-
-		java.awt.EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				m_jtxtTaxID.requestFocus();
-			}
-		});
-	}
-
-	private void cleanSearch() {
-		jListCustomers.setModel(new MyListData(new ArrayList()));
-	}
-
-	public void executeSearch() {
+	private void executeSearch() {
 		try {
-			jListCustomers.setModel(new MyListData(lpr.loadData()));
-			if (jListCustomers.getModel().getSize() > 0) {
-				jListCustomers.setSelectedIndex(0);
+			customersModel.clear();
+			List<CustomerInfo> result = dlCustomers.searchCustomers(searchField.getText());
+			for (CustomerInfo customer : result) {
+				customersModel.addElement(customer);
 			}
-		} catch (BasicException e) {
-			e.printStackTrace();
+			if (!result.isEmpty()) {
+				customers.setSelectedIndex(0);
+			}
+		} catch (BasicException exception) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.finderror"),
+					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
-	public Object createValue() throws BasicException {
-
-		Object[] afilter = new Object[6];
-
-		// TaxID
-		if (m_jtxtTaxID.getText() == null || m_jtxtTaxID.getText().equals("")) {
-			afilter[0] = QBFCompareEnum.COMP_NONE;
-			afilter[1] = null;
-		} else {
-			afilter[0] = QBFCompareEnum.COMP_CONTAINS;
-			afilter[1] = m_jtxtTaxID.getText();
+	private void selectCustomer() {
+		selectedCustomer = customers.getSelectedValue();
+		if (selectedCustomer != null) {
+			dispose();
 		}
+	}
 
-		// SearchKey
-		if (m_jtxtSearchKey.getText() == null || m_jtxtSearchKey.getText().equals("")) {
-			afilter[2] = QBFCompareEnum.COMP_NONE;
-			afilter[3] = null;
-		} else {
-			afilter[2] = QBFCompareEnum.COMP_CONTAINS;
-			afilter[3] = m_jtxtSearchKey.getText();
+	private void createCustomer() {
+		JTextField name = new JTextField();
+		JTextField phone = new JTextField();
+		JPanel fields = new JPanel(new GridLayout(0, 2, 5, 5));
+		fields.add(new JLabel(AppLocal.getIntString("customer.name")));
+		fields.add(name);
+		fields.add(new JLabel(AppLocal.getIntString("customer.phone")));
+		fields.add(phone);
+		int result = JOptionPane.showConfirmDialog(this, fields, AppLocal.getIntString("customer.new"),
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result != JOptionPane.OK_OPTION) {
+			return;
 		}
-
-		// Name
-		if (m_jtxtName.getText() == null || m_jtxtName.getText().equals("")) {
-			afilter[4] = QBFCompareEnum.COMP_NONE;
-			afilter[5] = null;
-		} else {
-			afilter[4] = QBFCompareEnum.COMP_CONTAINS;
-			afilter[5] = m_jtxtName.getText();
+		String normalizedPhone = CustomerInfo.normalizePhone(phone.getText());
+		if (name.getText().trim().isEmpty() || normalizedPhone.isEmpty()) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.required"),
+					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
+			return;
 		}
-
-		return afilter;
+		try {
+			CustomerInfoExt created = dlCustomers.createCustomer(name.getText(), normalizedPhone);
+			selectedCustomer = created;
+			dispose();
+		} catch (BasicException exception) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.createerror"),
+					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
 	private static Window getWindow(Component parent) {
 		if (parent == null) {
-			return new JFrame();
-		} else if (parent instanceof Frame || parent instanceof Dialog) {
+			return null;
+		}
+		if (parent instanceof Frame || parent instanceof Dialog) {
 			return (Window) parent;
-		} else {
-			return getWindow(parent.getParent());
 		}
+		return getWindow(parent.getParent());
 	}
-
-	private static class MyListData extends javax.swing.AbstractListModel {
-
-		private java.util.List m_data;
-
-		public MyListData(java.util.List data) {
-			m_data = data;
-		}
-
-		public Object getElementAt(int index) {
-			return m_data.get(index);
-		}
-
-		public int getSize() {
-			return m_data.size();
-		}
-	}
-
-	/**
-	 * This method is called from within the constructor to initialize the form.
-	 * WARNING: Do NOT modify this code. The content of this method is always
-	 * regenerated by the Form Editor.
-	 */
-	// <editor-fold defaultstate="collapsed" desc="Generated
-	// Code">//GEN-BEGIN:initComponents
-	private void initComponents() {
-
-		jPanel3 = new javax.swing.JPanel();
-		jPanel5 = new javax.swing.JPanel();
-		jPanel7 = new javax.swing.JPanel();
-		jLabel5 = new javax.swing.JLabel();
-		m_jtxtName = new javax.swing.JTextField();
-		jLabel6 = new javax.swing.JLabel();
-		m_jtxtSearchKey = new javax.swing.JTextField();
-		jLabel7 = new javax.swing.JLabel();
-		m_jtxtTaxID = new javax.swing.JTextField();
-		jPanel6 = new javax.swing.JPanel();
-		jButton1 = new javax.swing.JButton();
-		jButton3 = new javax.swing.JButton();
-		jPanel4 = new javax.swing.JPanel();
-		jScrollPane1 = new javax.swing.JScrollPane();
-		jListCustomers = new javax.swing.JList();
-		jPanel8 = new javax.swing.JPanel();
-		jPanel1 = new javax.swing.JPanel();
-		jcmdOK = new javax.swing.JButton();
-		jcmdCancel = new javax.swing.JButton();
-
-		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		setTitle(AppLocal.getIntString("form.customertitle")); // NOI18N
-
-		jPanel3.setLayout(new java.awt.BorderLayout());
-
-		jPanel5.setLayout(new java.awt.BorderLayout());
-
-		jLabel5.setText(AppLocal.getIntString("label.prodname")); // NOI18N
-
-		jLabel6.setText(AppLocal.getIntString("label.searchkey")); // NOI18N
-
-		jLabel7.setText(AppLocal.getIntString("label.taxid")); // NOI18N
-
-		javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-		jPanel7.setLayout(jPanel7Layout);
-		jPanel7Layout.setHorizontalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(jPanel7Layout.createSequentialGroup().addContainerGap()
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 140,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(m_jtxtSearchKey, javax.swing.GroupLayout.PREFERRED_SIZE, 220,
-												javax.swing.GroupLayout.PREFERRED_SIZE)))
-						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
-		jPanel7Layout.setVerticalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(jPanel7Layout.createSequentialGroup().addContainerGap()
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(jLabel7).addComponent(m_jtxtTaxID, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(jLabel6).addComponent(m_jtxtSearchKey,
-										javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-										javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(jLabel5).addComponent(m_jtxtName, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
-
-		jPanel5.add(jPanel7, java.awt.BorderLayout.CENTER);
-
-		jButton1.setText(AppLocal.getIntString("button.clean")); // NOI18N
-		jButton1.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton1ActionPerformed(evt);
-			}
-		});
-		jPanel6.add(jButton1);
-
-		jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/launch.png"))); // NOI18N
-		jButton3.setText(AppLocal.getIntString("button.executefilter")); // NOI18N
-		jButton3.setFocusPainted(false);
-		jButton3.setFocusable(false);
-		jButton3.setRequestFocusEnabled(false);
-		jButton3.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton3ActionPerformed(evt);
-			}
-		});
-		jPanel6.add(jButton3);
-
-		jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
-
-		jPanel3.add(jPanel5, java.awt.BorderLayout.PAGE_START);
-
-		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		jPanel4.setLayout(new java.awt.BorderLayout());
-
-		jListCustomers.setFocusable(false);
-		jListCustomers.setRequestFocusEnabled(false);
-		jListCustomers.addMouseListener(new java.awt.event.MouseAdapter() {
-			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				jListCustomersMouseClicked(evt);
-			}
-		});
-		jListCustomers.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-			public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-				jListCustomersValueChanged(evt);
-			}
-		});
-		jScrollPane1.setViewportView(jListCustomers);
-
-		jPanel4.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-		jPanel3.add(jPanel4, java.awt.BorderLayout.CENTER);
-
-		jPanel8.setLayout(new java.awt.BorderLayout());
-
-		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
-		jcmdOK.setEnabled(false);
-		jcmdOK.setFocusPainted(false);
-		jcmdOK.setFocusable(false);
-		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdOK.setRequestFocusEnabled(false);
-		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdOKActionPerformed(evt);
-			}
-		});
-		jPanel1.add(jcmdOK);
-
-		jcmdCancel
-				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
-		jcmdCancel.setFocusPainted(false);
-		jcmdCancel.setFocusable(false);
-		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdCancel.setRequestFocusEnabled(false);
-		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdCancelActionPerformed(evt);
-			}
-		});
-		jPanel1.add(jcmdCancel);
-
-		jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
-
-		jPanel3.add(jPanel8, java.awt.BorderLayout.SOUTH);
-
-		getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
-
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 613) / 2, (screenSize.height - 610) / 2, 613, 610);
-	}// </editor-fold>//GEN-END:initComponents
-
-	private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdOKActionPerformed
-
-		selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
-		dispose();
-
-	}// GEN-LAST:event_jcmdOKActionPerformed
-
-	private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdCancelActionPerformed
-
-		dispose();
-
-	}// GEN-LAST:event_jcmdCancelActionPerformed
-
-	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
-
-		executeSearch();
-
-	}// GEN-LAST:event_jButton3ActionPerformed
-
-	private void jListCustomersValueChanged(javax.swing.event.ListSelectionEvent evt) {// GEN-FIRST:event_jListCustomersValueChanged
-
-		jcmdOK.setEnabled(jListCustomers.getSelectedValue() != null);
-
-	}// GEN-LAST:event_jListCustomersValueChanged
-
-	private void jListCustomersMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jListCustomersMouseClicked
-
-		if (evt.getClickCount() == 2) {
-			selectedCustomer = (CustomerInfo) jListCustomers.getSelectedValue();
-			dispose();
-		}
-
-	}// GEN-LAST:event_jListCustomersMouseClicked
-
-	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
-
-		cleanFields();
-
-		cleanSearch();
-	}// GEN-LAST:event_jButton1ActionPerformed
-
-	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JButton jButton1;
-	private javax.swing.JButton jButton3;
-	private javax.swing.JLabel jLabel5;
-	private javax.swing.JLabel jLabel6;
-	private javax.swing.JLabel jLabel7;
-	private javax.swing.JList jListCustomers;
-	private javax.swing.JPanel jPanel1;
-	private javax.swing.JPanel jPanel3;
-	private javax.swing.JPanel jPanel4;
-	private javax.swing.JPanel jPanel5;
-	private javax.swing.JPanel jPanel6;
-	private javax.swing.JPanel jPanel7;
-	private javax.swing.JPanel jPanel8;
-	private javax.swing.JScrollPane jScrollPane1;
-	private javax.swing.JButton jcmdCancel;
-	private javax.swing.JButton jcmdOK;
-	private javax.swing.JTextField m_jtxtName;
-	private javax.swing.JTextField m_jtxtSearchKey;
-	private javax.swing.JTextField m_jtxtTaxID;
-	// End of variables declaration//GEN-END:variables
 }

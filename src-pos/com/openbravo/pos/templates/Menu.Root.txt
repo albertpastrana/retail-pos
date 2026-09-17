@@ -20,7 +20,7 @@
     group = menu.addGroup("Menu.Main");
     group.addPanel("/com/openbravo/images/menu-sales.png", "Menu.Ticket", "com.openbravo.pos.sales.JPanelTicketSales");
     group.addPanel("/com/openbravo/images/menu-edit-sales.png", "Menu.TicketEdit", "com.openbravo.pos.sales.JPanelTicketEdits");
-    group.addPanel("/com/openbravo/images/menu-customers-payment.png", "Menu.CustomersPayment", "com.openbravo.pos.customers.CustomersPayment");
+    group.addPanel("/com/openbravo/images/menu-customers-payment.png", "Menu.CustomersPayment", "com.openbravo.pos.customers.CustomersPanel");
     group.addPanel("/com/openbravo/images/menu-payments.png", "Menu.Payments", "com.openbravo.pos.panels.JPanelPayments");
     group.addPanel("/com/openbravo/images/menu-close-cash.png", "Menu.CloseTPV", "com.openbravo.pos.panels.JPanelCloseMoney");
     group.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.Closing", "com.openbravo.pos.panels.JPanelClosedCash");

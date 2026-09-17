@@ -34,6 +34,7 @@ public class CustomerInfo implements Serializable {
 	protected String taxid;
 	protected String name;
 	protected String address;
+	protected String phone;
 
 	/** Creates a new instance of UserInfoBasic */
 	public CustomerInfo(String id) {
@@ -42,6 +43,7 @@ public class CustomerInfo implements Serializable {
 		this.taxid = null;
 		this.name = null;
 		this.address = null;
+		this.phone = null;
 	}
 
 	public String getId() {
@@ -80,6 +82,28 @@ public class CustomerInfo implements Serializable {
 		this.address = address;
 	}
 
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public static String normalizePhone(String value) {
+		if (value == null) {
+			return null;
+		}
+		StringBuilder digits = new StringBuilder();
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9') {
+				digits.append(c);
+			}
+		}
+		return digits.toString();
+	}
+
 	public String printTaxid() {
 		return StringUtils.encodeXML(taxid);
 	}
@@ -90,6 +114,6 @@ public class CustomerInfo implements Serializable {
 
 	@Override
 	public String toString() {
-		return getName() + " (" + getAddress() + ")";
+		return getName() + (getPhone() == null || getPhone().isEmpty() ? "" : " (" + getPhone() + ")");
 	}
 }

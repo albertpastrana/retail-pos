@@ -45,6 +45,7 @@ import com.openbravo.data.loader.Transaction;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.customers.DataLogicCustomers;
 import com.openbravo.pos.customers.JCustomerFinder;
+import com.openbravo.pos.customers.CustomerSheet;
 import com.openbravo.pos.scripting.ScriptEngine;
 import com.openbravo.pos.scripting.ScriptException;
 import com.openbravo.pos.scripting.ScriptFactory;
@@ -336,6 +337,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void refreshTicket() {
+		updateCustomerButton();
 
 		CardLayout cl = (CardLayout) (getLayout());
 
@@ -386,6 +388,18 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				}
 			});
 		}
+	}
+
+	private void updateCustomerButton() {
+		String label = AppLocal.getIntString("buttonlabel.customer");
+		if (m_oTicket != null && m_oTicket.getCustomer() != null) {
+			CustomerInfoExt customer = m_oTicket.getCustomer();
+			label = customer.getName();
+			if (customer.getCurdebt() != null && customer.getCurdebt().doubleValue() > 0.0) {
+				label += " " + Formats.CURRENCY.formatValue(customer.getCurdebt());
+			}
+		}
+		TillButtons.labelUnderIcon(btnCustomer, label);
 	}
 
 	private void printPartialTotals() {
@@ -898,25 +912,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			// Codigo de barras introducido
 			String sCode = m_jKeyFactory.getText();
 			if (sCode != null && sCode.length() > 0) {
-				if (sCode.startsWith("c")) {
-					// barcode of a customers card
-					try {
-						CustomerInfoExt newcustomer = dlSales.findCustomerExt(sCode);
-						if (newcustomer == null) {
-							Toolkit.getDefaultToolkit().beep();
-							new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.nocustomer"))
-									.show(this);
-						} else {
-							m_oTicket.setCustomer(newcustomer);
-							notifyTicketChanged();
-						}
-					} catch (BasicException e) {
-						Toolkit.getDefaultToolkit().beep();
-						new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.nocustomer"), e)
-								.show(this);
-					}
-					stateToZero();
-				} else if (sCode.length() == 13 && sCode.startsWith("250")) {
+				if (sCode.length() == 13 && sCode.startsWith("250")) {
 					// barcode of the other machine
 					ProductInfoExt oProduct = new ProductInfoExt(); // Es un ticket
 					oProduct.setReference(null); // para que no se grabe
@@ -1967,14 +1963,29 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private void btnCustomerActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnCustomerActionPerformed
 
-		JCustomerFinder finder = JCustomerFinder.getCustomerFinder(this, dlCustomers);
-		finder.search(m_oTicket.getCustomer());
-		finder.setVisible(true);
-
 		try {
-			m_oTicket.setCustomer(finder.getSelectedCustomer() == null
-					? null
-					: dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()));
+			boolean openFinder = m_oTicket.getCustomer() == null;
+			if (m_oTicket.getCustomer() != null) {
+				int action = CustomerSheet.showDialog(this, m_App, m_oTicket.getCustomer());
+				if (action == CustomerSheet.REMOVE) {
+					m_oTicket.setCustomer(null);
+					openFinder = false;
+				} else if (action != CustomerSheet.CHANGE) {
+					return;
+				} else {
+					openFinder = true;
+				}
+			}
+			if (openFinder) {
+				JCustomerFinder finder = JCustomerFinder.getCustomerFinder(this, dlCustomers);
+				finder.search(m_oTicket.getCustomer());
+				finder.setVisible(true);
+				if (finder.isRemoveRequested()) {
+					m_oTicket.setCustomer(null);
+				} else if (finder.getSelectedCustomer() != null) {
+					m_oTicket.setCustomer(dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()));
+				}
+			}
 		} catch (BasicException e) {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"),
 					e);

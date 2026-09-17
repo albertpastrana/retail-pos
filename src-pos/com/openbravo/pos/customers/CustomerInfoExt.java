@@ -32,14 +32,12 @@ public class CustomerInfoExt extends CustomerInfo {
 	protected String taxcustomerid;
 	protected String notes;
 	protected boolean visible;
-	protected String card;
 	protected Double maxdebt;
 	protected Date curdate;
 	protected Double curdebt;
 	protected String firstname;
 	protected String lastname;
 	protected String email;
-	protected String phone;
 	protected String phone2;
 	protected String fax;
 	protected String address2;
@@ -75,14 +73,6 @@ public class CustomerInfoExt extends CustomerInfo {
 
 	public void setVisible(boolean visible) {
 		this.visible = visible;
-	}
-
-	public String getCard() {
-		return card;
-	}
-
-	public void setCard(String card) {
-		this.card = card;
 	}
 
 	public Double getMaxdebt() {
@@ -156,14 +146,6 @@ public class CustomerInfoExt extends CustomerInfo {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public void setPhone(String phone) {
-		this.phone = phone;
 	}
 
 	public String getPhone2() {
