@@ -157,6 +157,13 @@ tasks.assemble {
 
 tasks.check {
     dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs, syncRunJars, "compileDataHelpersJava")
+    dependsOn("checkMigrationChecksums")
+}
+
+tasks.register<Exec>("checkMigrationChecksums") {
+    group = "verification"
+    description = "Ensure applied Flyway migrations are immutable."
+    commandLine("bash", "scripts/check-migration-checksums.sh")
 }
 
 tasks.named("compileDataHelpersJava") {

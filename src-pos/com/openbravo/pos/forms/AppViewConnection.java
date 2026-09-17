@@ -26,6 +26,8 @@ import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.util.AltEncrypter;
@@ -35,6 +37,7 @@ import com.openbravo.pos.util.AltEncrypter;
  * @author adrianromero
  */
 public class AppViewConnection {
+	private static final Logger logger = Logger.getLogger(AppViewConnection.class.getName());
 
 	/** Creates a new instance of AppViewConnection */
 	private AppViewConnection() {
@@ -80,6 +83,7 @@ public class AppViewConnection {
 		} catch (SQLException eSQL) {
 			throw new BasicException(AppLocal.getIntString("message.databaseconnectionerror"), eSQL);
 		} catch (RuntimeException e) {
+			logger.log(Level.SEVERE, "Could not initialize database session", e);
 			throw new BasicException(AppLocal.getIntString("Database.ScriptError"), e);
 		}
 	}

@@ -20,6 +20,7 @@
 package com.openbravo.data.gui;
 
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import javax.swing.*;
 import com.openbravo.data.loader.LocalRes;
 /**
@@ -106,6 +107,7 @@ public class JMessageDialog extends javax.swing.JDialog {
 			myMsg.jtxtException.setText(sb.toString());
 		}
 		myMsg.jtxtException.setCaretPosition(0);
+		myMsg.jcmdCopy.setEnabled(myMsg.jtxtException.getText() != null && !myMsg.jtxtException.getText().isEmpty());
 
 		// myMsg.show();
 		myMsg.setVisible(true);
@@ -130,6 +132,7 @@ public class JMessageDialog extends javax.swing.JDialog {
 		jPanel2 = new javax.swing.JPanel();
 		jcmdOK = new javax.swing.JButton();
 		jcmdMore = new javax.swing.JButton();
+		jcmdCopy = new javax.swing.JButton();
 
 		setTitle(LocalRes.getIntString("title.message")); // NOI18N
 		setResizable(false);
@@ -186,6 +189,15 @@ public class JMessageDialog extends javax.swing.JDialog {
 		});
 		jPanel2.add(jcmdMore);
 
+		jcmdCopy.setText(LocalRes.getIntString("button.copy")); // NOI18N
+		jcmdCopy.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				Toolkit.getDefaultToolkit().getSystemClipboard()
+						.setContents(new StringSelection(jtxtException.getText()), null);
+			}
+		});
+		jPanel2.add(jcmdCopy);
+
 		jPanel3.add(jPanel2, java.awt.BorderLayout.LINE_END);
 
 		getContentPane().add(jPanel3, java.awt.BorderLayout.SOUTH);
@@ -221,6 +233,7 @@ public class JMessageDialog extends javax.swing.JDialog {
 	private javax.swing.JPanel jPanel3;
 	private javax.swing.JPanel jPanel4;
 	private javax.swing.JButton jcmdMore;
+	private javax.swing.JButton jcmdCopy;
 	private javax.swing.JButton jcmdOK;
 	private javax.swing.JLabel jlblErrorCode;
 	private javax.swing.JLabel jlblIcon;

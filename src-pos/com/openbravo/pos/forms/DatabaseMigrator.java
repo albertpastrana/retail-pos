@@ -5,10 +5,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.flywaydb.core.Flyway;
 
 final class DatabaseMigrator {
+	private static final Logger logger = Logger.getLogger(DatabaseMigrator.class.getName());
 
 	private static final String DERBY_URL_PREFIX = "jdbc:derby:";
 	private static final String DATABASE_NOT_FOUND = "XJ004";
@@ -23,6 +26,7 @@ final class DatabaseMigrator {
 	}
 
 	static void migrate(String url, String user, String password) {
+		logger.info("Starting database migration: " + url);
 		Map<String, String> placeholders = placeholdersFor(url);
 		placeholders.put("app_id", AppLocal.APP_ID);
 		placeholders.put("app_name", AppLocal.APP_NAME);
@@ -34,8 +38,15 @@ final class DatabaseMigrator {
 
 		// A database that predates Flyway already holds everything V1 and V2 create,
 		// so adopt it at version 2 rather than replaying the baseline over live data.
-		Flyway.configure().dataSource(url, user, password).locations("classpath:db/migration")
-				.placeholders(placeholders).baselineOnMigrate(true).baselineVersion("2").load().migrate();
+		try {
+			Flyway.configure().dataSource(url, user, password).locations("classpath:db/migration")
+					.placeholders(placeholders).baselineOnMigrate(true).baselineVersion("2").validateOnMigrate(true)
+					.load().migrate();
+			logger.info("Database migration completed: " + url);
+		} catch (RuntimeException e) {
+			logger.log(Level.SEVERE, "Database migration failed: " + url, e);
+			throw e;
+		}
 	}
 
 	/**
