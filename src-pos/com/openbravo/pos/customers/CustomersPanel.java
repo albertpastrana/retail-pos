@@ -101,6 +101,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
         debtOnly.addActionListener(e -> loadCustomers());
         inactive.addActionListener(e -> loadCustomers());
         clearSearch.addActionListener(e -> search.setText(""));
+        debtOnly.setFont(debtOnly.getFont().deriveFont(Font.PLAIN, debtOnly.getFont().getSize2D() + 1f));
+        inactive.setFont(inactive.getFont().deriveFont(Font.PLAIN, inactive.getFont().getSize2D() + 1f));
         save.addActionListener(e -> saveCustomer());
         cancel.addActionListener(e -> cancelEdit());
         archive.addActionListener(e -> toggleArchive());
@@ -135,14 +137,14 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
         c.weightx = 1; tools.add(searchBox, c);
         c.weightx = 0; tools.add(debtOnly, c); tools.add(inactive, c);
         c.weightx = 1; tools.add(BoxPanel.glue(), c);
-        c.weightx = 0; newCustomer.setForeground(Color.WHITE); newCustomer.setBackground(new Color(48, 112, 183));
+        c.weightx = 0; newCustomer.setMargin(new Insets(9, 14, 9, 14)); newCustomer.setForeground(Color.WHITE); newCustomer.setBackground(new Color(48, 112, 183));
         newCustomer.setFont(newCustomer.getFont().deriveFont(Font.BOLD)); tools.add(newCustomer, c);
         left.add(tools, BorderLayout.NORTH);
         table.setRowSorter(sorter);
         sorter.setComparator(0, Collator.getInstance(new Locale("ca")));
         sorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
         table.setAutoCreateRowSorter(false); table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setRowHeight(30); table.setShowVerticalLines(false); table.setShowHorizontalLines(true);
+        table.setRowHeight(34); table.setShowVerticalLines(false); table.setShowHorizontalLines(true);
         table.setGridColor(new Color(235, 235, 235)); table.setFillsViewportHeight(true);
         table.getSelectionModel().addListSelectionListener(e -> { if (!e.getValueIsAdjusting() && !loading) selectionChanged(); });
         table.getColumnModel().getColumn(2).setCellRenderer(new DebtRenderer());
@@ -160,22 +162,22 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
         JPanel content = new JPanel(new GridBagLayout()); content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
         GridBagConstraints f = new GridBagConstraints(); f.gridx = 0; f.weightx = 1; f.fill = GridBagConstraints.HORIZONTAL; f.anchor = GridBagConstraints.NORTHWEST; f.insets = new Insets(0, 0, 5, 0);
         addField(content, f, 0, "Nom", name); addField(content, f, 2, "Telèfon", phone);
-        f.gridy = 4; content.add(new JLabel("Notes"), f); f.gridy = 5; f.weighty = 0; f.fill = GridBagConstraints.BOTH; content.add(new JScrollPane(notes), f);
-        f.gridy = 6; f.weighty = 1; content.add(debtBlock(), f); detail.add(content, BorderLayout.CENTER);
+        f.gridy = 4; content.add(new JLabel("Notes"), f); f.gridy = 5; f.weighty = 1; f.fill = GridBagConstraints.BOTH; content.add(new JScrollPane(notes), f);
+        f.gridy = 6; f.weighty = 0; content.add(debtBlock(), f); detail.add(content, BorderLayout.CENTER);
         JPanel bottom = new JPanel(new BorderLayout()); bottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(210, 210, 210)));
         JPanel actions = new JPanel(new GridLayout(1, 2, 8, 0)); actions.setBorder(BorderFactory.createEmptyBorder(12, 14, 6, 14));
-        save.setBackground(new Color(48, 112, 183)); save.setForeground(Color.WHITE); save.setFont(save.getFont().deriveFont(Font.BOLD));
+        save.setMargin(new Insets(10, 12, 10, 12)); cancel.setMargin(new Insets(10, 12, 10, 12)); save.setBackground(new Color(48, 112, 183)); save.setForeground(Color.WHITE); save.setFont(save.getFont().deriveFont(Font.BOLD));
         cancel.setContentAreaFilled(false); actions.add(save); actions.add(cancel); bottom.add(actions, BorderLayout.NORTH);
         JPanel statePanel = new JPanel(new BorderLayout()); statePanel.setBorder(BorderFactory.createEmptyBorder(0, 14, 8, 14)); statePanel.add(state, BorderLayout.WEST); bottom.add(statePanel, BorderLayout.CENTER);
         archive.setBorderPainted(false); archive.setContentAreaFilled(false); archive.setForeground(DARK_RED); JPanel archivePanel = new JPanel(new FlowLayout(FlowLayout.TRAILING)); archivePanel.add(archive); bottom.add(archivePanel, BorderLayout.SOUTH);
         detail.add(bottom, BorderLayout.SOUTH);
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, detail); split.setResizeWeight(1.0); split.setDividerLocation(-340); detail.setMinimumSize(new Dimension(300, 0)); detail.setPreferredSize(new Dimension(340, 0));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, detail); split.setResizeWeight(1.0); split.setDividerLocation(-390); detail.setMinimumSize(new Dimension(340, 0)); detail.setPreferredSize(new Dimension(390, 0));
         return panelWith(split);
     }
 
     private JPanel panelWith(Component component) { JPanel p = new JPanel(new BorderLayout()); p.add(component); return p; }
     private void addField(JPanel p, GridBagConstraints c, int row, String label, JComponent field) { c.gridy = row; p.add(new JLabel(label), c); c.gridy = row + 1; p.add(field, c); }
-    private JPanel debtBlock() { JPanel p = new JPanel(new BorderLayout(4, 4)); p.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(215,215,215)), BorderFactory.createEmptyBorder(10, 12, 10, 12))); p.add(new JLabel("Deute acumulat"), BorderLayout.WEST); debtValue.setFont(debtValue.getFont().deriveFont(Font.BOLD, 25f)); debtValue.setForeground(DARK_RED); p.add(debtValue, BorderLayout.EAST); JLabel note = new JLabel("Es calcula a partir dels albarans. No editable aquí."); p.add(note, BorderLayout.SOUTH); return p; }
+    private JPanel debtBlock() { JPanel p = new JPanel(new BorderLayout(4, 4)); p.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(215,215,215)), BorderFactory.createEmptyBorder(10, 12, 10, 12))); p.add(new JLabel("Deute acumulat"), BorderLayout.WEST); debtValue.setFont(debtValue.getFont().deriveFont(Font.BOLD, 20f)); debtValue.setForeground(DARK_RED); p.add(debtValue, BorderLayout.EAST); JLabel note = new JLabel("<html>Es calcula a partir dels albarans. No editable aquí.</html>"); note.setForeground(Color.GRAY); p.add(note, BorderLayout.SOUTH); return p; }
 
     private void installActions() {
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("control N"), "new"); getActionMap().put("new", new AbstractAction() { public void actionPerformed(java.awt.event.ActionEvent e) { startNewCustomer(); }});
