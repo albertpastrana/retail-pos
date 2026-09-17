@@ -40,7 +40,7 @@ On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
 
 ## Releases
 
-Pushing a tag such as `v2.30.5` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS, each with a bundled JRE, and publishes them with SHA256 checksums to the GitHub Release. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
+Pushing a tag such as `v2.30.5` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Windows and macOS packages include a bundled JRE; the Linux package uses the system Java installation to avoid cross-platform JRE mismatches. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
 
 ## Configuration
 

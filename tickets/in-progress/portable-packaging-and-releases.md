@@ -12,7 +12,7 @@ The application is a Gradle-built Java Swing desktop application. The current bu
 
 The work is split into two phases:
 
-1. **Portable packages:** produce x86_64 `.tar.gz` for Linux, `.zip` for Windows, and `.tar.gz` for macOS. Include the application jars, runtime dependencies, platform libraries, launchers, and a JRE. A `v*` tag creates a GitHub Release and uploads the packages and checksums.
+1. **Portable packages:** produce x86_64 `.tar.gz` for Linux, `.zip` for Windows, and `.tar.gz` for macOS. Include the application jars, runtime dependencies, platform libraries, and launchers. Windows and macOS include a JRE; Linux uses the system Java installation. A `v*` tag creates a GitHub Release and uploads the packages and checksums.
 2. **Native installers:** evaluate and add AppImage/deb/rpm for Linux, MSI or an equivalent installer for Windows, and DMG/PKG for macOS. Add platform signing and notarization where applicable, and validate native printer support on each target architecture.
 
 The first phase targets x86_64. Apple Silicon and Linux ARM64 need separate native-library validation because the current RXTX library set does not clearly provide those architectures.
@@ -23,7 +23,7 @@ Phase 1 implementation uses `scripts/package-portable.sh`, a bundled JRE produce
 
 - Pushing a `v*` tag runs the existing verification and release packaging workflow.
 - The GitHub Release contains one downloadable portable package for Linux, Windows, and macOS.
-- Each package starts with its bundled JRE and does not require a system Java installation.
+- Windows and macOS packages start with their bundled JRE; the Linux package requires system Java.
 - Platform-specific RXTX libraries and the existing licensing files are present in the relevant packages.
 - SHA256 checksums are attached to the release.
 - The release and packaging steps are documented for maintainers.

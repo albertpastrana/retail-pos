@@ -12,6 +12,12 @@ case "$platform" in
   *) echo "Unsupported platform: $platform" >&2; exit 2 ;;
 esac
 
+if [ "$platform" = "linux" ]; then
+  runtime_note="This package uses Java installed on the system."
+else
+  runtime_note="This package includes its Java runtime."
+fi
+
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dist="$root/dist"
 staging="$dist/RetailPOS-${platform}-x86_64"
@@ -26,21 +32,23 @@ cp "$root/logging.properties" "$root/start.sh" "$root/start.bat" "$root/scripts/
 cp -R "$root/licensing" "$staging/"
 cp -R "$root/lib/$native_lib" "$staging/lib/$native_lib"
 
-jlink="${JAVA_HOME:-}/bin/jlink"
-if [ ! -x "$jlink" ]; then jlink="$(command -v jlink)"; fi
-"$jlink" \
-  --add-modules ALL-MODULE-PATH \
-  --strip-debug \
-  --no-man-pages \
-  --no-header-files \
-  --compress=2 \
-  --output "$staging/runtime"
+if [ "$platform" != "linux" ]; then
+  jlink="${JAVA_HOME:-}/bin/jlink"
+  if [ ! -x "$jlink" ]; then jlink="$(command -v jlink)"; fi
+  "$jlink" \
+    --add-modules ALL-MODULE-PATH \
+    --strip-debug \
+    --no-man-pages \
+    --no-header-files \
+    --compress=2 \
+    --output "$staging/runtime"
+fi
 
 cat > "$staging/README.txt" <<EOF
 Retail POS ${version}
 
 Run start.sh on Linux or macOS, and start.bat on Windows.
-The package includes its Java runtime. Application configuration remains
+${runtime_note} Application configuration remains
 external; see the project documentation for database and printer settings.
 EOF
 chmod +x "$staging/start.sh"
