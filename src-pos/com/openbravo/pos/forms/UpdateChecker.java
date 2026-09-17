@@ -54,7 +54,7 @@ public final class UpdateChecker {
 						java.awt.EventQueue.invokeLater(new Runnable() {
 							@Override
 							public void run() {
-								showUpdate(parent, availableRelease);
+								showUpdate(config, parent, availableRelease);
 							}
 						});
 					} else {
@@ -228,7 +228,7 @@ public final class UpdateChecker {
 		return parts;
 	}
 
-	private static void showUpdate(Component parent, Release release) {
+	private static void showUpdate(AppConfig config, Component parent, Release release) {
 		String message = AppLocal.getIntString("update.available", release.version, AppLocal.APP_VERSION);
 		if (release.packageFile != null) {
 			int choice = JOptionPane.showOptionDialog(parent, message, AppLocal.getIntString("update.title"),
@@ -237,7 +237,7 @@ public final class UpdateChecker {
 					AppLocal.getIntString("update.install"));
 			logger.info("Update dialog choice for local package: " + choice);
 			if (choice == 0) {
-				installAndRestart(parent, release.packageFile);
+				installAndRestart(parent, release.packageFile, config.getConfigFile());
 			}
 			return;
 		}
@@ -257,7 +257,7 @@ public final class UpdateChecker {
 		}
 	}
 
-	private static void installAndRestart(Component parent, File packageFile) {
+	private static void installAndRestart(Component parent, File packageFile, File configFile) {
 		try {
 			File installDir = new File(System.getProperty("dirname.path")).getCanonicalFile();
 			String platform = platformName();
@@ -272,10 +272,10 @@ public final class UpdateChecker {
 			}
 			if (platform.equals("windows")) {
 				new ProcessBuilder("cmd", "/c", "start", "", updater.getAbsolutePath(), packageFile.getAbsolutePath(),
-						installDir.getAbsolutePath(), processId()).start();
+						installDir.getAbsolutePath(), processId(), configFile.getAbsolutePath()).start();
 			} else {
 				new ProcessBuilder(updater.getAbsolutePath(), packageFile.getAbsolutePath(),
-						installDir.getAbsolutePath(), processId()).start();
+						installDir.getAbsolutePath(), processId(), configFile.getAbsolutePath()).start();
 			}
 			logger.info("Updater process started; exiting application");
 			System.exit(0);
