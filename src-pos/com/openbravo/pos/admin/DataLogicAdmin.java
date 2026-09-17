@@ -20,11 +20,14 @@
 package com.openbravo.pos.admin;
 
 import com.openbravo.data.loader.Datas;
+import com.openbravo.data.loader.SentenceFind;
 import com.openbravo.data.loader.SentenceList;
+import com.openbravo.data.loader.SerializerReadInteger;
 import com.openbravo.data.loader.SerializerReadClass;
 import com.openbravo.data.loader.Session;
 import com.openbravo.data.loader.StaticSentence;
 import com.openbravo.data.loader.TableDefinition;
+import com.openbravo.basic.BasicException;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.BeanFactoryDataSingle;
@@ -37,6 +40,7 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 
 	private Session s;
 	private TableDefinition m_tpeople;
+	private SentenceFind m_nextpeoplesortorder;
 	private TableDefinition m_troles;
 	private TableDefinition m_tresources;
 
@@ -48,15 +52,17 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 		this.s = s;
 
 		m_tpeople = new TableDefinition(s, "PEOPLE",
-				new String[]{"ID", "NAME", "APPPASSWORD", "ROLE", "VISIBLE", "CARD", "IMAGE"},
+				new String[]{"ID", "NAME", "APPPASSWORD", "ROLE", "VISIBLE", "CARD", "IMAGE", "SORT_ORDER"},
 				new String[]{"ID", AppLocal.getIntString("label.peoplename"), AppLocal.getIntString("Label.Password"),
 						AppLocal.getIntString("label.role"), AppLocal.getIntString("label.peoplevisible"),
-						AppLocal.getIntString("label.card"), AppLocal.getIntString("label.peopleimage")},
+						AppLocal.getIntString("label.card"), AppLocal.getIntString("label.peopleimage"), "Sort order"},
 				new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, Datas.BOOLEAN, Datas.STRING,
-						Datas.IMAGE},
+						Datas.IMAGE, Datas.INT},
 				new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING, Formats.BOOLEAN,
-						Formats.STRING, Formats.NULL},
+						Formats.STRING, Formats.NULL, Formats.INT},
 				new int[]{0});
+		m_nextpeoplesortorder = new StaticSentence(s, "SELECT COALESCE(MAX(SORT_ORDER), -1) + 1 FROM PEOPLE", null,
+				SerializerReadInteger.INSTANCE);
 
 		m_troles = new TableDefinition(s, "ROLES", new String[]{"ID", "NAME", "PERMISSIONS"},
 				new String[]{"ID", AppLocal.getIntString("Label.Name"), "PERMISSIONS"},
@@ -75,6 +81,10 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 	}
 	public final TableDefinition getTablePeople() {
 		return m_tpeople;
+	}
+
+	public final int getNextPeopleSortOrder() throws BasicException {
+		return ((Integer) m_nextpeoplesortorder.find()).intValue();
 	}
 	public final TableDefinition getTableRoles() {
 		return m_troles;

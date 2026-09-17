@@ -39,7 +39,9 @@ import com.openbravo.pos.util.StringUtils;
 public class PeopleView extends JPanel implements EditorRecord {
 
 	private Object m_oId;
+	private Object m_oSortOrder;
 	private String m_sPassword;
+	private final DataLogicAdmin m_dlAdmin;
 
 	private DirtyManager m_Dirty;
 
@@ -48,6 +50,7 @@ public class PeopleView extends JPanel implements EditorRecord {
 
 	/** Creates new form PeopleEditor */
 	public PeopleView(DataLogicAdmin dlAdmin, DirtyManager dirty) {
+		m_dlAdmin = dlAdmin;
 		initComponents();
 
 		// El modelo de roles
@@ -65,6 +68,7 @@ public class PeopleView extends JPanel implements EditorRecord {
 
 	public void writeValueEOF() {
 		m_oId = null;
+		m_oSortOrder = null;
 		m_jName.setText(null);
 		m_sPassword = null;
 		m_RoleModel.setSelectedKey(null);
@@ -83,6 +87,7 @@ public class PeopleView extends JPanel implements EditorRecord {
 
 	public void writeValueInsert() {
 		m_oId = null;
+		m_oSortOrder = null;
 		m_jName.setText(null);
 		m_sPassword = null;
 		m_RoleModel.setSelectedKey(null);
@@ -102,6 +107,7 @@ public class PeopleView extends JPanel implements EditorRecord {
 	public void writeValueDelete(Object value) {
 		Object[] people = (Object[]) value;
 		m_oId = people[0];
+		m_oSortOrder = people[7];
 		m_jName.setText(Formats.STRING.formatValue(people[1]));
 		m_sPassword = Formats.STRING.formatValue(people[2]);
 		m_RoleModel.setSelectedKey(people[3]);
@@ -121,6 +127,7 @@ public class PeopleView extends JPanel implements EditorRecord {
 	public void writeValueEdit(Object value) {
 		Object[] people = (Object[]) value;
 		m_oId = people[0];
+		m_oSortOrder = people[7];
 		m_jName.setText(Formats.STRING.formatValue(people[1]));
 		m_sPassword = Formats.STRING.formatValue(people[2]);
 		m_RoleModel.setSelectedKey(people[3]);
@@ -138,8 +145,9 @@ public class PeopleView extends JPanel implements EditorRecord {
 	}
 
 	public Object createValue() throws BasicException {
-		Object[] people = new Object[7];
+		Object[] people = new Object[8];
 		people[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+		people[7] = m_oSortOrder == null ? Integer.valueOf(m_dlAdmin.getNextPeopleSortOrder()) : m_oSortOrder;
 		people[1] = Formats.STRING.parseValue(m_jName.getText());
 		people[2] = Formats.STRING.parseValue(m_sPassword);
 		people[3] = m_RoleModel.getSelectedKey();
