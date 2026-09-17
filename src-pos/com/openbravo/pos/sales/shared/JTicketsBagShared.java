@@ -24,6 +24,7 @@ import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.util.TillButtons;
 import java.awt.event.KeyEvent;
 import java.util.*;
+import java.util.logging.Logger;
 import javax.swing.*;
 
 import com.openbravo.basic.BasicException;
@@ -34,6 +35,7 @@ import com.openbravo.pos.forms.*;
 public class JTicketsBagShared extends JTicketsBag {
 
 	private static final String MESSAGE_NO_TICKET = "message.noticket";
+	private static final Logger LOGGER = Logger.getLogger(JTicketsBagShared.class.getName());
 
 	private String m_sCurrentTicket = null;
 	private boolean currentTicketPersisted;
@@ -42,6 +44,7 @@ public class JTicketsBagShared extends JTicketsBag {
 	private Map<String, JToggleButton> m_sellerButtons = new HashMap<String, JToggleButton>();
 	private Map<String, UserInfo> m_sellers = new HashMap<String, UserInfo>();
 	private final String host;
+	private final javax.swing.Timer ownershipTimer;
 
 	/** Creates new form JTicketsBagShared */
 	public JTicketsBagShared(AppView app, TicketsEditor panelticket) {
@@ -51,6 +54,7 @@ public class JTicketsBagShared extends JTicketsBag {
 		dlReceipts = (DataLogicReceipts) app.getBean("com.openbravo.pos.sales.DataLogicReceipts");
 		host = app.getProperties().getHost();
 		panelticket.setTicketChangeListener(this::saveActiveTicket);
+		ownershipTimer = new javax.swing.Timer(2000, e -> refreshTicketOwnership());
 
 		initComponents();
 		initSellerButtons();
@@ -62,6 +66,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		m_sCurrentTicket = null;
 		createTicket(null);
+		ownershipTimer.start();
 
 		// Authorization
 		m_jDelTicket.setEnabled(
@@ -78,6 +83,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		m_sCurrentTicket = null;
 		m_panelticket.setActiveTicket(null, null);
+		ownershipTimer.stop();
 
 		return true;
 
@@ -142,6 +148,7 @@ public class JTicketsBagShared extends JTicketsBag {
 		if (m_sCurrentTicket != null && ticket != null && ticket.getLinesCount() > 0) {
 			try {
 				if (!dlReceipts.parkSharedTicket(m_sCurrentTicket, ticket, host)) {
+					LOGGER.warning("park rejected ticket=" + m_sCurrentTicket + " host=" + host);
 					showTicketTaken();
 					createTicket(null);
 					return false;
@@ -169,6 +176,7 @@ public class JTicketsBagShared extends JTicketsBag {
 					currentTicketPersisted = false;
 				}
 			} else if (!dlReceipts.saveSharedTicket(m_sCurrentTicket, ticket, host)) {
+				LOGGER.warning("save rejected ticket=" + m_sCurrentTicket + " host=" + host);
 				showTicketTaken();
 				createTicket(null);
 			} else {
@@ -232,15 +240,49 @@ public class JTicketsBagShared extends JTicketsBag {
 		}
 
 		try {
-			String ticketId = findTicketForSeller(user.getId());
+			String ticketId = dlReceipts.claimSharedTicketForSeller(user.getId(), host);
 			if (ticketId == null) {
 				createTicket(user.getUserInfo());
 			} else {
-				setActiveTicket(ticketId);
+				setActiveTicketFromClaim(ticketId, dlReceipts.getSharedTicket(ticketId));
 			}
 		} catch (BasicException e) {
 			new MessageInf(e).show(this);
 			createTicket(user.getUserInfo());
+		}
+	}
+
+	private void setActiveTicketFromClaim(String id, TicketInfo ticket) {
+		if (ticket == null) {
+			LOGGER.warning("claimed ticket could not be read ticket=" + id + " host=" + host);
+			try {
+				dlReceipts.deleteSharedTicket(id, host);
+			} catch (BasicException e) {
+				LOGGER.warning("could not release unreadable ticket=" + id + " host=" + host);
+			}
+			createTicket(null);
+			return;
+		}
+		m_sCurrentTicket = id;
+		currentTicketPersisted = true;
+		resolveSeller(ticket);
+		m_panelticket.setActiveTicket(ticket, null);
+		syncSellerSelection();
+	}
+
+	private void refreshTicketOwnership() {
+		if (!currentTicketPersisted || m_sCurrentTicket == null) {
+			return;
+		}
+		try {
+			if (!dlReceipts.isSharedTicketOwned(m_sCurrentTicket, host)) {
+				LOGGER.warning("ticket no longer owned ticket=" + m_sCurrentTicket + " host=" + host);
+				currentTicketPersisted = false;
+				createTicket(null);
+			}
+		} catch (BasicException e) {
+			LOGGER.warning(
+					"ownership check failed ticket=" + m_sCurrentTicket + " host=" + host + " error=" + e.getMessage());
 		}
 	}
 
@@ -251,17 +293,6 @@ public class JTicketsBagShared extends JTicketsBag {
 			// sellers that are no longer available.
 			ticket.setUser(m_sellers.get(seller.getId()));
 		}
-	}
-
-	private String findTicketForSeller(String sellerId) throws BasicException {
-		List<SharedTicketInfo> tickets = dlReceipts.getSharedTicketList();
-		for (SharedTicketInfo ticketInfo : tickets) {
-			TicketInfo ticket = dlReceipts.getSharedTicket(ticketInfo.getId());
-			if (ticket != null && ticket.getUser() != null && sellerId.equals(ticket.getUser().getId())) {
-				return ticketInfo.getId();
-			}
-		}
-		return null;
 	}
 
 	private void initSellerButtons() {

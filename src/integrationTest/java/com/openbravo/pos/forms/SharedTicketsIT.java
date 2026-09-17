@@ -65,6 +65,20 @@ public class SharedTicketsIT {
 	}
 
 	@Test
+	public void sellerClaimIsAtomicWithTheSellerLookup() throws Exception {
+		Session session = openDatabase();
+		try {
+			DataLogicReceipts receipts = receipts(session);
+			assertTrue(receipts.saveSharedTicket("ticket-1", ticket("seller", "Anna"), "scanner"));
+
+			assertEquals("ticket-1", receipts.claimSharedTicketForSeller("seller", "central"));
+			assertTrue(receipts.isSharedTicketOwned("ticket-1", "central"));
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	public void paymentPreventsAnotherTillFromClaimingTheTicket() throws Exception {
 		Session session = openDatabase();
 		try {

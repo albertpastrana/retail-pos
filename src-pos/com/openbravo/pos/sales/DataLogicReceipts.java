@@ -20,6 +20,7 @@
 package com.openbravo.pos.sales;
 
 import java.util.List;
+import java.util.logging.Logger;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.PreparedSentence;
@@ -39,6 +40,7 @@ import com.openbravo.pos.ticket.TicketInfo;
  */
 public class DataLogicReceipts extends BeanFactoryDataSingle {
 
+	private static final Logger LOGGER = Logger.getLogger(DataLogicReceipts.class.getName());
 	private Session s;
 
 	/** Creates a new instance of DataLogicReceipts */
@@ -70,19 +72,51 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
 		return new Transaction<TicketInfo>(s) {
 			@Override
 			protected TicketInfo transact() throws BasicException {
-				Object[] values = new Object[]{id, host};
-				Datas[] datas = new Datas[]{Datas.STRING, Datas.STRING};
-				int claimed = new PreparedSentence(s,
-						"UPDATE SHAREDTICKETS SET HOST = ?, PAYING = FALSE WHERE ID = ? AND (PAYING = FALSE OR HOST = ?)",
-						new SerializerWriteBasicExt(datas, new int[]{1, 0, 1})).exec(values);
-				return claimed == 0 ? null : getSharedTicket(id);
+				TicketInfo ticket = claimSharedTicketInTransaction(id, host);
+				LOGGER.info(() -> "claim ticket=" + id + " host=" + host + " result=" + (ticket != null));
+				return ticket;
 			}
 		}.execute();
 	}
 
+	/**
+	 * Finds and claims a seller ticket without leaving a gap between the lookup and
+	 * claim.
+	 */
+	public final String claimSharedTicketForSeller(final String sellerId, final String host) throws BasicException {
+		return new Transaction<String>(s) {
+			@Override
+			protected String transact() throws BasicException {
+				List<SharedTicketInfo> tickets = getSharedTicketList();
+				for (SharedTicketInfo ticketInfo : tickets) {
+					TicketInfo ticket = getSharedTicket(ticketInfo.getId());
+					if (ticket != null && ticket.getUser() != null && sellerId.equals(ticket.getUser().getId())) {
+						TicketInfo claimed = claimSharedTicketInTransaction(ticketInfo.getId(), host);
+						LOGGER.info(() -> "claim seller=" + sellerId + " ticket=" + ticketInfo.getId() + " host=" + host
+								+ " result=" + (claimed != null));
+						if (claimed != null) {
+							return ticketInfo.getId();
+						}
+					}
+				}
+				LOGGER.info(() -> "claim seller=" + sellerId + " host=" + host + " result=false");
+				return null;
+			}
+		}.execute();
+	}
+
+	private TicketInfo claimSharedTicketInTransaction(String id, String host) throws BasicException {
+		Object[] values = new Object[]{id, host};
+		Datas[] datas = new Datas[]{Datas.STRING, Datas.STRING};
+		int claimed = new PreparedSentence(s,
+				"UPDATE SHAREDTICKETS SET HOST = ?, PAYING = FALSE WHERE ID = ? AND (PAYING = FALSE OR HOST = ?)",
+				new SerializerWriteBasicExt(datas, new int[]{1, 0, 1})).exec(values);
+		return claimed == 0 ? null : getSharedTicket(id);
+	}
+
 	public final boolean saveSharedTicket(final String id, final TicketInfo ticket, final String host)
 			throws BasicException {
-		return new Transaction<Boolean>(s) {
+		boolean saved = new Transaction<Boolean>(s) {
 			@Override
 			protected Boolean transact() throws BasicException {
 				if (updateOwnedSharedTicket(id, ticket, host, false) > 0) {
@@ -95,11 +129,13 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
 				return Boolean.TRUE;
 			}
 		}.execute().booleanValue();
+		LOGGER.info(() -> "save ticket=" + id + " host=" + host + " result=" + saved);
+		return saved;
 	}
 
 	public final boolean parkSharedTicket(final String id, final TicketInfo ticket, final String host)
 			throws BasicException {
-		return new Transaction<Boolean>(s) {
+		boolean parked = new Transaction<Boolean>(s) {
 			@Override
 			protected Boolean transact() throws BasicException {
 				if (updateOwnedSharedTicket(id, ticket, host, true) > 0) {
@@ -112,6 +148,8 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
 				return Boolean.TRUE;
 			}
 		}.execute().booleanValue();
+		LOGGER.info(() -> "park ticket=" + id + " host=" + host + " result=" + parked);
+		return parked;
 	}
 
 	private int updateOwnedSharedTicket(String id, TicketInfo ticket, String host, boolean park) throws BasicException {
@@ -166,7 +204,9 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
 
 		Object[] values = new Object[]{id, host};
 		Datas[] datas = new Datas[]{Datas.STRING, Datas.STRING};
-		return new PreparedSentence(s, "DELETE FROM SHAREDTICKETS WHERE ID = ? AND HOST = ?",
+		boolean deleted = new PreparedSentence(s, "DELETE FROM SHAREDTICKETS WHERE ID = ? AND HOST = ?",
 				new SerializerWriteBasicExt(datas, new int[]{0, 1})).exec(values) > 0;
+		LOGGER.info(() -> "delete ticket=" + id + " host=" + host + " result=" + deleted);
+		return deleted;
 	}
 }
