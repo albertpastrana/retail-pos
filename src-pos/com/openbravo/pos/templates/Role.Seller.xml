@@ -18,6 +18,7 @@
     <class name="refund.magcard"/>
     <class name="Menu.ChangePassword"/>
     <class name="button.print"/>
+    <class name="button.opendrawer"/>
     <class name="button.discount"/>
     <class name="button.discount.total"/>
 </permissions>
