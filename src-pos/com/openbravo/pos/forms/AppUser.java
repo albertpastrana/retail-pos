@@ -142,6 +142,11 @@ public class AppUser {
 		// Y lo que todos tienen permisos
 		m_apermissions.add("com.openbravo.pos.forms.JPanelMenu");
 		m_apermissions.add("Menu.Exit");
+		// Replenishment is an operational action available from the till menu.
+		if (ROLE_SELLER.equals(m_sRole)) {
+			m_apermissions.add("com.openbravo.pos.inventory.ReplenishmentPanel");
+			m_apermissions.add("Menu.Replenishment.Add");
+		}
 
 		String sRolePermisions = dlSystem.findRolePermissions(m_sRole);
 

@@ -10,10 +10,11 @@
     <class name="payment.cash"/>
     <class name="payment.paper"/>
     <class name="payment.magcard"/>
+    <class name="payment.debt"/>
     <class name="refund.cash"/>
     <class name="refund.paper"/>
     <class name="refund.magcard"/>
     <class name="Menu.ChangePassword"/>
     <class name="button.print"/>
+    <class name="Menu.Replenishment.Add"/>
 </permissions>
-    <class name="payment.debt"/>

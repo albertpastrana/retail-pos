@@ -158,6 +158,23 @@ public class JCustomerFinder extends JDialog {
 			return;
 		}
 		try {
+			List<CustomerInfo> existing = dlCustomers.findCustomersByPhone(normalizedPhone);
+			if (!existing.isEmpty()) {
+				StringBuilder message = new StringBuilder("A customer already has this phone:\n");
+				for (CustomerInfo c : existing)
+					message.append(c.getName()).append("\n");
+				Object[] options = {"Select existing", "Create anyway", "Cancel"};
+				int choice = JOptionPane.showOptionDialog(this, message.toString(),
+						AppLocal.getIntString("customer.title"), JOptionPane.DEFAULT_OPTION,
+						JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+				if (choice == 0) {
+					selectedCustomer = existing.get(0);
+					dispose();
+					return;
+				}
+				if (choice != 1)
+					return;
+			}
 			CustomerInfoExt created = dlCustomers.createCustomer(name.getText(), normalizedPhone);
 			selectedCustomer = created;
 			dispose();

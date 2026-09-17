@@ -125,6 +125,24 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		return customer;
 	}
 
+	public List<CustomerInfo> findCustomersByPhone(String phone) throws BasicException {
+		final String normalized = CustomerInfo.normalizePhone(phone);
+		return new PreparedSentence(s,
+				"SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE VISIBLE = " + s.DB.TRUE() + " AND PHONE = ? ORDER BY NAME",
+				SerializerWriteParams.INSTANCE, new SerializerRead() {
+					public Object readValues(DataRead dr) throws BasicException {
+						CustomerInfo c = new CustomerInfo(dr.getString(1));
+						c.setName(dr.getString(2));
+						c.setPhone(dr.getString(3));
+						return c;
+					}
+				}).list(new DataParams() {
+					public void writeValues() throws BasicException {
+						setString(1, normalized);
+					}
+				});
+	}
+
 	public List<CustomerInfoExt> searchCustomerSummaries(final String value) throws BasicException {
 		return searchCustomerSummaries(value, false, false);
 	}

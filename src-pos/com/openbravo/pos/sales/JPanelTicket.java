@@ -1427,6 +1427,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		return dlSystem.getResourceAsXML(sresourcename);
 	}
 
+	public void showReplenishmentDialog() {
+		com.openbravo.pos.inventory.ReplenishmentPanel.showAddDialog(this, m_App);
+	}
+
 	public BufferedImage getResourceAsImage(String sresourcename) {
 		return dlSystem.getResourceAsImage(sresourcename);
 	}

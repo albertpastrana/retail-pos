@@ -154,6 +154,16 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				.find(sCode, "0" + sCode, "00" + sCode, sCode, "0" + sCode, "00" + sCode);
 	}
 
+	public final List<ProductInfoExt> getProductVariants(String reference) throws BasicException {
+		String model = reference == null ? "" : reference.trim();
+		int separator = model.indexOf('-');
+		if (separator > 0)
+			model = model.substring(0, separator);
+		return new PreparedSentence(s,
+				"SELECT " + ProductInfoExt.infoColumns() + " FROM PRODUCTS WHERE REFERENCE LIKE ? ORDER BY REFERENCE",
+				SerializerWriteString.INSTANCE, ProductInfoExt.getSerializerRead()).list(model + "%");
+	}
+
 	public final ProductInfoExt getCatalogProductByCode(String code, String productsPath, String categoriesPath)
 			throws BasicException {
 		if (productsPath == null) {
