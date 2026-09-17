@@ -1,5 +1,6 @@
 build/
 /dist/
+/archive/openbravo-legacy/
 .gradle/
 .env.local
 .icon-work/
