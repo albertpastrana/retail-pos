@@ -156,6 +156,8 @@ public class JMessageDialog extends javax.swing.JDialog {
 		jscrException.setAlignmentX(0.0F);
 
 		jtxtException.setEditable(false);
+		jtxtException.setFocusable(true);
+		jtxtException.setTransferHandler(new javax.swing.TransferHandler("text"));
 		jscrException.setViewportView(jtxtException);
 
 		jPanel4.add(jscrException);
