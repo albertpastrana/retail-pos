@@ -84,6 +84,8 @@ public class JCustomerFinder extends JDialog {
 		selectButton.setEnabled(false);
 		pack();
 		setSize(620, 430);
+		// Centre the modal finder on the sales window that opened it.
+		setLocationRelativeTo(parent);
 	}
 
 	public static JCustomerFinder getCustomerFinder(Component parent, DataLogicCustomers dlCustomers) {
