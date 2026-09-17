@@ -29,6 +29,8 @@ public class CatalogVariantModelTest {
 		assertEquals("1/10011T", CatalogVariantModel.fromReference("1/10011T NGR XL", "Gisela"));
 		assertEquals("A5398E2", CatalogVariantModel.fromReference("A5398E2-1SE XXL/60", "Abanderado"));
 		assertEquals("P4716P1", CatalogVariantModel.fromReference("P4716P1-001 L", "Playtex"));
+		assertEquals("000M1AC04", CatalogVariantModel.fromReference("000M1AC04-01-UN", "Focenza"));
+		assertEquals("2345410", CatalogVariantModel.fromReference("2345410-90-U", "Punto Blanco"));
 		assertEquals("12733", CatalogVariantModel.fromReference("12733UNGR", "Ysabel Mora"));
 	}
 

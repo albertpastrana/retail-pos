@@ -65,6 +65,8 @@ def product_model(row: list[str]) -> str:
         "Egatex",
         "Soy",
         "Muslher",
+        "Focenza",
+        "Punto Blanco",
     }:
         return reference.split("-")[0]
     if brand == "Selene":

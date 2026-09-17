@@ -17,7 +17,8 @@ public final class CatalogVariantModel {
 		String value = reference.trim();
 		if ("Avetset".equals(brand) || "Massana".equals(brand) || "Petrus".equals(brand) || "Dusen".equals(brand)
 				|| "Señoretta".equals(brand) || "Egatex".equals(brand) || "Soy".equals(brand) || "Muslher".equals(brand)
-				|| "Abanderado".equals(brand) || "Playtex".equals(brand)) {
+				|| "Abanderado".equals(brand) || "Playtex".equals(brand) || "Focenza".equals(brand)
+				|| "Punto Blanco".equals(brand)) {
 			return before(value, '-');
 		}
 		if ("Gisela".equals(brand)) {
