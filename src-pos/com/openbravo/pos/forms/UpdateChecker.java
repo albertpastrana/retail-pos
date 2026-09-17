@@ -33,25 +33,35 @@ public final class UpdateChecker {
 
 	public static void checkAsync(final AppConfig config, final Component parent) {
 		if ("false".equalsIgnoreCase(config.getProperty("update.check"))) {
+			logger.info("Update check disabled by configuration");
 			return;
 		}
 
 		final String endpoint = configuredUrl(config);
+		logger.info("Starting update check; endpoint=" + endpoint + ", local directory="
+				+ config.getProperty("update.dir"));
 		Thread checker = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				Release release = findLocal(config.getProperty("update.dir"));
-				if (release == null) {
-					release = fetch(endpoint);
-				}
-				if (release != null && hasNewerVersion(release)) {
-					final Release availableRelease = release;
-					java.awt.EventQueue.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							showUpdate(parent, availableRelease);
-						}
-					});
+				try {
+					Release release = findLocal(config.getProperty("update.dir"));
+					if (release == null) {
+						release = fetch(endpoint);
+					}
+					if (release != null && hasNewerVersion(release)) {
+						logger.info("New application version available: " + release.version);
+						final Release availableRelease = release;
+						java.awt.EventQueue.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								showUpdate(parent, availableRelease);
+							}
+						});
+					} else {
+						logger.info("No newer application version found; current=" + AppLocal.APP_VERSION);
+					}
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "Unexpected error while checking for application updates", e);
 				}
 			}
 		}, "retail-pos-update-check");
@@ -61,10 +71,13 @@ public final class UpdateChecker {
 
 	private static Release findLocal(String directory) {
 		if (directory == null || directory.trim().isEmpty()) {
+			logger.info("No local update directory configured");
 			return null;
 		}
-		File[] files = new File(directory).listFiles();
+		File updateDirectory = new File(directory);
+		File[] files = updateDirectory.listFiles();
 		if (files == null) {
+			logger.warning("Cannot read local update directory: " + updateDirectory.getAbsolutePath());
 			return null;
 		}
 		String platform = platformName();
@@ -82,6 +95,9 @@ public final class UpdateChecker {
 					newest = candidate;
 				}
 			}
+		}
+		if (newest != null) {
+			logger.info("Found verified local update package: " + newest.packageFile.getAbsolutePath());
 		}
 		return newest;
 	}
@@ -137,7 +153,9 @@ public final class UpdateChecker {
 			connection.setReadTimeout(3000);
 			connection.setRequestProperty("Accept", "application/vnd.github+json");
 			connection.setRequestProperty("User-Agent", AppLocal.APP_ID + "-update-checker");
-			if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+			int responseCode = connection.getResponseCode();
+			logger.info("Update endpoint response: " + responseCode);
+			if (responseCode != HttpURLConnection.HTTP_OK) {
 				return null;
 			}
 
@@ -155,9 +173,11 @@ public final class UpdateChecker {
 			if (!tag.find() || !page.find()) {
 				return null;
 			}
-			return new Release(tag.group(1), page.group(1));
+			Release release = new Release(tag.group(1), page.group(1));
+			logger.info("Update endpoint release: " + release.version);
+			return release;
 		} catch (Exception e) {
-			logger.log(Level.FINE, "Could not check for application updates", e);
+			logger.log(Level.WARNING, "Could not check for application updates", e);
 			return null;
 		} finally {
 			if (connection != null) {
@@ -209,19 +229,23 @@ public final class UpdateChecker {
 	}
 
 	private static void showUpdate(Component parent, Release release) {
-		String message = "A new version is available: " + release.version + " (current: " + AppLocal.APP_VERSION + ").";
+		String message = AppLocal.getIntString("update.available", release.version, AppLocal.APP_VERSION);
 		if (release.packageFile != null) {
-			int choice = JOptionPane.showOptionDialog(parent, message, "Application update", JOptionPane.DEFAULT_OPTION,
-					JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Install and restart", "Later"},
-					"Install and restart");
+			int choice = JOptionPane.showOptionDialog(parent, message, AppLocal.getIntString("update.title"),
+					JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
+					new Object[]{AppLocal.getIntString("update.install"), AppLocal.getIntString("update.later")},
+					AppLocal.getIntString("update.install"));
+			logger.info("Update dialog choice for local package: " + choice);
 			if (choice == 0) {
 				installAndRestart(parent, release.packageFile);
 			}
 			return;
 		}
-		int choice = JOptionPane.showOptionDialog(parent, message, "Application update", JOptionPane.DEFAULT_OPTION,
-				JOptionPane.INFORMATION_MESSAGE, null, new Object[]{"Open download page", "Later"},
-				"Open download page");
+		int choice = JOptionPane.showOptionDialog(parent, message, AppLocal.getIntString("update.title"),
+				JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
+				new Object[]{AppLocal.getIntString("update.download"), AppLocal.getIntString("update.later")},
+				AppLocal.getIntString("update.download"));
+		logger.info("Update dialog choice for remote release: " + choice);
 		if (choice == 0) {
 			try {
 				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -236,22 +260,29 @@ public final class UpdateChecker {
 	private static void installAndRestart(Component parent, File packageFile) {
 		try {
 			File installDir = new File(System.getProperty("dirname.path")).getCanonicalFile();
-			File updater = new File(installDir, platformName().equals("windows") ? "update.bat" : "update.sh");
+			String platform = platformName();
+			File updater = new File(installDir, platform.equals("windows") ? "update.bat" : "update.sh");
+			logger.info("Starting updater; package=" + packageFile.getAbsolutePath() + ", install="
+					+ installDir.getAbsolutePath() + ", updater=" + updater.getAbsolutePath() + ", pid=" + processId());
 			if (!updater.isFile()) {
 				throw new IOException("Updater is not present in the application package");
 			}
-			if (platformName().equals("windows")) {
+			if (!platform.equals("windows") && !updater.canExecute()) {
+				throw new IOException("Updater is not executable: " + updater.getAbsolutePath());
+			}
+			if (platform.equals("windows")) {
 				new ProcessBuilder("cmd", "/c", "start", "", updater.getAbsolutePath(), packageFile.getAbsolutePath(),
 						installDir.getAbsolutePath(), processId()).start();
 			} else {
 				new ProcessBuilder(updater.getAbsolutePath(), packageFile.getAbsolutePath(),
 						installDir.getAbsolutePath(), processId()).start();
 			}
+			logger.info("Updater process started; exiting application");
 			System.exit(0);
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Could not start the application updater", e);
-			JOptionPane.showMessageDialog(parent, "The update could not be started.", "Application update",
-					JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(parent, AppLocal.getIntString("update.startError"),
+					AppLocal.getIntString("update.title"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
