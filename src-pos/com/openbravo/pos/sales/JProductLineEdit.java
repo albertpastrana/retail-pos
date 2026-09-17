@@ -29,6 +29,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JFrame;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.ticket.TicketLineInfo;
 
 /**
@@ -187,7 +188,13 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		} else {
 			myMsg = new JProductLineEdit((Dialog) window, true);
 		}
-		return myMsg.init(app, oLine);
+		TicketLineInfo result = myMsg.init(app, oLine);
+		if (result != null && app.getAppUserView().getUser().isSellerSession()
+				&& (result.getPrice() != oLine.getPrice() || result.getPriceTax() != oLine.getPriceTax())
+				&& !SupervisorAuthorization.authorize(parent, app, AppLocal.getIntString("message.authorizedprice"))) {
+			return null;
+		}
+		return result;
 	}
 
 	/**

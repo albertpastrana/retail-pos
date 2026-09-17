@@ -42,6 +42,7 @@ import com.openbravo.pos.scripting.ScriptException;
 import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.DatabaseBackup;
 import com.openbravo.pos.forms.DataLogicSystem;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.printer.TicketParser;
 import com.openbravo.pos.printer.TicketPrinterException;
 
@@ -499,6 +500,9 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
 	private void m_jCloseCashActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jCloseCashActionPerformed
 		// TODO add your handling code here:
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedcash"))) {
+			return;
+		}
 		int res = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.wannaclosecash"),
 				AppLocal.getIntString("message.title"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		if (res == JOptionPane.YES_OPTION) {

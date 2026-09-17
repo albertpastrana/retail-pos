@@ -32,7 +32,7 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(16, count(connection, "flyway_schema_history"));
+			assertEquals(17, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
@@ -94,12 +94,17 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(17, count(connection, "flyway_schema_history"));
+			assertEquals(18, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
-			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
+			assertEquals(3, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
+			assertEquals(3, count(connection, "ROLES"));
+			assertEquals(1,
+					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
+			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
+			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Seller'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
-			assertEquals(4, count(connection, "PEOPLE"));
+			assertEquals(3, count(connection, "PEOPLE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
 		} finally {
 			connection.close();
@@ -110,7 +115,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(17, count(connection, "flyway_schema_history"));
+			assertEquals(18, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
 		} finally {
 			connection.close();

@@ -35,6 +35,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppUser;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
 import com.openbravo.pos.util.TillButtons;
@@ -148,6 +149,10 @@ public class JPanelButtons extends javax.swing.JPanel {
 				} else {
 					btn.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
+							if ("Printer.OpenDrawer".equals(template) && !SupervisorAuthorization.authorize(panelticket,
+									panelticket.m_App, AppLocal.getIntString("message.authorizeddrawer"))) {
+								return;
+							}
 							panelticket.printTicket(template);
 						}
 					});

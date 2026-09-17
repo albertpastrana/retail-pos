@@ -70,7 +70,7 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 	}
 
 	public final SentenceList getRolesList() {
-		return new StaticSentence(s, "SELECT ID, NAME FROM ROLES ORDER BY NAME", null,
+		return new StaticSentence(s, "SELECT ID, NAME FROM ROLES WHERE ID IN ('0', '1', '2') ORDER BY ID", null,
 				new SerializerReadClass(RoleInfo.class));
 	}
 	public final TableDefinition getTablePeople() {

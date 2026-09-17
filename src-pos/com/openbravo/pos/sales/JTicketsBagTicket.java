@@ -32,6 +32,7 @@ import java.util.List;
 import javax.swing.*;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.pos.forms.AppView;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.printer.*;
 import com.openbravo.basic.BasicException;
@@ -466,6 +467,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}// </editor-fold>//GEN-END:initComponents
 
 	private void m_jEditActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jEditActionPerformed
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedticketedit"))) {
+			return;
+		}
 
 		m_ticketCopy = m_ticket;
 		m_TicketsBagTicketBag.showEdit();
@@ -517,6 +521,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private void m_jRefundActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jRefundActionPerformed
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedrefund"))) {
+			return;
+		}
 
 		java.util.List aRefundLines = new ArrayList();
 

@@ -276,6 +276,9 @@ public class JTicketsBagShared extends JTicketsBag {
 			int position = 0;
 			for (Iterator i = people.iterator(); i.hasNext();) {
 				final AppUser user = (AppUser) i.next();
+				if (!AppUser.ROLE_SELLER.equals(user.getRole())) {
+					continue;
+				}
 				int shortcutKey = getSellerShortcut(position++);
 				String shortcut = shortcutKey == 0 ? null : KeyEvent.getKeyText(shortcutKey);
 

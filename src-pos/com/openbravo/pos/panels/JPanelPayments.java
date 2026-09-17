@@ -52,6 +52,7 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.forms.JPanelView;
 
@@ -128,6 +129,9 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 	}
 
 	private void addMovement(boolean cashin) {
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedcash"))) {
+			return;
+		}
 
 		Double amount = m_jAmount.getDoubleValue();
 		if (amount == null || amount.doubleValue() <= 0.0) {
@@ -142,6 +146,9 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 	}
 
 	private void reverseSelected() {
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedcash"))) {
+			return;
+		}
 
 		int row = m_jMovements.getSelectedRow();
 		if (row < 0 || row >= m_movements.size()) {

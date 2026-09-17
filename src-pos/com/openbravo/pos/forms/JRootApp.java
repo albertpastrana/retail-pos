@@ -75,6 +75,7 @@ public class JRootApp extends JPanel implements AppView {
 	private String m_sInventoryLocation;
 
 	private StringBuffer inputtext;
+	private boolean m_administrationLogin;
 
 	private DeviceScale m_Scale;
 	private DeviceTicket m_TP;
@@ -378,7 +379,7 @@ public class JRootApp extends JPanel implements AppView {
 		}
 	}
 
-	private void listPeople() {
+	private void listPeople(boolean administratorsOnly) {
 
 		try {
 
@@ -392,6 +393,10 @@ public class JRootApp extends JPanel implements AppView {
 			for (int i = 0; i < people.size(); i++) {
 
 				AppUser user = (AppUser) people.get(i);
+				if (administratorsOnly && !AppUser.ROLE_ADMINISTRATOR.equals(user.getRole())
+						&& !AppUser.ROLE_MANAGER.equals(user.getRole())) {
+					continue;
+				}
 
 				JButton btn = new JButton(new AppUserAction(user));
 				btn.applyComponentOrientation(getComponentOrientation());
@@ -431,14 +436,14 @@ public class JRootApp extends JPanel implements AppView {
 			// String sPassword = m_actionuser.getPassword();
 			if (m_actionuser.authenticate()) {
 				// p'adentro directo, no tiene password
-				openAppView(m_actionuser);
+				openAdministrationView(m_actionuser);
 			} else {
 				// comprobemos la clave antes de entrar...
 				String sPassword = JPasswordDialog.showEditPassword(JRootApp.this,
 						AppLocal.getIntString("Label.Password"), m_actionuser.getName(), m_actionuser.getIcon());
 				if (sPassword != null) {
 					if (m_actionuser.authenticate(sPassword)) {
-						openAppView(m_actionuser);
+						openAdministrationView(m_actionuser);
 					} else {
 						MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 								AppLocal.getIntString("message.BadPassword"));
@@ -454,10 +459,11 @@ public class JRootApp extends JPanel implements AppView {
 		cl.show(m_jPanelContainer, view);
 	}
 
-	private void openAppView(AppUser user) {
+	private void openAppView(AppUser user, boolean administrationMode) {
 
 		if (closeAppView()) {
 
+			user.setAdministrationMode(administrationMode);
 			m_principalapp = new JPrincipalApp(this, user);
 
 			// The main panel
@@ -468,6 +474,17 @@ public class JRootApp extends JPanel implements AppView {
 
 			m_principalapp.activate();
 		}
+	}
+
+	private void openAdministrationView(AppUser user) {
+		openAppView(user, true);
+	}
+
+	private void openSalesView() {
+		AppUser till = new AppUser("till", AppLocal.getIntString("Button.SalesMode"), null, null, AppUser.ROLE_SELLER,
+				null);
+		till.setSellerSession(true);
+		openAppView(till, false);
 	}
 
 	public boolean closeAppView() {
@@ -491,8 +508,10 @@ public class JRootApp extends JPanel implements AppView {
 
 	private void showLogin() {
 
-		// Show Login
-		listPeople();
+		m_administrationLogin = false;
+		m_jSalesMode.setVisible(true);
+		m_jAdminMode.setVisible(true);
+		jScrollPane1.getViewport().setView(null);
 		showView("login");
 
 		// show welcome message
@@ -512,6 +531,11 @@ public class JRootApp extends JPanel implements AppView {
 
 		if (c == '\n') {
 
+			if (!m_administrationLogin) {
+				inputtext = new StringBuffer();
+				return;
+			}
+
 			AppUser user = null;
 			try {
 				user = m_dlSystem.findPeopleByCard(inputtext.toString());
@@ -524,7 +548,12 @@ public class JRootApp extends JPanel implements AppView {
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.nocard"));
 				msg.show(this);
 			} else {
-				openAppView(user);
+				if (AppUser.ROLE_ADMINISTRATOR.equals(user.getRole()) || AppUser.ROLE_MANAGER.equals(user.getRole())) {
+					openAdministrationView(user);
+				} else {
+					MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.adminonly"));
+					msg.show(this);
+				}
 			}
 
 			inputtext = new StringBuffer();
@@ -553,6 +582,8 @@ public class JRootApp extends JPanel implements AppView {
 		m_jPanelLogin = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
 		jLabel1 = new javax.swing.JLabel();
+		m_jSalesMode = new javax.swing.JButton();
+		m_jAdminMode = new javax.swing.JButton();
 		jPanel5 = new javax.swing.JPanel();
 		m_jLogonName = new javax.swing.JPanel();
 		jScrollPane1 = new javax.swing.JScrollPane();
@@ -623,6 +654,26 @@ public class JRootApp extends JPanel implements AppView {
 		jLabel1.setAlignmentX(0.5F);
 		jPanel4.add(jLabel1);
 
+		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
+
+		m_jSalesMode.setText(AppLocal.getIntString("Button.SalesMode"));
+		m_jSalesMode.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				openSalesView();
+			}
+		});
+		m_jAdminMode.setText(AppLocal.getIntString("Button.AdministrationMode"));
+		m_jAdminMode.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(java.awt.event.ActionEvent evt) {
+				m_administrationLogin = true;
+				m_jSalesMode.setVisible(true);
+				m_jAdminMode.setVisible(false);
+				listPeople(true);
+			}
+		});
+		jPanel4.add(m_jSalesMode);
+		jPanel4.add(javax.swing.Box.createVerticalStrut(8));
+		jPanel4.add(m_jAdminMode);
 		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
 
 		m_jLogonName.setLayout(new java.awt.BorderLayout());
@@ -747,6 +798,8 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JButton m_jClose;
 	private javax.swing.JLabel m_jLblClock;
 	private javax.swing.JLabel m_jLblOperator;
+	private javax.swing.JButton m_jAdminMode;
+	private javax.swing.JButton m_jSalesMode;
 	private javax.swing.JLabel m_jLblSubTitle;
 	private javax.swing.JLabel m_jLblTitle;
 	private javax.swing.JPanel m_jLogonName;

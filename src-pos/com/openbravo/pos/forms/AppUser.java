@@ -42,6 +42,10 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class AppUser {
 
+	public static final String ROLE_ADMINISTRATOR = "0";
+	public static final String ROLE_MANAGER = "1";
+	public static final String ROLE_SELLER = "2";
+
 	private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.AppUser");
 
 	private static SAXParser m_sp = null;
@@ -55,6 +59,8 @@ public class AppUser {
 	private Icon m_Icon;
 
 	private Set<String> m_apermissions;
+	private boolean m_administrationMode;
+	private boolean m_sellerSession;
 
 	static {
 		initOldClasses();
@@ -69,6 +75,8 @@ public class AppUser {
 		m_sRole = role;
 		m_Icon = icon;
 		m_apermissions = null;
+		m_administrationMode = false;
+		m_sellerSession = false;
 	}
 
 	public Icon getIcon() {
@@ -87,6 +95,11 @@ public class AppUser {
 		return m_sName;
 	}
 
+	@Override
+	public String toString() {
+		return m_sName;
+	}
+
 	public void setPassword(String sValue) {
 		m_sPassword = sValue;
 	}
@@ -97,6 +110,18 @@ public class AppUser {
 
 	public String getRole() {
 		return m_sRole;
+	}
+
+	public void setAdministrationMode(boolean value) {
+		m_administrationMode = value;
+	}
+
+	public void setSellerSession(boolean value) {
+		m_sellerSession = value;
+	}
+
+	public boolean isSellerSession() {
+		return m_sellerSession;
 	}
 
 	public String getCard() {
@@ -140,12 +165,27 @@ public class AppUser {
 	}
 
 	public boolean hasPermission(String classname) {
-
-		return (m_apermissions == null) ? false : m_apermissions.contains(classname);
+		if (m_apermissions == null || !m_apermissions.contains(classname)) {
+			return false;
+		}
+		if (m_administrationMode) {
+			return !classname.startsWith("sales.") && !classname.startsWith("payment.")
+					&& !classname.startsWith("refund.")
+					&& !classname.equals("com.openbravo.pos.sales.JPanelTicketSales")
+					&& !classname.equals("com.openbravo.pos.sales.JPanelTicketEdits")
+					&& !classname.equals("com.openbravo.pos.panels.JPanelPayments")
+					&& !classname.equals("com.openbravo.pos.panels.JPanelCloseMoney")
+					&& !classname.equals("com.openbravo.pos.panels.JPanelClosedCash");
+		}
+		return true;
 	}
 
 	public UserInfo getUserInfo() {
 		return new UserInfo(m_sId, m_sName);
+	}
+
+	public UserInfo getTicketUserInfo() {
+		return m_sellerSession ? null : getUserInfo();
 	}
 
 	private static String mapNewClass(String classname) {

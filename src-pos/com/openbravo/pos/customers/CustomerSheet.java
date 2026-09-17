@@ -4,6 +4,7 @@ import com.openbravo.basic.BasicException;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.payment.JPaymentSelect;
 import com.openbravo.pos.payment.JPaymentSelectCustomer;
 import com.openbravo.pos.payment.PaymentInfo;
@@ -91,6 +92,9 @@ public class CustomerSheet extends JDialog {
 	}
 
 	private void payDebt() {
+		if (!SupervisorAuthorization.authorize(this, app, AppLocal.getIntString("message.authorizeddebt"))) {
+			return;
+		}
 		JPaymentSelect payment = JPaymentSelectCustomer.getDialog(this);
 		payment.init(app);
 		if (!payment.showDialog(customer.getCurdebt(), customer)) {
@@ -105,7 +109,7 @@ public class CustomerSheet extends JDialog {
 		TicketInfo ticket = new TicketInfo();
 		ticket.setTicketType(TicketInfo.RECEIPT_PAYMENT);
 		ticket.setPayments(payments);
-		ticket.setUser(app.getAppUserView().getUser().getUserInfo());
+		ticket.setUserIfAbsent(app.getAppUserView().getUser().getTicketUserInfo());
 		ticket.setActiveCash(app.getActiveCashIndex());
 		ticket.setDate(new Date());
 		ticket.setCustomer(customer);

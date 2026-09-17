@@ -50,6 +50,7 @@ import com.openbravo.pos.scripting.ScriptEngine;
 import com.openbravo.pos.scripting.ScriptException;
 import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.DataLogicSystem;
+import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
@@ -311,7 +312,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		if (m_oTicket != null) {
 			// Asign preeliminary properties to the receipt
-			m_oTicket.setUserIfAbsent(m_App.getAppUserView().getUser().getUserInfo());
+			m_oTicket.setUserIfAbsent(m_App.getAppUserView().getUser().getTicketUserInfo());
 			m_oTicket.setActiveCash(m_App.getActiveCashIndex());
 			m_oTicket.setDate(new Date()); // Set the edition date.
 			applyLoyaltyConfig(m_oTicket);
@@ -732,6 +733,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			stateToZero();
 			return;
 		}
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizediscount"))) {
+			stateToZero();
+			return;
+		}
 
 		Double percentage = getDiscountPercentage();
 		if (percentage == null) {
@@ -758,6 +763,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private void applyTotalDiscount() {
 		if (!m_App.getAppUserView().getUser().hasPermission("button.discount.total")) {
 			Toolkit.getDefaultToolkit().beep();
+			stateToZero();
+			return;
+		}
+		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizediscount"))) {
 			stateToZero();
 			return;
 		}
@@ -1202,7 +1211,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 						ticket.setPayments(paymentdialog.getSelectedPayments());
 
 						// Asigno los valores definitivos del ticket...
-						ticket.setUserIfAbsent(m_App.getAppUserView().getUser().getUserInfo());
+						ticket.setUserIfAbsent(m_App.getAppUserView().getUser().getTicketUserInfo());
 						ticket.setActiveCash(m_App.getActiveCashIndex());
 						ticket.setDate(new Date()); // Le pongo la fecha de cobro
 
