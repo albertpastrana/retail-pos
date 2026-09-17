@@ -55,6 +55,9 @@ public class JRootApp extends JPanel implements AppView {
 	private static final Color HEADER_RULE = new Color(0xD5D5D5);
 	private static final Color HEADER_TEXT = new Color(0x2B2B2B);
 	private static final Color HEADER_TEXT_MUTED = new Color(0x7A7A7A);
+	private static final Color LOGIN_BACKGROUND = new Color(0xF4F6F8);
+	private static final Color SALES_BUTTON = new Color(0x1769AA);
+	private static final Color ADMIN_BUTTON = new Color(0x374151);
 
 	// Two columns of staff buttons, four rows before the grid starts scrolling.
 	private static final int LOGIN_BUTTON_WIDTH = 240;
@@ -509,6 +512,7 @@ public class JRootApp extends JPanel implements AppView {
 	private void showLogin() {
 
 		m_administrationLogin = false;
+		jLabel1.setText(AppLocal.getIntString("Label.ChooseMode"));
 		m_jSalesMode.setVisible(true);
 		m_jAdminMode.setVisible(true);
 		jScrollPane1.getViewport().setView(null);
@@ -656,16 +660,45 @@ public class JRootApp extends JPanel implements AppView {
 
 		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
 
-		m_jSalesMode.setText(AppLocal.getIntString("Button.SalesMode"));
+		m_jSalesMode.setText("<html><b>" + AppLocal.getIntString("Button.SalesMode") + "</b><br>" + "<font size='3'>"
+				+ AppLocal.getIntString("Label.SalesModeHint") + "</font></html>");
+		m_jSalesMode.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/menu-sales.png")));
+		m_jSalesMode.setToolTipText(AppLocal.getIntString("Label.SalesModeHint"));
+		m_jSalesMode.setBackground(SALES_BUTTON);
+		m_jSalesMode.setForeground(Color.WHITE);
+		m_jSalesMode.setFont(m_jSalesMode.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		m_jSalesMode.setHorizontalAlignment(SwingConstants.LEADING);
+		m_jSalesMode.setIconTextGap(18);
+		m_jSalesMode.setFocusPainted(false);
+		m_jSalesMode.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
+		m_jSalesMode.setOpaque(true);
+		m_jSalesMode.setAlignmentX(0.5F);
+		m_jSalesMode.setMaximumSize(new Dimension(460, 82));
+		m_jSalesMode.setPreferredSize(new Dimension(460, 82));
 		m_jSalesMode.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				openSalesView();
 			}
 		});
-		m_jAdminMode.setText(AppLocal.getIntString("Button.AdministrationMode"));
+		m_jAdminMode.setText("<html><b>" + AppLocal.getIntString("Button.AdministrationMode") + "</b><br>"
+				+ "<font size='3'>" + AppLocal.getIntString("Label.AdministrationModeHint") + "</font></html>");
+		m_jAdminMode.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/menu-maintenance.png")));
+		m_jAdminMode.setToolTipText(AppLocal.getIntString("Label.AdministrationModeHint"));
+		m_jAdminMode.setBackground(ADMIN_BUTTON);
+		m_jAdminMode.setForeground(Color.WHITE);
+		m_jAdminMode.setFont(m_jAdminMode.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		m_jAdminMode.setHorizontalAlignment(SwingConstants.LEADING);
+		m_jAdminMode.setIconTextGap(18);
+		m_jAdminMode.setFocusPainted(false);
+		m_jAdminMode.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
+		m_jAdminMode.setOpaque(true);
+		m_jAdminMode.setAlignmentX(0.5F);
+		m_jAdminMode.setMaximumSize(new Dimension(460, 82));
+		m_jAdminMode.setPreferredSize(new Dimension(460, 82));
 		m_jAdminMode.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				m_administrationLogin = true;
+				jLabel1.setText(AppLocal.getIntString("Label.ChooseAdministrator"));
 				m_jSalesMode.setVisible(true);
 				m_jAdminMode.setVisible(false);
 				listPeople(true);
@@ -691,6 +724,8 @@ public class JRootApp extends JPanel implements AppView {
 		jPanel4.add(m_jLogonName);
 
 		m_jPanelLogin.add(jPanel4, java.awt.BorderLayout.CENTER);
+		m_jPanelLogin.setBackground(LOGIN_BACKGROUND);
+		jPanel4.setOpaque(false);
 
 		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 24, 20, 24));
 		jPanel5.setLayout(new java.awt.BorderLayout());
