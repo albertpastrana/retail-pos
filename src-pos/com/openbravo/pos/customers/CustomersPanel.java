@@ -37,6 +37,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private final JTextField debt = new JTextField();
 	private final JCheckBox visible = new JCheckBox();
 	private final JButton save = new JButton();
+	private final JButton delete = new JButton();
 	private final JButton newCustomer = new JButton();
 	private DataLogicCustomers customers;
 	private CustomerInfoExt selected;
@@ -74,6 +75,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		JPanel detailActions = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 		save.setText(AppLocal.getIntString("Button.Save"));
 		detailActions.add(save);
+		delete.setText(AppLocal.getIntString("customer.delete"));
+		detailActions.add(delete);
 		detail.add(detailActions, BorderLayout.SOUTH);
 
 		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(table), detail);
@@ -95,6 +98,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		});
 		newCustomer.addActionListener(e -> startNewCustomer());
 		save.addActionListener(e -> saveCustomer());
+		delete.addActionListener(e -> deleteCustomer());
 		setDetailEnabled(false);
 	}
 
@@ -136,6 +140,24 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			}
 		} catch (BasicException exception) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.finderror"),
+					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
+		}
+	}
+
+	private void deleteCustomer() {
+		if (selected == null || creating) {
+			return;
+		}
+		int choice = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("customer.deleteconfirm"),
+				AppLocal.getIntString("customer.title"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+		if (choice != JOptionPane.YES_OPTION) {
+			return;
+		}
+		try {
+			customers.deleteCustomer(selected.getId());
+			loadCustomers();
+		} catch (BasicException exception) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.deleteerror"),
 					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
@@ -205,6 +227,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		phone.setEnabled(enabled);
 		visible.setEnabled(enabled);
 		save.setEnabled(enabled);
+		delete.setEnabled(enabled && !creating);
 		debt.setEnabled(false);
 	}
 

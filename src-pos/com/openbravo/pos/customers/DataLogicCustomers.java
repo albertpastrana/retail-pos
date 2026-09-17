@@ -80,7 +80,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		final String phoneSearch = normalizedSearch.isEmpty() ? "!" : "%" + normalizedSearch + "%";
 		return new PreparedSentence(s,
 				"SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE VISIBLE = " + s.DB.TRUE()
-						+ " AND (NAME LIKE ? OR PHONE LIKE ?) ORDER BY NAME",
+						+ " AND (UPPER(NAME) LIKE UPPER(?) OR PHONE LIKE ?) ORDER BY NAME",
 				SerializerWriteParams.INSTANCE, new SerializerRead() {
 					public Object readValues(DataRead dr) throws BasicException {
 						CustomerInfo c = new CustomerInfo(dr.getString(1));
@@ -125,7 +125,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		final String phoneSearch = normalizedSearch.isEmpty() ? "!" : "%" + normalizedSearch + "%";
 		return new PreparedSentence(s,
 				"SELECT ID, NAME, PHONE, CURDEBT, VISIBLE FROM CUSTOMERS WHERE VISIBLE = " + s.DB.TRUE()
-						+ " AND (NAME LIKE ? OR PHONE LIKE ?) ORDER BY NAME",
+						+ " AND (UPPER(NAME) LIKE UPPER(?) OR PHONE LIKE ?) ORDER BY NAME",
 				SerializerWriteParams.INSTANCE, new SerializerRead() {
 					public Object readValues(DataRead dr) throws BasicException {
 						CustomerInfoExt c = new CustomerInfoExt(dr.getString(1));
@@ -151,6 +151,15 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 						setString(2, CustomerInfo.normalizePhone(customer.getPhone()));
 						setBoolean(3, customer.isVisible());
 						setString(4, customer.getId());
+					}
+				});
+	}
+
+	public int deleteCustomer(final String id) throws BasicException {
+		return new PreparedSentence(s, "UPDATE CUSTOMERS SET VISIBLE = " + s.DB.FALSE() + " WHERE ID = ?",
+				SerializerWriteParams.INSTANCE).exec(new DataParams() {
+					public void writeValues() throws BasicException {
+						setString(1, id);
 					}
 				});
 	}
