@@ -43,6 +43,7 @@ public class JTicketsBagShared extends JTicketsBag {
 	private ButtonGroup m_sellerGroup = new ButtonGroup();
 	private Map<String, JToggleButton> m_sellerButtons = new HashMap<String, JToggleButton>();
 	private Map<String, UserInfo> m_sellers = new HashMap<String, UserInfo>();
+	private UserInfo m_firstSeller;
 	private final String host;
 	private final javax.swing.Timer ownershipTimer;
 
@@ -213,9 +214,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	private void createTicket(UserInfo seller) {
 		TicketInfo ticket = new TicketInfo();
-		if (seller != null) {
-			ticket.setUser(seller);
-		}
+		ticket.setUser(seller == null ? m_firstSeller : seller);
 		m_sCurrentTicket = UUID.randomUUID().toString(); // m_fmtid.format(ticket.getId());
 		currentTicketPersisted = false;
 		m_panelticket.setActiveTicket(ticket, null);
@@ -291,7 +290,10 @@ public class JTicketsBagShared extends JTicketsBag {
 		if (seller != null) {
 			// The stored seller is a snapshot, so take the current name and discard
 			// sellers that are no longer available.
-			ticket.setUser(m_sellers.get(seller.getId()));
+			UserInfo currentSeller = m_sellers.get(seller.getId());
+			ticket.setUser(currentSeller == null ? m_firstSeller : currentSeller);
+		} else {
+			ticket.setUser(m_firstSeller);
 		}
 	}
 
@@ -307,6 +309,9 @@ public class JTicketsBagShared extends JTicketsBag {
 			int position = 0;
 			for (Iterator i = people.iterator(); i.hasNext();) {
 				final AppUser user = (AppUser) i.next();
+				if (m_firstSeller == null) {
+					m_firstSeller = user.getUserInfo();
+				}
 				int shortcutKey = getSellerShortcut(position++);
 				String shortcut = shortcutKey == 0 ? null : KeyEvent.getKeyText(shortcutKey);
 
