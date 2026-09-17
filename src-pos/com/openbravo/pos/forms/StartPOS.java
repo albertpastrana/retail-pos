@@ -160,9 +160,11 @@ public class StartPOS {
 				if ("fullscreen".equals(screenmode)) {
 					JRootKiosk rootkiosk = new JRootKiosk();
 					rootkiosk.initFrame(config);
+					UpdateChecker.checkAsync(config, rootkiosk);
 				} else {
 					JRootFrame rootframe = new JRootFrame();
 					rootframe.initFrame(config);
+					UpdateChecker.checkAsync(config, rootframe);
 				}
 			}
 		});

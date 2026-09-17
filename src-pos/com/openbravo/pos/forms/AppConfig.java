@@ -182,5 +182,10 @@ public class AppConfig implements AppProperties {
 
 		m_propsconfig.setProperty("backup.daily", "false");
 		m_propsconfig.setProperty("backup.dir", "");
+
+		m_propsconfig.setProperty("update.check", "true");
+		m_propsconfig.setProperty("update.dir", "");
+		m_propsconfig.setProperty("update.url",
+				"https://api.github.com/repos/albertpastrana/retail-pos/releases/latest");
 	}
 }

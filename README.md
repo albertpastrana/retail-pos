@@ -63,6 +63,11 @@ Important keys:
 | `machine.printer`                       | `screen`, or `epson:file,<path>` for a raw ESC/POS printer ([escpos-printer.md](escpos-printer.md)) |
 | `catalog.import.products`               | Path to the products TSV (scan-to-import)                                                           |
 | `catalog.import.categories`             | Path to the categories TSV                                                                          |
+| `update.check`                          | Set to `false` to disable the startup update check                                                   |
+| `update.dir`                            | Directory containing platform packages and matching `.sha256` files for local updates              |
+| `update.url`                            | Compatible releases API endpoint; defaults to the project GitHub `latest` release                  |
+
+The update check runs in the background and never prevents startup. When a newer stable release is found, the POS offers to install a verified local package and restart, or to open the remote release page in the system browser. Local updates replace only the application directory; configuration and databases remain external.
 
 First launch against an empty database URL runs the Flyway migrations and creates the schema. Default users (empty password): Administrator, Manager, Employee, Guest.
 

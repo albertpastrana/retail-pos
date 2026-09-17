@@ -22,7 +22,7 @@ for file in retail-pos.jar locales.jar reports.jar; do
   cp "$root/build/jar/$file" "$staging/$file"
 done
 cp -R "$root/build/runtime-libs/." "$staging/runtime-libs/"
-cp "$root/logging.properties" "$root/start.sh" "$root/start.bat" "$staging/"
+cp "$root/logging.properties" "$root/start.sh" "$root/start.bat" "$root/scripts/update.sh" "$root/scripts/update.bat" "$staging/"
 cp -R "$root/licensing" "$staging/"
 cp -R "$root/lib/$native_lib" "$staging/lib/$native_lib"
 
@@ -44,8 +44,9 @@ The package includes its Java runtime. Application configuration remains
 external; see the project documentation for database and printer settings.
 EOF
 chmod +x "$staging/start.sh"
+chmod +x "$staging/update.sh"
 
-archive="$dist/RetailPOS-${platform}-x86_64.${archive_suffix}"
+archive="$dist/RetailPOS-${version}-${platform}-x86_64.${archive_suffix}"
 if [ "$archive_suffix" = "tar.gz" ]; then
   tar -czf "$archive" -C "$dist" "$(basename "$staging")"
 else
