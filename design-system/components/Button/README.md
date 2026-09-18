@@ -1,0 +1,5 @@
+The till's primary interactive control, sized for a touch screen first and a mouse second. Every screen gets **one** `primary` button — the action that moves the sale forward (`Charge`, `Confirm`, `Save`) — never two competing primaries on the same screen. `secondary` is for anything else that isn't destructive: `Cancel`, `Print copy`, a dialog's back action. `danger` is reserved for a genuinely destructive or reversal action — `Void line`, `Refund`, `Close till` — and always asks for confirmation before it takes effect; it is not a general-purpose "important" button.
+
+Minimum height is `space-12` (48px) on every size — this is a control a fast-moving thumb has to land, not a desktop button that can afford to be 28px. Label text is `body-lg`, Title Case, a verb or verb phrase (`New sale`, not `Sale`). An icon, when one is used, sits before the label with `space-2` between them and is drawn from this system's Icons set only.
+
+Do not add a fourth colour variant for "less important" actions — use `secondary` at a smaller size instead, so colour keeps meaning `primary` and `danger` mean what their names say.

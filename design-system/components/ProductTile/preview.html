@@ -1,0 +1,41 @@
+<!-- @dsCard group="Content" height=260 -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../tokens.css">
+<style>
+  body { margin: 0; padding: var(--space-6); background: var(--surface-0); font-family: var(--font-sans); }
+  .grid { display: grid; grid-template-columns: repeat(3, 148px); gap: var(--space-4); }
+  .tile {
+    background: var(--surface-100); border-radius: var(--radius-md); padding: var(--space-4);
+    box-shadow: var(--shadow-raised); display: flex; flex-direction: column; gap: var(--space-2);
+    min-height: var(--space-12); cursor: pointer;
+  }
+  .tile:hover { box-shadow: var(--shadow-overlay); }
+  .name { color: var(--ink); }
+  .price { color: var(--ink); font-family: var(--font-mono); }
+  .badge {
+    align-self: flex-start; display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2);
+    border-radius: var(--radius-full); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    background: color-mix(in srgb, var(--warning) 18%, var(--surface-100)); color: var(--warning);
+  }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="tile">
+      <span class="name body-lg">Pa de pagès</span>
+      <span class="price price">3,20 €</span>
+    </div>
+    <div class="tile">
+      <span class="name body-lg">Formatge de cabra</span>
+      <span class="price price">7,95 €</span>
+      <span class="badge">Low stock</span>
+    </div>
+    <div class="tile">
+      <span class="name body-lg">Oli d'oliva 1L</span>
+      <span class="price price">9,50 €</span>
+    </div>
+  </div>
+</body>
+</html>

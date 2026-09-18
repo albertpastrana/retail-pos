@@ -1,0 +1,57 @@
+<!-- @dsCard height=288 -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../tokens.css">
+<style>
+  body { margin: 0; background: var(--surface-0); }
+  .ink { fill: var(--ink); }
+  .muted { fill: var(--ink-muted); }
+  .brand { fill: var(--brand); }
+  .tint { fill: var(--surface-200); stroke: var(--border); stroke-width: 1; }
+  .hole { fill: var(--surface-0); }
+  .name { font-family: var(--font-sans); font-weight: 800; font-size: 72px; letter-spacing: -1px; }
+  .tagline { font-family: var(--font-sans); font-weight: 500; font-size: 14px; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 960 288" width="960" height="288" xmlns="http://www.w3.org/2000/svg">
+<!--
+  Derivation:
+  Blocks — brand slab (space-8 x2 tall, radius-lg*1.5 corners) as the one
+    identity colour people will know this app by; an ink slab and a
+    surface-200/border tint slab beneath it as the neutral pair everything
+    else is built from. Together they fill x=560..960 of the 960-wide
+    cover, just over the "half" ceiling, biased large because a system this
+    neutral (one accent, everything else ink/surface) needs its single hue
+    to read at a glance.
+  Arrangement — one tall slab (brand) with two smaller satellites below,
+    staggered rather than stacked flush: the same "one confident action,
+    quiet neutrals underneath it" composition the README asks every real
+    screen to use.
+  Pattern — punched circles in surface-0 (the ground colour) sit inside the
+    blocks: the same string-hole as the logo mark, repeated as texture
+    rather than drawn once. "Retail POS exists because every shop already
+    has a price tag on the counter" is the sentence that picked it over a
+    generic dot grid.
+  Scales used — radius-lg (16px) x1.5 for the big slab's corners, radius-lg
+    for the two satellites, radius-full for every punched hole; hole radii
+    are space-1/space-2/space-3 (4/8/12px) at varied sizes, never a grid.
+-->
+  <rect class="brand" x="560" y="24" width="300" height="140" rx="24"/>
+  <rect class="ink" x="560" y="180" width="140" height="84" rx="16"/>
+  <rect class="tint" x="716" y="180" width="144" height="84" rx="16"/>
+
+  <circle class="hole" cx="612" cy="58" r="12"/>
+  <circle class="hole" cx="700" cy="46" r="8"/>
+  <circle class="hole" cx="820" cy="132" r="9"/>
+  <circle class="hole" cx="760" cy="70" r="4"/>
+  <circle class="hole" cx="604" cy="214" r="8"/>
+  <circle class="hole" cx="788" cy="220" r="9"/>
+  <circle class="hole" cx="852" cy="200" r="4"/>
+
+  <text class="name ink" x="64" y="176">Retail POS</text>
+  <text class="tagline muted" x="64" y="204">A design system for the till, built from the shop's own price tag.</text>
+</svg>
+</body>
+</html>

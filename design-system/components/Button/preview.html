@@ -1,0 +1,40 @@
+<!-- @dsCard group="Actions" height=180 -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../tokens.css">
+<style>
+  body { margin: 0; padding: var(--space-6); background: var(--surface-0); display: flex; flex-direction: column; gap: var(--space-4); font-family: var(--font-sans); }
+  .row { display: flex; gap: var(--space-3); align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+    height: var(--space-12); padding: 0 var(--space-6); border-radius: var(--radius-md);
+    border: none; cursor: pointer;
+  }
+  .btn.primary { background: var(--brand); color: var(--on-brand); }
+  .btn.primary:hover { background: var(--brand-strong); }
+  .btn.secondary { background: var(--surface-100); color: var(--ink); border: 1px solid var(--border); }
+  .btn.secondary:hover { border-color: var(--border-strong); }
+  .btn.danger { background: var(--surface-100); color: var(--danger); border: 1px solid var(--danger); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .label { font-size: 12px; color: var(--ink-muted); width: 90px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <span class="label">primary</span>
+    <button class="btn primary body-lg">Charge 24,50 €</button>
+    <button class="btn primary body-lg" disabled>Charge 24,50 €</button>
+  </div>
+  <div class="row">
+    <span class="label">secondary</span>
+    <button class="btn secondary body-lg">Print copy</button>
+    <button class="btn secondary body-lg">Cancel</button>
+  </div>
+  <div class="row">
+    <span class="label">danger</span>
+    <button class="btn danger body-lg">Void line</button>
+    <button class="btn danger body-lg">Close till</button>
+  </div>
+</body>
+</html>

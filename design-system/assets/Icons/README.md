@@ -1,0 +1,1 @@
+Six icons establishing the family: 24×24, 2px stroke, rounded caps and joins, fixed ink `#241c14` (not `currentColor` — recolour by exporting a themed copy, per README.md → Iconography). `cash-drawer`, `print`, `barcode-scan`, `card-payment`, `discount-tag`, `search`. A new icon should match this construction before it's added, not just visually resemble it.

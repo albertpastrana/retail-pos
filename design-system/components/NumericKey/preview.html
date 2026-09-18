@@ -1,0 +1,32 @@
+<!-- @dsCard group="Actions" height=320 subtitle="the sales-screen keypad" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../tokens.css">
+<style>
+  body { margin: 0; padding: var(--space-6); background: var(--surface-0); font-family: var(--font-sans); }
+  .pad {
+    display: grid; grid-template-columns: repeat(3, 56px); gap: var(--space-2);
+    background: var(--surface-200); padding: var(--space-4); border-radius: var(--radius-lg);
+    width: max-content;
+  }
+  .key {
+    height: 56px; display: flex; align-items: center; justify-content: center;
+    background: var(--surface-100); color: var(--ink); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-raised); border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 17px; font-weight: 500;
+  }
+  .key.zero { grid-column: span 2; }
+  .key.active { background: var(--brand); color: var(--on-brand); box-shadow: none; }
+  .key.clear { color: var(--ink-muted); font-family: var(--font-sans); font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="pad">
+    <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+    <button class="key">4</button><button class="key active">5</button><button class="key">6</button>
+    <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+    <button class="key zero">0</button><button class="key clear">C</button>
+  </div>
+</body>
+</html>
