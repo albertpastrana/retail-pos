@@ -106,18 +106,16 @@ public class JDlgChangePassword extends javax.swing.JDialog {
 		jPanel2.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
 		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png")));
-		jcmdOK.setText(AppLocal.getIntString("Button.OK"));
+		jcmdOK.setText(AppLocal.getIntString("button.changepassword"));
 		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jcmdOKActionPerformed(evt);
 			}
 		});
 
-		jPanel2.add(jcmdOK);
-
 		jcmdCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png")));
-		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel"));
+		jcmdCancel.setText(AppLocal.getIntString("button.cancelpassword"));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jcmdCancelActionPerformed(evt);
@@ -125,6 +123,7 @@ public class JDlgChangePassword extends javax.swing.JDialog {
 		});
 
 		jPanel2.add(jcmdCancel);
+		jPanel2.add(jcmdOK);
 
 		getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 

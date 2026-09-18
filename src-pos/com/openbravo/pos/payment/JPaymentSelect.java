@@ -464,7 +464,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		jPanel2.add(jPanel1);
 
 		m_jButtonOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		m_jButtonOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		m_jButtonOK.setText(AppLocal.getIntString("button.confirmpayment")); // NOI18N
 		m_jButtonOK.setFocusPainted(false);
 		m_jButtonOK.setFocusable(false);
 		m_jButtonOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
@@ -474,11 +474,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 				m_jButtonOKActionPerformed(evt);
 			}
 		});
-		jPanel2.add(m_jButtonOK);
-
 		m_jButtonCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		m_jButtonCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		m_jButtonCancel.setText(AppLocal.getIntString("button.cancelpayment")); // NOI18N
 		m_jButtonCancel.setFocusPainted(false);
 		m_jButtonCancel.setFocusable(false);
 		m_jButtonCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
@@ -489,6 +487,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 			}
 		});
 		jPanel2.add(m_jButtonCancel);
+		jPanel2.add(m_jButtonOK);
 
 		jPanel5.add(jPanel2, java.awt.BorderLayout.LINE_END);
 

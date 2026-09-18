@@ -56,9 +56,10 @@ public class JProductFinder extends javax.swing.JDialog {
 		super(parent, modal);
 	}
 
-	private ProductInfoExt init(DataLogicSales dlSales, int productsType) {
+	private ProductInfoExt init(DataLogicSales dlSales, int productsType, String actionKey) {
 
 		initComponents();
+		jcmdOK.setText(AppLocal.getIntString(actionKey));
 
 		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
 
@@ -110,7 +111,16 @@ public class JProductFinder extends javax.swing.JDialog {
 		return showMessage(parent, dlSales, PRODUCT_ALL);
 	}
 
+	public static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, String actionKey) {
+		return showMessage(parent, dlSales, PRODUCT_ALL, actionKey);
+	}
+
 	public static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, int productsType) {
+		return showMessage(parent, dlSales, productsType, "button.selectproduct");
+	}
+
+	private static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, int productsType,
+			String actionKey) {
 
 		Window window = getWindow(parent);
 
@@ -120,7 +130,7 @@ public class JProductFinder extends javax.swing.JDialog {
 		} else {
 			myMsg = new JProductFinder((Dialog) window, true);
 		}
-		return myMsg.init(dlSales, productsType);
+		return myMsg.init(dlSales, productsType, actionKey);
 	}
 
 	private static class MyListData extends javax.swing.AbstractListModel {
@@ -213,11 +223,9 @@ public class JProductFinder extends javax.swing.JDialog {
 				jcmdOKActionPerformed(evt);
 			}
 		});
-		jPanel1.add(jcmdOK);
-
 		jcmdCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		jcmdCancel.setText(AppLocal.getIntString("button.cancelselection")); // NOI18N
 		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -225,6 +233,7 @@ public class JProductFinder extends javax.swing.JDialog {
 			}
 		});
 		jPanel1.add(jcmdCancel);
+		jPanel1.add(jcmdOK);
 
 		jPanel2.add(jPanel1, java.awt.BorderLayout.SOUTH);
 

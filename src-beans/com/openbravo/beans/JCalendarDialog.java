@@ -162,7 +162,7 @@ public class JCalendarDialog extends javax.swing.JDialog {
 		jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
 		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png")));
-		jcmdOK.setText(m_resources.getString("button.ok"));
+		jcmdOK.setText(m_resources.getString("button.selectdate"));
 		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
 		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -170,11 +170,9 @@ public class JCalendarDialog extends javax.swing.JDialog {
 			}
 		});
 
-		jPanel1.add(jcmdOK);
-
 		jcmdCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png")));
-		jcmdCancel.setText(m_resources.getString("button.cancel"));
+		jcmdCancel.setText(m_resources.getString("button.canceldate"));
 		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -183,6 +181,7 @@ public class JCalendarDialog extends javax.swing.JDialog {
 		});
 
 		jPanel1.add(jcmdCancel);
+		jPanel1.add(jcmdOK);
 
 		getContentPane().add(jPanel1, java.awt.BorderLayout.SOUTH);
 

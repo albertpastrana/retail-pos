@@ -19,6 +19,7 @@
 
 package com.openbravo.data.gui;
 
+import com.openbravo.data.loader.LocalRes;
 import java.util.*;
 
 public class JListData extends javax.swing.JDialog {
@@ -85,16 +86,14 @@ public class JListData extends javax.swing.JDialog {
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
-		m_jOK.setText("Aceptar");
+		m_jOK.setText(LocalRes.getIntString("button.select"));
 		m_jOK.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				m_jOKActionPerformed(evt);
 			}
 		});
 
-		jPanel1.add(m_jOK);
-
-		m_jCancel.setText("Cancelar");
+		m_jCancel.setText(LocalRes.getIntString("button.cancellist"));
 		m_jCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				m_jCancelActionPerformed(evt);
@@ -102,6 +101,7 @@ public class JListData extends javax.swing.JDialog {
 		});
 
 		jPanel1.add(m_jCancel);
+		jPanel1.add(m_jOK);
 
 		getContentPane().add(jPanel1, java.awt.BorderLayout.SOUTH);
 

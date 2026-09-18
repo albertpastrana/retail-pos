@@ -110,18 +110,16 @@ public class SelectPrinter extends javax.swing.JDialog {
 		jPanel8.setLayout(new java.awt.BorderLayout());
 
 		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		jcmdOK.setText(AppLocal.getIntString("button.selectprinter")); // NOI18N
 		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
 		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jcmdOKActionPerformed(evt);
 			}
 		});
-		jPanel1.add(jcmdOK);
-
 		jcmdCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		jcmdCancel.setText(AppLocal.getIntString("button.cancelprinter")); // NOI18N
 		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -129,6 +127,7 @@ public class SelectPrinter extends javax.swing.JDialog {
 			}
 		});
 		jPanel1.add(jcmdCancel);
+		jPanel1.add(jcmdOK);
 
 		jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
 

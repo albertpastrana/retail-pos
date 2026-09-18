@@ -131,7 +131,7 @@ public class ReceiptSplit extends javax.swing.JDialog {
 		jPanel2.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
 		m_jButtonOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		m_jButtonOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		m_jButtonOK.setText(AppLocal.getIntString("button.splitticket")); // NOI18N
 		m_jButtonOK.setFocusPainted(false);
 		m_jButtonOK.setFocusable(false);
 		m_jButtonOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
@@ -141,11 +141,9 @@ public class ReceiptSplit extends javax.swing.JDialog {
 				m_jButtonOKActionPerformed(evt);
 			}
 		});
-		jPanel2.add(m_jButtonOK);
-
 		m_jButtonCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		m_jButtonCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		m_jButtonCancel.setText(AppLocal.getIntString("button.cancelsplit")); // NOI18N
 		m_jButtonCancel.setFocusPainted(false);
 		m_jButtonCancel.setFocusable(false);
 		m_jButtonCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
@@ -156,6 +154,7 @@ public class ReceiptSplit extends javax.swing.JDialog {
 			}
 		});
 		jPanel2.add(m_jButtonCancel);
+		jPanel2.add(m_jButtonOK);
 
 		getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 

@@ -147,16 +147,14 @@ public class JSort extends JDialog {
 
 		jPanel2.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
-		jcmdOK.setText(LocalRes.getIntString("button.ok"));
+		jcmdOK.setText(LocalRes.getIntString("button.applysort"));
 		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jcmdOKActionPerformed(evt);
 			}
 		});
 
-		jPanel2.add(jcmdOK);
-
-		jcmdCancel.setText(LocalRes.getIntString("button.cancel"));
+		jcmdCancel.setText(LocalRes.getIntString("button.cancelsort"));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				jcmdCancelActionPerformed(evt);
@@ -164,6 +162,7 @@ public class JSort extends JDialog {
 		});
 
 		jPanel2.add(jcmdCancel);
+		jPanel2.add(jcmdOK);
 
 		getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 

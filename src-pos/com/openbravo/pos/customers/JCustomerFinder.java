@@ -52,13 +52,15 @@ public class JCustomerFinder extends JDialog {
 
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton newButton = new JButton(AppLocal.getIntString("customer.new"));
-		JButton cancelButton = new JButton(AppLocal.getIntString("Button.Cancel"));
-		JButton selectButton = new JButton(AppLocal.getIntString("customer.select"));
+		JButton cancelButton = new JButton(AppLocal.getIntString("button.cancelcustomer"));
+		JButton selectButton = new JButton(AppLocal.getIntString("button.selectcustomer"));
 		removeButton.setText(AppLocal.getIntString("customer.remove"));
 		actions.add(newButton);
 		removeButton.setVisible(false);
 		actions.add(removeButton);
+		actions.add(selectButton);
 		actions.add(cancelButton);
+		actions.remove(selectButton);
 		actions.add(selectButton);
 		add(actions, BorderLayout.SOUTH);
 

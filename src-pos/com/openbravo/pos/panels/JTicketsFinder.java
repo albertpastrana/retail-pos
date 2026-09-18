@@ -528,7 +528,7 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 		jPanel8.setLayout(new java.awt.BorderLayout());
 
 		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		jcmdOK.setText(AppLocal.getIntString("button.selectticket")); // NOI18N
 		jcmdOK.setEnabled(false);
 		jcmdOK.setFocusPainted(false);
 		jcmdOK.setFocusable(false);
@@ -539,11 +539,9 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 				jcmdOKActionPerformed(evt);
 			}
 		});
-		jPanel1.add(jcmdOK);
-
 		jcmdCancel
 				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("Button.Cancel")); // NOI18N
+		jcmdCancel.setText(AppLocal.getIntString("button.cancelticket")); // NOI18N
 		jcmdCancel.setFocusPainted(false);
 		jcmdCancel.setFocusable(false);
 		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
@@ -554,6 +552,7 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 			}
 		});
 		jPanel1.add(jcmdCancel);
+		jPanel1.add(jcmdOK);
 
 		jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
 
