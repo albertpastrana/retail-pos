@@ -1,0 +1,97 @@
+// Retail POS observability for Grafana Alloy.
+// Secrets and installation-specific paths are supplied through /etc/alloy/env.
+
+otelcol.auth.basic "grafana_cloud" {
+  username = sys.env("GRAFANA_CLOUD_OTLP_USERNAME")
+  password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+}
+
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROMETHEUS_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROMETHEUS_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+    }
+  }
+}
+
+loki.write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_TOKEN")
+    }
+  }
+}
+
+// Host CPU, memory, filesystem, network, and load metrics.
+prometheus.exporter.unix "host" {}
+
+prometheus.scrape "host" {
+  targets    = prometheus.exporter.unix.host.targets
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+  job_name   = "node"
+}
+
+// PostgreSQL exporter. The monitoring role only needs pg_monitor.
+prometheus.exporter.postgres "pos" {
+  data_source_names = [sys.env("POSTGRES_MONITOR_DSN")]
+}
+
+prometheus.scrape "postgres" {
+  targets    = prometheus.exporter.postgres.pos.targets
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+  job_name   = "postgres"
+}
+
+// The casa-victoria POS rotates logs as pos-0.log through pos-4.log. Keep these explicit:
+// loki.source.file does not expand a glob returned by sys.env().
+loki.source.file "pos" {
+  targets = [
+    {__path__ = "/home/cv/retail-pos/logs/pos-0.log", job = "java-app", service = "retail-pos"},
+    {__path__ = "/home/cv/retail-pos/logs/pos-1.log", job = "java-app", service = "retail-pos"},
+    {__path__ = "/home/cv/retail-pos/logs/pos-2.log", job = "java-app", service = "retail-pos"},
+    {__path__ = "/home/cv/retail-pos/logs/pos-3.log", job = "java-app", service = "retail-pos"},
+    {__path__ = "/home/cv/retail-pos/logs/pos-4.log", job = "java-app", service = "retail-pos"},
+  ]
+
+  forward_to = [loki.write.grafana_cloud.receiver]
+}
+
+// Forward systemd journal entries, including PostgreSQL and Alloy service logs.
+loki.source.journal "system" {
+  labels = {
+    job = "journal",
+  }
+
+  forward_to = [loki.write.grafana_cloud.receiver]
+}
+
+// Optional OTLP receiver for a Java agent or another local instrumented process.
+// The current Retail POS launcher emits file logs but does not emit OTLP by itself.
+otelcol.receiver.otlp "local" {
+  grpc {
+    endpoint = "127.0.0.1:4317"
+  }
+
+  http {
+    endpoint = "127.0.0.1:4318"
+  }
+
+  output {
+    traces = [otelcol.exporter.otlp.grafana_cloud.input]
+    metrics = [otelcol.exporter.otlp.grafana_cloud.input]
+    logs = [otelcol.exporter.otlp.grafana_cloud.input]
+  }
+}
+
+otelcol.exporter.otlp "grafana_cloud" {
+  client {
+    endpoint = sys.env("GRAFANA_CLOUD_OTLP_ENDPOINT")
+    auth     = otelcol.auth.basic.grafana_cloud.handler
+  }
+}
