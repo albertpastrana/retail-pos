@@ -251,6 +251,13 @@ dataHelper(
     checkLock = false,
 )
 dataHelper(
+    "loadFallbackCatalog",
+    "LoadFallbackCatalog",
+    "Replace the shared fallback catalogue from categories, products, and prices TSVs.",
+    requireArgs = true,
+    checkLock = false,
+)
+dataHelper(
     "keepCatalog",
     "KeepCatalog",
     "Drop products whose REFERENCE is not in a keep CSV. Pass: --args='data/retail-pos-database path/to/keep.csv'",

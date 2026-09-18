@@ -105,9 +105,10 @@ TSV files (UTF-8, tab-separated, no header):
 
 Prices in the file are **before tax**; imported products are assigned tax category `001`, whose rate you set in Stock → Taxes. The sales-screen buttons use `taxesincluded=true`, so the till displays prices with tax.
 
-`import-products.tsv` is the complete scan lookup; it is not bulk-loaded into a
-new database. `import-prices.tsv` overlays costs which can already be joined to
-an EAN. Invoice lines that cannot yet be joined remain in
+`import-products.tsv` is the complete scan lookup and is loaded into the shared
+`CATALOG_FALLBACK_PRODUCTS` table for scan-to-import. `import-prices.tsv`
+overlays costs in `CATALOG_FALLBACK_PRICES`, indexed by barcode and reference.
+Invoice lines that cannot yet be joined remain in
 `import-reference-prices.tsv` for later reference-based imports. Regenerate the
 invoice joins after updating `external-data/preus-cost-factures.csv`:
 
@@ -154,6 +155,7 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `./gradlew applyStoreResources`                                                         | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/retail-pos-database`. |
 | `./gradlew importCatalog`                                                               | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.       |
+| `./gradlew loadFallbackCatalog --args='JDBC_URL USER PASSWORD categories.tsv products.tsv prices.tsv'` | Replaces the shared fallback tables from TSVs. Does not modify products or stock. |
 | `./gradlew keepCatalog --args='data/retail-pos-database path/to/keep.csv'`            | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history.  |
 | `python3 data/apply-model-price.py Avet 3267 --cost 3.66 --price 5.95 --apply --insert` | Sets cost and ticket price on every variant of a model, then inserts them.                                                                       |
 | `updateResource` / `dumpResource` / `dumpAllResources` / `showResource`                 | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                          |

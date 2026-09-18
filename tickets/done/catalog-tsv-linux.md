@@ -45,3 +45,5 @@ All tills connected to the shared database see the same fallback data. Satellite
 ## Shipped
 
 `V27__shared_fallback_catalog` creates the empty shared tables. `DataLogicSales` reads them for till and Stock scan-to-import, including price overlays by barcode or reference. The application no longer reads the configured catalogue TSV paths for this flow.
+
+The shared PostgreSQL database at the shop LAN address was populated from the current categories, products, and prices TSVs on 2026-09-18: 44,169 fallback products and 24,084 price lookup keys.
