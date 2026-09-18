@@ -405,6 +405,7 @@ public class JRootApp extends JPanel implements AppView {
 			jScrollPane1.getViewport().setView(null);
 
 			JFlowPanel jPeople = new JFlowPanel();
+			jPeople.setOpaque(false);
 			jPeople.applyComponentOrientation(getComponentOrientation());
 
 			java.util.List people = m_dlSystem.listPeopleVisible();
@@ -532,6 +533,7 @@ public class JRootApp extends JPanel implements AppView {
 		jLabel1.setText(AppLocal.getIntString("Label.ChooseMode"));
 		m_jSalesMode.setVisible(true);
 		m_jAdminMode.setVisible(true);
+		m_jLogonName.setVisible(false);
 		jScrollPane1.getViewport().setView(null);
 		showView("login");
 
@@ -717,8 +719,11 @@ public class JRootApp extends JPanel implements AppView {
 				m_administrationLogin = true;
 				jLabel1.setText(AppLocal.getIntString("Label.ChooseAdministrator"));
 				m_jSalesMode.setVisible(true);
-				m_jAdminMode.setVisible(false);
+				m_jAdminMode.setVisible(true);
+				m_jLogonName.setVisible(true);
 				listPeople(true);
+				jPanel4.revalidate();
+				jPanel4.repaint();
 			}
 		});
 		jPanel4.add(m_jSalesMode);
@@ -727,8 +732,10 @@ public class JRootApp extends JPanel implements AppView {
 		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
 
 		m_jLogonName.setLayout(new java.awt.BorderLayout());
+		m_jLogonName.setOpaque(false);
 		m_jLogonName.setAlignmentX(0.5F);
 		m_jLogonName.setMaximumSize(new java.awt.Dimension(LOGIN_GRID_WIDTH, LOGIN_GRID_HEIGHT));
+		m_jLogonName.setVisible(false);
 
 		jScrollPane1.setBorder(null);
 		jScrollPane1.setOpaque(false);
