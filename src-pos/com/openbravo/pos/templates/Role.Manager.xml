@@ -57,6 +57,7 @@
     <class name="com.openbravo.pos.inventory.StockManagement"/>
     <class name="com.openbravo.pos.inventory.AuxiliarPanel"/>
     <class name="com.openbravo.pos.forms.MenuSalesManagement"/>
+    <class name="com.openbravo.pos.reports.JPanelSalesSummary"/>
     <class name="com.openbravo.pos.forms.MenuMaintenance"/>
     <class name="com.openbravo.pos.admin.PeoplePanel"/>
     <class name="com.openbravo.pos.inventory.LocationsPanel"/>

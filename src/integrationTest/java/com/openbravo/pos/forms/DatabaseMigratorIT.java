@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -13,6 +14,7 @@ import com.openbravo.data.loader.Session;
 import com.openbravo.pos.ticket.ProductInfoExt;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DatabaseMigratorIT {
 
@@ -130,6 +132,9 @@ public class DatabaseMigratorIT {
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
+			assertTrue(resourceContains(connection, "Menu.Root", "JPanelSalesSummary"));
+			assertTrue(roleContains(connection, "0", "JPanelSalesSummary"));
+			assertTrue(roleContains(connection, "1", "JPanelSalesSummary"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Employee'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
@@ -213,6 +218,28 @@ public class DatabaseMigratorIT {
 			}
 		} finally {
 			statement.close();
+		}
+	}
+
+	private static boolean resourceContains(Connection connection, String name, String text) throws SQLException {
+		try (java.sql.PreparedStatement statement = connection
+				.prepareStatement("SELECT CONTENT FROM RESOURCES WHERE NAME = ?")) {
+			statement.setString(1, name);
+			try (ResultSet results = statement.executeQuery()) {
+				results.next();
+				return new String(results.getBytes(1), StandardCharsets.UTF_8).contains(text);
+			}
+		}
+	}
+
+	private static boolean roleContains(Connection connection, String id, String text) throws SQLException {
+		try (java.sql.PreparedStatement statement = connection
+				.prepareStatement("SELECT PERMISSIONS FROM ROLES WHERE ID = ?")) {
+			statement.setString(1, id);
+			try (ResultSet results = statement.executeQuery()) {
+				results.next();
+				return new String(results.getBytes(1), StandardCharsets.UTF_8).contains(text);
+			}
 		}
 	}
 

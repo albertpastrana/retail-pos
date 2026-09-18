@@ -93,8 +93,6 @@ public class JCalendarDialog extends javax.swing.JDialog {
 		myMsg.initComponents();
 
 		Date d = date;
-		int dialogwidth = 400;
-
 		myMsg.myCalendar = new JCalendarPanel(d);
 		myMsg.myCalendar.addPropertyChangeListener("Date", new JPanelCalendarChange(myMsg));
 		myMsg.jPanelGrid.add(myMsg.myCalendar);
@@ -103,13 +101,11 @@ public class JCalendarDialog extends javax.swing.JDialog {
 			myMsg.myTime = new JTimePanel(d);
 			myMsg.myTime.addPropertyChangeListener("Date", new JPanelTimeChange(myMsg));
 			myMsg.jPanelGrid.add(myMsg.myTime);
-			dialogwidth += 400;
 		}
 
 		myMsg.getRootPane().setDefaultButton(myMsg.jcmdOK);
-
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		myMsg.setBounds((screenSize.width - dialogwidth) / 2, (screenSize.height - 359) / 2, dialogwidth, 359);
+		myMsg.pack();
+		myMsg.setLocationRelativeTo(window);
 
 		// myMsg.show();
 		myMsg.m_date = null;
@@ -133,7 +129,9 @@ public class JCalendarDialog extends javax.swing.JDialog {
 			m_me = me;
 		}
 		public void propertyChange(PropertyChangeEvent evt) {
-			m_me.myTime.setDate(m_me.myCalendar.getDate());
+			if (m_me.myTime != null) {
+				m_me.myTime.setDate(m_me.myCalendar.getDate());
+			}
 		}
 	}
 
