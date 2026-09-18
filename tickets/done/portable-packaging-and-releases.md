@@ -27,3 +27,7 @@ Phase 1 implementation uses `scripts/package-portable.sh`, a bundled JRE produce
 - Platform-specific RXTX libraries and the existing licensing files are present in the relevant packages.
 - SHA256 checksums are attached to the release.
 - The release and packaging steps are documented for maintainers.
+
+## Shipped
+
+Automated x86_64 portable packages for Linux, Windows, and Intel macOS, with GitHub Release publication and SHA256 checksums. Main paths: `scripts/package-portable.sh` and `.github/workflows/release.yml`. Native installers remain a future phase.

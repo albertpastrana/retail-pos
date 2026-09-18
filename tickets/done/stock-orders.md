@@ -214,3 +214,7 @@ not automatically choose a size or colour based on the scanned product.
   reopen them.
 - Status changes never modify `STOCKCURRENT` or `STOCKDIARY`.
 - Received entries remain available through history/search.
+
+## Shipped
+
+Shared replenishment entries with product and variant selection, optional customer assignment, status workflow, stock menu access, permissions, and database migrations. Main paths: `src-pos/com/openbravo/pos/inventory/` and `src-pos/db/migration/V22__replenishment_entries.java`.

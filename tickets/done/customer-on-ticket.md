@@ -107,3 +107,7 @@ Select a row to open the same customer sheet.
 ## Done when
 
 Cashiers find or create a customer using only name and phone, see them on the ticket, and open the same sheet from till and backoffice. Debt is paid from the sheet, not a separate menu, using the existing debt behaviour. The database stores no unused ERP customer fields, loyalty data, notes or purchase summaries.
+
+## Shipped
+
+Integrated customer management with name-and-phone lookup/create, customer assignment on tickets, shared customer sheets, and debt payment from the sheet. Main paths: `src-pos/com/openbravo/pos/customers/` and `src-pos/com/openbravo/pos/sales/JPanelTicket.java`.

@@ -21,3 +21,7 @@ Local packages are installed by an external updater after the POS exits. The upd
 - The current version is not reported as an update, including versions with a leading `v`.
 - Update checks can be disabled or pointed at another compatible endpoint through the POS configuration.
 - A local package can be selected and installed without manually extracting it.
+
+## Shipped
+
+GitHub release checks, configurable update settings, local package installation, checksum verification, rollback, and platform updater scripts. Main paths: `src-pos/com/openbravo/pos/forms/UpdateChecker.java` and `scripts/update.sh`.
