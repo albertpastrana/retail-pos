@@ -33,7 +33,7 @@ jobs:
 
       - run: docker compose up -d --wait --wait-timeout 120
 
-      - run: ./gradlew check integrationTest
+      - run: ./gradlew ciCheck
 
       - if: failure()
         run: docker compose logs

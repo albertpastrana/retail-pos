@@ -192,6 +192,12 @@ val integrationTest by tasks.registering(Test::class) {
     systemProperty("pos.postgres.password", "pos")
 }
 
+tasks.register("ciCheck") {
+    group = "verification"
+    description = "Run the normal checks and the full database integration suite."
+    dependsOn(tasks.check, integrationTest)
+}
+
 fun dataHelper(
     taskName: String,
     main: String,

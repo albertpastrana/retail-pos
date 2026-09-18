@@ -81,11 +81,13 @@ Versioned migrations are in `src-pos/db/migration/`. `V1__baseline.sql` is share
 
 Do not edit a migration after it has shipped. Add the next `V<n>__description.sql` or Java migration instead.
 
-To prove a new install on MySQL and PostgreSQL as well as Derby:
+To run the same checks as CI, including a new install on MySQL and PostgreSQL
+as well as Derby:
 
 ```sh
 docker compose up -d --wait
-./gradlew integrationTest
+./gradlew ciCheck
+docker compose down -v
 ```
 
 Compose publishes PostgreSQL on `127.0.0.1:15432` (user/password/database `pos`) and MySQL on `127.0.0.1:13306` (user `root`, password `pos`, database `pos`). `docker compose down -v` drops those containers so the next run starts from an empty schema.
