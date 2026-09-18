@@ -52,6 +52,8 @@ import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.DataLogicSystem;
 import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.ticket.UserInfo;
+import com.openbravo.pos.sales.shared.JTicketsBagShared;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.inventory.CatalogImportDialog;
@@ -325,6 +327,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	public TicketInfo getActiveTicket() {
 		return m_oTicket;
+	}
+
+	public UserInfo getSelectedSeller() {
+		if (m_ticketsbag instanceof JTicketsBagShared) return ((JTicketsBagShared) m_ticketsbag).getSelectedSeller();
+		return m_oTicket == null ? null : m_oTicket.getUser();
 	}
 
 	public void setTicketChangeListener(Runnable listener) {

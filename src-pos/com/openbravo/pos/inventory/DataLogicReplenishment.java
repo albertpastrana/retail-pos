@@ -126,6 +126,12 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 	}
 
+	public void update(ReplenishmentEntry e, String user) throws BasicException {
+		try (PreparedStatement ps = connection().prepareStatement("UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ?='RECEIVED' THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=?")) {
+			ps.setString(1, e.productId); ps.setString(2, e.reference); ps.setString(3, e.name); ps.setString(4, e.ean); ps.setString(5, e.manualDescription); ps.setString(6, e.manualEan); ps.setString(7, e.note); ps.setString(8, e.customerId); ps.setString(9, e.customerName); ps.setString(10, e.status); ps.setString(11, e.status); ps.setTimestamp(12, new Timestamp(System.currentTimeMillis())); ps.setString(13, user); ps.setString(14, e.id); ps.executeUpdate();
+		} catch (SQLException ex) { throw new BasicException(ex); }
+	}
+
 	private void insert(Connection c, ReplenishmentEntry e) throws SQLException {
 		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {

@@ -44,6 +44,7 @@ public class JTicketsBagShared extends JTicketsBag {
 	private Map<String, JToggleButton> m_sellerButtons = new HashMap<String, JToggleButton>();
 	private Map<String, UserInfo> m_sellers = new HashMap<String, UserInfo>();
 	private UserInfo m_firstSeller;
+	private UserInfo m_lastSeller;
 	private final String host;
 	private final javax.swing.Timer ownershipTimer;
 
@@ -66,7 +67,7 @@ public class JTicketsBagShared extends JTicketsBag {
 		// precondicion es que no tenemos ticket activado ni ticket en el panel
 
 		m_sCurrentTicket = null;
-		createTicket(null);
+		createTicket(m_lastSeller);
 		ownershipTimer.start();
 
 		// Authorization
@@ -214,7 +215,9 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	private void createTicket(UserInfo seller) {
 		TicketInfo ticket = new TicketInfo();
-		ticket.setUser(seller == null ? m_firstSeller : seller);
+		UserInfo selectedSeller = seller == null ? (m_lastSeller == null ? m_firstSeller : m_lastSeller) : seller;
+		ticket.setUser(selectedSeller);
+		m_lastSeller = selectedSeller;
 		m_sCurrentTicket = UUID.randomUUID().toString(); // m_fmtid.format(ticket.getId());
 		currentTicketPersisted = false;
 		m_panelticket.setActiveTicket(ticket, null);
@@ -226,6 +229,7 @@ public class JTicketsBagShared extends JTicketsBag {
 	}
 
 	private void switchToSeller(AppUser user) {
+		m_lastSeller = user.getUserInfo();
 		TicketInfo currentTicket = m_panelticket.getActiveTicket();
 		if (currentTicket != null && currentTicket.getUser() != null
 				&& user.getId().equals(currentTicket.getUser().getId())) {
@@ -292,8 +296,10 @@ public class JTicketsBagShared extends JTicketsBag {
 			// sellers that are no longer available.
 			UserInfo currentSeller = m_sellers.get(seller.getId());
 			ticket.setUser(currentSeller == null ? m_firstSeller : currentSeller);
+			m_lastSeller = ticket.getUser();
 		} else {
 			ticket.setUser(m_firstSeller);
+			m_lastSeller = m_firstSeller;
 		}
 	}
 
@@ -374,6 +380,13 @@ public class JTicketsBagShared extends JTicketsBag {
 				button.setSelected(true);
 			}
 		}
+	}
+
+	public UserInfo getSelectedSeller() {
+		for (Map.Entry<String, JToggleButton> entry : m_sellerButtons.entrySet()) {
+			if (entry.getValue().isSelected()) return m_sellers.get(entry.getKey());
+		}
+		return m_firstSeller;
 	}
 
 	/**

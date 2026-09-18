@@ -26,6 +26,7 @@ import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.PreparedSentence;
 import com.openbravo.data.loader.SerializerRead;
 import com.openbravo.data.loader.SerializerWriteParams;
+import com.openbravo.data.loader.SerializerWriteString;
 import com.openbravo.data.loader.Session;
 import com.openbravo.data.loader.TableDefinition;
 import com.openbravo.format.Formats;
@@ -145,6 +146,19 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 
 	public List<CustomerInfoExt> searchCustomerSummaries(final String value) throws BasicException {
 		return searchCustomerSummaries(value, false, false);
+	}
+
+	public CustomerInfo getCustomer(final String id) throws BasicException {
+		return (CustomerInfo) new PreparedSentence(s,
+				"SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE ID = ?",
+				SerializerWriteString.INSTANCE, new SerializerRead() {
+					public Object readValues(DataRead dr) throws BasicException {
+						CustomerInfo customer = new CustomerInfo(dr.getString(1));
+						customer.setName(dr.getString(2));
+						customer.setPhone(dr.getString(3));
+						return customer;
+					}
+				}).find(id);
 	}
 
 	public List<CustomerInfoExt> searchCustomerSummaries(final String value, final boolean debtOnly,
