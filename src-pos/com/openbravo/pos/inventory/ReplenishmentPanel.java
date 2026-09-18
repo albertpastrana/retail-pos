@@ -15,7 +15,6 @@ import com.openbravo.pos.sales.TicketsEditor;
 import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.GridBagConstraints;
@@ -34,7 +33,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.Box;
 import javax.swing.JList;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -584,18 +582,6 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			JOptionPane.showMessageDialog(this, e.getMessage());
 		}
 	}
-	private void addEntry() {
-		ReplenishmentDialog dialog = new ReplenishmentDialog(this);
-		dialog.setVisible(true);
-		if (dialog.entry != null) {
-			try {
-				data.add(dialog.entry);
-				load("", false);
-			} catch (BasicException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage());
-			}
-		}
-	}
 	@Override
 	public String getTitle() {
 		return AppLocal.getIntString("Replenishment.ScreenTitle");
@@ -624,94 +610,4 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		return this;
 	}
 
-	public static void showAddDialog(Component parent, AppView app) {
-		try {
-			ReplenishmentPanel p = new ReplenishmentPanel();
-			p.init(app);
-			p.addEntry();
-		} catch (BeanFactoryException e) {
-			JOptionPane.showMessageDialog(parent, e.getMessage());
-		}
-	}
-	private class ReplenishmentDialog extends JDialog {
-		private ReplenishmentEntry entry;
-		private ProductInfoExt product;
-		private final JTextField code = new JTextField();
-		private final JTextField description = new JTextField();
-		private final JTextField note = new JTextField();
-		private CustomerInfo customer;
-		ReplenishmentDialog(java.awt.Component parent) {
-			super(javax.swing.SwingUtilities.getWindowAncestor(parent), AppLocal.getIntString("Menu.Replenishment.Add"),
-					ModalityType.APPLICATION_MODAL);
-			setLayout(new BorderLayout(6, 6));
-			JPanel fields = new JPanel(new GridLayout(0, 2, 5, 5));
-			fields.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
-			fields.add(new JLabel(AppLocal.getIntString("Replenishment.Scan")));
-			fields.add(code);
-			fields.add(new JLabel(AppLocal.getIntString("Replenishment.Product")));
-			JPanel productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-			JButton finder = new JButton(AppLocal.getIntString("Replenishment.SearchProduct"));
-			productButtons.add(finder);
-			fields.add(productButtons);
-			fields.add(new JLabel(AppLocal.getIntString("Replenishment.Description")));
-			fields.add(description);
-			fields.add(new JLabel(AppLocal.getIntString("Replenishment.Note")));
-			fields.add(note);
-			JButton customerButton = new JButton(AppLocal.getIntString("Replenishment.Customer"));
-			fields.add(new JLabel(AppLocal.getIntString("Replenishment.CustomerColumn")));
-			fields.add(customerButton);
-			add(fields, BorderLayout.CENTER);
-			JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-			JButton cancel = new JButton(AppLocal.getIntString("Button.Cancel")),
-					save = new JButton(AppLocal.getIntString("Replenishment.Add"));
-			buttons.add(cancel);
-			buttons.add(save);
-			add(buttons, BorderLayout.SOUTH);
-			finder.addActionListener(e -> product = JProductFinder.showMessage(this, sales));
-			code.addActionListener(e -> findProduct());
-			customerButton.addActionListener(e -> chooseCustomer());
-			cancel.addActionListener(e -> dispose());
-			save.addActionListener(e -> save());
-			pack();
-			setSize(560, 300);
-		}
-		private void findProduct() {
-			try {
-				product = sales.getProductInfoByCode(code.getText().trim());
-				if (product == null)
-					product = JProductFinder.showMessage(this, sales);
-			} catch (BasicException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage());
-			}
-		}
-		private void chooseCustomer() {
-			JCustomerFinder f = JCustomerFinder.getCustomerFinder(this, customers);
-			f.search(null);
-			f.setVisible(true);
-			customer = f.getSelectedCustomer();
-		}
-		private void save() {
-			if (product == null && code.getText().trim().isEmpty() && description.getText().trim().isEmpty()) {
-				JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.SelectProduct"));
-				return;
-			}
-			entry = new ReplenishmentEntry();
-			if (product != null) {
-				entry.productId = product.getID();
-				entry.reference = product.getReference();
-				entry.name = product.getName();
-				entry.ean = product.getCode();
-			} else {
-				entry.manualEan = code.getText().trim();
-				entry.manualDescription = description.getText().trim();
-			}
-			entry.note = note.getText().trim();
-			if (customer != null) {
-				entry.customerId = customer.getId();
-				entry.customerName = customer.getName();
-			}
-			entry.createdBy = app.getAppUserView().getUser().getId();
-			dispose();
-		}
-	}
 }

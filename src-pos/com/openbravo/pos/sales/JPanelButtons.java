@@ -143,11 +143,7 @@ public class JPanelButtons extends javax.swing.JPanel {
 					final String code = attributes.getValue("code");
 					btn.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
-							if ("replenishment.add".equals(code)) {
-								panelticket.showReplenishmentDialog();
-							} else {
-								panelticket.evalScriptAndRefresh(code);
-							}
+							panelticket.evalScriptAndRefresh(code);
 						}
 					});
 				} else {

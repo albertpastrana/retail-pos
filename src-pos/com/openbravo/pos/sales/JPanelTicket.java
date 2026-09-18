@@ -1443,10 +1443,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		return dlSystem.getResourceAsXML(sresourcename);
 	}
 
-	public void showReplenishmentDialog() {
-		com.openbravo.pos.inventory.ReplenishmentPanel.showAddDialog(this, m_App);
-	}
-
 	public BufferedImage getResourceAsImage(String sresourcename) {
 		return dlSystem.getResourceAsImage(sresourcename);
 	}
@@ -1983,7 +1979,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private void m_jListActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jListActionPerformed
 
-		ProductInfoExt prod = JProductFinder.showMessage(JPanelTicket.this, dlSales);
+		ProductInfoExt prod = JProductFinder.showMessage(JPanelTicket.this, dlSales, "button.addproduct");
 		if (prod != null) {
 			buttonTransition(prod);
 		}

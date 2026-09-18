@@ -22,7 +22,6 @@
 <configuration>
     <button key="button.print" titlekey="button.print" image="Button.Print" template="Printer.TicketPreview"/>
     <button key="button.opendrawer" titlekey="button.opendrawer" image="Button.OpenDrawer" template="Printer.OpenDrawer"/>
-    <button key="Menu.Replenishment.Add" titlekey="Menu.Replenishment.Add" image="Button.OpenDrawer" code="replenishment.add"/>
     <!-- <event key="ticket.change" code="event.change"/> -->
     <!-- <event key="ticket.addline" code="event.addline"/> -->
     <!-- <event key="ticket.removeline" code="event.removeline"/> -->
