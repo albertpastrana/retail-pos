@@ -2,7 +2,7 @@
 
 Captured: 2026-09-17
 
-Related: `tickets/todo/descriptive-confirmation-actions.md`
+Related: `tickets/done/descriptive-confirmation-actions.md`
 
 ## Goal
 

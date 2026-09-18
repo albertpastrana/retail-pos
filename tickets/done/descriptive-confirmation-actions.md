@@ -56,3 +56,7 @@ Review these confirmation flows:
 ## Dependency
 
 Implement after `tickets/todo/descriptive-dialog-actions.md`, so the two phases can be reviewed and released independently.
+
+## Shipped
+
+Confirmation flows now use localized contextual actions with safe defaults, destructive styling, and consistent button ordering. Covered flows include ticket deletion, cash closing, save-before-exit, configuration restore, card values, price rules, sale marks, and image resizing. Main paths: `src-data/com/openbravo/data/gui/JConfirmationDialog.java` and the affected sales, configuration, inventory, admin, and data GUI classes.
