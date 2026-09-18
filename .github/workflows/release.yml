@@ -18,10 +18,13 @@ jobs:
         include:
           - platform: linux
             runner: ubuntu-latest
+            gradle_args: ""
           - platform: windows
             runner: windows-latest
+            gradle_args: "-x checkMigrationChecksums"
           - platform: macos
             runner: macos-13
+            gradle_args: ""
 
     steps:
       - uses: actions/checkout@v7
@@ -36,7 +39,7 @@ jobs:
 
       - name: Build application
         shell: bash
-        run: ./gradlew -PappVersion="${GITHUB_REF_NAME#v}" check
+        run: ./gradlew -PappVersion="${GITHUB_REF_NAME#v}" check ${{ matrix.gradle_args }}
 
       - name: Create portable package
         shell: bash
