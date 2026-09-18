@@ -23,7 +23,7 @@ jobs:
             runner: windows-latest
             gradle_args: "-x checkMigrationChecksums"
           - platform: macos
-            runner: macos-13
+            runner: macos-15-intel
             gradle_args: ""
 
     steps:
