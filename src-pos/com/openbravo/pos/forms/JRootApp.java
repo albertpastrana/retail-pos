@@ -42,12 +42,16 @@ import com.openbravo.data.loader.Session;
 import com.openbravo.pos.scale.DeviceScale;
 import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author adrianromero
  */
 public class JRootApp extends JPanel implements AppView {
+
+	private static final Logger LOGGER = Logger.getLogger(JRootApp.class.getName());
 
 	private static final int HEADER_HEIGHT = 64;
 	private static final int HEADER_LOGO_HEIGHT = 40;
@@ -142,6 +146,7 @@ public class JRootApp extends JPanel implements AppView {
 	public boolean initApp(AppProperties props) {
 
 		m_props = props;
+		LOGGER.info("event=pos_initialization_start host=" + props.getHost());
 		// setPreferredSize(new java.awt.Dimension(800, 600));
 
 		// support for different component orientation languages.
@@ -151,6 +156,7 @@ public class JRootApp extends JPanel implements AppView {
 		try {
 			session = AppViewConnection.createSession(m_props);
 		} catch (BasicException e) {
+			LOGGER.log(Level.SEVERE, "event=pos_initialization_database_failed", e);
 			JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_DANGER, e.getMessage(), e));
 			return false;
 		}
@@ -182,6 +188,7 @@ public class JRootApp extends JPanel implements AppView {
 				setActiveCash(sActiveCashIndex, (Integer) valcash[1], (Date) valcash[2], (Date) valcash[3]);
 			}
 		} catch (BasicException e) {
+			LOGGER.log(Level.SEVERE, "event=pos_initialization_cash_failed", e);
 			// Casco. Sin caja no hay pos
 			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"), e);
 			msg.show(this);
@@ -223,6 +230,8 @@ public class JRootApp extends JPanel implements AppView {
 			}
 		}, 3600000L, 3600000L);
 
+		LOGGER.info("event=pos_initialization_success printer=" + m_props.getProperty("machine.printer") + " scale="
+				+ m_props.getProperty("machine.scale"));
 		return true;
 	}
 
@@ -423,7 +432,7 @@ public class JRootApp extends JPanel implements AppView {
 			jScrollPane1.getViewport().setView(jPeople);
 
 		} catch (BasicException ee) {
-			ee.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=login_users_load_failed", ee);
 		}
 	}
 
@@ -443,27 +452,28 @@ public class JRootApp extends JPanel implements AppView {
 		}
 
 		public void actionPerformed(ActionEvent evt) {
-			// String sPassword = m_actionuser.getPassword();
-			if (m_actionuser.authenticate()) {
-				// p'adentro directo, no tiene password
-				openAdministrationView(m_actionuser);
-			} else {
-				// comprobemos la clave antes de entrar...
-				String sPassword = JPasswordDialog.showEditPassword(JRootApp.this,
-						AppLocal.getIntString("Label.Password"), m_actionuser.getName(), m_actionuser.getIcon());
-				if (sPassword != null) {
-					if (m_actionuser.authenticate(sPassword)) {
-						openAdministrationView(m_actionuser);
-					} else {
-						MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
-								AppLocal.getIntString("message.BadPassword"));
-						msg.show(JRootApp.this);
+			try (LogContext.Scope ignored = LogContext.beginOperation()) {
+				// String sPassword = m_actionuser.getPassword();
+				if (m_actionuser.authenticate()) {
+					// p'adentro directo, no tiene password
+					openAdministrationView(m_actionuser);
+				} else {
+					// comprobemos la clave antes de entrar...
+					String sPassword = JPasswordDialog.showEditPassword(JRootApp.this,
+							AppLocal.getIntString("Label.Password"), m_actionuser.getName(), m_actionuser.getIcon());
+					if (sPassword != null) {
+						if (m_actionuser.authenticate(sPassword)) {
+							openAdministrationView(m_actionuser);
+						} else {
+							MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
+									AppLocal.getIntString("message.BadPassword"));
+							msg.show(JRootApp.this);
+						}
 					}
 				}
 			}
 		}
 	}
-
 	private void showView(String view) {
 		CardLayout cl = (CardLayout) (m_jPanelContainer.getLayout());
 		cl.show(m_jPanelContainer, view);
@@ -551,7 +561,7 @@ public class JRootApp extends JPanel implements AppView {
 			try {
 				user = m_dlSystem.findPeopleByCard(inputtext.toString());
 			} catch (BasicException e) {
-				e.printStackTrace();
+				LOGGER.log(Level.WARNING, "event=login_card_lookup_failed", e);
 			}
 
 			if (user == null) {

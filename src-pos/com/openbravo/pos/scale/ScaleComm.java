@@ -22,8 +22,12 @@ package com.openbravo.pos.scale;
 import gnu.io.*;
 import java.io.*;
 import java.util.TooManyListenersException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ScaleComm implements Scale, SerialPortEventListener {
+
+	private static final Logger LOGGER = Logger.getLogger(ScaleComm.class.getName());
 
 	private String m_sPortScale;
 	private CommPortIdentifier m_PortIdPrinter;
@@ -110,15 +114,15 @@ public class ScaleComm implements Scale, SerialPortEventListener {
 			}
 			m_out.write(data);
 		} catch (NoSuchPortException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=scale_no_such_port port=" + m_sPortScale, e);
 		} catch (PortInUseException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=scale_port_in_use port=" + m_sPortScale, e);
 		} catch (UnsupportedCommOperationException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=scale_unsupported_operation port=" + m_sPortScale, e);
 		} catch (TooManyListenersException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=scale_listener_failed port=" + m_sPortScale, e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=scale_write_failed port=" + m_sPortScale, e);
 		}
 	}
 

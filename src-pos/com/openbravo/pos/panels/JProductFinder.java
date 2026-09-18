@@ -36,6 +36,9 @@ import com.openbravo.pos.forms.DataLogicSales;
  */
 public class JProductFinder extends javax.swing.JDialog {
 
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+			.getLogger(JProductFinder.class.getName());
+
 	private ProductInfoExt m_ReturnProduct;
 	private ListProvider lpr;
 
@@ -273,7 +276,7 @@ public class JProductFinder extends javax.swing.JDialog {
 				jListProducts.setSelectedIndex(0);
 			}
 		} catch (BasicException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=product_search_failed", e);
 		}
 	}
 

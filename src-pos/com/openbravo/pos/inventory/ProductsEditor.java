@@ -59,6 +59,8 @@ import java.lang.reflect.InvocationTargetException;
  * @author adrianromero
  */
 public class ProductsEditor extends JPanel implements EditorRecord {
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+			.getLogger(ProductsEditor.class.getName());
 
 	private SentenceList m_sentcat;
 	private ComboBoxValModel m_CategoryModel;
@@ -1227,7 +1229,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 												}
 											}
 										} catch (Exception e) {
-											e.printStackTrace();
+											LOGGER.log(java.util.logging.Level.WARNING,
+													"event=product_barcodes_save_failed", e);
 										}
 										hid();
 									}
@@ -1255,7 +1258,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 								setVisible(true);
 							}
 						} catch (Exception e) {
-							e.printStackTrace();
+							LOGGER.log(java.util.logging.Level.WARNING, "event=product_barcodes_load_failed", e);
 						}
 					}
 

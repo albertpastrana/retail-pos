@@ -42,6 +42,8 @@ import com.openbravo.pos.ticket.TaxInfo;
  */
 public class JCatalog extends JPanel implements ListSelectionListener, CatalogSelector {
 
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(JCatalog.class.getName());
+
 	protected EventListenerList listeners = new EventListenerList();
 	private DataLogicSales m_dlSales;
 	private TaxesLogic taxeslogic;
@@ -349,7 +351,8 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 						cl.show(m_jProducts, "PRODUCT." + id);
 					}
 				} catch (BasicException eb) {
-					eb.printStackTrace();
+					LOGGER.log(java.util.logging.Level.WARNING, "event=catalog_category_load_failed category=" + id,
+							eb);
 					m_productsset.put(id, null);
 					if (showingcategory == null) {
 						showRootCategoriesPanel();

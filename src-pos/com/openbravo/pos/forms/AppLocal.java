@@ -22,6 +22,8 @@ package com.openbravo.pos.forms;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.openbravo.beans.LocaleResources;
 
@@ -30,6 +32,7 @@ import com.openbravo.beans.LocaleResources;
  * @author adrianromero
  */
 public class AppLocal {
+	private static final Logger LOGGER = Logger.getLogger(AppLocal.class.getName());
 
 	public static final String APP_NAME = "Retail POS";
 	public static final String APP_ID = "openbravopos";
@@ -46,7 +49,7 @@ public class AppLocal {
 		try {
 			versionProps.load(AppLocal.class.getClassLoader().getResourceAsStream("version.properties"));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=version_properties_load_failed", e);
 		}
 		APP_VERSION = versionProps.getProperty("APP_VERSION", "0.0.0");
 		GIT_REVISION = versionProps.getProperty("GIT_REVISION", "r0");

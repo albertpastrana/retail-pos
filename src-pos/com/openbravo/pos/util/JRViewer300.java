@@ -122,6 +122,8 @@ import net.sf.jasperreports.view.save.JRPrintSaveContributor;
  * @version $Id: JRViewer300.java 2160 2008-04-29 11:31:51Z lucianc $
  */
 public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListener {
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+			.getLogger(JRViewer300.class.getName());
 	private static final long serialVersionUID = JRConstants.SERIAL_VERSION_UID;
 
 	/**
@@ -430,8 +432,8 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 		switch (hyperlink.getHyperlinkType()) {
 			case JRHyperlink.HYPERLINK_TYPE_REFERENCE : {
 				if (isOnlyHyperlinkListener()) {
-					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+					LOGGER.info("event=report_hyperlink_reference reference=" + hyperlink.getHyperlinkReference());
+					LOGGER.info("event=report_hyperlink_listener_missing");
 				}
 				break;
 			}
@@ -493,24 +495,24 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 			}
 			case JRHyperlink.HYPERLINK_TYPE_REMOTE_ANCHOR : {
 				if (isOnlyHyperlinkListener()) {
-					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-					System.out.println("Hyperlink anchor    : " + hyperlink.getHyperlinkAnchor());
-					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+					LOGGER.info("event=report_hyperlink_remote_anchor reference=" + hyperlink.getHyperlinkReference()
+							+ " anchor=" + hyperlink.getHyperlinkAnchor());
+					LOGGER.info("event=report_hyperlink_listener_missing");
 				}
 				break;
 			}
 			case JRHyperlink.HYPERLINK_TYPE_REMOTE_PAGE : {
 				if (isOnlyHyperlinkListener()) {
-					System.out.println("Hyperlink reference : " + hyperlink.getHyperlinkReference());
-					System.out.println("Hyperlink page      : " + hyperlink.getHyperlinkPage());
-					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+					LOGGER.info("event=report_hyperlink_remote_page reference=" + hyperlink.getHyperlinkReference()
+							+ " page=" + hyperlink.getHyperlinkPage());
+					LOGGER.info("event=report_hyperlink_listener_missing");
 				}
 				break;
 			}
 			case JRHyperlink.HYPERLINK_TYPE_CUSTOM : {
 				if (isOnlyHyperlinkListener()) {
-					System.out.println("Hyperlink of type " + hyperlink.getLinkType());
-					System.out.println("Implement your own JRHyperlinkListener to manage this type of event.");
+					LOGGER.info("event=report_hyperlink_custom type=" + hyperlink.getLinkType());
+					LOGGER.info("event=report_hyperlink_listener_missing");
 				}
 				break;
 			}
@@ -965,7 +967,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 			try {
 				contributor.save(jasperPrint, file);
 			} catch (JRException e) {
-				e.printStackTrace();
+				LOGGER.log(java.util.logging.Level.WARNING, "event=report_save_failed", e);
 				JOptionPane.showMessageDialog(this, getBundleString("error.saving"));
 			}
 		}
@@ -1026,7 +1028,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 					JRViewer300.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					JasperPrintManager.printReport(jasperPrint, true);
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					LOGGER.log(java.util.logging.Level.WARNING, "event=report_print_failed", ex);
 					JOptionPane.showMessageDialog(JRViewer300.this, getBundleString("error.printing"));
 				} finally {
 					JRViewer300.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1072,7 +1074,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 			try {
 				loadReport(reportFileName, isXML);
 			} catch (JRException e) {
-				e.printStackTrace();
+				LOGGER.log(java.util.logging.Level.WARNING, "event=report_reload_failed", e);
 
 				jasperPrint = null;
 				setPageIndex(0);
@@ -1155,7 +1157,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 				listener.gotoHyperlink(hyperlink);
 			}
 		} catch (JRException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=report_hyperlink_failed", e);
 			JOptionPane.showMessageDialog(this, getBundleString("error.hyperlink"));
 		}
 	}
@@ -1310,7 +1312,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 				image = JasperPrintManager.printPageToImage(jasperPrint, pageIndex, realZoom);
 			} catch (Exception e) {
 				pageError = true;
-				e.printStackTrace();
+				LOGGER.log(java.util.logging.Level.WARNING, "event=report_page_image_failed", e);
 
 				image = getPageErrorImage();
 				JOptionPane.showMessageDialog(this, java.util.ResourceBundle
@@ -1651,7 +1653,7 @@ public class JRViewer300 extends javax.swing.JPanel implements JRHyperlinkListen
 			exporter.exportReport();
 		} catch (Exception e) {
 			pageError = true;
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=report_page_render_failed", e);
 
 			paintPageError(grx);
 			SwingUtilities.invokeLater(new Runnable() {

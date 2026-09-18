@@ -53,6 +53,9 @@ import javax.swing.JFrame;
  */
 public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator {
 
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+			.getLogger(JTicketsFinder.class.getName());
+
 	private ListProvider lpr;
 	private SentenceList m_sentcat;
 	private ComboBoxValModel m_CategoryModel;
@@ -129,7 +132,7 @@ public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator
 				jListTickets.setSelectedIndex(0);
 			}
 		} catch (BasicException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=ticket_search_failed", e);
 		}
 	}
 

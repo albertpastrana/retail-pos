@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 /**
  * File logs at {@code <install>/logs/pos-%g.log} ({@code dirname.path}, else
@@ -59,7 +58,7 @@ public final class FileLogging {
 		try {
 			FileHandler handler = new FileHandler(new File(dir, "pos-%g.log").getPath(), LIMIT, COUNT, true);
 			handler.setEncoding("UTF-8");
-			handler.setFormatter(new SimpleFormatter());
+			handler.setFormatter(new LogFormatter());
 			handler.setLevel(Level.INFO);
 			Logger.getLogger("").addHandler(handler);
 		} catch (IOException e) {

@@ -104,6 +104,13 @@ public class StartPOS {
 	public static void main(final String args[]) {
 
 		FileLogging.install();
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread thread, Throwable throwable) {
+				logger.log(Level.SEVERE, "Unhandled exception thread=" + thread.getName(), throwable);
+			}
+		});
+		logger.info("event=application_start version=" + AppLocal.APP_VERSION + " args=" + args.length);
 
 		setReportCompiler();
 

@@ -22,19 +22,22 @@ package com.openbravo.pos.forms;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import com.openbravo.basic.BasicException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author adrianromero
  */
 public class JPanelNull extends JPanel implements JPanelView {
+	private static final Logger LOGGER = Logger.getLogger(JPanelNull.class.getName());
 
 	/** Creates new form JPanelNull */
 	public JPanelNull(AppView oApp, Object o) {
 
 		initComponents();
 		if (o instanceof Exception) {
-			((Exception) o).printStackTrace();
+			LOGGER.log(Level.WARNING, "event=error_view_opened", (Exception) o);
 		}
 		jtxtException.setText(o.toString());
 	}

@@ -56,6 +56,7 @@ import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.sales.shared.JTicketsBagShared;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
+import com.openbravo.pos.forms.LogContext;
 import com.openbravo.pos.inventory.CatalogImportDialog;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
 import com.openbravo.pos.inventory.PriceRuleService;
@@ -841,18 +842,25 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void closeCurrentTicket() {
-		if (m_oTicket.getLinesCount() > 0) {
-			if (!m_ticketsbag.preparePayment()) {
-				return;
-			}
-			if (closeTicket(m_oTicket, m_oTicketExt)) {
-				m_ticketsbag.deleteTicket();
+		try (LogContext.Scope ignored = LogContext.beginOperation()) {
+			LOGGER.info("event=ticket_close_start lines=" + m_oTicket.getLinesCount());
+			if (m_oTicket.getLinesCount() > 0) {
+				if (!m_ticketsbag.preparePayment()) {
+					LOGGER.info("event=ticket_payment_cancelled reason=prepare_payment_rejected");
+					return;
+				}
+				if (closeTicket(m_oTicket, m_oTicketExt)) {
+					LOGGER.info("event=ticket_close_success");
+					m_ticketsbag.deleteTicket();
+				} else {
+					LOGGER.warning("event=ticket_close_failed");
+					m_ticketsbag.cancelPayment();
+					refreshTicket();
+				}
 			} else {
-				m_ticketsbag.cancelPayment();
-				refreshTicket();
+				LOGGER.info("event=ticket_close_ignored reason=empty_ticket");
+				Toolkit.getDefaultToolkit().beep();
 			}
-		} else {
-			Toolkit.getDefaultToolkit().beep();
 		}
 	}
 

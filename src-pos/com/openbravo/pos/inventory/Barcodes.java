@@ -7,8 +7,12 @@ import java.awt.print.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.text.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Barcodes implements Printable {
+
+	private static final Logger LOGGER = Logger.getLogger(Barcodes.class.getName());
 
 	// 16ths of inches
 	private static float TOP_MARGIN = 5.7f * 4.5f;
@@ -80,7 +84,7 @@ public class Barcodes implements Printable {
 				bc.setBarHeight(BARCODE_HEIGHT);
 				bc.setFont(new Font("Arial", Font.PLAIN, 12));
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOGGER.log(Level.WARNING, "event=barcode_print_setup_failed", e);
 			}
 
 			for (int n = 0; n < (int) (pf.getWidth() / (CODE_WIDTH + HORIZ_SEP)); n++) {
@@ -111,7 +115,7 @@ public class Barcodes implements Printable {
 							// draw Name
 							g2d2.drawString(name, NAME_XOFFSET, NAME_YOFFSET);
 						} catch (Exception e) {
-							e.printStackTrace();
+							LOGGER.log(Level.WARNING, "event=barcode_render_failed", e);
 						}
 						if (copies > 1) {
 							copiesDone++;

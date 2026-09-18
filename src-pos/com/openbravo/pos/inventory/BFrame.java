@@ -8,6 +8,7 @@ import net.sourceforge.barbecue.*;
 import net.sourceforge.barbecue.linear.ean.*;
 
 public class BFrame extends JFrame {
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(BFrame.class.getName());
 
 	private JButton butt_print, butt_genRandom, butt_lookup;
 	private JTextField text_x, text_y, text_barcode, text_leftMargin, text_tax;
@@ -181,7 +182,7 @@ public class BFrame extends JFrame {
 			EANCode b = new EANCode(wholeCode);
 			wholeCode += b.checksum().getSymbol();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=barcode_generation_failed", e);
 		}
 
 		return wholeCode;

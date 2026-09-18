@@ -23,9 +23,13 @@ package com.openbravo.pos.printer.escpos;
 import gnu.io.*; // RXTX comm library
 
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import com.openbravo.pos.printer.*;
 
 public class PrinterWritterRXTX extends PrinterWritter /* implements SerialPortEventListener */ {
+
+	private static final Logger LOGGER = Logger.getLogger(PrinterWritterRXTX.class.getName());
 
 	private CommPortIdentifier m_PortIdPrinter;
 	private CommPort m_CommPortPrinter;
@@ -63,13 +67,13 @@ public class PrinterWritterRXTX extends PrinterWritter /* implements SerialPortE
 			}
 			m_out.write(data);
 		} catch (NoSuchPortException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_no_such_port port=" + m_sPortPrinter, e);
 		} catch (PortInUseException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_port_in_use port=" + m_sPortPrinter, e);
 		} catch (UnsupportedCommOperationException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_unsupported_operation port=" + m_sPortPrinter, e);
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_write_failed port=" + m_sPortPrinter, e);
 		}
 	}
 
@@ -79,7 +83,7 @@ public class PrinterWritterRXTX extends PrinterWritter /* implements SerialPortE
 				m_out.flush();
 			}
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_flush_failed port=" + m_sPortPrinter, e);
 		}
 	}
 
@@ -93,7 +97,7 @@ public class PrinterWritterRXTX extends PrinterWritter /* implements SerialPortE
 				m_PortIdPrinter = null;
 			}
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_serial_close_failed port=" + m_sPortPrinter, e);
 		}
 	}
 }

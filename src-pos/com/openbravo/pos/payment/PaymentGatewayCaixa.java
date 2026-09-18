@@ -37,6 +37,8 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -55,6 +57,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Mikel Irurita
  */
 public class PaymentGatewayCaixa implements PaymentGateway {
+	private static final Logger LOGGER = Logger.getLogger(PaymentGatewayCaixa.class.getName());
 
 	private static String ENDPOINTADDRESS;
 	private static final String SALE = "A";
@@ -270,7 +273,7 @@ public class PaymentGatewayCaixa implements PaymentGateway {
 			md.update(input.getBytes());
 			output = md.digest();
 		} catch (Exception e) {
-			System.out.println("Exception: " + e);
+			LOGGER.log(Level.WARNING, "event=payment_gateway_hash_failed", e);
 		}
 		return StringUtils.byte2hex(output);
 	}

@@ -2,12 +2,15 @@ package com.openbravo.pos.inventory;
 
 import java.sql.*;
 import javax.swing.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppViewConnection;
 
 public class SQLQueryer {
+	private static final Logger LOGGER = Logger.getLogger(SQLQueryer.class.getName());
 	Connection conn = null;
 	Statement stmt = null;
 	ResultSet rs = null;
@@ -39,7 +42,7 @@ public class SQLQueryer {
 			}
 			rs.next();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "event=sql_query_failed", e);
 		}
 	}
 

@@ -26,7 +26,7 @@ final class DatabaseMigrator {
 	}
 
 	static void migrate(String url, String user, String password) {
-		logger.info("Starting database migration: " + url);
+		logger.info("event=database_migration_start url=" + LogSanitizer.jdbcUrl(url));
 		Map<String, String> placeholders = placeholdersFor(url);
 		placeholders.put("app_id", AppLocal.APP_ID);
 		placeholders.put("app_name", AppLocal.APP_NAME);
@@ -42,9 +42,9 @@ final class DatabaseMigrator {
 			Flyway.configure().dataSource(url, user, password).locations("classpath:db/migration")
 					.placeholders(placeholders).baselineOnMigrate(true).baselineVersion("2").validateOnMigrate(true)
 					.load().migrate();
-			logger.info("Database migration completed: " + url);
+			logger.info("event=database_migration_success url=" + LogSanitizer.jdbcUrl(url));
 		} catch (RuntimeException e) {
-			logger.log(Level.SEVERE, "Database migration failed: " + url, e);
+			logger.log(Level.SEVERE, "event=database_migration_failed url=" + LogSanitizer.jdbcUrl(url), e);
 			throw e;
 		}
 	}

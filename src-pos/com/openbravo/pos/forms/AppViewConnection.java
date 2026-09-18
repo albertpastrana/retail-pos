@@ -69,8 +69,11 @@ public class AppViewConnection {
 			}
 
 			String dbUrl = props.getProperty("db.URL");
+			logger.info("event=database_connect_start url=" + LogSanitizer.jdbcUrl(dbUrl));
 			DatabaseMigrator.migrate(dbUrl, sDBUser, sDBPassword);
-			return new Session(dbUrl, sDBUser, sDBPassword);
+			Session session = new Session(dbUrl, sDBUser, sDBPassword);
+			logger.info("event=database_connect_success url=" + LogSanitizer.jdbcUrl(dbUrl));
+			return session;
 
 		} catch (InstantiationException e) {
 			throw new BasicException(AppLocal.getIntString("message.databasedrivererror"), e);
@@ -83,7 +86,7 @@ public class AppViewConnection {
 		} catch (SQLException eSQL) {
 			throw new BasicException(AppLocal.getIntString("message.databaseconnectionerror"), eSQL);
 		} catch (RuntimeException e) {
-			logger.log(Level.SEVERE, "Could not initialize database session", e);
+			logger.log(Level.SEVERE, "event=database_connect_failed", e);
 			throw new BasicException(AppLocal.getIntString("Database.ScriptError"), e);
 		}
 	}

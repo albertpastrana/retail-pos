@@ -20,8 +20,12 @@
 package com.openbravo.pos.printer.escpos;
 
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PrinterWritterFile extends PrinterWritter {
+
+	private static final Logger LOGGER = Logger.getLogger(PrinterWritterFile.class.getName());
 
 	private String m_sFilePrinter;
 	private OutputStream m_out;
@@ -38,7 +42,7 @@ public class PrinterWritterFile extends PrinterWritter {
 			}
 			m_out.write(data);
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_file_write_failed", e);
 		}
 	}
 
@@ -50,7 +54,7 @@ public class PrinterWritterFile extends PrinterWritter {
 				m_out = null;
 			}
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_file_flush_failed", e);
 		}
 	}
 
@@ -62,7 +66,7 @@ public class PrinterWritterFile extends PrinterWritter {
 				m_out = null;
 			}
 		} catch (IOException e) {
-			System.err.println(e);
+			LOGGER.log(Level.WARNING, "event=printer_file_close_failed", e);
 		}
 	}
 }

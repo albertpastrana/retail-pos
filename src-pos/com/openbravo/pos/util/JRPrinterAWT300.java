@@ -63,6 +63,8 @@ import net.sf.jasperreports.engine.util.JRGraphEnvInitializer;
  * @version $Id: JRPrinterAWT.java 2123 2008-03-12 11:00:41Z teodord $
  */
 public class JRPrinterAWT300 implements Printable {
+	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+			.getLogger(JRPrinterAWT300.class.getName());
 
 	/**
 	 *
@@ -176,7 +178,7 @@ public class JRPrinterAWT300 implements Printable {
 			exporter.setParameter(JRExporterParameter.PAGE_INDEX, new Integer(pageIndex));
 			exporter.exportReport();
 		} catch (JRException e) {
-			e.printStackTrace();
+			LOGGER.log(java.util.logging.Level.WARNING, "event=report_print_render_failed", e);
 			throw new PrinterException(e.getMessage());
 		}
 
