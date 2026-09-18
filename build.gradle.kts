@@ -5,7 +5,7 @@ plugins {
     id("com.diffplug.spotless") version "8.10.1"
 }
 
-version = providers.gradleProperty("appVersion").orElse("2.30.4").get()
+version = providers.gradleProperty("appVersion").orElse("3.0.0-RC1").get()
 description = "Retail POS"
 
 repositories {

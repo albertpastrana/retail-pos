@@ -53,6 +53,8 @@ jobs:
     needs: package
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -62,4 +64,4 @@ jobs:
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --notes-file ".github/release-notes/${GITHUB_REF_NAME#v}.md"
