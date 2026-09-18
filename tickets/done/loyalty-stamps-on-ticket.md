@@ -2,7 +2,7 @@
 
 Captured: 2026-09-12
 
-Related: `tickets/todo/loyalty-customer-balance.md`
+Related: `tickets/backlog/loyalty-customer-balance.md`
 
 ## Goal
 
@@ -24,7 +24,7 @@ Rules implemented on the **current ticket** only:
 
 There is no fixed-amount ticket discount at the till: `Dte. total` only takes a percentage. A discount in euros has to be typed as a negative line, which comes off the eligible spend like a redemption.
 
-VAT split, leftover euros on the customer, and close-cash booking are `tickets/todo/loyalty-customer-balance.md`.
+VAT split, leftover euros on the customer, and close-cash booking are `tickets/backlog/loyalty-customer-balance.md`.
 
 ## Done when
 

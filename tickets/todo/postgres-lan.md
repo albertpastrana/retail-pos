@@ -2,7 +2,7 @@
 
 Captured: 2026-09-11, 2026-09-17
 
-Related: `tickets/todo/pending-barcodes.md`, `tickets/todo/stock-orders.md`, `tickets/done/postgres-backups.md`, `tickets/todo/catalog-tsv-linux.md`, `tickets/todo/live-shared-tickets.md`
+Related: `tickets/todo/pending-barcodes.md`, `tickets/done/stock-orders.md`, `tickets/done/postgres-backups.md`, `tickets/done/catalog-tsv-linux.md`, `tickets/done/live-shared-tickets.md`
 
 ## Goal
 

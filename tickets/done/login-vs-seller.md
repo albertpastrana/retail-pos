@@ -2,7 +2,7 @@
 
 Captured: 2026-09-14
 
-Related: `tickets/todo/operator-docs.md`, `tickets/todo/live-shared-tickets.md`, `tickets/done/till-sales-screen-buttons.md`
+Related: `tickets/todo/operator-docs.md`, `tickets/done/live-shared-tickets.md`, `tickets/done/till-sales-screen-buttons.md`
 
 ## Goal
 
@@ -40,3 +40,7 @@ Not decided: exact till-role permissions; whether refunds need a supervisor; sat
 - A sale is attributed to the seller button in use, not to whoever opened the session.
 - Close cash, people, stock, and other privileged menus cannot be used just because someone logged in as Administrator and then switched seller.
 - Operator docs describe open-till vs choose-seller vs supervisor, not “login as yourself then pick another face”.
+
+## Shipped
+
+Sales opens with a generic till session, sellers are selected independently on the ticket, and privileged operations use administration mode or supervisor authorization without changing the active seller. Main paths: `src-pos/com/openbravo/pos/forms/JRootApp.java`, `src-pos/com/openbravo/pos/forms/AppUser.java`, and `src-pos/com/openbravo/pos/forms/SupervisorAuthorization.java`.

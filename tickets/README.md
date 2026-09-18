@@ -9,6 +9,7 @@ Status is the folder the file sits in. Moving the file is the status change.
 | `todo/`        | Agreed work, not started                               |
 | `in-progress/` | Someone is implementing it now                         |
 | `done/`        | Behaviour is in the tree (or the ops step is finished) |
+| `backlog/`     | Intentionally parked; not planned for now              |
 
 Design notes and decisions live **inside** the ticket they belong to. A written decision is not done work.
 

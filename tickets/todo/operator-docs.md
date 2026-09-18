@@ -2,7 +2,7 @@
 
 Captured: 2026-09-14
 
-Related: `tickets/todo/customer-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/todo/live-shared-tickets.md`, `tickets/todo/postgres-lan.md`, `tickets/todo/login-vs-seller.md`
+Related: `tickets/done/customer-on-ticket.md`, `tickets/backlog/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/done/live-shared-tickets.md`, `tickets/todo/postgres-lan.md`, `tickets/done/login-vs-seller.md`
 
 ## Goal
 
@@ -24,7 +24,7 @@ Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close 
 - Sale with scanner (known EAN): scan → lines → pay → receipt
 - Find a product without EAN (name / model, size, colour)
 - Change quantity, delete line, line / total discount
-- Customer on the ticket (name / phone search); no customer, no loyalty. Target: one search field + name-and-phone create + chip (`tickets/todo/customer-on-ticket.md`)
+- Customer on the ticket (name / phone search); no customer, no loyalty. Target: one search field + name-and-phone create + chip (`tickets/done/customer-on-ticket.md`)
 - Pay: cash, card, mixed, gift voucher
 - Open drawer without a sale
 - Refund / edited ticket (`TicketEdit`)

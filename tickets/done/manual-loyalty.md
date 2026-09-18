@@ -2,7 +2,7 @@
 
 Captured: 2026-09-17
 
-Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/done/customer-on-ticket.md`
+Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/backlog/loyalty-customer-balance.md`, `tickets/done/customer-on-ticket.md`
 
 ## Goal
 
@@ -14,7 +14,7 @@ Do not add loyalty columns, balances, movements, or customer history to the data
 
 The existing ticket-only stamp calculation and redemption line from `tickets/done/loyalty-stamps-on-ticket.md` may remain available as a cashier aid. It must not imply that the customer’s running balance is persisted.
 
-The future stored balance is parked in `tickets/todo/loyalty-customer-balance.md`.
+The future stored balance is parked in `tickets/backlog/loyalty-customer-balance.md`.
 
 ## Done when
 
