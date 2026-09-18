@@ -21,11 +21,11 @@ The new module should initially provide:
 
 ## Context
 
-The current management reports are spread across BeanShell scripts, embedded SQL, JRXML templates, JasperReports 3.7.6, Swing panels, positional field arrays, and the custom `JRViewer300` fork. The current test only extracts SQL literals from `.bs` files and excludes two known-broken reports:
+The current management reports were spread across BeanShell scripts, embedded SQL, JRXML templates, JasperReports 3.7.6, Swing panels, positional field arrays, and the custom `JRViewer300` fork. Those management resources and their SQL-extraction test have now been removed. The invoice JRXML templates remain temporarily because an installed database may contain a custom event script that references them.
 
-- `src/integrationTest/java/com/openbravo/pos/forms/ReportStatementsIT.java:33-43,107-133`
-- `reports/com/openbravo/reports/soldproducts.bs:26-40`
-- `reports/com/openbravo/reports/productsaletotals.bs:26-37`
+- `src/integrationTest/java/com/openbravo/pos/forms/ReportStatementsIT.java` (removed with the legacy scripts)
+- `reports/com/openbravo/reports/soldproducts.bs` (removed)
+- `reports/com/openbravo/reports/productsaletotals.bs` (removed)
 
 This code is not used by the normal daily receipt flow. Closing a sale uses the Velocity/XML printer resources through:
 
@@ -43,7 +43,7 @@ The replacement should not reproduce the old generic BeanShell/JRXML architectur
 
 ## Slices
 
-1. Confirm that no installed database event script calls `ScriptObject.printReport(...)` and record any required exception.
+1. Confirm that no installed database event script calls `ScriptObject.printReport(...)` and record any required exception. The repository contains no such call in versioned scripts, templates, SQL, or TSV data; an installation-level resource audit is still required before deleting the retained invoice JRXML templates.
 2. Remove the unused management report resources and legacy report UI/runtime code, while keeping receipt and invoice behaviour that is confirmed operational.
 3. Add the new report model, query boundary, typed parameters, and table presentation.
 4. Implement the initial small-shop report set, starting with sales summary, cash closing, product sales, taxes, and low stock.
@@ -54,7 +54,7 @@ The replacement should not reproduce the old generic BeanShell/JRXML architectur
 
 - The normal sale, receipt preview, receipt reprint, cash closing, and drawer/printer flows still work.
 - No active installation path depends on the removed Jasper/BeanShell management-report subsystem.
-- The old `.bs` management reports, `JRViewer300`, and unused report-only dependencies are removed or explicitly retained with a documented reason.
+- The old `.bs` management reports, `JRViewer300`, and unused report-only dependencies are removed or explicitly retained with a documented reason. The invoice JRXML templates are the documented temporary exception pending the installation-level event-script audit.
 - The initial reports answer the agreed small-shop questions and do not block the Swing event thread.
 - Report queries and representative results are covered on Derby, MySQL, and PostgreSQL.
 - Empty results, null customer data, refunds, tax differences, and date filters are tested.

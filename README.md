@@ -174,7 +174,7 @@ Example with a different Derby directory:
 
 - Scan-to-import: unknown barcodes can be pulled from the catalogue TSV at the till
 - Sales keypad: line discount and total discount (Administrator and Manager need `button.discount` and `button.discount.total`; run `./gradlew applyStoreResources` to patch an existing database)
-- Extra reports: **Stock by model**, **Sales by model**, **Dead / slow stock**, **Sales by category** (Administrator and Manager roles)
+- Management reports are being rebuilt; the former BeanShell/Jasper report menu is no longer installed by the default roles.
 - FlatLaf Light look and feel in Configuration → General
 
 Receipt content, shop name, logo, and on-screen buttons are resources, not code. Edit `src-pos/com/openbravo/pos/templates/` (`Printer.Ticket.xml`, `Printer.TicketPreview.xml`, `Ticket.Buttons.xml`, `Window.Title.txt`) and apply them to the database.
@@ -186,7 +186,7 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 | `src-pos/`   | Till UI, sales, inventory, config                    |
 | `src-data/`  | Persistence / session layer                          |
 | `src-beans/` | Shared beans                                         |
-| `reports/`   | Jasper reports (`.jrxml` + `.bs` menu scripts)       |
+| `reports/`   | Retained invoice JRXML templates pending installation audit |
 | `locales/`   | UI translations                                      |
 | `lib/`       | Native serial-port libraries for supported platforms |
 | `data/`      | Local database, TSV catalogue, resource dump tools   |
