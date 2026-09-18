@@ -8,6 +8,7 @@ build/
 .DS_Store
 .metals/
 .vscode/
+.cursor/skills/
 /.project
 /.classpath
 /.settings/
