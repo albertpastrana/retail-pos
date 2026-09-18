@@ -52,23 +52,6 @@
             <text>L'ha atès: ${ticket.printUserFirstName()}</text>
         </line>
 
-         #if ($ticket.getCustomer())
-        <line>
-            <text align="left" length="15">Client:</text>
-            <text>${ticket.getCustomer().printName()}</text>
-        </line>
-        <line>
-            <text align="left" length="15"></text>
-            <text>${ticket.getCustomer().printTaxid()}</text>
-        </line>
-        #end
-
-        #if ($place != "")
-        <line>
-            <text align="left" length="15">Taula:</text>
-            <text>${place}</text>
-        </line>
-        #end
         <line></line>
         <line>
             <text align ="left" length="25">Article</text>
