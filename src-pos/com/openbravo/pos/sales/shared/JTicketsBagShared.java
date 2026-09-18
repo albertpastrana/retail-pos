@@ -384,7 +384,8 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	public UserInfo getSelectedSeller() {
 		for (Map.Entry<String, JToggleButton> entry : m_sellerButtons.entrySet()) {
-			if (entry.getValue().isSelected()) return m_sellers.get(entry.getKey());
+			if (entry.getValue().isSelected())
+				return m_sellers.get(entry.getKey());
 		}
 		return m_firstSeller;
 	}

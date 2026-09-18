@@ -41,8 +41,7 @@ public class V24__employee_account_payment_permission extends BaseJavaMigration 
 		}
 
 		String updated = permissions.substring(0, end) + "    " + PERMISSION + "\n" + permissions.substring(end);
-		try (PreparedStatement update = connection
-				.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?")) {
+		try (PreparedStatement update = connection.prepareStatement("UPDATE ROLES SET PERMISSIONS = ? WHERE ID = ?")) {
 			update.setBytes(1, updated.getBytes(StandardCharsets.UTF_8));
 			update.setString(2, EMPLOYEE_ROLE_ID);
 			update.executeUpdate();

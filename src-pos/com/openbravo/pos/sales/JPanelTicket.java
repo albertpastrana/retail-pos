@@ -330,7 +330,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	public UserInfo getSelectedSeller() {
-		if (m_ticketsbag instanceof JTicketsBagShared) return ((JTicketsBagShared) m_ticketsbag).getSelectedSeller();
+		if (m_ticketsbag instanceof JTicketsBagShared)
+			return ((JTicketsBagShared) m_ticketsbag).getSelectedSeller();
 		return m_oTicket == null ? null : m_oTicket.getUser();
 	}
 

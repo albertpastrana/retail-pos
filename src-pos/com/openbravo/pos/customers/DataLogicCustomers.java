@@ -101,7 +101,8 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		return createCustomer(name, phone, null);
 	}
 
-	public CustomerInfoExt createCustomer(final String name, final String phone, final String notes) throws BasicException {
+	public CustomerInfoExt createCustomer(final String name, final String phone, final String notes)
+			throws BasicException {
 		final String id = UUID.randomUUID().toString();
 		final String normalizedPhone = CustomerInfo.normalizePhone(phone);
 		new PreparedSentence(s,
@@ -149,8 +150,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 	}
 
 	public CustomerInfo getCustomer(final String id) throws BasicException {
-		return (CustomerInfo) new PreparedSentence(s,
-				"SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE ID = ?",
+		return (CustomerInfo) new PreparedSentence(s, "SELECT ID, NAME, PHONE FROM CUSTOMERS WHERE ID = ?",
 				SerializerWriteString.INSTANCE, new SerializerRead() {
 					public Object readValues(DataRead dr) throws BasicException {
 						CustomerInfo customer = new CustomerInfo(dr.getString(1));
