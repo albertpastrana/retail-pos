@@ -318,13 +318,17 @@ public class JTicketsBagShared extends JTicketsBag {
 			DataLogicSystem dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
 			List people = dlSystem.listPeopleVisible();
 
-			if (!people.isEmpty()) {
-				jPanel1.add(Box.createHorizontalStrut(20));
-			}
-
 			int position = 0;
+			boolean hasSeller = false;
 			for (Iterator i = people.iterator(); i.hasNext();) {
 				final AppUser user = (AppUser) i.next();
+				if (AppUser.ROLE_ADMINISTRATOR.equals(user.getRole())) {
+					continue;
+				}
+				if (!hasSeller) {
+					jPanel1.add(Box.createHorizontalStrut(20));
+					hasSeller = true;
+				}
 				if (m_firstSeller == null) {
 					m_firstSeller = user.getUserInfo();
 				}
