@@ -140,6 +140,7 @@ val reportsJar by tasks.registering(Jar::class) {
 }
 
 val syncRunJars by tasks.registering(Copy::class) {
+    doNotTrackState("Copies the runnable jars into the project directory for local launchers")
     dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs)
     from(layout.buildDirectory.dir("jar")) {
         include("retail-pos.jar", "locales.jar", "reports.jar")
