@@ -103,8 +103,10 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		// jcboLAF.addItem(new UIManager.LookAndFeelInfo("Openbravo",
 		// "com.openbravo.pos.skin.OpenbravoLookAndFeel"));
 
-		// FlatLaf skins
+		// FlatLaf skins — Light for the sales floor, Dark for the evening shift
+		// and unlit back rooms (design-system/README.md "Colour")
 		jcboLAF.addItem(new LAFInfo("FlatLaf Light", "com.formdev.flatlaf.FlatLightLaf"));
+		jcboLAF.addItem(new LAFInfo("FlatLaf Dark", "com.formdev.flatlaf.FlatDarkLaf"));
 
 		// Installed skins
 		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
@@ -479,6 +481,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 						if (laf instanceof LookAndFeel) {
 							UIManager.setLookAndFeel((LookAndFeel) laf);
 						}
+						com.openbravo.pos.theme.RetailPOSTheme.applyFonts();
 
 						SwingUtilities.updateComponentTreeUI(JPanelConfigGeneral.this.getTopLevelAncestor());
 					} catch (Exception e) {

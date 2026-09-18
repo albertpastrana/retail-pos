@@ -4,14 +4,14 @@ Retail POS already runs FlatLaf 3.7.2 (`Configuration → General`, `com.formdev
 
 ## 1. A custom FlatLaf theme file, not a custom LookAndFeel
 
-Don't subclass `FlatLightLaf`/`FlatDarkLaf` or override paint code. FlatLaf reads a `.properties` file of UI colour keys and applies it on top of a base theme — that file *is* the token mapping. Add two resources next to the existing templates, one per theme:
+Don't subclass `FlatLightLaf`/`FlatDarkLaf` or override paint code. FlatLaf reads a `.properties` file of UI colour keys and applies it on top of a base theme — that file *is* the token mapping. `FlatLaf.registerCustomDefaultsSource(packageName)` looks up a file named after the active look and feel's simple class name in that package, so the two theme files have to be named to match, not just "one per theme":
 
 ```
-src-pos/com/openbravo/pos/theme/RetailPOSLight.properties
-src-pos/com/openbravo/pos/theme/RetailPOSDark.properties
+src-pos/com/openbravo/pos/theme/FlatLightLaf.properties
+src-pos/com/openbravo/pos/theme/FlatDarkLaf.properties
 ```
 
-`RetailPOSLight.properties` (values copied verbatim from `tokens.json`'s `light` theme — if a token's value here ever disagrees with `tokens.json`, `tokens.json` is the source of truth and this file is stale):
+`FlatLightLaf.properties` (values copied verbatim from `tokens.json`'s `light` theme — if a token's value here ever disagrees with `tokens.json`, `tokens.json` is the source of truth and this file is stale):
 
 ```properties
 # Surfaces
@@ -57,15 +57,15 @@ TextComponent.arc = 6
 defaultFont = Manrope 15
 ```
 
-`RetailPOSDark.properties` is the same key list with the `dark` column of `tokens.json` (`@background = #1b1712`, `@accentColor = #e2764c`, `Button.default.foreground = #2b1206`, and so on) — never invert the light file's values with a filter or "darken by X%": copy them from the token, the same discipline as the light file.
+`FlatDarkLaf.properties` is the same key list with the `dark` column of `tokens.json` (`@background = #1b1712`, `@accentColor = #e2764c`, `Button.default.foreground = #2b1206`, and so on) — never invert the light file's values with a filter or "darken by X%": copy them from the token, the same discipline as the light file.
 
-Load whichever the config calls for, same place `Configuration → General` already switches Light/Dark:
+Loaded once, at startup, before `UIManager.setLookAndFeel(...)` — see `com.openbravo.pos.theme.RetailPOSTheme.registerDefaultsSource()`, called from both `StartPOS.main` and `JFrmConfig.main`:
 
 ```java
-FlatLightLaf.setup();          // was: com.formdev.flatlaf.FlatLightLaf
-UIManager.addAuxiliaryLookAndFeel(...); // unchanged
-FlatLaf.registerCustomDefaultsSource("com.openbravo.pos.theme"); // or:
-UIManager.getLookAndFeelDefaults().putAll(loadProperties("RetailPOSLight.properties"));
+FlatLaf.registerCustomDefaultsSource("com.openbravo.pos.theme");
+UIManager.setLookAndFeel(config.getProperty("swing.defaultlaf")); // FlatLaf Light or FlatLaf Dark,
+                                                                    // same place Configuration → General
+                                                                    // already switches Light/Dark
 ```
 
 (`FlatLaf.registerCustomDefaultsSource(packageName)` is the supported hook — FlatLaf finds `FlatLightLaf.properties`-style overrides on the classpath at that package and layers them automatically; that's the cleanest way to slot these two files in without touching the setup call at all.)
