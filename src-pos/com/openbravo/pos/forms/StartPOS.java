@@ -110,8 +110,6 @@ public class StartPOS {
 				logger.log(Level.SEVERE, "Unhandled exception thread=" + thread.getName(), throwable);
 			}
 		});
-		logger.info("event=application_start version=" + AppLocal.APP_VERSION + " args=" + args.length);
-
 		setReportCompiler();
 
 		if (args.length > 0 && args[0].equals("configure")) {
@@ -139,6 +137,8 @@ public class StartPOS {
 				if (slang != null && !slang.equals("") && scountry != null && svariant != null) {
 					Locale.setDefault(new Locale(slang, scountry, svariant));
 				}
+
+				logger.info("event=application_start version=" + AppLocal.APP_VERSION + " args=" + args.length);
 
 				// Set the format patterns
 				Formats.setIntegerPattern(config.getProperty("format.integer"));
