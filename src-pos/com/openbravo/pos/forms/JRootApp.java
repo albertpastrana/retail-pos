@@ -40,6 +40,7 @@ import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.scale.DeviceScale;
+import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import java.util.Locale;
 
 /**
@@ -158,6 +159,12 @@ public class JRootApp extends JPanel implements AppView {
 
 		// Cargamos las propiedades de base de datos
 		m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
+		if (m_props instanceof AppConfig) {
+			Properties localLoyalty = new Properties();
+			LoyaltyConfiguration.apply(localLoyalty, m_propsdb);
+			((AppConfig) m_props).setProperty("loyalty.enabled", localLoyalty.getProperty("loyalty.enabled"));
+			((AppConfig) m_props).setProperty("loyalty.name", localLoyalty.getProperty("loyalty.name"));
+		}
 
 		// creamos la caja activa si esta no existe
 		try {

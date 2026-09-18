@@ -21,15 +21,11 @@ public final class LoyaltyStamps {
 	}
 
 	public static boolean isEnabled(String configured) {
-		return configured == null || configured.isEmpty() || Boolean.parseBoolean(configured);
+		return Boolean.parseBoolean(configured);
 	}
 
 	public static String name(String configured) {
-		if (configured == null) {
-			return DEFAULT_NAME;
-		}
-		String trimmed = configured.trim();
-		return trimmed.isEmpty() ? DEFAULT_NAME : trimmed;
+		return configured == null ? "" : configured.trim();
 	}
 
 	public static void applyToTicket(TicketInfo ticket, String enabledValue, String nameValue) {

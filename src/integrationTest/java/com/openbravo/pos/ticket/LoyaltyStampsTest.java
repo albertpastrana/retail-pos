@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import java.util.Properties;
+
 public class LoyaltyStampsTest {
 
 	@Test
@@ -96,9 +98,35 @@ public class LoyaltyStampsTest {
 
 	@Test
 	public void missingConfigKeepsLoyaltyOnWithDefaultName() {
-		assertTrue(LoyaltyStamps.isEnabled(null));
-		assertEquals("victorines", LoyaltyStamps.name(""));
+		assertFalse(LoyaltyStamps.isEnabled(null));
+		assertEquals("", LoyaltyStamps.name(""));
 		assertFalse(LoyaltyStamps.isEnabled("false"));
+	}
+
+	@Test
+	public void databaseConfigOverridesLocalConfig() {
+		Properties runtime = new Properties();
+		runtime.setProperty(LoyaltyStamps.ENABLED_KEY, "true");
+		runtime.setProperty(LoyaltyStamps.NAME_KEY, "Local");
+		Properties database = new Properties();
+		database.setProperty(LoyaltyStamps.ENABLED_KEY, "true");
+		database.setProperty(LoyaltyStamps.NAME_KEY, "Segells");
+
+		LoyaltyConfiguration.apply(runtime, database);
+		assertEquals("true", runtime.getProperty(LoyaltyStamps.ENABLED_KEY));
+		assertEquals("Segells", runtime.getProperty(LoyaltyStamps.NAME_KEY));
+	}
+
+	@Test
+	public void missingDatabaseConfigDisablesLoyalty() {
+		Properties runtime = new Properties();
+		runtime.setProperty(LoyaltyStamps.ENABLED_KEY, "true");
+		runtime.setProperty(LoyaltyStamps.NAME_KEY, "Segells");
+		Properties database = new Properties();
+
+		LoyaltyConfiguration.apply(runtime, database);
+		assertFalse(LoyaltyStamps.isEnabled(runtime.getProperty(LoyaltyStamps.ENABLED_KEY)));
+		assertEquals("", runtime.getProperty(LoyaltyStamps.NAME_KEY));
 	}
 
 	@Test

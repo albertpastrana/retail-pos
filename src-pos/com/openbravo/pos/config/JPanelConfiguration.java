@@ -23,11 +23,15 @@ import javax.swing.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import com.openbravo.basic.BasicException;
+import com.openbravo.data.loader.Session;
 
 import com.openbravo.pos.forms.*;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
+import com.openbravo.pos.ticket.LoyaltyConfiguration;
+import com.openbravo.pos.ticket.LoyaltyStamps;
 
 /**
  *
@@ -38,6 +42,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	private List<PanelConfig> m_panelconfig;
 
 	private AppConfig config;
+	private DataLogicSystem loyaltyDataLogic;
+	private Session loyaltySession;
+	private String loyaltyResourceName;
 
 	/** Creates new form JPanelConfiguration */
 	public JPanelConfiguration(AppView oApp) {
@@ -77,6 +84,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	private void loadProperties() {
 
 		config.load();
+		loadLoyaltyDatabaseProperties();
 
 		// paneles auxiliares
 		for (PanelConfig c : m_panelconfig) {
@@ -90,6 +98,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		for (PanelConfig c : m_panelconfig) {
 			c.saveProperties(config);
 		}
+		saveLoyaltyDatabaseProperties();
+		config.setProperty(LoyaltyStamps.ENABLED_KEY, null);
+		config.setProperty(LoyaltyStamps.NAME_KEY, null);
 
 		try {
 			config.save();
@@ -98,6 +109,59 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		} catch (IOException e) {
 			JMessageDialog.showMessage(this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
+		}
+	}
+
+	private void loadLoyaltyDatabaseProperties() {
+		try {
+			if (loyaltyDataLogic == null) {
+				loyaltySession = AppViewConnection.createSession(config);
+				loyaltyDataLogic = new DataLogicSystem();
+				loyaltyDataLogic.init(loyaltySession);
+			}
+			loyaltyResourceName = config.getHost() + "/properties";
+			Properties databaseConfig = loyaltyDataLogic.getResourceAsProperties(loyaltyResourceName);
+			Properties runtimeConfig = new Properties();
+			LoyaltyConfiguration.apply(runtimeConfig, databaseConfig);
+			copyIfPresent(runtimeConfig, config, LoyaltyStamps.ENABLED_KEY);
+			copyIfPresent(runtimeConfig, config, LoyaltyStamps.NAME_KEY);
+		} catch (BasicException e) {
+			// Loyalty stays disabled when the database is unavailable.
+			loyaltyDataLogic = null;
+			loyaltySession = null;
+			config.setProperty(LoyaltyStamps.ENABLED_KEY, "false");
+			config.setProperty(LoyaltyStamps.NAME_KEY, "");
+		}
+	}
+
+	private void saveLoyaltyDatabaseProperties() {
+		if (loyaltyDataLogic == null || loyaltyResourceName == null) {
+			return;
+		}
+		Properties databaseConfig = loyaltyDataLogic.getResourceAsProperties(loyaltyResourceName);
+		copyIfPresent(config, databaseConfig, LoyaltyStamps.ENABLED_KEY);
+		copyIfPresent(config, databaseConfig, LoyaltyStamps.NAME_KEY);
+		loyaltyDataLogic.setResourceAsProperties(loyaltyResourceName, databaseConfig);
+	}
+
+	private static void copyIfPresent(AppProperties source, Properties target, String key) {
+		String value = source.getProperty(key);
+		if (value != null) {
+			target.setProperty(key, value);
+		}
+	}
+
+	private static void copyIfPresent(Properties source, AppConfig target, String key) {
+		String value = source.getProperty(key);
+		if (value != null) {
+			target.setProperty(key, value);
+		}
+	}
+
+	public void close() {
+		if (loyaltySession != null) {
+			loyaltySession.close();
+			loyaltySession = null;
 		}
 	}
 
