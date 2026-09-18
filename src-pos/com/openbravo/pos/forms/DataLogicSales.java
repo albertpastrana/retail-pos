@@ -166,63 +166,192 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final ProductInfoExt getCatalogProductByCode(String code, String productsPath, String categoriesPath)
 			throws BasicException {
-		if (productsPath == null) {
-			return null;
+		if (productsPath != null) {
+			return getLegacyCatalogProductByCode(code, productsPath, categoriesPath);
 		}
+		try {
+			Connection connection = s.getConnection();
+			try (PreparedStatement product = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
+					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND "
+					+ "FROM CATALOG_FALLBACK_PRODUCTS WHERE BARCODE IN (?, ?, ?)");
+					PreparedStatement price = connection
+							.prepareStatement("SELECT REFERENCE, PRICE_BUY, PRICE_SELL, BRAND "
+									+ "FROM CATALOG_FALLBACK_PRICES WHERE LOOKUP_CODE = ?")) {
+				String[] codes = barcodeForms(code);
+				for (int i = 0; i < codes.length; i++) {
+					product.setString(i + 1, codes[i]);
+				}
+				try (ResultSet result = product.executeQuery()) {
+					if (result.next()) {
+						return catalogProduct(result, price, code);
+					}
+				}
+				FallbackPrice fallbackPrice = findFallbackPrice(price, code);
+				if (fallbackPrice == null || fallbackPrice.priceBuy == null) {
+					return null;
+				}
+				ProductInfoExt pricedProduct = new ProductInfoExt();
+				pricedProduct.setID(UUID.randomUUID().toString());
+				pricedProduct.setReference(fallbackPrice.reference == null || fallbackPrice.reference.isEmpty()
+						? code
+						: fallbackPrice.reference);
+				pricedProduct.setCode(code);
+				pricedProduct.setName("");
+				pricedProduct.setPriceBuy(fallbackPrice.priceBuy.doubleValue());
+				pricedProduct.setPriceSell(0.0);
+				pricedProduct.setTaxCategoryID("001");
+				pricedProduct.setProperty("catalog.brand", fallbackPrice.brand);
+				pricedProduct.setProperty("catalog.price.available", "true");
+				return pricedProduct;
+			}
+		} catch (Exception e) {
+			throw new BasicException("Cannot read barcode " + code + " from fallback catalog", e);
+		}
+	}
 
+	public final List<ProductInfoExt> getCatalogProductFamily(String code, String productsPath, String categoriesPath)
+			throws BasicException {
+		if (productsPath != null) {
+			return getLegacyCatalogProductFamily(code, productsPath, categoriesPath);
+		}
+		List<ProductInfoExt> family = new ArrayList<ProductInfoExt>();
+		try {
+			Connection connection = s.getConnection();
+			try (PreparedStatement find = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
+					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND "
+					+ "FROM CATALOG_FALLBACK_PRODUCTS WHERE BARCODE IN (?, ?, ?)");
+					PreparedStatement products = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
+							+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND FROM CATALOG_FALLBACK_PRODUCTS");
+					PreparedStatement price = connection
+							.prepareStatement("SELECT REFERENCE, PRICE_BUY, PRICE_SELL, BRAND "
+									+ "FROM CATALOG_FALLBACK_PRICES WHERE LOOKUP_CODE = ?")) {
+				String[] codes = barcodeForms(code);
+				for (int i = 0; i < codes.length; i++) {
+					find.setString(i + 1, codes[i]);
+				}
+				try (ResultSet scanned = find.executeQuery()) {
+					if (!scanned.next()) {
+						return family;
+					}
+					String brand = scanned.getString("BRAND");
+					String model = CatalogVariantModel.fromReference(scanned.getString("REFERENCE"), brand);
+					try (ResultSet result = products.executeQuery()) {
+						while (result.next()) {
+							if (equals(brand, result.getString("BRAND")) && model.equals(CatalogVariantModel
+									.fromReference(result.getString("REFERENCE"), result.getString("BRAND")))) {
+								family.add(catalogProduct(result, price, result.getString("BARCODE")));
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new BasicException("Cannot read barcode family " + code + " from fallback catalog", e);
+		}
+		return family;
+	}
+
+	private ProductInfoExt catalogProduct(ResultSet result, PreparedStatement price, String code) throws Exception {
+		String barcode = result.getString("BARCODE");
+		String reference = result.getString("REFERENCE");
+		FallbackPrice fallbackPrice = findFallbackPrice(price, barcode);
+		if (fallbackPrice == null && reference != null) {
+			fallbackPrice = findFallbackPrice(price, reference);
+		}
+		Double priceBuy = fallbackPrice != null && fallbackPrice.priceBuy != null
+				? fallbackPrice.priceBuy
+				: nullableDouble(result, "PRICE_BUY");
+		ProductInfoExt product = new ProductInfoExt();
+		product.setID(result.getString("ID"));
+		product.setReference(reference);
+		product.setCode(barcode);
+		product.setName(result.getString("NAME"));
+		product.setCategoryID(result.getString("CATEGORY_ID"));
+		product.setPriceBuy(priceBuy == null ? 0.0 : priceBuy.doubleValue());
+		product.setPriceSell(0.0);
+		product.setTaxCategoryID("001");
+		product.setProperty("catalog.category.name", result.getString("CATEGORY_NAME"));
+		product.setProperty("catalog.brand",
+				fallbackPrice != null && fallbackPrice.brand != null ? fallbackPrice.brand : result.getString("BRAND"));
+		product.setProperty("catalog.price.available", Boolean.toString(priceBuy != null));
+		return product;
+	}
+
+	private FallbackPrice findFallbackPrice(PreparedStatement statement, String code) throws Exception {
+		for (String candidate : barcodeForms(code)) {
+			statement.setString(1, candidate);
+			try (ResultSet result = statement.executeQuery()) {
+				if (result.next()) {
+					return new FallbackPrice(result.getString("REFERENCE"), nullableDouble(result, "PRICE_BUY"),
+							nullableDouble(result, "PRICE_SELL"), result.getString("BRAND"));
+				}
+			}
+		}
+		return null;
+	}
+
+	private static String[] barcodeForms(String code) {
+		return new String[]{code, "0" + code, "00" + code};
+	}
+
+	private static Double nullableDouble(ResultSet result, String column) throws Exception {
+		double value = result.getDouble(column);
+		return result.wasNull() ? null : Double.valueOf(value);
+	}
+
+	private static boolean equals(String left, String right) {
+		return left == null ? right == null : left.equals(right);
+	}
+
+	private static final class FallbackPrice {
+		private final String reference;
+		private final Double priceBuy;
+		@SuppressWarnings("unused")
+		private final Double priceSell;
+		private final String brand;
+
+		private FallbackPrice(String reference, Double priceBuy, Double priceSell, String brand) {
+			this.reference = reference;
+			this.priceBuy = priceBuy;
+			this.priceSell = priceSell;
+			this.brand = brand;
+		}
+	}
+
+	private ProductInfoExt getLegacyCatalogProductByCode(String code, String productsPath, String categoriesPath)
+			throws BasicException {
 		try {
 			String[] row = findProduct(code, productsPath);
 			if (row == null) {
 				String[] priced = findCatalogPrice(code, productsPath);
 				if (priced == null) {
-					LOGGER.info("Barcode " + code + " not found in import catalog " + productsPath);
 					return null;
 				}
-				ProductInfoExt pricedProduct = new ProductInfoExt();
-				pricedProduct.setID(UUID.randomUUID().toString());
-				pricedProduct.setReference(priced[1].isEmpty() ? code : priced[1]);
-				pricedProduct.setCode(code);
-				pricedProduct.setName("");
-				pricedProduct.setPriceBuy(Double.parseDouble(priced[2]));
-				pricedProduct.setPriceSell(0.0);
-				pricedProduct.setTaxCategoryID("001");
-				if (priced.length > 4 && !priced[4].isEmpty()) {
-					pricedProduct.setProperty("catalog.brand", priced[4]);
-				}
-				pricedProduct.setProperty("catalog.price.available", "true");
-				return pricedProduct;
+				ProductInfoExt product = new ProductInfoExt();
+				product.setID(UUID.randomUUID().toString());
+				product.setReference(priced[1].isEmpty() ? code : priced[1]);
+				product.setCode(code);
+				product.setName("");
+				product.setPriceBuy(Double.parseDouble(priced[2]));
+				product.setPriceSell(0.0);
+				product.setTaxCategoryID("001");
+				product.setProperty("catalog.brand", priced.length > 4 ? priced[4] : null);
+				product.setProperty("catalog.price.available", "true");
+				return product;
 			}
-
-			ProductInfoExt product = new ProductInfoExt();
-			product.setID(row[0]);
-			product.setReference(row[1]);
-			product.setCode(row[2]);
-			product.setName(row[3]);
-			product.setCategoryID(row[4]);
-			boolean priceAvailable = applyCatalogPrices(row, productsPath);
-			product.setPriceBuy(Double.parseDouble(row[5]));
-			product.setPriceSell(0.0);
-			product.setTaxCategoryID("001");
-
 			Map<String, String[]> categories = categoriesPath == null
 					? new HashMap<String, String[]>()
 					: readCategories(categoriesPath);
-			String[] category = categories.get(row[4]);
-			product.setProperty("catalog.category.name", catalogCategoryPath(category, categories, row[4]));
-			product.setProperty("catalog.brand", row.length > 7 ? row[7] : null);
-			product.setProperty("catalog.price.available", Boolean.toString(priceAvailable));
+			ProductInfoExt product = legacyCatalogProduct(row, productsPath, categories);
 			return product;
 		} catch (Exception e) {
 			throw new BasicException("Cannot read barcode " + code + " from import catalog", e);
 		}
 	}
 
-	public final List<ProductInfoExt> getCatalogProductFamily(String code, String productsPath, String categoriesPath)
+	private List<ProductInfoExt> getLegacyCatalogProductFamily(String code, String productsPath, String categoriesPath)
 			throws BasicException {
 		List<ProductInfoExt> family = new ArrayList<ProductInfoExt>();
-		if (productsPath == null) {
-			return family;
-		}
 		try {
 			String[] scanned = findProduct(code, productsPath);
 			if (scanned == null || scanned.length < 8) {
@@ -240,7 +369,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					String[] row = line.split("\t", -1);
 					if (row.length >= 8 && brand.equals(row[7])
 							&& model.equals(CatalogVariantModel.fromReference(row[1], row[7]))) {
-						family.add(catalogProduct(row, productsPath, categories));
+						family.add(legacyCatalogProduct(row, productsPath, categories));
 					}
 				}
 			} finally {
@@ -252,7 +381,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		}
 	}
 
-	private ProductInfoExt catalogProduct(String[] source, String productsPath, Map<String, String[]> categories)
+	private ProductInfoExt legacyCatalogProduct(String[] source, String productsPath, Map<String, String[]> categories)
 			throws IOException {
 		String[] row = source.clone();
 		ProductInfoExt product = new ProductInfoExt();
@@ -311,7 +440,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			boolean oldAutoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
 			try {
-				ensureCategory(connection, product.getCategoryID(), categories);
+				ensureCategory(connection, product.getCategoryID(), categories,
+						product.getProperty("catalog.category.name"));
 
 				PreparedStatement insert = connection
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
@@ -371,7 +501,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					PreparedStatement insertCat = connection
 							.prepareStatement("INSERT INTO PRODUCTS_CAT (PRODUCT, CATORDER) VALUES (?, NULL)")) {
 				for (ProductInfoExt product : products) {
-					ensureCategory(connection, product.getCategoryID(), categories);
+					ensureCategory(connection, product.getCategoryID(), categories,
+							product.getProperty("catalog.category.name"));
 					find.setString(1, product.getCode());
 					String productId;
 					try (ResultSet existing = find.executeQuery()) {
@@ -529,8 +660,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		return new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8));
 	}
 
-	private void ensureCategory(Connection connection, String categoryId, Map<String, String[]> categories)
-			throws Exception {
+	private void ensureCategory(Connection connection, String categoryId, Map<String, String[]> categories,
+			String categoryName) throws Exception {
 		PreparedStatement find = connection.prepareStatement("SELECT ID FROM CATEGORIES WHERE ID = ?");
 		find.setString(1, categoryId);
 		ResultSet result = find.executeQuery();
@@ -543,11 +674,20 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 		String[] category = categories.get(categoryId);
 		if (category == null) {
+			if (categoryName != null && !categoryName.trim().isEmpty()) {
+				try (PreparedStatement insert = connection.prepareStatement(
+						"INSERT INTO CATEGORIES (ID, NAME, PARENTID, IMAGE) VALUES (?, ?, NULL, NULL)")) {
+					insert.setString(1, categoryId);
+					insert.setString(2, categoryName);
+					insert.executeUpdate();
+				}
+				return;
+			}
 			throw new IOException("Category not found in catalog: " + categoryId);
 		}
 		String parentId = category.length > 2 && category[2].length() > 0 ? category[2] : null;
 		if (parentId != null) {
-			ensureCategory(connection, parentId, categories);
+			ensureCategory(connection, parentId, categories, null);
 		}
 
 		PreparedStatement insert = connection

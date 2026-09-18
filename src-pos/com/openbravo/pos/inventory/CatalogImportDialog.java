@@ -110,23 +110,21 @@ public final class CatalogImportDialog {
 		if (product != null) {
 			return product;
 		}
-		String productsPath = app.getProperties().getProperty("catalog.import.products");
-		String categoriesPath = app.getProperties().getProperty("catalog.import.categories");
-		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, productsPath, categoriesPath);
+		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, null, null);
 		if (catalogProduct == null && copy == Copy.RECEIPT) {
 			unknown = true;
 			return null;
 		}
 		List<ProductInfoExt> family = catalogProduct == null
 				? new ArrayList<ProductInfoExt>()
-				: dlSales.getCatalogProductFamily(code, productsPath, categoriesPath);
+				: dlSales.getCatalogProductFamily(code, null, null);
 		if (family.size() > 1) {
 			List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family);
 			if (editedFamily == null) {
 				cancelled = true;
 				return null;
 			}
-			dlSales.importProducts(editedFamily, categoriesPath);
+			dlSales.importProducts(editedFamily, null);
 			for (ProductInfoExt imported : editedFamily) {
 				applyImportedStock(imported);
 			}
@@ -137,7 +135,7 @@ public final class CatalogImportDialog {
 			cancelled = true;
 			return null;
 		}
-		product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), categoriesPath);
+		product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), null);
 		applyImportedStock(editedProduct);
 		return product;
 	}

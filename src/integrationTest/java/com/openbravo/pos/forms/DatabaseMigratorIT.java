@@ -9,6 +9,9 @@ import java.sql.Statement;
 
 import org.junit.Test;
 
+import com.openbravo.data.loader.Session;
+import com.openbravo.pos.ticket.ProductInfoExt;
+
 import static org.junit.Assert.assertEquals;
 
 public class DatabaseMigratorIT {
@@ -23,6 +26,32 @@ public class DatabaseMigratorIT {
 	}
 
 	@Test
+	public void readsFallbackCatalogPriceOverlay() throws Exception {
+		String url = "jdbc:derby:memory:fallbackCatalogIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND) "
+						+ "VALUES ('fallback-1', '9990000000101', 'P761237-R64-3XL', 'Fallback shirt', "
+						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Massana')");
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRICES "
+						+ "(LOOKUP_CODE, REFERENCE, PRICE_BUY, PRICE_SELL, BRAND, SOURCE) VALUES "
+						+ "('9990000000101', 'P761237-R64-3XL', 12.5, 25.0, 'Massana', 'supplier')");
+			}
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			ProductInfoExt product = sales.getCatalogProductByCode("9990000000101", null, null);
+			assertEquals("Fallback shirt", product.getName());
+			assertEquals(12.5, product.getPriceBuy(), 0.0001);
+			assertEquals("Shirts", product.getProperty("catalog.category.name"));
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	public void adoptsDerbySchemaCreatedBeforeFlyway() throws Exception {
 		String url = "jdbc:derby:memory:flywayLegacyIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);
@@ -32,11 +61,13 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(24, count(connection, "flyway_schema_history"));
+			assertEquals(25, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
+			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
+			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRICES"));
 		} finally {
 			connection.close();
 		}
@@ -94,7 +125,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(25, count(connection, "flyway_schema_history"));
+			assertEquals(26, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
@@ -106,6 +137,8 @@ public class DatabaseMigratorIT {
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(4, count(connection, "PEOPLE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
+			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
+			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRICES"));
 		} finally {
 			connection.close();
 		}
@@ -115,7 +148,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(25, count(connection, "flyway_schema_history"));
+			assertEquals(26, count(connection, "flyway_schema_history"));
 			assertEquals(36, count(connection, "RESOURCES"));
 		} finally {
 			connection.close();
