@@ -2,7 +2,11 @@
 
 Captured: 2026-09-12, 2026-09-14
 
-Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/customer-on-ticket.md`
+Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/manual-loyalty.md`
+
+## Parked
+
+Do not implement the customer loyalty balance yet. The shop will use the manual paper-card flow in `tickets/todo/manual-loyalty.md`; no loyalty balance, movements, stamps, or leftover euros are stored in the database for now.
 
 ## Goal
 
@@ -16,7 +20,7 @@ Intended rules (unchanged):
 
 - 1 stamp = 10 € of eligible base (floor). Store leftover euros on the customer (27 € → 2 stamps and 7 €). Paper loses the remainder; the till should not.
 - 12 stamps → −5 € line. One redemption per ticket unless we say otherwise.
-- Needs a customer with `CUSTOMERS.CARD`. No customer, no balance.
+- When this ticket is resumed, the customer phone can be used as the lookup identity; no separate loyalty card is required.
 - On close: a movement (earn / redeem) tied to the ticket, not only a number. A refund can reverse it.
 - Till copy: “this ticket: +N · total: X/12”. If the ticket reaches 12: offer redeem or apply it. First cut of this ticket: balance + calc + −5 € line + text. Not the brand-offer engine.
 - Close cash: redemption lowers sales as a discount. Not a payment method.

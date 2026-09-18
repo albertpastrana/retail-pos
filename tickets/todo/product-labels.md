@@ -2,7 +2,7 @@
 
 Captured: 2026-09-10
 
-Related: `tickets/todo/catalog-variants.md`, `tickets/todo/brand-offers.md`
+Related: `tickets/todo/catalog-variants.md`, `tickets/todo/brand-offers.md`, `tickets/done/gift-vouchers.md`
 
 ## Goal
 
@@ -18,6 +18,14 @@ Tags are the extra layer: e.g. tèrmic, novetat, rebaixes, encàrrec — things 
 
 Not specified yet: free text vs a closed list, and whether printed shelf labels are in scope. Do not invent a promo engine here (`tickets/todo/brand-offers.md`).
 
+## Special-product barcodes
+
+The product editor should allow assigning or generating a unique barcode for products that do not arrive with a manufacturer code, such as bags, vouchers, or arrangements. The barcode must behave like the product's normal code at the till so it can be scanned instead of searched by name.
+
+Those codes should also be printable as individual labels or in a batch, with at least the product name, price when applicable, and the machine-readable barcode. Assignment must prevent collisions with existing product and alternative barcodes, and voucher handling must retain the existing `ISVOUCHER` behaviour.
+
 ## Done when
 
 A product can carry labels, they are visible where staff would use them, and they survive across tills on the shared database.
+
+Special products can be given a unique barcode, found by scanning at the till, and printed again from the product or barcode-management flow.

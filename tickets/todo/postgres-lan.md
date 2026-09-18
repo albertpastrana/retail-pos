@@ -1,23 +1,34 @@
-# PostgreSQL on the LAN
+# Validate the PostgreSQL shop LAN
 
-Captured: 2026-09-11
+Captured: 2026-09-11, 2026-09-17
 
-Related: `tickets/todo/pending-barcodes.md`, `tickets/todo/stock-orders.md`, `tickets/todo/postgres-backups.md`, `tickets/todo/catalog-tsv-linux.md`, `tickets/todo/live-shared-tickets.md`
+Related: `tickets/todo/pending-barcodes.md`, `tickets/todo/stock-orders.md`, `tickets/done/postgres-backups.md`, `tickets/todo/catalog-tsv-linux.md`, `tickets/todo/live-shared-tickets.md`
 
 ## Goal
 
-All tills sell against one PostgreSQL on the Linux machine. Same `db.URL` on Windows and Mac. Printer, display, and locale stay in each till’s `*.properties`.
+Deploy and validate the shop so every till sells against the same PostgreSQL server on the Linux machine. The application already supports PostgreSQL; this ticket covers the real shop installation and its operational checks.
 
 ## Context
 
-Everything is LAN-only. Postgres is not on the internet. If Linux is off, the other tills cannot sell.
+PostgreSQL is installed and the application has PostgreSQL migrations, integration tests, backup support, and a LAN configuration template in `till-lan.properties`.
 
-Do not sync Derby copies: `db.lck` and diverging stock/tickets/creates. Not Syncthing or git for till data. The ERP/JMS menu is leftover; do not use it.
+Configure the Linux host and each till with the same `db.URL`. Printer, display, locale, and other machine-specific settings stay in each till’s `*.properties`.
 
-Pending EANs, orders, and backups are app tables/actions, not side files — but they need this shared database first.
+Everything is LAN-only; PostgreSQL is not exposed to the internet. If Linux is off, the other tills cannot sell.
 
-Suggested order: (1) Postgres on Linux and each PC’s config, (2) pending EANs, (3) orders, (4) backup from Maintenance.
+Do not sync Derby copies with Syncthing or git. Stock, tickets, pending EANs, orders, and backups belong in the shared database or its backup process. The ERP/JMS menu is leftover and should not be used.
+
+## Checks
+
+- PostgreSQL starts before Windows and Mac tills.
+- Each till connects using the same `db.URL` and can complete a sale.
+- Two tills can read and write the same catalogue, stock, and tickets.
+- A line scanned on the satellite till appears on the central till’s shared-ticket list without parking.
+- Opening the live ticket transfers its lock, prevents silent stale edits, and only the central till can take payment.
+- A backup can be produced from Maintenance on the Linux till.
+- Stopping the Linux host prevents the other tills from selling, as expected.
+- The operator guide records the startup order, configuration, and failure behaviour.
 
 ## Done when
 
-Two tills on the LAN read and write the same catalogue, stock, and tickets. Killing the Linux host stops sales on the others.
+The shop’s tills have been configured and tested against the shared PostgreSQL server, including the live shared-ticket flow. Two tills can read and write the same catalogue, stock, and tickets; the central till alone can take payment; and the documented failure behaviour is confirmed.
