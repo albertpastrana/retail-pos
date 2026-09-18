@@ -21,6 +21,7 @@ package com.openbravo.pos.sales;
 
 import java.awt.CardLayout;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.forms.AppLocal;
 
 public class JTicketsBagTicketBag extends javax.swing.JPanel {
@@ -119,8 +120,9 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 
 	private void m_jBtnDeleteActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jBtnDeleteActionPerformed
 
-		int res = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.wannadelete"),
-				AppLocal.getIntString("title.editor"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int res = JConfirmationDialog.show(this, AppLocal.getIntString("message.wannadelete"),
+				AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.delete"), true);
 		if (res == JOptionPane.YES_OPTION) {
 			m_ticketsbagticket.deleteTicket();
 		}

@@ -18,6 +18,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -169,8 +170,8 @@ public class PriceRulesPanel extends JPanel implements JPanelView, BeanFactoryAp
 				? AppLocal.getIntString("label.pricerule.default")
 				: newRule.getBrand();
 		String message = AppLocal.getIntString("message.pricerules.bulk", scope, Integer.valueOf(count));
-		int answer = JOptionPane.showConfirmDialog(this, message, AppLocal.getIntString("title.pricerules.bulk"),
-				JOptionPane.YES_NO_OPTION);
+		int answer = JConfirmationDialog.show(this, message, AppLocal.getIntString("title.pricerules.bulk"),
+				AppLocal.getIntString("confirm.cancel"), AppLocal.getIntString("confirm.update"), false);
 		if (answer == JOptionPane.YES_OPTION) {
 			int changed = service.repriceProductsUsingOldRule(newRule.getBrand(), oldRule, newRule);
 			JOptionPane.showMessageDialog(this,

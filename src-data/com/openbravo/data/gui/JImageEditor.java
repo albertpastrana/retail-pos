@@ -141,9 +141,9 @@ public class JImageEditor extends javax.swing.JPanel {
 				if (img != null) {
 					// compruebo que no exceda el tamano maximo.
 					if (m_maxsize != null && (img.getHeight() > m_maxsize.height || img.getWidth() > m_maxsize.width)) {
-						if (JOptionPane.showConfirmDialog(this, LocalRes.getIntString("message.resizeimage"),
-								LocalRes.getIntString("title.editor"), JOptionPane.YES_NO_OPTION,
-								JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+						if (JConfirmationDialog.show(this, LocalRes.getIntString("message.resizeimage"),
+								LocalRes.getIntString("title.editor"), LocalRes.getIntString("confirm.cancel"),
+								LocalRes.getIntString("confirm.resize"), false) == JOptionPane.YES_OPTION) {
 							// Redimensionamos la imagen para que se ajuste
 							img = resizeImage(img);
 						}

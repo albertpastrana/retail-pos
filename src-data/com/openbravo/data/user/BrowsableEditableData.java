@@ -25,6 +25,7 @@ import java.awt.Component;
 import javax.swing.event.EventListenerList;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.LocalRes;
+import com.openbravo.data.gui.JConfirmationDialog;
 
 public class BrowsableEditableData {
 
@@ -252,18 +253,18 @@ public class BrowsableEditableData {
 	}
 
 	public void actionReloadCurrent(Component c) {
-		if (!m_Dirty.isDirty() || JOptionPane.showConfirmDialog(c, LocalRes.getIntString("message.changeslost"),
-				LocalRes.getIntString("title.editor"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		if (!m_Dirty.isDirty() || JConfirmationDialog.show(c, LocalRes.getIntString("message.changeslost"),
+				LocalRes.getIntString("title.editor"), LocalRes.getIntString("confirm.cancel"),
+				LocalRes.getIntString("confirm.discard"), true) == JOptionPane.YES_OPTION) {
 			refreshCurrent();
 		}
 	}
 
 	public boolean actionClosingForm(Component c) throws BasicException {
 		if (m_Dirty.isDirty()) {
-			int res = JOptionPane.showConfirmDialog(c, LocalRes.getIntString("message.wannasave"),
-					LocalRes.getIntString("title.editor"), JOptionPane.YES_NO_CANCEL_OPTION,
-					JOptionPane.QUESTION_MESSAGE);
+			int res = JConfirmationDialog.show(c, LocalRes.getIntString("message.wannasave"),
+					LocalRes.getIntString("title.editor"), LocalRes.getIntString("confirm.cancel"),
+					LocalRes.getIntString("confirm.discard"), LocalRes.getIntString("confirm.save"), false);
 			if (res == JOptionPane.YES_OPTION) {
 				saveData();
 				return true;

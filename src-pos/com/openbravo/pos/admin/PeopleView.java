@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.util.UUID;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ComboBoxValModel;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.loader.SentenceList;
 import com.openbravo.data.user.*;
 import com.openbravo.format.Formats;
@@ -318,9 +319,9 @@ public class PeopleView extends JPanel implements EditorRecord {
 
 	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
 
-		if (JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.cardnew"),
-				AppLocal.getIntString("title.editor"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardnew"),
+				AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.newcard"), false) == JOptionPane.YES_OPTION) {
 			jcard.setText("c" + StringUtils.getCardNumber());
 			m_Dirty.setDirty(true);
 		}
@@ -329,9 +330,9 @@ public class PeopleView extends JPanel implements EditorRecord {
 
 	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
 
-		if (JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.cardremove"),
-				AppLocal.getIntString("title.editor"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardremove"),
+				AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.remove"), true) == JOptionPane.YES_OPTION) {
 			jcard.setText(null);
 			m_Dirty.setDirty(true);
 		}

@@ -34,6 +34,7 @@ import com.openbravo.format.Formats;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.gui.MessageInf;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.gui.TableRendererBasic;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
@@ -503,8 +504,9 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedcash"))) {
 			return;
 		}
-		int res = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.wannaclosecash"),
-				AppLocal.getIntString("message.title"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int res = JConfirmationDialog.show(this, AppLocal.getIntString("message.wannaclosecash"),
+				AppLocal.getIntString("message.title"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.closecash"), false);
 		if (res == JOptionPane.YES_OPTION) {
 
 			Date dNow = new Date();

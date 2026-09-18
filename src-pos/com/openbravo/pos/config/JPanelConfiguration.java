@@ -30,6 +30,7 @@ import com.openbravo.data.loader.Session;
 import com.openbravo.pos.forms.*;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import com.openbravo.pos.ticket.LoyaltyStamps;
 
@@ -187,9 +188,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		}
 
 		if (haschanged) {
-			int res = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.wannasave"),
-					AppLocal.getIntString("title.editor"), JOptionPane.YES_NO_CANCEL_OPTION,
-					JOptionPane.QUESTION_MESSAGE);
+			int res = JConfirmationDialog.show(this, AppLocal.getIntString("message.wannasave"),
+					AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+					AppLocal.getIntString("confirm.discard"), AppLocal.getIntString("confirm.save"), false);
 			if (res == JOptionPane.YES_OPTION) {
 				saveProperties();
 				return true;
@@ -266,9 +267,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void jbtnCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jbtnCancelActionPerformed
 
-		if (JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.configrestore"),
-				AppLocal.getIntString("message.title"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.configrestore"),
+				AppLocal.getIntString("message.title"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.restore"), true) == JOptionPane.YES_OPTION) {
 			loadProperties();
 		}
 
@@ -276,9 +277,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void jbtnRestoreActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jbtnRestoreActionPerformed
 
-		if (JOptionPane.showConfirmDialog(this, AppLocal.getIntString("message.configfactory"),
-				AppLocal.getIntString("message.title"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.configfactory"),
+				AppLocal.getIntString("message.title"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.restore"), true) == JOptionPane.YES_OPTION) {
 			restoreProperties();
 		}
 

@@ -23,6 +23,7 @@ import javax.swing.table.AbstractTableModel;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
@@ -150,9 +151,10 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 		if (value == null || pending.isEmpty()) {
 			return;
 		}
-		int ok = JOptionPane.showConfirmDialog(this,
+		int ok = JConfirmationDialog.show(this,
 				AppLocal.getIntString("message.sale.applyconfirm", new Object[]{new Integer(pending.size()), value}),
-				AppLocal.getIntString("Menu.SaleMark"), JOptionPane.YES_NO_OPTION);
+				AppLocal.getIntString("Menu.SaleMark"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.apply"), false);
 		if (ok != JOptionPane.YES_OPTION) {
 			return;
 		}
@@ -171,9 +173,10 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 		if (pending.isEmpty()) {
 			return;
 		}
-		int ok = JOptionPane.showConfirmDialog(this,
+		int ok = JConfirmationDialog.show(this,
 				AppLocal.getIntString("message.sale.clearconfirm", new Integer(pending.size())),
-				AppLocal.getIntString("Menu.SaleMark"), JOptionPane.YES_NO_OPTION);
+				AppLocal.getIntString("Menu.SaleMark"), AppLocal.getIntString("confirm.cancel"),
+				AppLocal.getIntString("confirm.clear"), true);
 		if (ok != JOptionPane.YES_OPTION) {
 			return;
 		}
