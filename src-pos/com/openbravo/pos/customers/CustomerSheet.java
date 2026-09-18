@@ -40,7 +40,7 @@ public class CustomerSheet extends JDialog {
 	private CustomerSheet(Window parent, AppView app, CustomerInfoExt customer) {
 		super(parent, ModalityType.APPLICATION_MODAL);
 		this.app = app;
-		this.dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		this.dlSales = app.getBean(DataLogicSales.class);
 		this.customer = customer;
 		setTitle(AppLocal.getIntString("customer.title"));
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);

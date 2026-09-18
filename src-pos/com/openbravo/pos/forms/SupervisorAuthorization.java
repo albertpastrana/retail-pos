@@ -30,7 +30,7 @@ public final class SupervisorAuthorization {
 			return true;
 		}
 
-		DataLogicSystem dlSystem = (DataLogicSystem) app.getBean("com.openbravo.pos.forms.DataLogicSystem");
+		DataLogicSystem dlSystem = app.getBean(DataLogicSystem.class);
 		List supervisors = new ArrayList();
 		try {
 			for (Object value : dlSystem.listPeopleVisible()) {

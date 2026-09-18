@@ -36,6 +36,7 @@ public interface AppView {
 	public Session getSession();
 	public AppProperties getProperties();
 	public Object getBean(String beanfactory) throws BeanFactoryException;
+	public <T> T getBean(Class<T> beanClass) throws BeanFactoryException;
 
 	public void setActiveCash(String value, int iSeq, Date dStart, Date dEnd);
 	public String getActiveCashIndex();

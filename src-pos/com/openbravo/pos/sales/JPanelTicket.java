@@ -147,9 +147,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	public void init(AppView app) throws BeanFactoryException {
 
 		m_App = app;
-		dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
-		dlSales = (DataLogicSales) m_App.getBean("com.openbravo.pos.forms.DataLogicSales");
-		dlCustomers = (DataLogicCustomers) m_App.getBean("com.openbravo.pos.customers.DataLogicCustomers");
+		dlSystem = m_App.getBean(DataLogicSystem.class);
+		dlSales = m_App.getBean(DataLogicSales.class);
+		dlCustomers = m_App.getBean(DataLogicCustomers.class);
 		priceRuleService = new PriceRuleService(m_App.getSession());
 
 		m_ticketsbag = getJTicketsBag();

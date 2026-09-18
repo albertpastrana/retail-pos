@@ -87,7 +87,7 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 
 	public void init(AppView app) {
 
-		DataLogicSales dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		DataLogicSales dlSales = app.getBean(DataLogicSales.class);
 
 		// El modelo de categorias
 		m_sentcat = dlSales.getCategoriesList();

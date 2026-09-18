@@ -98,7 +98,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 	public void init(AppView app) {
 		this.app = app;
-		dlSystem = (DataLogicSystem) app.getBean("com.openbravo.pos.forms.DataLogicSystem");
+		dlSystem = app.getBean(DataLogicSystem.class);
 		printselected = true;
 	}
 

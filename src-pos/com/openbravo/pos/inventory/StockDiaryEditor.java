@@ -75,7 +75,7 @@ public class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord
 	public StockDiaryEditor(AppView app, DirtyManager dirty) {
 
 		m_App = app;
-		m_dlSales = (DataLogicSales) m_App.getBean("com.openbravo.pos.forms.DataLogicSales");
+		m_dlSales = m_App.getBean(DataLogicSales.class);
 
 		initComponents();
 

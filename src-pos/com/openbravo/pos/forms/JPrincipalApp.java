@@ -71,7 +71,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		m_appview = appview;
 		m_appuser = appuser;
 
-		m_dlSystem = (DataLogicSystem) m_appview.getBean("com.openbravo.pos.forms.DataLogicSystem");
+		m_dlSystem = m_appview.getBean(DataLogicSystem.class);
 
 		// Cargamos los permisos del usuario
 		m_appuser.fillPermissions(m_dlSystem);

@@ -75,7 +75,7 @@ public class JPanelClosedCash extends JPanel implements JPanelView, BeanFactoryA
 	public void init(AppView app) throws BeanFactoryException {
 
 		m_App = app;
-		m_dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
+		m_dlSystem = m_App.getBean(DataLogicSystem.class);
 
 		// Este deviceticket solo tiene una impresora, la de pantalla
 		m_TP = new DeviceTicket();

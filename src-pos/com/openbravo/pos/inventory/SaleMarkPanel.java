@@ -87,7 +87,7 @@ public class SaleMarkPanel extends JPanel implements JPanelView, BeanFactoryApp 
 
 	@Override
 	public void init(AppView app) throws BeanFactoryException {
-		dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		dlSales = app.getBean(DataLogicSales.class);
 		sales = new SaleService(app.getSession());
 	}
 

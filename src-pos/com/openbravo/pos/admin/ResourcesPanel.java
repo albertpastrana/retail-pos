@@ -42,7 +42,7 @@ public class ResourcesPanel extends JPanelTable {
 	}
 
 	protected void init() {
-		DataLogicAdmin dlAdmin = (DataLogicAdmin) app.getBean("com.openbravo.pos.admin.DataLogicAdmin");
+		DataLogicAdmin dlAdmin = app.getBean(DataLogicAdmin.class);
 		tresources = dlAdmin.getTableResources();
 		jeditor = new ResourcesView(dirty);
 	}
@@ -50,7 +50,7 @@ public class ResourcesPanel extends JPanelTable {
 	@Override
 	public boolean deactivate() {
 		if (super.deactivate()) {
-			DataLogicSystem dlSystem = (DataLogicSystem) app.getBean("com.openbravo.pos.forms.DataLogicSystem");
+			DataLogicSystem dlSystem = app.getBean(DataLogicSystem.class);
 			dlSystem.resetResourcesCache();
 			return true;
 		} else {

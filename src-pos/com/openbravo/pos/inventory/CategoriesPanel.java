@@ -46,7 +46,7 @@ public class CategoriesPanel extends JPanelTable {
 	}
 
 	protected void init() {
-		DataLogicSales dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		DataLogicSales dlSales = app.getBean(DataLogicSales.class);
 		tcategories = dlSales.getTableCategories();
 		jeditor = new CategoriesEditor(app, dirty);
 	}

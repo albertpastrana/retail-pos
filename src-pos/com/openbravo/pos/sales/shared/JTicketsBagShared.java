@@ -54,7 +54,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 		super(app, panelticket);
 
-		dlReceipts = (DataLogicReceipts) app.getBean("com.openbravo.pos.sales.DataLogicReceipts");
+		dlReceipts = app.getBean(DataLogicReceipts.class);
 		host = app.getProperties().getHost();
 		panelticket.setTicketChangeListener(this::saveActiveTicket);
 		ownershipTimer = new javax.swing.Timer(2000, e -> refreshTicketOwnership());
@@ -315,7 +315,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	private void initSellerButtons() {
 		try {
-			DataLogicSystem dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
+			DataLogicSystem dlSystem = m_App.getBean(DataLogicSystem.class);
 			List people = dlSystem.listPeopleVisible();
 
 			int position = 0;

@@ -12,6 +12,7 @@ import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.panels.JProductFinder;
 import com.openbravo.pos.sales.TicketsEditor;
+import com.openbravo.pos.sales.JPanelTicketSales;
 import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.BorderLayout;
@@ -83,9 +84,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	@Override
 	public void init(AppView app) throws BeanFactoryException {
 		this.app = app;
-		data = (DataLogicReplenishment) app.getBean("com.openbravo.pos.inventory.DataLogicReplenishment");
-		sales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
-		customers = (DataLogicCustomers) app.getBean("com.openbravo.pos.customers.DataLogicCustomers");
+		data = app.getBean(DataLogicReplenishment.class);
+		sales = app.getBean(DataLogicSales.class);
+		customers = app.getBean(DataLogicCustomers.class);
 		build();
 	}
 	private void build() {
@@ -268,7 +269,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private UserInfo selectedSeller() {
 		try {
-			TicketsEditor editor = (TicketsEditor) app.getBean("com.openbravo.pos.sales.JPanelTicketSales");
+			TicketsEditor editor = app.getBean(JPanelTicketSales.class);
 			UserInfo seller = ((com.openbravo.pos.sales.JPanelTicket) editor).getSelectedSeller();
 			if (seller != null)
 				return seller;

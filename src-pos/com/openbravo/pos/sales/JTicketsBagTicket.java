@@ -70,8 +70,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		super(app, panelticket);
 		m_panelticketedit = panelticket;
-		m_dlSystem = (DataLogicSystem) m_App.getBean("com.openbravo.pos.forms.DataLogicSystem");
-		dlCustomers = (DataLogicCustomers) m_App.getBean("com.openbravo.pos.customers.DataLogicCustomers");
+		m_dlSystem = m_App.getBean(DataLogicSystem.class);
+		dlCustomers = m_App.getBean(DataLogicCustomers.class);
 
 		// Inicializo la impresora...
 		m_TP = new DeviceTicket();

@@ -46,7 +46,7 @@ public class TaxCustCategoriesPanel extends JPanelTable {
 	}
 
 	protected void init() {
-		DataLogicSales dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		DataLogicSales dlSales = app.getBean(DataLogicSales.class);
 		ttaxcategories = dlSales.getTableTaxCustCategories();
 		jeditor = new TaxCustCategoriesEditor(dirty);
 	}

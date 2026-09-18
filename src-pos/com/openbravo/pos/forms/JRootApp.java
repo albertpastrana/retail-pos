@@ -162,7 +162,7 @@ public class JRootApp extends JPanel implements AppView {
 			return false;
 		}
 
-		m_dlSystem = (DataLogicSystem) getBean("com.openbravo.pos.forms.DataLogicSystem");
+		m_dlSystem = getBean(DataLogicSystem.class);
 
 		// Cargamos las propiedades de base de datos
 		m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
@@ -341,6 +341,25 @@ public class JRootApp extends JPanel implements AppView {
 			}
 		}
 		return bf.getBean();
+	}
+
+	public <T> T getBean(Class<T> beanClass) throws BeanFactoryException {
+		if (beanClass == null) {
+			throw new BeanFactoryException("Bean class cannot be null");
+		}
+
+		Object bean = getBean(beanClass.getName());
+		if (bean == null) {
+			throw new BeanFactoryException("Bean " + beanClass.getName() + " resolved to null");
+		}
+		try {
+			return beanClass.cast(bean);
+		} catch (ClassCastException e) {
+			BeanFactoryException exception = new BeanFactoryException(
+					"Bean " + beanClass.getName() + " resolved to " + bean.getClass().getName());
+			exception.initCause(e);
+			throw exception;
+		}
 	}
 
 	private static String mapNewClass(String classname) {

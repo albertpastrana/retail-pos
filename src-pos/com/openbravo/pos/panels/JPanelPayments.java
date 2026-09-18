@@ -92,7 +92,7 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 	public void init(AppView app) throws BeanFactoryException {
 
 		m_App = app;
-		m_dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		m_dlSales = app.getBean(DataLogicSales.class);
 	}
 
 	public Object getBean() {

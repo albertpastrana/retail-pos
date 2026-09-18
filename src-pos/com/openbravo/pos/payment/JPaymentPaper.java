@@ -49,7 +49,7 @@ public class JPaymentPaper extends JPanel implements JPaymentInterface {
 
 	public JPaymentPaper(JPaymentNotifier notifier, AppView app) {
 		this.notifier = notifier;
-		this.dlSales = (DataLogicSales) app.getBean("com.openbravo.pos.forms.DataLogicSales");
+		this.dlSales = app.getBean(DataLogicSales.class);
 		initComponents();
 	}
 

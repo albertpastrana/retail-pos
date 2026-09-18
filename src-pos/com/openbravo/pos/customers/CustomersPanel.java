@@ -313,7 +313,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	}
 
 	public void init(AppView app) throws BeanFactoryException {
-		customers = (DataLogicCustomers) app.getBean("com.openbravo.pos.customers.DataLogicCustomers");
+		customers = app.getBean(DataLogicCustomers.class);
 	}
 	public Object getBean() {
 		return this;

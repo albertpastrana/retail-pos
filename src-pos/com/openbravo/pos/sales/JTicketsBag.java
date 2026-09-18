@@ -34,7 +34,7 @@ public abstract class JTicketsBag extends JPanel {
 	public JTicketsBag(AppView oApp, TicketsEditor panelticket) {
 		m_App = oApp;
 		m_panelticket = panelticket;
-		m_dlSales = (DataLogicSales) m_App.getBean("com.openbravo.pos.forms.DataLogicSales");
+		m_dlSales = m_App.getBean(DataLogicSales.class);
 	}
 
 	public abstract void activate();
