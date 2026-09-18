@@ -2,7 +2,7 @@
 
 Captured: 2026-09-14
 
-Related: `tickets/todo/manual-loyalty.md`
+Related: `tickets/done/manual-loyalty.md`
 
 ## Goal
 

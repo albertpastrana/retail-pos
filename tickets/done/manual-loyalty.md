@@ -1,12 +1,12 @@
-# Manual loyalty card
+# Manual loyalty card decision
 
 Captured: 2026-09-17
 
-Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/todo/customer-on-ticket.md`
+Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/loyalty-customer-balance.md`, `tickets/done/customer-on-ticket.md`
 
 ## Goal
 
-Keep loyalty manual while the shop does not need a stored customer balance. The paper card is the source of truth and the cashier records stamps and redemptions manually.
+Keep loyalty manual while the shop does not need a stored customer balance. This is an operational decision, not a pending implementation task. The paper card is the source of truth and the cashier records stamps and redemptions manually.
 
 ## Context
 
@@ -19,3 +19,7 @@ The future stored balance is parked in `tickets/todo/loyalty-customer-balance.md
 ## Done when
 
 The cashier can use the paper card to decide when to add stamps or apply the manual loyalty redemption. Closing a ticket does not create or update any loyalty data in the database.
+
+## Shipped
+
+The shop keeps the loyalty balance on paper. The POS may calculate the current ticket's stamps and redemption as a cashier aid, but it does not persist customer loyalty data.

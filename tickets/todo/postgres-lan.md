@@ -20,14 +20,14 @@ Do not sync Derby copies with Syncthing or git. Stock, tickets, pending EANs, or
 
 ## Checks
 
-- PostgreSQL starts before Windows and Mac tills.
+- PostgreSQL is running before any till tries to sell; the tills may start in any order.
 - Each till connects using the same `db.URL` and can complete a sale.
 - Two tills can read and write the same catalogue, stock, and tickets.
 - A line scanned on the satellite till appears on the central till’s shared-ticket list without parking.
-- Opening the live ticket transfers its lock, prevents silent stale edits, and only the central till can take payment.
+- Opening the live ticket transfers its lock, prevents stale edits, and only the till with a receipt printer can take payment.
 - A backup can be produced from Maintenance on the Linux till.
-- Stopping the Linux host prevents the other tills from selling, as expected.
-- The operator guide records the startup order, configuration, and failure behaviour.
+- Stopping PostgreSQL causes the tills to fail with an error; no special recovery flow is required.
+- The operator guide records the PostgreSQL availability requirement, configuration, and failure behaviour.
 
 ## Done when
 

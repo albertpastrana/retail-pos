@@ -2,11 +2,11 @@
 
 Captured: 2026-09-12, 2026-09-14
 
-Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/todo/manual-loyalty.md`
+Related: `tickets/done/loyalty-stamps-on-ticket.md`, `tickets/done/manual-loyalty.md`
 
 ## Parked
 
-Do not implement the customer loyalty balance yet. The shop will use the manual paper-card flow in `tickets/todo/manual-loyalty.md`; no loyalty balance, movements, stamps, or leftover euros are stored in the database for now.
+Do not implement the customer loyalty balance yet. The shop will use the manual paper-card flow in `tickets/done/manual-loyalty.md`; no loyalty balance, movements, stamps, or leftover euros are stored in the database for now.
 
 ## Goal
 

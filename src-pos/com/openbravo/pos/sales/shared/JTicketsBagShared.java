@@ -108,6 +108,9 @@ public class JTicketsBagShared extends JTicketsBag {
 	}
 
 	public boolean preparePayment() {
+		if (!hasReceiptPrinter()) {
+			return false;
+		}
 		try {
 			if (dlReceipts.beginSharedTicketPayment(m_sCurrentTicket, host)) {
 				return true;
@@ -118,6 +121,12 @@ public class JTicketsBagShared extends JTicketsBag {
 		}
 		showTicketTaken();
 		return false;
+	}
+
+	private boolean hasReceiptPrinter() {
+		String printer = m_App.getProperties().getProperty("machine.printer");
+		return printer != null && !printer.trim().isEmpty() && !"screen".equalsIgnoreCase(printer.trim())
+				&& !"Not defined".equalsIgnoreCase(printer.trim());
 	}
 
 	public void cancelPayment() {

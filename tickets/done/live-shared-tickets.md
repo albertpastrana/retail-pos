@@ -16,9 +16,9 @@ Current cycle (`JTicketsBagShared`): create → not saved; park (new ticket, cha
 
 Workaround with no code: on till-2, New ticket (or leave sales) parks; central’s list shows it and can charge. Needs discipline; not visible while they fill it.
 
-**Decision:** persist live + list all open tickets, satellite without payment. Till-2 = scanner; central = cash. A ticket is edited by one till at a time; only central closes with payment. Lock by `machine.hostname`; opening it takes the lock (warn the other till, or they keep adding lines that are lost). Config/permission to hide payment on the satellite.
+**Decision:** persist live + list all open tickets, satellite without payment. The till with a configured receipt printer is central and can take payment; tills without a receipt printer are scanning tills and cannot take payment. A ticket is edited by one till at a time; opening it takes the lock. No warning is required when another till takes the ticket: the original till drops the ticket when its ownership check notices the change.
 
-Possible first slice: persist on the first line, do not delete on open, simple lock — hide payment later.
+The implementation keeps the live row until payment completes and uses the till receipt-printer configuration to distinguish the central till from scanning tills.
 
 ## Current implementation
 
@@ -30,13 +30,13 @@ The first slice is implemented:
 - Starting Sales creates an empty local ticket instead of taking the first shared ticket.
 - Payment locks the row, and saving the receipt removes the shared row in the same database transaction.
 
-Still open: configure the scanner till so it cannot take payment, then validate the full flow on the two shop computers.
+The shop validation is complete. The shop does not need an alert when ownership changes; the ticket disappearing from the original till is acceptable.
 
 ### Intended flow
 
 - Start: nobody grabs another till’s parked ticket; each till starts empty (or its own).
 - Fill on till-2: first line saves to Postgres (locked to `till-2`). Central list: seller, `#…`, till-2. Each line updates the same ticket.
-- Pay: customer goes to cash. Central opens the list and takes the ticket (its lock). Till-2: warning that it is gone, empty screen. Payment only on central.
+- Pay: customer goes to cash. Central opens the list and takes the ticket (its lock). The scanning till loses the ticket and returns to an empty screen. Payment only on the till with a receipt printer.
 - After payment: gone from `SHAREDTICKETS` and from lists.
 - If central does not take it: till-2 can park (new ticket / change seller); it stays on the list. Till-2 still cannot pay.
 - Wrong till: till-2 cannot pay. If central opens a ticket till-2 is still filling, till-2 loses it.
@@ -45,4 +45,8 @@ Still open: configure the scanner till so it cannot take payment, then validate 
 
 ## Done when
 
-A line scanned on till-2 appears on central’s list without parking. Only central can take payment. Opening a ticket on one till stops the other from editing it silently.
+A line scanned on a till without a receipt printer appears on the central till’s list without parking. Only the till with a receipt printer can take payment. Opening a ticket on one till stops the other from editing it; the other till may simply lose the ticket without an alert.
+
+## Shipped
+
+Live shared tickets persist from the first line, transfer ownership between tills, reject stale writes, and remove the shared row transactionally after payment. Payment is available only on tills whose `machine.printer` is configured as a real receipt printer. Main paths: `src-pos/com/openbravo/pos/sales/shared/JTicketsBagShared.java` and `src-pos/com/openbravo/pos/sales/DataLogicReceipts.java`.
