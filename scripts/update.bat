@@ -19,6 +19,10 @@ powershell -NoProfile -NonInteractive -Command "Expand-Archive -LiteralPath '%PA
 if errorlevel 1 (call :log ERROR: Could not extract package & exit /B 1)
 for /D %%D in ("%STAGING%\*") do set NEW_DIR=%%~fD
 if not defined NEW_DIR (call :log ERROR: Package has no application directory & exit /B 1)
+rem Leave the installation directory before replacing it so the restarted process
+rem does not inherit a deleted working directory.
+cd /d "%TEMP%"
+if errorlevel 1 (call :log ERROR: Could not change to a stable working directory & exit /B 1)
 if exist "%BACKUP%" rmdir /S /Q "%BACKUP%"
 move "%INSTALL_DIR%" "%BACKUP%" >>"%LOG_FILE%" 2>&1
 if errorlevel 1 (call :log ERROR: Could not move current installation to backup & exit /B 1)

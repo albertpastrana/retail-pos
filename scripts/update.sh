@@ -21,6 +21,10 @@ for _ in $(seq 1 60); do
 done
 if kill -0 "$pid" 2>/dev/null; then fail "Timed out waiting for application process $pid"; fi
 
+# The updater is launched from the installation directory. Leave it before
+# replacing that directory, otherwise the restarted JVM inherits a deleted cwd.
+cd / || fail "Could not change to a stable working directory"
+
 case "$package" in
   *.tar.gz) tar -xzf "$package" -C "$staging" || fail "Could not extract package" ;;
   *.zip) unzip -q "$package" -d "$staging" || fail "Could not extract package" ;;

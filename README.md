@@ -67,7 +67,7 @@ Important keys:
 | `update.dir`                            | Directory containing platform packages and matching `.sha256` files for local updates              |
 | `update.url`                            | Compatible releases API endpoint; defaults to the project GitHub `latest` release                  |
 
-The update check runs in the background and never prevents startup. When a newer stable release is found, the POS offers to install a verified local package and restart, or to open the remote release page in the system browser. Local updates replace only the application directory; configuration and databases remain external.
+The update check runs in the background and never prevents startup. When a newer stable release is found, the POS offers to install a verified local package and restart, or to open the remote release page in the system browser. Local updates replace only the application directory; configuration and databases remain external. Update diagnostics are written to `<install>.update.log` next to the application directory, while normal application logs are in `<install>/logs/`.
 
 First launch against an empty database URL runs the Flyway migrations and creates the schema. Default users (empty password): Administrator, Manager, Employee, Guest.
 
@@ -186,6 +186,13 @@ Receipt content, shop name, logo, and on-screen buttons are resources, not code.
 | `locales/`   | UI translations                                      |
 | `lib/`       | Native serial-port libraries for supported platforms |
 | `data/`      | Local database, TSV catalogue, resource dump tools   |
+
+## Observability
+
+Grafana Alloy configuration for the Linux POS host, PostgreSQL, host metrics,
+and rotating POS logs lives in [observability/alloy/](observability/alloy/).
+The configuration reads Grafana Cloud and database credentials from
+`/etc/alloy/env`; credentials are intentionally not stored in this repository.
 
 ## Upstream
 
