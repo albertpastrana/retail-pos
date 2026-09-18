@@ -67,6 +67,7 @@ public class JFrmConfig extends javax.swing.JFrame {
 		}
 
 		public void windowClosed(WindowEvent evt) {
+			config.close();
 			System.exit(0);
 		}
 	}
