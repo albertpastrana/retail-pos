@@ -32,6 +32,7 @@ import java.util.UUID;
 import javax.swing.*;
 
 import com.openbravo.pos.printer.*;
+import com.openbravo.pos.theme.RetailPOSColors;
 
 import com.openbravo.beans.*;
 
@@ -56,12 +57,12 @@ public class JRootApp extends JPanel implements AppView {
 	private static final int HEADER_HEIGHT = 64;
 	private static final int HEADER_LOGO_HEIGHT = 40;
 	private static final int HEADER_GAP = 18;
-	private static final Color HEADER_BACKGROUND = Color.WHITE;
-	private static final Color HEADER_RULE = new Color(0xD5D5D5);
-	private static final Color HEADER_TEXT = new Color(0x2B2B2B);
-	private static final Color HEADER_TEXT_MUTED = new Color(0x7A7A7A);
-	private static final Color LOGIN_BACKGROUND = new Color(0xF4F6F8);
-	private static final Color SALES_BUTTON = new Color(0x1769AA);
+	// Retail POS design system tokens (com.openbravo.pos.theme.RetailPOSColors).
+	private static final Color HEADER_BACKGROUND = RetailPOSColors.surface100();
+	private static final Color HEADER_RULE = RetailPOSColors.border();
+	private static final Color HEADER_TEXT = RetailPOSColors.ink();
+	private static final Color HEADER_TEXT_MUTED = RetailPOSColors.inkMuted();
+	private static final Color LOGIN_BACKGROUND = RetailPOSColors.surface0();
 	private static final Color ADMIN_BUTTON = new Color(0x374151);
 
 	// Two columns of staff buttons, four rows before the grid starts scrolling.
@@ -683,8 +684,7 @@ public class JRootApp extends JPanel implements AppView {
 				+ AppLocal.getIntString("Label.SalesModeHint") + "</font></html>");
 		m_jSalesMode.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/menu-sales.png")));
 		m_jSalesMode.setToolTipText(AppLocal.getIntString("Label.SalesModeHint"));
-		m_jSalesMode.setBackground(SALES_BUTTON);
-		m_jSalesMode.setForeground(Color.WHITE);
+		RetailPOSColors.primaryButton(m_jSalesMode);
 		m_jSalesMode.setFont(m_jSalesMode.getFont().deriveFont(java.awt.Font.BOLD, 20f));
 		m_jSalesMode.setHorizontalAlignment(SwingConstants.LEADING);
 		m_jSalesMode.setIconTextGap(18);

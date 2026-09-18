@@ -6,6 +6,7 @@ import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.forms.JPanelView;
+import com.openbravo.pos.theme.RetailPOSColors;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -171,8 +172,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		tools.add(BoxPanel.glue(), c);
 		c.weightx = 0;
 		newCustomer.setMargin(new Insets(9, 14, 9, 14));
-		newCustomer.setForeground(Color.WHITE);
-		newCustomer.setBackground(new Color(48, 112, 183));
+		RetailPOSColors.primaryButton(newCustomer);
 		newCustomer.setFont(newCustomer.getFont().deriveFont(Font.BOLD));
 		tools.add(newCustomer, c);
 		left.add(tools, BorderLayout.NORTH);
@@ -235,8 +235,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		actions.setBorder(BorderFactory.createEmptyBorder(12, 14, 6, 14));
 		save.setMargin(new Insets(10, 12, 10, 12));
 		cancel.setMargin(new Insets(10, 12, 10, 12));
-		save.setBackground(new Color(48, 112, 183));
-		save.setForeground(Color.WHITE);
+		RetailPOSColors.primaryButton(save);
 		save.setFont(save.getFont().deriveFont(Font.BOLD));
 		cancel.setContentAreaFilled(false);
 		actions.add(save);

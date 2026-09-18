@@ -48,8 +48,15 @@ import javax.swing.Icon;
 public class DataLogicSystem extends BeanFactoryDataSingle {
 
 	private static final int AVATAR_SIZE = TillButtons.ICON_SOURCE_SIZE;
-	private static final Color[] AVATAR_COLOURS = {new Color(0x1565C0), new Color(0x2E7D32), new Color(0xC62828),
-			new Color(0x6A1B9A), new Color(0xEF6C00), new Color(0x00838F), new Color(0xAD1457), new Color(0x4E342E)};
+
+	// Retail POS design system tokens (design-system/tokens.json): brand,
+	// success, danger, info, warning, brand-strong, border-strong, ink. Pinned
+	// to their light-theme values regardless of Configuration → General's
+	// Light/Dark choice: white initials text is only verified against these
+	// (see tokens.json's contrast notes on brand/on-brand and ink), and the
+	// dark-theme column of several of these tokens is too light for white text.
+	private static final Color[] AVATAR_COLOURS = {new Color(0xb8481f), new Color(0x1f6b5c), new Color(0x8a2a22),
+			new Color(0x3c6e8f), new Color(0x7a5300), new Color(0x8f3216), new Color(0x6b5f47), new Color(0x241c14)};
 
 	protected SentenceList m_peoplevisible;
 	protected SentenceFind m_peoplebycard;

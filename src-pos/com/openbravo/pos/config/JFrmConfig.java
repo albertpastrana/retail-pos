@@ -23,6 +23,7 @@ import java.awt.*;
 import java.awt.event.*;
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.forms.*;
+import com.openbravo.pos.theme.RetailPOSTheme;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.UIManager;
@@ -99,11 +100,14 @@ public class JFrmConfig extends javax.swing.JFrame {
 				AppConfig config = new AppConfig(args);
 				config.load();
 
-				// Set the look and feel.
+				// Set the look and feel, with the Retail POS design system's tokens
+				// layered on top (design-system/swing-development.md).
+				RetailPOSTheme.registerDefaultsSource();
 				try {
 					UIManager.setLookAndFeel(config.getProperty("swing.defaultlaf"));
 				} catch (Exception e) {
 				}
+				RetailPOSTheme.applyFonts();
 
 				new JFrmConfig(config).setVisible(true);
 			}

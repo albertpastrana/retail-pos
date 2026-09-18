@@ -28,6 +28,7 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 import com.openbravo.pos.config.JFrmConfig;
+import com.openbravo.pos.theme.RetailPOSTheme;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.instance.InstanceQuery;
 import java.util.logging.Level;
@@ -149,7 +150,9 @@ public class StartPOS {
 				Formats.setTimePattern(config.getProperty("format.time"));
 				Formats.setDateTimePattern(config.getProperty("format.datetime"));
 
-				// Set the look and feel.
+				// Set the look and feel, with the Retail POS design system's tokens
+				// layered on top (design-system/swing-development.md).
+				RetailPOSTheme.registerDefaultsSource();
 				try {
 
 					Object laf = Class.forName(config.getProperty("swing.defaultlaf")).newInstance();
@@ -161,6 +164,7 @@ public class StartPOS {
 					logger.log(Level.WARNING, "Cannot set look and feel", e);
 				}
 
+				RetailPOSTheme.applyFonts();
 				enlargeFonts();
 
 				String screenmode = config.getProperty("machine.screenmode");
