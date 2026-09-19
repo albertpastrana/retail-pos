@@ -136,6 +136,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		m_jTotalEuros.setText(Formats.CURRENCY.formatValue(new Double(m_dTotal)));
 
 		addTabs();
+		pack();
+		setLocationRelativeTo(getOwner());
 
 		if (m_jTabPayment.getTabCount() == 0) {
 			// No payment panels available
@@ -263,7 +265,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		}
 
 		public String getIconKey() {
-			return "/com/openbravo/images/kdmconfig32.png";
+			return "/com/openbravo/images/wallet.png";
 		}
 	}
 
@@ -493,8 +495,6 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 		getContentPane().add(jPanel5, java.awt.BorderLayout.SOUTH);
 
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 672) / 2, (screenSize.height - 497) / 2, 672, 497);
 	}// </editor-fold>//GEN-END:initComponents
 
 	private void m_jButtonRemoveActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jButtonRemoveActionPerformed

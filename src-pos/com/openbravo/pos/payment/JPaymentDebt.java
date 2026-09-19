@@ -23,6 +23,9 @@ import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.util.RoundUtils;
+import com.openbravo.beans.JNumberEvent;
+import com.openbravo.beans.JNumberEventListener;
+import com.openbravo.beans.JNumberKeys;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -47,7 +50,12 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 		initComponents();
 
 		m_jTendered.addPropertyChangeListener("Edition", new RecalculateState());
-		m_jTendered.addEditorKeys(m_jKeys);
+		m_jKeys.addJNumberEventListener(new JNumberEventListener() {
+			@Override
+			public void keyPerformed(JNumberEvent event) {
+				m_jTendered.transChar(event.getKey());
+			}
+		});
 
 	}
 
@@ -161,7 +169,7 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 		jlblMessage = new javax.swing.JTextArea();
 		jPanel2 = new javax.swing.JPanel();
 		jPanel1 = new javax.swing.JPanel();
-		m_jKeys = new com.openbravo.editor.JEditorKeys();
+		m_jKeys = new JNumberKeys();
 		jPanel3 = new javax.swing.JPanel();
 		m_jTendered = new com.openbravo.editor.JEditorCurrencyPositive();
 
@@ -169,11 +177,18 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 
 		jPanel5.setLayout(new java.awt.BorderLayout());
 
-		jPanel4.setLayout(null);
+		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 16, 16, 16));
+		jPanel4.setLayout(new java.awt.GridBagLayout());
+		java.awt.GridBagConstraints formConstraints = new java.awt.GridBagConstraints();
+		formConstraints.gridx = 0;
+		formConstraints.gridy = 0;
+		formConstraints.insets = new java.awt.Insets(6, 6, 6, 6);
+		formConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+		formConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		formConstraints.weightx = 0.0;
 
 		jLabel8.setText(AppLocal.getIntString("label.debt")); // NOI18N
-		jPanel4.add(jLabel8);
-		jLabel8.setBounds(20, 20, 100, 15);
+		jPanel4.add(jLabel8, formConstraints);
 
 		m_jMoneyEuros.setBackground(new java.awt.Color(153, 153, 255));
 		m_jMoneyEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -183,53 +198,57 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
 		m_jMoneyEuros.setOpaque(true);
 		m_jMoneyEuros.setPreferredSize(new java.awt.Dimension(150, 25));
-		jPanel4.add(m_jMoneyEuros);
-		m_jMoneyEuros.setBounds(120, 20, 150, 25);
+		formConstraints = formConstraintsForField(0);
+		jPanel4.add(m_jMoneyEuros, formConstraints);
 
 		jLabel3.setText(AppLocal.getIntString("label.name")); // NOI18N
-		jPanel4.add(jLabel3);
-		jLabel3.setBounds(20, 70, 100, 15);
+		formConstraints = formConstraintsForLabel(1);
+		jPanel4.add(jLabel3, formConstraints);
 
 		m_jName.setEditable(false);
-		jPanel4.add(m_jName);
-		m_jName.setBounds(120, 70, 200, 19);
+		formConstraints = formConstraintsForField(1);
+		jPanel4.add(m_jName, formConstraints);
 
 		jLabel12.setText(AppLocal.getIntString("label.notes")); // NOI18N
-		jPanel4.add(jLabel12);
-		jLabel12.setBounds(20, 100, 100, 15);
+		formConstraints = formConstraintsForLabel(2);
+		formConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_END;
+		jPanel4.add(jLabel12, formConstraints);
 
 		jLabel2.setText(AppLocal.getIntString("label.maxdebt")); // NOI18N
-		jPanel4.add(jLabel2);
-		jLabel2.setBounds(20, 180, 100, 15);
+		formConstraints = formConstraintsForLabel(3);
+		jPanel4.add(jLabel2, formConstraints);
 
 		txtMaxdebt.setEditable(false);
 		txtMaxdebt.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-		jPanel4.add(txtMaxdebt);
-		txtMaxdebt.setBounds(120, 180, 130, 19);
+		formConstraints = formConstraintsForField(3);
+		jPanel4.add(txtMaxdebt, formConstraints);
 
 		jLabel4.setText(AppLocal.getIntString("label.curdebt")); // NOI18N
-		jPanel4.add(jLabel4);
-		jLabel4.setBounds(20, 210, 100, 15);
+		formConstraints = formConstraintsForLabel(4);
+		jPanel4.add(jLabel4, formConstraints);
 
 		txtCurdebt.setEditable(false);
 		txtCurdebt.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-		jPanel4.add(txtCurdebt);
-		txtCurdebt.setBounds(120, 210, 130, 19);
+		formConstraints = formConstraintsForField(4);
+		jPanel4.add(txtCurdebt, formConstraints);
 
 		jLabel6.setText(AppLocal.getIntString("label.curdate")); // NOI18N
-		jPanel4.add(jLabel6);
-		jLabel6.setBounds(20, 240, 100, 15);
+		formConstraints = formConstraintsForLabel(5);
+		jPanel4.add(jLabel6, formConstraints);
 
 		txtCurdate.setEditable(false);
 		txtCurdate.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-		jPanel4.add(txtCurdate);
-		txtCurdate.setBounds(120, 240, 130, 19);
+		formConstraints = formConstraintsForField(5);
+		jPanel4.add(txtCurdate, formConstraints);
 
 		m_jNotes.setEditable(false);
 		jScrollPane1.setViewportView(m_jNotes);
 
-		jPanel4.add(jScrollPane1);
-		jScrollPane1.setBounds(120, 100, 200, 70);
+		formConstraints = formConstraintsForField(2);
+		formConstraints.weightx = 1.0;
+		formConstraints.weighty = 1.0;
+		formConstraints.fill = java.awt.GridBagConstraints.BOTH;
+		jPanel4.add(jScrollPane1, formConstraints);
 
 		jPanel5.add(jPanel4, java.awt.BorderLayout.CENTER);
 
@@ -277,7 +296,7 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 	private javax.swing.JPanel jPanel6;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JTextArea jlblMessage;
-	private com.openbravo.editor.JEditorKeys m_jKeys;
+	private JNumberKeys m_jKeys;
 	private javax.swing.JLabel m_jMoneyEuros;
 	private javax.swing.JTextField m_jName;
 	private javax.swing.JTextArea m_jNotes;
@@ -286,5 +305,22 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 	private javax.swing.JTextField txtCurdebt;
 	private javax.swing.JTextField txtMaxdebt;
 	// End of variables declaration//GEN-END:variables
+
+	private java.awt.GridBagConstraints formConstraintsForLabel(int row) {
+		java.awt.GridBagConstraints constraints = new java.awt.GridBagConstraints();
+		constraints.gridx = 0;
+		constraints.gridy = row;
+		constraints.insets = new java.awt.Insets(6, 6, 6, 6);
+		constraints.anchor = java.awt.GridBagConstraints.LINE_END;
+		return constraints;
+	}
+
+	private java.awt.GridBagConstraints formConstraintsForField(int row) {
+		java.awt.GridBagConstraints constraints = formConstraintsForLabel(row);
+		constraints.gridx = 1;
+		constraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		constraints.weightx = 1.0;
+		return constraints;
+	}
 
 }
