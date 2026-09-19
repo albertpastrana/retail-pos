@@ -136,6 +136,10 @@ public class DatabaseMigratorIT {
 			assertTrue(resourceContains(connection, "Menu.Root", "JPanelProductSales"));
 			assertTrue(resourceContains(connection, "Menu.Root", "JPanelPaymentSales"));
 			assertTrue(resourceContains(connection, "Menu.Root", "JPanelLowStock"));
+			assertTrue(resourceContains(connection, "Printer.Ticket", "Entregat:"));
+			assertTrue(resourceContains(connection, "Printer.Ticket", "printChange()"));
+			assertTrue(resourceContains(connection, "Printer.TicketPreview", "Entregat:"));
+			assertTrue(resourceContains(connection, "Printer.TicketPreview", "printChange()"));
 			assertTrue(roleContains(connection, "0", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "0", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "0", "JPanelPaymentSales"));
