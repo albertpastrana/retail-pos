@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.text.DecimalFormatSymbols;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -11,6 +12,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.DocumentFilter;
 
 /**
  * One labelled row per field, pinned to the top of whatever panel it sits in.
@@ -69,11 +73,32 @@ public final class ProductFormLayout {
 	public static JTextField numberField(boolean editable, int columns) {
 		JTextField field = new JTextField(columns);
 		field.setHorizontalAlignment(JTextField.RIGHT);
+		((AbstractDocument) field.getDocument()).setDocumentFilter(new DecimalSeparatorFilter());
 		if (!editable) {
 			field.setEditable(false);
 			field.setFocusable(false);
 		}
 		return field;
+	}
+
+	private static final class DecimalSeparatorFilter extends DocumentFilter {
+		private final char decimalSeparator = DecimalFormatSymbols.getInstance().getDecimalSeparator();
+
+		@Override
+		public void insertString(FilterBypass bypass, int offset, String text, AttributeSet attributes)
+				throws javax.swing.text.BadLocationException {
+			bypass.insertString(offset, normalize(text), attributes);
+		}
+
+		@Override
+		public void replace(FilterBypass bypass, int offset, int length, String text, AttributeSet attributes)
+				throws javax.swing.text.BadLocationException {
+			bypass.replace(offset, length, normalize(text), attributes);
+		}
+
+		private String normalize(String text) {
+			return decimalSeparator == '.' || text == null ? text : text.replace('.', decimalSeparator);
+		}
 	}
 
 	// GridBagLayout centres its rows in whatever height it gets, so the form needs
