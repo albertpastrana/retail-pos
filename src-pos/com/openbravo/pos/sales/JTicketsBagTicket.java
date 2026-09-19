@@ -251,9 +251,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		// Cash-state validation is performed when editing starts, after the
 		// supervisor authorization can explain why the operation is rejected.
-		m_jEdit.setEnabled(m_ticket != null
-				&& (m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
-						|| m_ticket.getTicketType() == TicketInfo.RECEIPT_REFUND));
+		m_jEdit.setEnabled(m_ticket != null && (m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
+				|| m_ticket.getTicketType() == TicketInfo.RECEIPT_REFUND));
 		m_jRefund.setEnabled(m_ticket != null && m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL);
 		m_jPrint.setEnabled(m_ticket != null);
 		m_jGiftPrint.setEnabled(m_ticket != null);
