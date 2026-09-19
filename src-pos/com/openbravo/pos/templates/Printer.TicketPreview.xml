@@ -32,17 +32,7 @@
     </display>
 
     <ticket>
-        <image>Printer.Ticket.Logo</image>
         <line></line>
-        <line>
-            <text align="center" length="42">Born, 7 - Igualada</text>
-        </line>
-        <line>
-            <text align="center" length="42">Tel. 938031974</text>
-        </line>
-        <line>
-            <text align="center" length="42">NIF: 77097341F</text>
-        </line>
         <line></line>
         <line>
             <text align="left" length="21">Rebut: ${ticket.printId()}</text>
