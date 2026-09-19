@@ -65,7 +65,7 @@ public final class JPanelPaymentSales extends javax.swing.JPanel implements JPan
 	}
 
 	private void initComponents() {
-		period = new ReportPeriodSelector("Menu.PaymentSalesSummary");
+		period = new ReportPeriodSelector();
 		load = new JButton(AppLocal.getIntString("Button.Load"));
 		load.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(15f));
 		load.setPreferredSize(new Dimension(120, 48));

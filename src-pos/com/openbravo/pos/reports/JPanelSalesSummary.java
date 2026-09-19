@@ -70,7 +70,7 @@ public final class JPanelSalesSummary extends JPanel implements JPanelView, Bean
 	}
 
 	private void initComponents() {
-		period = new ReportPeriodSelector("Menu.SalesSummary");
+		period = new ReportPeriodSelector();
 		load = new JButton(AppLocal.getIntString("Button.Load"));
 		load.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(15f));
 		load.setPreferredSize(new Dimension(120, 48));

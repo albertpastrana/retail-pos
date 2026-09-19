@@ -68,10 +68,6 @@ public final class JPanelLowStock extends javax.swing.JPanel implements JPanelVi
 		header.setBackground(RetailPOSColors.surface100());
 		header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
 				BorderFactory.createEmptyBorder(16, 16, 16, 16)));
-		javax.swing.JLabel title = new javax.swing.JLabel(AppLocal.getIntString("Menu.LowStockSummary"));
-		title.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
-		title.setForeground(RetailPOSColors.ink());
-		header.add(title, BorderLayout.CENTER);
 		refresh = new JButton(AppLocal.getIntString("Button.Load"));
 		refresh.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(15f));
 		refresh.setPreferredSize(new Dimension(130, 48));

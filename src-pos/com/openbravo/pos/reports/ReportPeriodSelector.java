@@ -25,15 +25,11 @@ final class ReportPeriodSelector extends JPanel {
 	private JTextField startField;
 	private JTextField endField;
 
-	ReportPeriodSelector(String titleKey) {
+	ReportPeriodSelector() {
 		setLayout(new BorderLayout(0, 12));
 		setBackground(RetailPOSColors.surface100());
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
 				BorderFactory.createEmptyBorder(16, 16, 16, 16)));
-		JLabel heading = new JLabel(AppLocal.getIntString(titleKey));
-		heading.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
-		heading.setForeground(RetailPOSColors.ink());
-		add(heading, BorderLayout.NORTH);
 		JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
 		controls.setOpaque(false);
 		controls.add(new JLabel(AppLocal.getIntString("label.reportstart")));
@@ -55,7 +51,7 @@ final class ReportPeriodSelector extends JPanel {
 	}
 
 	void addActionButton(JButton button) {
-		JPanel controls = (JPanel) getComponent(1);
+		JPanel controls = (JPanel) getComponent(0);
 		controls.add(button);
 		controls.revalidate();
 	}
