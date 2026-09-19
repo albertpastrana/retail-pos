@@ -111,11 +111,18 @@
 
         #foreach ($paymentline in $ticket.payments)
          #if ($paymentline.name == "cash")
-        <line>
-            <text align="left" length="16" bold="true">Efectiu</text>
-            <text align="right" length="26" bold="true">${paymentline.printTotal()}</text>
-        </line>
-         #end
+         <line>
+             <text bold="true">Efectiu</text>
+         </line>
+         <line>
+             <text align="left" length="22">Entregat:</text>
+             <text align="right" length="20">${paymentline.printPaid()}</text>
+         </line>
+         <line>
+             <text align="left" length="22">Canvi:</text>
+             <text align="right" length="20">${paymentline.printChange()}</text>
+         </line>
+          #end
          #if ($paymentline.name == "cashrefund")
         <line></line>
         <line>
