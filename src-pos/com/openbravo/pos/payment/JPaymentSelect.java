@@ -85,7 +85,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 	private void highlightSelectedTab() {
 		m_jTabPayment.putClientProperty("JTabbedPane.tabType", "card");
-		m_jTabPayment.putClientProperty("FlatLaf.style", "selectedBackground: #fff; tabHeight: 44");
+		m_jTabPayment.putClientProperty("FlatLaf.style", "tabHeight: 44");
 	}
 
 	private void configureSplitPaymentHeader() {
@@ -388,7 +388,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		m_jLblTotalEuros1.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
 		jPanel4.add(m_jLblTotalEuros1);
 
-		m_jTotalEuros.setBackground(java.awt.Color.white);
+		m_jTotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTotalEuros.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
 		m_jTotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jTotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
@@ -405,7 +405,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 		m_jLblRemainingEuros.setText(AppLocal.getIntString("label.remainingcash")); // NOI18N
 		jPanel6.add(m_jLblRemainingEuros);
 
-		m_jRemaininglEuros.setBackground(java.awt.Color.white);
+		m_jRemaininglEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jRemaininglEuros.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
 		m_jRemaininglEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jRemaininglEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(

@@ -322,7 +322,7 @@ public class JImageEditor extends javax.swing.JPanel {
 		});
 		jPanel2.add(m_jbtnzoomin);
 
-		m_jPercent.setBackground(java.awt.Color.white);
+		m_jPercent.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jPercent.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jPercent.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory

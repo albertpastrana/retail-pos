@@ -1644,7 +1644,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_jPanTotals.setLayout(new java.awt.GridBagLayout());
 
-		m_jTotalEuros.setBackground(java.awt.Color.white);
+		m_jTotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTotalEuros.setFont(new java.awt.Font("Dialog", 1, 14));
 		m_jTotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 		m_jTotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
@@ -1671,7 +1671,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
 		m_jPanTotals.add(m_jLblTotalEuros1, gridBagConstraints);
 
-		m_jSubtotalEuros.setBackground(java.awt.Color.white);
+		m_jSubtotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jSubtotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 		m_jSubtotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
@@ -1689,7 +1689,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
 		m_jPanTotals.add(m_jSubtotalEuros, gridBagConstraints);
 
-		m_jTaxesEuros.setBackground(java.awt.Color.white);
+		m_jTaxesEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTaxesEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 		m_jTaxesEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory

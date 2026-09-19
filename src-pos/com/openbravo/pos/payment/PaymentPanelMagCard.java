@@ -186,7 +186,7 @@ public class PaymentPanelMagCard extends javax.swing.JPanel implements PaymentPa
 		jPanel1.add(jLabel7);
 		jLabel7.setBounds(20, 80, 100, 15);
 
-		m_jExpirationDate.setBackground(java.awt.Color.white);
+		m_jExpirationDate.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.background"));
 		m_jExpirationDate.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
 						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
@@ -196,7 +196,7 @@ public class PaymentPanelMagCard extends javax.swing.JPanel implements PaymentPa
 		jPanel1.add(m_jExpirationDate);
 		m_jExpirationDate.setBounds(120, 80, 70, 25);
 
-		m_jCardNumber.setBackground(java.awt.Color.white);
+		m_jCardNumber.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.background"));
 		m_jCardNumber.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
 						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
@@ -210,7 +210,7 @@ public class PaymentPanelMagCard extends javax.swing.JPanel implements PaymentPa
 		jPanel1.add(jLabel8);
 		jLabel8.setBounds(20, 20, 100, 15);
 
-		m_jHolderName.setBackground(java.awt.Color.white);
+		m_jHolderName.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.background"));
 		m_jHolderName.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
 						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),

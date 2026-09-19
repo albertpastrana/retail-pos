@@ -391,7 +391,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		m_jButtons.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-		m_jTicketId.setBackground(java.awt.Color.white);
+		m_jTicketId.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTicketId.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 		m_jTicketId.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory

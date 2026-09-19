@@ -254,7 +254,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
 
 		m_jPanTotals.setLayout(new java.awt.GridBagLayout());
 
-		m_jTotalEuros.setBackground(java.awt.Color.white);
+		m_jTotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTotalEuros.setFont(new java.awt.Font("Dialog", 1, 14));
 		m_jTotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jTotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
@@ -282,7 +282,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
 		gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
 		m_jPanTotals.add(m_jLblTotalEuros1, gridBagConstraints);
 
-		m_jSubtotalEuros.setBackground(java.awt.Color.white);
+		m_jSubtotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jSubtotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jSubtotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
@@ -301,7 +301,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
 		gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
 		m_jPanTotals.add(m_jSubtotalEuros, gridBagConstraints);
 
-		m_jTaxesEuros.setBackground(java.awt.Color.white);
+		m_jTaxesEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTaxesEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jTaxesEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
@@ -341,7 +341,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
 
 		m_jButtons.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-		m_jTicketId.setBackground(java.awt.Color.white);
+		m_jTicketId.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jTicketId.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 		m_jTicketId.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory

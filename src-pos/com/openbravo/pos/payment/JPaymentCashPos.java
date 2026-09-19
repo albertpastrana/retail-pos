@@ -230,7 +230,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 		jPanel4.setPreferredSize(new java.awt.Dimension(0, 100));
 		jPanel4.setLayout(null);
 
-		m_jChangeEuros.setBackground(java.awt.Color.white);
+		m_jChangeEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jChangeEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jChangeEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
@@ -249,7 +249,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 		jPanel4.add(jLabel8);
 		jLabel8.setBounds(20, 20, 100, 15);
 
-		m_jMoneyEuros.setBackground(new java.awt.Color(153, 153, 255));
+		m_jMoneyEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jMoneyEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jMoneyEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory

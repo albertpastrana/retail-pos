@@ -190,7 +190,7 @@ public class JPaymentDebt extends javax.swing.JPanel implements JPaymentInterfac
 		jLabel8.setText(AppLocal.getIntString("label.debt")); // NOI18N
 		jPanel4.add(jLabel8, formConstraints);
 
-		m_jMoneyEuros.setBackground(new java.awt.Color(153, 153, 255));
+		m_jMoneyEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
 		m_jMoneyEuros.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jMoneyEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
