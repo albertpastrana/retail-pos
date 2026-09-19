@@ -113,8 +113,7 @@ public class JTicketsBagShared extends JTicketsBag {
 		if (!hasReceiptPrinter()) {
 			LOGGER.info("event=prepare_payment_rejected reason=no_receipt_printer printer="
 					+ m_App.getProperties().getProperty("machine.printer"));
-			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noreceiptprinter"))
-					.show(this);
+			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noreceiptprinter")).show(this);
 			return false;
 		}
 		try {
@@ -122,11 +121,10 @@ public class JTicketsBagShared extends JTicketsBag {
 				LOGGER.info("event=prepare_payment_success ticket=" + m_sCurrentTicket + " host=" + host);
 				return true;
 			}
-			LOGGER.info("event=prepare_payment_rejected reason=ticket_unavailable ticket=" + m_sCurrentTicket
-					+ " host=" + host);
+			LOGGER.info("event=prepare_payment_rejected reason=ticket_unavailable ticket=" + m_sCurrentTicket + " host="
+					+ host);
 		} catch (BasicException e) {
-			LOGGER.log(Level.WARNING, "event=prepare_payment_failed ticket=" + m_sCurrentTicket + " host=" + host,
-					e);
+			LOGGER.log(Level.WARNING, "event=prepare_payment_failed ticket=" + m_sCurrentTicket + " host=" + host, e);
 			new MessageInf(e).show(this);
 			return false;
 		}

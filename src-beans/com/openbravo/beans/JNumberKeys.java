@@ -64,7 +64,9 @@ public class JNumberKeys extends javax.swing.JPanel {
 		m_jEquals.addActionListener(new MyKeyNumberListener('='));
 	}
 
-	/** Applies the NumericKey tokens without coupling this shared bean to src-pos. */
+	/**
+	 * Applies the NumericKey tokens without coupling this shared bean to src-pos.
+	 */
 	private void applyRetailPOSStyle() {
 		setBackground(tokenColor("retailpos.surface200", 0xece5d6));
 		setOpaque(false);
@@ -102,8 +104,7 @@ public class JNumberKeys extends javax.swing.JPanel {
 		styleKey(m_jEquals, "=", actionFont, keyBackground, ink);
 	}
 
-	private void styleKey(javax.swing.JButton button, String text, Font font,
-			Color background, Color foreground) {
+	private void styleKey(javax.swing.JButton button, String text, Font font, Color background, Color foreground) {
 		button.setIcon(null);
 		button.setText(text);
 		button.setFont(font);
@@ -116,8 +117,8 @@ public class JNumberKeys extends javax.swing.JPanel {
 		button.putClientProperty("JButton.buttonType", "roundRect");
 		button.setMinimumSize(new java.awt.Dimension(56, 56));
 		button.setPreferredSize(new java.awt.Dimension(56, 56));
-		button.getModel().addChangeListener(event -> button.setForeground(
-				button.getModel().isPressed() ? tokenColor("retailpos.onBrand", 0xffffff) : foreground));
+		button.getModel().addChangeListener(event -> button
+				.setForeground(button.getModel().isPressed() ? tokenColor("retailpos.onBrand", 0xffffff) : foreground));
 	}
 
 	private static Color tokenColor(String key, int fallback) {
