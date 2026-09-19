@@ -59,6 +59,7 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 
 	@Override
 	public void activate() throws BasicException {
+		period.reset();
 		loadRows();
 	}
 

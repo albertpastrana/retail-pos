@@ -60,6 +60,7 @@ public final class JPanelSalesSummary extends JPanel implements JPanelView, Bean
 
 	@Override
 	public void activate() throws BasicException {
+		period.reset();
 		loadSummary();
 	}
 

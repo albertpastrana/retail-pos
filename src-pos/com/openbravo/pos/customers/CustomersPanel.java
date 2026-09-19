@@ -81,6 +81,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private CustomerInfoExt selected;
 	private boolean creating;
 	private boolean loading;
+	private boolean resettingFilters;
 	private String originalName = "", originalPhone = "", originalNotes = "";
 	private boolean originalVisible;
 	private final Timer searchTimer;
@@ -121,8 +122,14 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		phone.getDocument().addDocumentListener(dirty);
 		notes.getDocument().addDocumentListener(dirty);
 		newCustomer.addActionListener(e -> startNewCustomer());
-		debtOnly.addActionListener(e -> loadCustomers());
-		inactive.addActionListener(e -> loadCustomers());
+		debtOnly.addActionListener(e -> {
+			if (!resettingFilters)
+				loadCustomers();
+		});
+		inactive.addActionListener(e -> {
+			if (!resettingFilters)
+				loadCustomers();
+		});
 		clearSearch.addActionListener(e -> search.setText(""));
 		debtOnly.setFont(debtOnly.getFont().deriveFont(Font.PLAIN, debtOnly.getFont().getSize2D() + 1f));
 		inactive.setFont(inactive.getFont().deriveFont(Font.PLAIN, inactive.getFont().getSize2D() + 1f));
@@ -325,8 +332,18 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		return this;
 	}
 	public void activate() throws BasicException {
+		resetFilters();
 		loadCustomers();
 		SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
+	}
+
+	private void resetFilters() {
+		resettingFilters = true;
+		search.setText("");
+		debtOnly.setSelected(false);
+		inactive.setSelected(false);
+		resettingFilters = false;
+		searchTimer.stop();
 	}
 	public boolean deactivate() {
 		return confirmDiscard();

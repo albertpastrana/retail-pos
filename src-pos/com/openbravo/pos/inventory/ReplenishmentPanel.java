@@ -75,6 +75,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			creatorLabel;
 	private JScrollPane manualDescriptionScroll;
 	private JToggleButton formPending, formOrdered, formReceived;
+	private JToggleButton allStatus;
+	private JTextField search;
 	private CustomerInfo formCustomer;
 	private ProductInfoExt formProduct;
 	private ReplenishmentEntry editingEntry;
@@ -110,6 +112,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			JToggleButton button = new JToggleButton(AppLocal.getIntString(labels[i]));
 			button.setMargin(new Insets(6, 10, 6, 10));
 			button.setSelected(i == 0);
+			if (i == 0)
+				allStatus = button;
 			group.add(button);
 			statusToggles.add(button);
 			button.addActionListener(e -> {
@@ -117,7 +121,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				load("", false);
 			});
 		}
-		JTextField search = new JTextField();
+		search = new JTextField();
 		installPlaceholder(search, "Replenishment.SearchPlaceholder");
 		filters.add(statusToggles, BorderLayout.WEST);
 		filters.add(search, BorderLayout.CENTER);
@@ -589,6 +593,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	@Override
 	public void activate() throws BasicException {
+		search.setText("");
+		selectedStatus = "ALL";
+		allStatus.setSelected(true);
 		if (!hasDraftContent())
 			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSeller().getName());
 		load("", false);

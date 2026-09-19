@@ -55,6 +55,7 @@ public final class JPanelPaymentSales extends javax.swing.JPanel implements JPan
 
 	@Override
 	public void activate() throws BasicException {
+		period.reset();
 		loadRows();
 	}
 

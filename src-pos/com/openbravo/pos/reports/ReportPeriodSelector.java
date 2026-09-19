@@ -26,12 +26,6 @@ final class ReportPeriodSelector extends JPanel {
 	private JTextField endField;
 
 	ReportPeriodSelector(String titleKey) {
-		Calendar today = Calendar.getInstance();
-		endDate = startOfDay(today.getTime());
-		Calendar yesterday = (Calendar) today.clone();
-		yesterday.add(Calendar.DAY_OF_MONTH, -1);
-		startDate = startOfDay(yesterday.getTime());
-
 		setLayout(new BorderLayout(0, 12));
 		setBackground(RetailPOSColors.surface100());
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
@@ -47,6 +41,17 @@ final class ReportPeriodSelector extends JPanel {
 		controls.add(new JLabel(AppLocal.getIntString("label.reportend")));
 		controls.add(createDatePicker(false));
 		add(controls, BorderLayout.CENTER);
+		reset();
+	}
+
+	void reset() {
+		Calendar today = Calendar.getInstance();
+		endDate = startOfDay(today.getTime());
+		Calendar yesterday = (Calendar) today.clone();
+		yesterday.add(Calendar.DAY_OF_MONTH, -1);
+		startDate = startOfDay(yesterday.getTime());
+		startField.setText(Formats.DATE.formatValue(startDate));
+		endField.setText(Formats.DATE.formatValue(endDate));
 	}
 
 	void addActionButton(JButton button) {
