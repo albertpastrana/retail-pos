@@ -99,6 +99,11 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 		return Formats.CURRENCY.formatValue(new Double(m_dTicket));
 	}
 
+	public String printChange() {
+		// Historical payments only store the amount applied to the ticket.
+		return Formats.CURRENCY.formatValue(new Double(0.0));
+	}
+
 	// Especificas
 	public String printPaperTotal() {
 		// En una devolucion hay que cambiar el signo al total
