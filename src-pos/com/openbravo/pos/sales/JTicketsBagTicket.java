@@ -264,18 +264,18 @@ public class JTicketsBagTicket extends JTicketsBag {
 		public Object getValueAt(int row, int column) {
 			FindTicketsInfo ticket = tickets.get(row);
 			switch (column) {
-			case 0:
-				return "[" + ticket.getTicketId() + "]";
-			case 1:
-				return dateFormat.format(ticket.getDate());
-			case 2:
-				return Formats.CURRENCY.formatValue(ticket.getTotal());
-			case 3:
-				return Formats.STRING.formatValue(ticket.getName());
-			case 4:
-				return ticket.getCustomer() == null ? "" : ticket.getCustomer();
-			default:
-				return "";
+				case 0 :
+					return "[" + ticket.getTicketId() + "]";
+				case 1 :
+					return dateFormat.format(ticket.getDate());
+				case 2 :
+					return Formats.CURRENCY.formatValue(ticket.getTotal());
+				case 3 :
+					return Formats.STRING.formatValue(ticket.getName());
+				case 4 :
+					return ticket.getCustomer() == null ? "" : ticket.getCustomer();
+				default :
+					return "";
 			}
 		}
 	}

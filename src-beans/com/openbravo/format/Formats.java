@@ -207,7 +207,8 @@ public abstract class Formats {
 			// The numeric keypad uses a dot even when the locale uses a comma.
 			DecimalFormatSymbols symbols = ((DecimalFormat) m_currencyformat).getDecimalFormatSymbols();
 			if (symbols.getDecimalSeparator() != '.' && value.indexOf('.') >= 0 && value.indexOf(',') < 0) {
-				return new Double(m_doubleformat.parse(value.replace('.', symbols.getDecimalSeparator())).doubleValue());
+				return new Double(
+						m_doubleformat.parse(value.replace('.', symbols.getDecimalSeparator())).doubleValue());
 			}
 			try {
 				return new Double(m_currencyformat.parse(value).doubleValue());
