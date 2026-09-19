@@ -193,6 +193,11 @@ public class UnicodeTranslatorInt extends UnicodeTranslator {
 					return -0x2C; //
 				case '\u20ac' :
 					return -0x2B; // Euro Sign
+				case '\u00a0' :
+					return 0x20; // Non-breaking space
+				case '\u2013' :
+				case '\u2014' :
+					return 0x2D; // En/em dash fallback
 				case '\u00cd' :
 					return -0x2A; // I acute
 				case '\u00ce' :
