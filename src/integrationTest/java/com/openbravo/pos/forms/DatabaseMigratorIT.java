@@ -134,10 +134,13 @@ public class DatabaseMigratorIT {
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
 			assertTrue(resourceContains(connection, "Menu.Root", "JPanelSalesSummary"));
 			assertTrue(resourceContains(connection, "Menu.Root", "JPanelProductSales"));
+			assertTrue(resourceContains(connection, "Menu.Root", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "0", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "0", "JPanelProductSales"));
+			assertTrue(roleContains(connection, "0", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "1", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "1", "JPanelProductSales"));
+			assertTrue(roleContains(connection, "1", "JPanelPaymentSales"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Employee'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
