@@ -20,6 +20,7 @@ data/retail-pos-database/
 data/retail-pos-database.bak*/
 # Keep an existing installation out of Git while it is migrated.
 data/openbravopos-database/
+data/openbravopos-database_demo/
 data/*.tsv
 data/__pycache__/
 devdb/
