@@ -144,6 +144,10 @@ public class AppUser {
 		m_apermissions.add("Menu.Exit");
 		// Replenishment is an operational action available from the till menu.
 		if (ROLE_SELLER.equals(m_sRole)) {
+			// Keep the normal till workflow available for databases with an older
+			// Seller role definition. These are also present in Role.Seller.xml.
+			m_apermissions.add("com.openbravo.pos.sales.JPanelTicketEdits");
+			m_apermissions.add("sales.EditTicket");
 			m_apermissions.add("com.openbravo.pos.inventory.ReplenishmentPanel");
 			m_apermissions.add("Menu.Replenishment.Add");
 		}

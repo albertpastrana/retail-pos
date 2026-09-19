@@ -202,6 +202,12 @@ public class JTicketsBagTicket extends JTicketsBag {
 			msg.show(this);
 		}
 		m_jRecentTickets.setModel(model);
+		if (model.getSize() > 0) {
+			// Make the normal correction flow immediately actionable.
+			m_jRecentTickets.setSelectedIndex(0);
+			FindTicketsInfo selected = (FindTicketsInfo) model.getElementAt(0);
+			readTicket(selected.getTicketId(), selected.getTicketType());
+		}
 	}
 
 	protected JComponent getBagComponent() {
@@ -243,14 +249,11 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		// imprimo m_ticket
 
-		try {
-			m_jEdit.setEnabled(m_ticket != null
-					&& (m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
-							|| m_ticket.getTicketType() == TicketInfo.RECEIPT_REFUND)
-					&& m_dlSales.isCashActive(m_ticket.getActiveCash()));
-		} catch (BasicException e) {
-			m_jEdit.setEnabled(false);
-		}
+		// Cash-state validation is performed when editing starts, after the
+		// supervisor authorization can explain why the operation is rejected.
+		m_jEdit.setEnabled(m_ticket != null
+				&& (m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
+						|| m_ticket.getTicketType() == TicketInfo.RECEIPT_REFUND));
 		m_jRefund.setEnabled(m_ticket != null && m_ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL);
 		m_jPrint.setEnabled(m_ticket != null);
 		m_jGiftPrint.setEnabled(m_ticket != null);
@@ -468,6 +471,13 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	private void m_jEditActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jEditActionPerformed
 		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedticketedit"))) {
+			return;
+		}
+		try {
+			if (!m_dlSales.isCashActive(m_ticket.getActiveCash())) {
+				return;
+			}
+		} catch (BasicException e) {
 			return;
 		}
 

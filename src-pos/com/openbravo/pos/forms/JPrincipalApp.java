@@ -123,6 +123,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	private Component getScriptMenu(String menutext) throws ScriptException {
 		// Older databases may still contain a Menu.Root resource without this
 		// frequently used till action. Keep the menu available while they migrate.
+		String editSales = "group.addPanel(\"/com/openbravo/images/menu-edit-sales.png\", \"Menu.TicketEdit\", \"com.openbravo.pos.sales.JPanelTicketEdits\");";
+		if (!menutext.contains(editSales)) {
+			String sales = "group.addPanel(\"/com/openbravo/images/menu-sales.png\", \"Menu.Ticket\", \"com.openbravo.pos.sales.JPanelTicketSales\");";
+			menutext = menutext.replace(sales, sales + " " + editSales);
+		}
 		String replenishment = "group.addPanel(\"/com/openbravo/images/menu-package-plus.png\", \"Menu.Replenishment\", \"com.openbravo.pos.inventory.ReplenishmentPanel\");";
 		menutext = menutext.replace(
 				"submenu.addPanel(\"/com/openbravo/images/menu-stock.png\", \"Menu.Replenishment\", \"com.openbravo.pos.inventory.ReplenishmentPanel\");",
@@ -131,10 +136,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		menutext = menutext.replace(
 				"group.addPanel(\"/com/openbravo/images/menu-stock.png\", \"Menu.Replenishment\", \"com.openbravo.pos.inventory.ReplenishmentPanel\");",
 				"");
-		menutext = menutext.replace(
-				"group.addPanel(\"/com/openbravo/images/menu-edit-sales.png\", \"Menu.TicketEdit\", \"com.openbravo.pos.sales.JPanelTicketEdits\");",
-				"group.addPanel(\"/com/openbravo/images/menu-edit-sales.png\", \"Menu.TicketEdit\", \"com.openbravo.pos.sales.JPanelTicketEdits\"); "
-						+ replenishment);
+		menutext = menutext.replace(editSales, editSales + " " + replenishment);
 		String demoAction = "submenu.addExecution(\"/com/openbravo/images/ark2.png\", \"Menu.DemoMode\", \"com.openbravo.pos.admin.DemoModeAction\");";
 		if (!menutext.contains("com.openbravo.pos.admin.DemoModeAction")) {
 			menutext = menutext.replace(
