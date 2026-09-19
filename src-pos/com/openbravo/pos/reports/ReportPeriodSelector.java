@@ -32,18 +32,27 @@ final class ReportPeriodSelector extends JPanel {
 		yesterday.add(Calendar.DAY_OF_MONTH, -1);
 		startDate = startOfDay(yesterday.getTime());
 
-		setLayout(new FlowLayout(FlowLayout.LEFT));
+		setLayout(new BorderLayout(0, 12));
 		setBackground(RetailPOSColors.surface100());
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
 				BorderFactory.createEmptyBorder(16, 16, 16, 16)));
 		JLabel heading = new JLabel(AppLocal.getIntString(titleKey));
 		heading.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
 		heading.setForeground(RetailPOSColors.ink());
-		add(heading);
-		add(new JLabel(AppLocal.getIntString("label.reportstart")));
-		add(createDatePicker(true));
-		add(new JLabel(AppLocal.getIntString("label.reportend")));
-		add(createDatePicker(false));
+		add(heading, BorderLayout.NORTH);
+		JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		controls.setOpaque(false);
+		controls.add(new JLabel(AppLocal.getIntString("label.reportstart")));
+		controls.add(createDatePicker(true));
+		controls.add(new JLabel(AppLocal.getIntString("label.reportend")));
+		controls.add(createDatePicker(false));
+		add(controls, BorderLayout.CENTER);
+	}
+
+	void addActionButton(JButton button) {
+		JPanel controls = (JPanel) getComponent(1);
+		controls.add(button);
+		controls.revalidate();
 	}
 
 	SalesSummaryParameters getParameters() {
@@ -66,6 +75,10 @@ final class ReportPeriodSelector extends JPanel {
 		calendar.setToolTipText(AppLocal.getIntString("button.selectdate"));
 		calendar.setPreferredSize(new Dimension(48, 48));
 		calendar.setFocusPainted(false);
+		calendar.setOpaque(true);
+		calendar.setBackground(RetailPOSColors.surface200());
+		calendar.setForeground(RetailPOSColors.ink());
+		calendar.setBorder(BorderFactory.createLineBorder(RetailPOSColors.border()));
 		calendar.addActionListener(e -> {
 			Date selected = JCalendarDialog.showCalendar(ReportPeriodSelector.this, isStart ? startDate : endDate);
 			if (selected != null) {

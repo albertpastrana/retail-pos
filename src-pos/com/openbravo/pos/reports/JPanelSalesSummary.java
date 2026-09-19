@@ -75,7 +75,7 @@ public final class JPanelSalesSummary extends JPanel implements JPanelView, Bean
 		load.setPreferredSize(new Dimension(120, 48));
 		RetailPOSColors.primaryButton(load);
 		load.addActionListener(e -> loadSummary());
-		period.add(load);
+		period.addActionButton(load);
 
 		receipts = valueLabel();
 		gross = valueLabel();

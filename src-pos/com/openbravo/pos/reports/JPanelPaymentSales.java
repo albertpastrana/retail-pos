@@ -70,7 +70,7 @@ public final class JPanelPaymentSales extends javax.swing.JPanel implements JPan
 		load.setPreferredSize(new Dimension(120, 48));
 		RetailPOSColors.primaryButton(load);
 		load.addActionListener(e -> loadRows());
-		period.add(load);
+		period.addActionButton(load);
 
 		table = new JTable(new PaymentSalesTableModel());
 		table.setRowHeight(32);

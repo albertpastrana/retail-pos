@@ -12,28 +12,24 @@ import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.theme.RetailPOSTheme;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 
-/** Non-blocking table of product sales for a selected period. */
-public final class JPanelProductSales extends JPanel implements JPanelView, BeanFactoryApp {
+/** Non-blocking table of products below their configured safety stock. */
+public final class JPanelLowStock extends javax.swing.JPanel implements JPanelView, BeanFactoryApp {
 
 	private AppView app;
-	private final ProductSalesRepository repository = new ProductSalesRepository();
-	private ReportPeriodSelector period;
-	private JButton load;
+	private final LowStockRepository repository = new LowStockRepository();
+	private JButton refresh;
 	private JTable table;
 
-	public JPanelProductSales() {
+	public JPanelLowStock() {
 		initComponents();
 	}
 
@@ -54,7 +50,7 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 
 	@Override
 	public String getTitle() {
-		return AppLocal.getIntString("Menu.ProductSalesSummary");
+		return AppLocal.getIntString("Menu.LowStockSummary");
 	}
 
 	@Override
@@ -68,64 +64,67 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 	}
 
 	private void initComponents() {
-		period = new ReportPeriodSelector("Menu.ProductSalesSummary");
-		load = new JButton(AppLocal.getIntString("Button.Load"));
-		load.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(15f));
-		load.setPreferredSize(new Dimension(120, 48));
-		RetailPOSColors.primaryButton(load);
-		load.addActionListener(e -> loadRows());
-		period.addActionButton(load);
+		JPanel header = new JPanel(new BorderLayout(16, 0));
+		header.setBackground(RetailPOSColors.surface100());
+		header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
+				BorderFactory.createEmptyBorder(16, 16, 16, 16)));
+		javax.swing.JLabel title = new javax.swing.JLabel(AppLocal.getIntString("Menu.LowStockSummary"));
+		title.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
+		title.setForeground(RetailPOSColors.ink());
+		header.add(title, BorderLayout.CENTER);
+		refresh = new JButton(AppLocal.getIntString("Button.Load"));
+		refresh.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(15f));
+		refresh.setPreferredSize(new Dimension(130, 48));
+		RetailPOSColors.primaryButton(refresh);
+		refresh.addActionListener(e -> loadRows());
+		header.add(refresh, BorderLayout.LINE_END);
 
-		table = new JTable(new ProductSalesTableModel());
+		table = new JTable(new LowStockTableModel());
 		table.setRowHeight(32);
 		table.setFillsViewportHeight(true);
 		table.setAutoCreateRowSorter(true);
 		table.getTableHeader().setReorderingAllowed(false);
 		table.getTableHeader().setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		table.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(15f));
-		table.getColumnModel().getColumn(0).setPreferredWidth(130);
-		table.getColumnModel().getColumn(1).setPreferredWidth(260);
-		table.getColumnModel().getColumn(2).setPreferredWidth(180);
-		table.getColumnModel().getColumn(3).setPreferredWidth(120);
-		table.getColumnModel().getColumn(4).setPreferredWidth(150);
 
 		setLayout(new BorderLayout(0, 16));
 		setBackground(RetailPOSColors.surface0());
 		setBorder(BorderFactory.createEmptyBorder(0, 24, 24, 24));
-		add(period, BorderLayout.NORTH);
+		add(header, BorderLayout.NORTH);
 		add(new JScrollPane(table), BorderLayout.CENTER);
 	}
 
 	private void loadRows() {
-		load.setEnabled(false);
-		new SwingWorker<List<ProductSalesRow>, Void>() {
+		refresh.setEnabled(false);
+		new SwingWorker<List<LowStockRow>, Void>() {
 			@Override
-			protected List<ProductSalesRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection(), period.getParameters());
+			protected List<LowStockRow> doInBackground() throws Exception {
+				return repository.load(app.getSession().getConnection());
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((ProductSalesTableModel) table.getModel()).setRows(get());
+					((LowStockTableModel) table.getModel()).setRows(get());
 				} catch (Exception e) {
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
-							.show(JPanelProductSales.this);
+							.show(JPanelLowStock.this);
 				} finally {
-					load.setEnabled(true);
+					refresh.setEnabled(true);
 				}
 			}
 		}.execute();
 	}
 
-	private static final class ProductSalesTableModel extends AbstractTableModel {
+	private static final class LowStockTableModel extends AbstractTableModel {
 
 		private static final long serialVersionUID = 1L;
 		private final String[] columns = {"label.reportreference", "label.reportproduct", "label.reportcategory",
-				"label.reportunits", "label.reportamount"};
-		private List<ProductSalesRow> rows = java.util.Collections.emptyList();
+				"label.reportlocation", "label.reportcurrentstock", "label.reportminimumstock",
+				"label.reportmaximumstock", "label.reporttoorder"};
+		private List<LowStockRow> rows = java.util.Collections.emptyList();
 
-		void setRows(List<ProductSalesRow> rows) {
+		void setRows(List<LowStockRow> rows) {
 			this.rows = rows;
 			fireTableDataChanged();
 		}
@@ -147,7 +146,7 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 
 		@Override
 		public Object getValueAt(int row, int column) {
-			ProductSalesRow value = rows.get(row);
+			LowStockRow value = rows.get(row);
 			switch (column) {
 				case 0 :
 					return value.getReference();
@@ -156,11 +155,17 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 				case 2 :
 					return value.getCategoryName();
 				case 3 :
-					return Formats.DOUBLE.formatValue(value.getUnits());
+					return value.getLocationName();
 				case 4 :
-					return Formats.CURRENCY.formatValue(value.getAmount());
+					return Formats.DOUBLE.formatValue(value.getCurrentUnits());
+				case 5 :
+					return Formats.DOUBLE.formatValue(value.getMinimumUnits());
+				case 6 :
+					return Formats.DOUBLE.formatValue(value.getMaximumUnits());
+				case 7 :
+					return Formats.DOUBLE.formatValue(value.getUnitsToOrder());
 				default :
-					throw new IllegalArgumentException("Unknown product sales column " + column);
+					throw new IllegalArgumentException("Unknown low stock column " + column);
 			}
 		}
 	}
