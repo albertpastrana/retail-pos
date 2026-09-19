@@ -24,12 +24,15 @@ import com.openbravo.pos.ticket.TicketLineInfo;
 import com.openbravo.pos.ticket.LoyaltyStamps;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.SupervisorAuthorization;
@@ -37,6 +40,7 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.printer.*;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.JMessageDialog;
+import com.openbravo.format.Formats;
 import com.openbravo.pos.customers.DataLogicCustomers;
 import com.openbravo.pos.scripting.ScriptEngine;
 import com.openbravo.pos.scripting.ScriptException;
@@ -44,7 +48,9 @@ import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.DataLogicSystem;
 import com.openbravo.pos.panels.JTicketsFinder;
 import com.openbravo.pos.ticket.FindTicketsInfo;
-import com.openbravo.pos.ticket.FindTicketsRenderer;
+import com.openbravo.beans.JNumberEvent;
+import com.openbravo.beans.JNumberEventListener;
+import com.openbravo.beans.JNumberKeys;
 
 public class JTicketsBagTicket extends JTicketsBag {
 
@@ -63,7 +69,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private JPanelTicketEdits m_panelticketedit;
 
 	private static final int RECENT_TICKETS = 10;
-	private JList m_jRecentTickets;
+	private JTable m_jRecentTickets;
 
 	/** Creates new form JTicketsBagTicket */
 	public JTicketsBagTicket(AppView app, JPanelTicketEdits panelticket) {
@@ -158,15 +164,33 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private void initRecentTickets() {
-		m_jRecentTickets = new JList();
-		m_jRecentTickets.setCellRenderer(new FindTicketsRenderer());
+		m_jRecentTickets = new JTable(new RecentTicketsTableModel());
 		m_jRecentTickets.setFocusable(false);
 		m_jRecentTickets.setRequestFocusEnabled(false);
-		m_jRecentTickets.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {
-				FindTicketsInfo selected = (FindTicketsInfo) m_jRecentTickets.getSelectedValue();
-				if (selected != null) {
-					readTicket(selected.getTicketId(), selected.getTicketType());
+		m_jRecentTickets.setRowHeight(40);
+		m_jRecentTickets.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		m_jRecentTickets.getTableHeader().setReorderingAllowed(false);
+		m_jRecentTickets.getColumnModel().getColumn(0).setPreferredWidth(70);
+		m_jRecentTickets.getColumnModel().getColumn(1).setPreferredWidth(140);
+		m_jRecentTickets.getColumnModel().getColumn(2).setPreferredWidth(110);
+		m_jRecentTickets.getColumnModel().getColumn(3).setPreferredWidth(160);
+		m_jRecentTickets.getColumnModel().getColumn(4).setPreferredWidth(165);
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		m_jRecentTickets.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
+		DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+		rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+		m_jRecentTickets.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
+		m_jRecentTickets.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent event) {
+				if (!event.getValueIsAdjusting()) {
+					int row = m_jRecentTickets.getSelectedRow();
+					if (row >= 0) {
+						FindTicketsInfo selected = ((RecentTicketsTableModel) m_jRecentTickets.getModel())
+								.getTicketAt(row);
+						readTicket(selected.getTicketId(), selected.getTicketType());
+					}
 				}
 			}
 		});
@@ -176,7 +200,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.setBorder(BorderFactory.createTitledBorder(AppLocal.getIntString("label.recentsales")));
-		panel.setPreferredSize(new Dimension(430, 0));
+		panel.setPreferredSize(new Dimension(720, 0));
 		panel.add(scroll, BorderLayout.CENTER);
 		add(panel, BorderLayout.WEST);
 
@@ -190,23 +214,69 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private void loadRecentTickets() {
-		DefaultListModel model = new DefaultListModel();
+		RecentTicketsTableModel model = (RecentTicketsTableModel) m_jRecentTickets.getModel();
+		List<FindTicketsInfo> tickets = new ArrayList<FindTicketsInfo>();
 		try {
-			List tickets = m_dlSales.getRecentTickets(jrbSales.isSelected() ? 0 : 1, RECENT_TICKETS);
-			for (int i = 0; i < tickets.size(); i++) {
-				model.addElement(tickets.get(i));
-			}
+			tickets = m_dlSales.getRecentTickets(jrbSales.isSelected() ? 0 : 1, RECENT_TICKETS);
 		} catch (BasicException e) {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadticket"),
 					e);
 			msg.show(this);
 		}
-		m_jRecentTickets.setModel(model);
-		if (model.getSize() > 0) {
+		m_jRecentTickets.clearSelection();
+		model.setTickets(tickets);
+		if (model.getRowCount() > 0) {
 			// Make the normal correction flow immediately actionable.
-			m_jRecentTickets.setSelectedIndex(0);
-			FindTicketsInfo selected = (FindTicketsInfo) model.getElementAt(0);
-			readTicket(selected.getTicketId(), selected.getTicketType());
+			m_jRecentTickets.setRowSelectionInterval(0, 0);
+		}
+	}
+
+	private static class RecentTicketsTableModel extends AbstractTableModel {
+		private final String[] columns = {"label.ticketid", "label.date", "label.totalcash", "Empleada", "Clienta"};
+		private List<FindTicketsInfo> tickets = new ArrayList<FindTicketsInfo>();
+		private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy - HH:mm");
+
+		public void setTickets(List<FindTicketsInfo> tickets) {
+			this.tickets = tickets;
+			fireTableDataChanged();
+		}
+
+		public FindTicketsInfo getTicketAt(int row) {
+			return tickets.get(row);
+		}
+
+		@Override
+		public int getRowCount() {
+			return tickets.size();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return columns.length;
+		}
+
+		@Override
+		public String getColumnName(int column) {
+			return column < 3 ? AppLocal.getIntString(columns[column]) : columns[column];
+		}
+
+		@Override
+		public Object getValueAt(int row, int column) {
+			FindTicketsInfo ticket = tickets.get(row);
+			switch (column) {
+			case 0:
+				return "[" + ticket.getTicketId() + "]";
+			case 1:
+				return dateFormat.format(ticket.getDate());
+			case 2:
+				return Formats.CURRENCY.formatValue(ticket.getTotal());
+			case 3:
+				return Formats.STRING.formatValue(ticket.getName());
+			case 4:
+				return ticket.getCustomer() == null ? "" : ticket.getCustomer();
+			default:
+				return "";
+			}
 		}
 	}
 
@@ -307,6 +377,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 		jPanel3 = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
 		m_jKeys = new com.openbravo.editor.JEditorKeys();
+		m_jNumberKeys = new com.openbravo.beans.JNumberKeys();
 		jPanel5 = new javax.swing.JPanel();
 		jButton1 = new javax.swing.JButton();
 		m_jTicketEditor = new com.openbravo.editor.JEditorIntegerPositive();
@@ -417,7 +488,20 @@ public class JTicketsBagTicket extends JTicketsBag {
 				m_jKeysActionPerformed(evt);
 			}
 		});
-		jPanel4.add(m_jKeys);
+		m_jNumberKeys.setNumbersOnly(false);
+		m_jNumberKeys.addJNumberEventListener(new JNumberEventListener() {
+			@Override
+			public void keyPerformed(JNumberEvent event) {
+				if (event.getKey() == '=') {
+					readTicket(-1, jrbSales.isSelected() ? 0 : 1);
+				} else if (event.getKey() == '\u007f') {
+					m_jTicketEditor.reset();
+				} else if (event.getKey() >= '0' && event.getKey() <= '9') {
+					m_jTicketEditor.transChar(event.getKey());
+				}
+			}
+		});
+		jPanel4.add(m_jNumberKeys);
 
 		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		jPanel5.setLayout(new java.awt.GridBagLayout());
@@ -591,6 +675,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private javax.swing.JPanel m_jButtons;
 	private javax.swing.JButton m_jEdit;
 	private com.openbravo.editor.JEditorKeys m_jKeys;
+	private com.openbravo.beans.JNumberKeys m_jNumberKeys;
 	private javax.swing.JPanel m_jOptions;
 	private javax.swing.JPanel m_jPanelTicket;
 	private javax.swing.JButton m_jPrint;
