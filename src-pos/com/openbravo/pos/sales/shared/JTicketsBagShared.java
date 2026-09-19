@@ -24,6 +24,7 @@ import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.util.TillButtons;
 import java.awt.event.KeyEvent;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
 
@@ -110,13 +111,22 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	public boolean preparePayment() {
 		if (!hasReceiptPrinter()) {
+			LOGGER.info("event=prepare_payment_rejected reason=no_receipt_printer printer="
+					+ m_App.getProperties().getProperty("machine.printer"));
+			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noreceiptprinter"))
+					.show(this);
 			return false;
 		}
 		try {
 			if (dlReceipts.beginSharedTicketPayment(m_sCurrentTicket, host)) {
+				LOGGER.info("event=prepare_payment_success ticket=" + m_sCurrentTicket + " host=" + host);
 				return true;
 			}
+			LOGGER.info("event=prepare_payment_rejected reason=ticket_unavailable ticket=" + m_sCurrentTicket
+					+ " host=" + host);
 		} catch (BasicException e) {
+			LOGGER.log(Level.WARNING, "event=prepare_payment_failed ticket=" + m_sCurrentTicket + " host=" + host,
+					e);
 			new MessageInf(e).show(this);
 			return false;
 		}
@@ -126,8 +136,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	private boolean hasReceiptPrinter() {
 		String printer = m_App.getProperties().getProperty("machine.printer");
-		return printer != null && !printer.trim().isEmpty() && !"screen".equalsIgnoreCase(printer.trim())
-				&& !"Not defined".equalsIgnoreCase(printer.trim());
+		return printer != null && !printer.trim().isEmpty() && !"Not defined".equalsIgnoreCase(printer.trim());
 	}
 
 	public void cancelPayment() {
