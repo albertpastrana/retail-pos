@@ -20,7 +20,16 @@
 package com.openbravo.beans;
 
 import java.awt.ComponentOrientation;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.util.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonModel;
+import javax.swing.UIManager;
+import javax.swing.plaf.basic.BasicButtonUI;
 
 public class JNumberKeys extends javax.swing.JPanel {
 
@@ -35,6 +44,7 @@ public class JNumberKeys extends javax.swing.JPanel {
 	/** Creates new form JNumberKeys */
 	public JNumberKeys() {
 		initComponents();
+		applyRetailPOSStyle();
 
 		m_jKey0.addActionListener(new MyKeyNumberListener('0'));
 		m_jKey1.addActionListener(new MyKeyNumberListener('1'));
@@ -52,6 +62,93 @@ public class JNumberKeys extends javax.swing.JPanel {
 		m_jPlus.addActionListener(new MyKeyNumberListener('+'));
 		m_jMinus.addActionListener(new MyKeyNumberListener('-'));
 		m_jEquals.addActionListener(new MyKeyNumberListener('='));
+	}
+
+	/** Applies the NumericKey tokens without coupling this shared bean to src-pos. */
+	private void applyRetailPOSStyle() {
+		setBackground(tokenColor("retailpos.surface200", 0xece5d6));
+		setOpaque(false);
+		setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+		setPreferredSize(new java.awt.Dimension(280, 340));
+		setMaximumSize(new java.awt.Dimension(280, 340));
+
+		Font numberFont = new Font("IBM Plex Mono", Font.BOLD, 24);
+		Font actionFont = new Font("IBM Plex Mono", Font.BOLD, 24);
+		Font clearFont = UIManager.getFont("defaultFont");
+		if (clearFont == null) {
+			clearFont = new Font(Font.SANS_SERIF, Font.BOLD, 16);
+		} else {
+			clearFont = clearFont.deriveFont(Font.BOLD, 16f);
+		}
+		Color keyBackground = tokenColor("retailpos.surface100", 0xfffdf9);
+		Color ink = tokenColor("retailpos.ink", 0x241c14);
+		Color mutedInk = tokenColor("retailpos.inkMuted", 0x6b6154);
+
+		styleKey(m_jKey0, "0", numberFont, keyBackground, ink);
+		styleKey(m_jKey1, "1", numberFont, keyBackground, ink);
+		styleKey(m_jKey2, "2", numberFont, keyBackground, ink);
+		styleKey(m_jKey3, "3", numberFont, keyBackground, ink);
+		styleKey(m_jKey4, "4", numberFont, keyBackground, ink);
+		styleKey(m_jKey5, "5", numberFont, keyBackground, ink);
+		styleKey(m_jKey6, "6", numberFont, keyBackground, ink);
+		styleKey(m_jKey7, "7", numberFont, keyBackground, ink);
+		styleKey(m_jKey8, "8", numberFont, keyBackground, ink);
+		styleKey(m_jKey9, "9", numberFont, keyBackground, ink);
+		styleKey(m_jKeyDot, ".", numberFont, keyBackground, ink);
+		styleKey(m_jCE, "C", clearFont, keyBackground, mutedInk);
+		styleKey(m_jMultiply, "*", actionFont, keyBackground, ink);
+		styleKey(m_jMinus, "-", actionFont, keyBackground, ink);
+		styleKey(m_jPlus, "+", actionFont, keyBackground, ink);
+		styleKey(m_jEquals, "=", actionFont, keyBackground, ink);
+	}
+
+	private void styleKey(javax.swing.JButton button, String text, Font font,
+			Color background, Color foreground) {
+		button.setIcon(null);
+		button.setText(text);
+		button.setFont(font);
+		button.setBackground(background);
+		button.setOpaque(false);
+		button.setContentAreaFilled(false);
+		button.setBorder(BorderFactory.createEmptyBorder());
+		button.setUI(new NumericKeyButtonUI());
+		button.setForeground(foreground);
+		button.putClientProperty("JButton.buttonType", "roundRect");
+		button.setMinimumSize(new java.awt.Dimension(56, 56));
+		button.setPreferredSize(new java.awt.Dimension(56, 56));
+		button.getModel().addChangeListener(event -> button.setForeground(
+				button.getModel().isPressed() ? tokenColor("retailpos.onBrand", 0xffffff) : foreground));
+	}
+
+	private static Color tokenColor(String key, int fallback) {
+		Color color = UIManager.getColor(key);
+		return color != null ? color : new Color(fallback);
+	}
+
+	@Override
+	protected void paintComponent(Graphics graphics) {
+		Graphics2D g = (Graphics2D) graphics.create();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setColor(getBackground());
+		g.fillRoundRect(0, 0, getWidth(), getHeight(), 32, 32);
+		g.dispose();
+	}
+
+	private static final class NumericKeyButtonUI extends BasicButtonUI {
+		@Override
+		public void paint(Graphics graphics, javax.swing.JComponent component) {
+			javax.swing.JButton button = (javax.swing.JButton) component;
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			ButtonModel model = button.getModel();
+			Color background = model.isPressed()
+					? tokenColor("retailpos.brand", 0xb8481f)
+					: tokenColor("retailpos.surface100", 0xfffdf9);
+			g.setColor(background);
+			g.fillRoundRect(0, 0, component.getWidth() - 1, component.getHeight() - 1, 20, 20);
+			g.dispose();
+			super.paint(graphics, component);
+		}
 	}
 
 	public void setNumbersOnly(boolean value) {
