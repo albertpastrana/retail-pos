@@ -117,6 +117,15 @@ public class JRootApp extends JPanel implements AppView {
 		m_jLblSubTitle.setFont(base.deriveFont(Font.PLAIN, 14f));
 		m_jLblClock.setFont(base.deriveFont(Font.BOLD, 16f));
 		m_jLblOperator.setFont(base.deriveFont(Font.PLAIN, 12f));
+		m_jLblDemo.setFont(base.deriveFont(Font.BOLD, 16f));
+		m_jLblDemo.setForeground(new Color(0x78350F));
+		m_jLblDemo.setBackground(new Color(0xFDE68A));
+		m_jLblDemo.setHorizontalAlignment(SwingConstants.CENTER);
+		m_jLblDemo.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(0xF59E0B), 1),
+				BorderFactory.createEmptyBorder(6, 14, 6, 14)));
+		m_jLblDemo.setOpaque(true);
+		m_jLblDemo.setText(AppLocal.getIntString("Label.DemoMode"));
+		m_jLblDemo.setVisible(false);
 
 		updateHeaderStatus();
 
@@ -136,6 +145,7 @@ public class JRootApp extends JPanel implements AppView {
 		String sdate = DateFormat.getDateInstance(DateFormat.MEDIUM).format(now);
 		m_jLblOperator
 				.setText(m_principalapp == null ? sdate : m_principalapp.getUser().getName() + "  \u00B7  " + sdate);
+		m_jLblDemo.setVisible(m_props != null && DemoMode.isActive(m_props));
 	}
 
 	private static Image scaleLogo(BufferedImage logo) {
@@ -604,6 +614,7 @@ public class JRootApp extends JPanel implements AppView {
 		m_jPanelStatus = new javax.swing.JPanel();
 		m_jLblClock = new javax.swing.JLabel();
 		m_jLblOperator = new javax.swing.JLabel();
+		m_jLblDemo = new javax.swing.JLabel();
 		m_jPanelContainer = new javax.swing.JPanel();
 		m_jPanelLogin = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
@@ -652,6 +663,8 @@ public class JRootApp extends JPanel implements AppView {
 		m_jPanelStatus.setLayout(new javax.swing.BoxLayout(m_jPanelStatus, javax.swing.BoxLayout.Y_AXIS));
 
 		m_jPanelStatus.add(javax.swing.Box.createVerticalGlue());
+
+		m_jPanelStatus.add(m_jLblDemo);
 
 		m_jLblClock.setForeground(HEADER_TEXT);
 		m_jLblClock.setAlignmentX(java.awt.Component.RIGHT_ALIGNMENT);
@@ -858,6 +871,7 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JButton m_jAbout;
 	private javax.swing.JButton m_jClose;
 	private javax.swing.JLabel m_jLblClock;
+	private javax.swing.JLabel m_jLblDemo;
 	private javax.swing.JLabel m_jLblOperator;
 	private javax.swing.JButton m_jAdminMode;
 	private javax.swing.JButton m_jSalesMode;

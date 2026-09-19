@@ -109,6 +109,31 @@ public class AppConfig implements AppProperties {
 			loadDefault();
 		}
 
+		applyDemoConfiguration();
+
+	}
+
+	private void applyDemoConfiguration() {
+		if (!"true".equalsIgnoreCase(m_propsconfig.getProperty("demo.active"))) {
+			return;
+		}
+
+		String demoUrl = m_propsconfig.getProperty("demo.db.URL");
+		if (demoUrl != null && !demoUrl.trim().isEmpty()) {
+			if (demoUrl.startsWith("jdbc:derby:") && demoUrl.indexOf(';') < 0) {
+				demoUrl += ";create=true";
+			}
+			m_propsconfig.setProperty("db.URL", demoUrl);
+		}
+		String demoUser = m_propsconfig.getProperty("demo.db.user");
+		if (demoUser != null) {
+			m_propsconfig.setProperty("db.user", demoUser);
+		}
+		String demoPassword = m_propsconfig.getProperty("demo.db.password");
+		if (demoPassword != null) {
+			m_propsconfig.setProperty("db.password", demoPassword);
+		}
+		DemoMode.removeIncompleteDerbyDatabase(m_propsconfig);
 	}
 
 	public void save() throws IOException {

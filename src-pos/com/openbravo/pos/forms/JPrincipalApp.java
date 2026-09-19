@@ -135,6 +135,13 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				"group.addPanel(\"/com/openbravo/images/menu-edit-sales.png\", \"Menu.TicketEdit\", \"com.openbravo.pos.sales.JPanelTicketEdits\");",
 				"group.addPanel(\"/com/openbravo/images/menu-edit-sales.png\", \"Menu.TicketEdit\", \"com.openbravo.pos.sales.JPanelTicketEdits\"); "
 						+ replenishment);
+		String demoAction = "submenu.addExecution(\"/com/openbravo/images/ark2.png\", \"Menu.DemoMode\", \"com.openbravo.pos.admin.DemoModeAction\");";
+		if (!menutext.contains("com.openbravo.pos.admin.DemoModeAction")) {
+			menutext = menutext.replace(
+					"submenu.addExecution(\"/com/openbravo/images/ark2.png\", \"Menu.DatabaseBackup\", \"com.openbravo.pos.admin.BackupDatabaseAction\");",
+					"submenu.addExecution(\"/com.openbravo/images/ark2.png\", \"Menu.DatabaseBackup\", \"com.openbravo.pos.admin.BackupDatabaseAction\"); "
+							+ demoAction);
+		}
 
 		ScriptMenu menu = new ScriptMenu();
 

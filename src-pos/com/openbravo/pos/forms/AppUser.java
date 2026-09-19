@@ -147,6 +147,9 @@ public class AppUser {
 			m_apermissions.add("com.openbravo.pos.inventory.ReplenishmentPanel");
 			m_apermissions.add("Menu.Replenishment.Add");
 		}
+		if (ROLE_ADMINISTRATOR.equals(m_sRole)) {
+			m_apermissions.add("com.openbravo.pos.admin.DemoModeAction");
+		}
 
 		String sRolePermisions = dlSystem.findRolePermissions(m_sRole);
 
