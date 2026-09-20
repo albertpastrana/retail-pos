@@ -7,22 +7,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.openbravo.pos.forms.DatabaseBackup.ConnectionInfo;
 import com.openbravo.pos.forms.DatabaseBackup.DatabaseType;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DatabaseBackupTest {
 
-	@Rule
-	public TemporaryFolder temp = new TemporaryFolder();
+	@TempDir
+	public File temp;
 
 	@Test
 	public void parsesPostgresUrls() {
@@ -80,7 +79,8 @@ public class DatabaseBackupTest {
 
 	@Test
 	public void checksDailyBackupStatus() throws Exception {
-		File backupDir = temp.newFolder("backups");
+		File backupDir = new File(temp, "backups");
+		assertTrue(backupDir.mkdirs());
 		final Properties props = new Properties();
 		AppProperties appProps = new AppProperties() {
 			public String getProperty(String sKey) {
@@ -120,11 +120,12 @@ public class DatabaseBackupTest {
 
 	@Test
 	public void performsDerbyBackupEndToEnd() throws Exception {
-		File dbDir = new File(temp.getRoot(), "derby-db");
+		File dbDir = new File(temp, "derby-db");
 		String url = "jdbc:derby:" + dbDir.getAbsolutePath() + ";create=true";
 		DatabaseMigrator.migrate(url, null, null);
 
-		File backupDir = temp.newFolder("derby-backups");
+		File backupDir = new File(temp, "derby-backups");
+		assertTrue(backupDir.mkdirs());
 		final Properties props = new Properties();
 		props.setProperty("db.URL", url);
 		props.setProperty("backup.dir", backupDir.getAbsolutePath());

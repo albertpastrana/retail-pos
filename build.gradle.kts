@@ -95,7 +95,8 @@ dependencies {
     "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")
     "dataHelpersImplementation"("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("com.mysql:mysql-connector-j:8.4.0")
-    "integrationTestImplementation"("junit:junit:4.13.2")
+    "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:5.12.2")
+    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher:1.12.2")
 }
 
 val runtimeLibs by tasks.registering(Sync::class) {
@@ -183,7 +184,7 @@ val integrationTest by tasks.registering(Test::class) {
     description = "Apply Flyway to Derby, MySQL, and PostgreSQL. Start Compose first: docker compose up -d --wait"
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath + files("locales")
-    useJUnit()
+    useJUnitPlatform()
     systemProperty("pos.mysql.url", "jdbc:mysql://127.0.0.1:13306/pos")
     systemProperty("pos.mysql.user", "root")
     systemProperty("pos.mysql.password", "pos")
