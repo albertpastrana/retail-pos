@@ -67,7 +67,9 @@ public final class DatabaseBackup {
 	}
 
 	public static File backup(AppProperties props) throws BasicException {
-		String backupDir = props.getProperty(BACKUP_DIR_KEY);
+		BackupConfiguration backup = BackupConfiguration.from(props);
+		DatabaseConfiguration database = DatabaseConfiguration.from(props);
+		String backupDir = backup.getDirectory();
 		if (backupDir == null || backupDir.trim().isEmpty()) {
 			throw new BasicException(AppLocal.getIntString("message.backupnodir"));
 		}
@@ -82,17 +84,17 @@ public final class DatabaseBackup {
 			throw new BasicException("Backup directory is not writable: " + dir.getAbsolutePath());
 		}
 
-		String url = props.getProperty("db.URL");
+		String url = database.getUrl();
 		if (url == null || url.trim().isEmpty()) {
 			throw new BasicException("Database URL is not configured");
 		}
 
-		String user = props.getProperty("db.user");
+		String user = database.getUser();
 		if (user == null) {
 			user = "";
 		}
 
-		String password = props.getProperty("db.password");
+		String password = database.getPassword();
 		if (password != null && password.startsWith("crypt:")) {
 			AltEncrypter cypher = new AltEncrypter("cypherkey" + user);
 			password = cypher.decrypt(password.substring(6));
@@ -107,7 +109,7 @@ public final class DatabaseBackup {
 		File resultFile;
 		switch (info.getType()) {
 			case POSTGRESQL :
-				resultFile = backupPostgres(props, info, user, password, dir, timestamp);
+				resultFile = backupPostgres(backup, info, user, password, dir, timestamp);
 				break;
 			case MYSQL :
 				resultFile = backupMySQL(props, info, user, password, dir, timestamp);
@@ -122,23 +124,18 @@ public final class DatabaseBackup {
 		String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
 		if (props instanceof AppConfig) {
 			((AppConfig) props).setProperty(BACKUP_LASTDATE_KEY, today);
-			try {
-				((AppConfig) props).save();
-			} catch (IOException e) {
-				logger.log(Level.WARNING, "Failed to save backup.lastdate property", e);
-			}
 		}
 
 		return resultFile;
 	}
 
 	public static boolean isDailyBackupNeeded(AppProperties props) {
-		String daily = props.getProperty(BACKUP_DAILY_KEY);
-		if (!"true".equalsIgnoreCase(daily)) {
+		BackupConfiguration backup = BackupConfiguration.from(props);
+		if (!backup.isDaily()) {
 			return false;
 		}
 
-		String backupDir = props.getProperty(BACKUP_DIR_KEY);
+		String backupDir = backup.getDirectory();
 		if (backupDir == null || backupDir.trim().isEmpty()) {
 			return false;
 		}
@@ -149,7 +146,7 @@ public final class DatabaseBackup {
 		}
 
 		String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
-		String lastDate = props.getProperty(BACKUP_LASTDATE_KEY);
+		String lastDate = backup.getLastDate();
 		if (today.equals(lastDate)) {
 			return false;
 		}
@@ -178,6 +175,9 @@ public final class DatabaseBackup {
 			public void run() {
 				try {
 					File target = backup(props);
+					if (props instanceof AppConfig) {
+						ConfigurationStore.save((AppConfig) props);
+					}
 					logger.info("Daily database backup created at: " + target.getAbsolutePath());
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Daily database backup failed: " + e.getMessage(), e);
@@ -273,9 +273,9 @@ public final class DatabaseBackup {
 		return cmd;
 	}
 
-	private static File backupPostgres(AppProperties props, ConnectionInfo info, String user, String password, File dir,
-			String timestamp) throws BasicException {
-		String pgDump = findExecutable(props.getProperty(BACKUP_PG_DUMP_KEY), "pg_dump",
+	private static File backupPostgres(BackupConfiguration backup, ConnectionInfo info, String user, String password,
+			File dir, String timestamp) throws BasicException {
+		String pgDump = findExecutable(backup.getPgDump(), "pg_dump",
 				new String[]{"/usr/bin/pg_dump", "/usr/local/bin/pg_dump", "/opt/homebrew/bin/pg_dump",
 						"/opt/homebrew/opt/libpq/bin/pg_dump", "/usr/lib/postgresql/16/bin/pg_dump",
 						"/usr/lib/postgresql/15/bin/pg_dump", "/usr/lib/postgresql/14/bin/pg_dump"});

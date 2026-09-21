@@ -19,14 +19,10 @@
 
 package com.openbravo.pos.forms;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 /**
  *
@@ -34,32 +30,10 @@ import java.util.logging.Logger;
  */
 public class AppConfig implements AppProperties {
 
-	private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.AppConfig");
-
 	private Properties m_propsconfig;
-	private File configfile;
 
-	public AppConfig(String[] args) {
-		if (args.length == 0) {
-			init(getDefaultConfig());
-		} else {
-			init(new File(args[0]));
-		}
-	}
-
-	public AppConfig(File configfile) {
-		init(configfile);
-	}
-
-	private void init(File configfile) {
-		this.configfile = configfile;
+	AppConfig() {
 		m_propsconfig = new Properties();
-
-		logger.info("Reading configuration file: " + configfile.getAbsolutePath());
-	}
-
-	private File getDefaultConfig() {
-		return new File(new File(System.getProperty("user.home")), AppLocal.APP_ID + ".properties");
 	}
 
 	public String getProperty(String sKey) {
@@ -68,10 +42,6 @@ public class AppConfig implements AppProperties {
 
 	public String getHost() {
 		return getProperty("machine.hostname");
-	}
-
-	public File getConfigFile() {
-		return configfile;
 	}
 
 	public void setProperty(String sKey, String sValue) {
@@ -90,20 +60,11 @@ public class AppConfig implements AppProperties {
 		}
 	}
 
-	public boolean delete() {
+	void load(InputStream input) {
 		loadDefault();
-		return configfile.delete();
-	}
-
-	public void load() {
-
-		loadDefault();
-
-		try {
-			InputStream in = new FileInputStream(configfile);
+		try (InputStream in = input) {
 			if (in != null) {
 				m_propsconfig.load(in);
-				in.close();
 			}
 		} catch (IOException e) {
 			loadDefault();
@@ -136,13 +97,8 @@ public class AppConfig implements AppProperties {
 		DemoMode.removeIncompleteDerbyDatabase(m_propsconfig);
 	}
 
-	public void save() throws IOException {
-
-		OutputStream out = new FileOutputStream(configfile);
-		if (out != null) {
-			m_propsconfig.store(out, AppLocal.APP_NAME + ". Configuration file.");
-			out.close();
-		}
+	void store(OutputStream out) throws IOException {
+		m_propsconfig.store(out, AppLocal.APP_NAME + ". Configuration file.");
 	}
 
 	private void loadDefault() {

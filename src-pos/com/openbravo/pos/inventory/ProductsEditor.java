@@ -1119,10 +1119,8 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 						fields = new JTextField[num];
 						JLabel[] labels = new JLabel[num];
 						JButton submit = new JButton("Afegeix");
-						AppConfig config = new AppConfig(new String[0]);
-						config.load();
 						try {
-							Session s = AppViewConnection.createSession(config);
+							Session s = AppViewConnection.createSession(m_App.getProperties());
 
 							setLayout(new GridLayout(num + 1, 2));
 							setPreferredSize(new Dimension(230, 25 * (num + 1)));
@@ -1150,10 +1148,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 								submit.addActionListener(new ActionListener() {
 									public void actionPerformed(ActionEvent ae) {
 										try {
-											AppConfig config = new AppConfig(new String[0]);
-											config.load();
-
-											Session s = AppViewConnection.createSession(config);
+											Session s = AppViewConnection.createSession(m_App.getProperties());
 											String statement;
 											PreparedStatement ps;
 											ResultSet rs;

@@ -328,7 +328,7 @@ public final class DemoMode {
 
 	private static void save(AppConfig props, String message) throws BasicException {
 		try {
-			props.save();
+			ConfigurationStore.save(props);
 		} catch (IOException e) {
 			throw new BasicException(message, e);
 		}

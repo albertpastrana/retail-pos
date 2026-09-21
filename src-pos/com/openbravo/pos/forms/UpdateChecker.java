@@ -237,7 +237,7 @@ public final class UpdateChecker {
 					AppLocal.getIntString("update.install"));
 			logger.info("Update dialog choice for local package: " + choice);
 			if (choice == 0) {
-				installAndRestart(parent, release.packageFile, config.getConfigFile());
+				installAndRestart(parent, release.packageFile);
 			}
 			return;
 		}
@@ -257,7 +257,7 @@ public final class UpdateChecker {
 		}
 	}
 
-	private static void installAndRestart(Component parent, File packageFile, File configFile) {
+	private static void installAndRestart(Component parent, File packageFile) {
 		try {
 			File installDir = new File(System.getProperty("dirname.path")).getCanonicalFile();
 			String platform = platformName();
@@ -272,10 +272,10 @@ public final class UpdateChecker {
 			}
 			if (platform.equals("windows")) {
 				new ProcessBuilder("cmd", "/c", "start", "", updater.getAbsolutePath(), packageFile.getAbsolutePath(),
-						installDir.getAbsolutePath(), processId(), configFile.getAbsolutePath()).start();
+						installDir.getAbsolutePath(), processId()).start();
 			} else {
 				new ProcessBuilder(updater.getAbsolutePath(), packageFile.getAbsolutePath(),
-						installDir.getAbsolutePath(), processId(), configFile.getAbsolutePath()).start();
+						installDir.getAbsolutePath(), processId()).start();
 			}
 			logger.info("Updater process started; exiting application");
 			System.exit(0);

@@ -79,7 +79,6 @@ public class DemoModeAction implements BeanFactoryApp, ProcessAction {
 		command.add("-cp");
 		command.add(System.getProperty("java.class.path"));
 		command.add("com.openbravo.pos.forms.ApplicationRestart");
-		command.add(config.getConfigFile().getAbsolutePath());
 		try {
 			new ProcessBuilder(command).inheritIO().start();
 		} catch (IOException e) {

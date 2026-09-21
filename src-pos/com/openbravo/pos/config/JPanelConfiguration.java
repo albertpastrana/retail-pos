@@ -48,13 +48,13 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	private String loyaltyResourceName;
 
 	/** Creates new form JPanelConfiguration */
-	public JPanelConfiguration(AppView oApp) {
-		this(oApp.getProperties());
+	public JPanelConfiguration(AppView app) {
+		this((AppConfig) app.getProperties());
 	}
 
-	public JPanelConfiguration(AppProperties props) {
+	public JPanelConfiguration(AppConfig props) {
 
-		config = new AppConfig(props.getConfigFile());
+		config = props;
 
 		initComponents();
 
@@ -74,7 +74,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void restoreProperties() {
 
-		if (config.delete()) {
+		AppConfig reset = ConfigurationStore.reset();
+		if (reset != null) {
+			config = reset;
 			loadProperties();
 		} else {
 			JMessageDialog.showMessage(this,
@@ -84,7 +86,6 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void loadProperties() {
 
-		config.load();
 		loadLoyaltyDatabaseProperties();
 
 		// paneles auxiliares
@@ -104,7 +105,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		config.setProperty(LoyaltyStamps.NAME_KEY, null);
 
 		try {
-			config.save();
+			ConfigurationStore.save(config);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.restartchanges"),
 					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
 		} catch (IOException e) {

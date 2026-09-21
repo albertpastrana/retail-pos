@@ -21,12 +21,14 @@ package com.openbravo.pos.config;
 
 import java.awt.Component;
 import java.io.File;
+import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.forms.ConfigurationStore;
 import com.openbravo.pos.forms.DatabaseBackup;
 import com.openbravo.pos.util.AltEncrypter;
 import com.openbravo.pos.util.DirectoryEvent;
@@ -38,6 +40,7 @@ import com.openbravo.pos.util.DirectoryEvent;
 public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelConfig {
 
 	private DirtyManager dirty = new DirtyManager();
+	private AppConfig config;
 
 	/** Creates new form JPanelConfigDatabase */
 	public JPanelConfigDatabase() {
@@ -88,6 +91,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 	}
 
 	public void loadProperties(AppConfig config) {
+		this.config = config;
 
 		jtxtDbDriverLib.setText(config.getProperty("db.driverlib"));
 		jtxtDbDriver.setText(config.getProperty("db.driver"));
@@ -135,15 +139,13 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		java.awt.Cursor oldCursor = getCursor();
 		setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
 		try {
-			AppConfig currentConfig = new AppConfig(
-					new File(System.getProperty("user.home"), AppLocal.APP_ID + ".properties"));
-			currentConfig.load();
-			saveProperties(currentConfig);
+			saveProperties(config);
 
-			File backupFile = DatabaseBackup.backup(currentConfig);
+			File backupFile = DatabaseBackup.backup(config);
+			ConfigurationStore.save(config);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupok", backupFile.getAbsolutePath()),
 					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
-		} catch (BasicException ex) {
+		} catch (BasicException | IOException ex) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupfailed", ex.getMessage()),
 					AppLocal.getIntString("message.title"), JOptionPane.ERROR_MESSAGE);
 		} finally {

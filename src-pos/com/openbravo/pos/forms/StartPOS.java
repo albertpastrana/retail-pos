@@ -111,8 +111,7 @@ public class StartPOS {
 					System.exit(1);
 				}
 
-				AppConfig config = new AppConfig(args);
-				config.load();
+				AppConfig config = ConfigurationStore.load();
 
 				// set Locale.
 				String slang = config.getProperty("user.language");

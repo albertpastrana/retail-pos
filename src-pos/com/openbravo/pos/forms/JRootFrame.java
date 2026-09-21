@@ -147,7 +147,7 @@ public class JRootFrame extends javax.swing.JFrame implements AppMessage {
 		m_props.setProperty(WINDOW_MAXIMIZED, Boolean.toString(maximized));
 
 		try {
-			m_props.save();
+			ConfigurationStore.save(m_props);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "Cannot save the window geometry", e);
 		}

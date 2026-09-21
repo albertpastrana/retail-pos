@@ -37,7 +37,7 @@ public class JRootKiosk extends javax.swing.JFrame implements AppMessage {
 	private InstanceManager m_instmanager = null;
 
 	private JRootApp m_rootapp;
-	private AppProperties m_props;
+	private AppConfig m_props;
 
 	/** Creates new form JRootKiosk */
 	public JRootKiosk() {
@@ -48,7 +48,7 @@ public class JRootKiosk extends javax.swing.JFrame implements AppMessage {
 		initComponents();
 	}
 
-	public void initFrame(AppProperties props) {
+	public void initFrame(AppConfig props) {
 
 		m_props = props;
 

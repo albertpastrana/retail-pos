@@ -33,7 +33,7 @@ CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrati
 `./gradlew jar` copies `retail-pos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
 
 ```sh
-./start.sh path/to/config.properties
+./start.sh
 ```
 
 On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
@@ -46,12 +46,15 @@ Pushing a tag such as `v3.0.0-RC1` starts the GitHub Actions release workflow. I
 
 Everything below is per-installation: locale, tax rates, receipt layout, shop details. Nothing is baked into the build.
 
-If you pass no argument, the app reads `~/retail-pos.properties`.
+The app reads `~/.retail-pos.properties`. Existing installations using
+`~/openbravopos.properties` are migrated automatically. For development only,
+`RETAIL_POS_CONFIG` can point to an alternative properties file.
 
-Pass a file to use a repo-local config (see `dev.properties` as a template — copy it; do not commit machine-specific paths):
+For development, set `RETAIL_POS_CONFIG` to use a repo-local config (see
+`dev.properties` as a template — copy it; do not commit machine-specific paths):
 
 ```sh
-./start.sh ./dev.properties
+RETAIL_POS_CONFIG="$PWD/dev.properties" ./start.sh
 ```
 
 Important keys:

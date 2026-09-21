@@ -6,8 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.openbravo.data.loader.Session;
-import com.openbravo.pos.forms.AppConfig;
-import com.openbravo.pos.forms.AppViewConnection;
 
 public class SQLQueryer {
 	private static final Logger LOGGER = Logger.getLogger(SQLQueryer.class.getName());
@@ -22,9 +20,7 @@ public class SQLQueryer {
 
 		try {
 			if (s == null) {
-				AppConfig config = new AppConfig(new String[0]);
-				config.load();
-				s = AppViewConnection.createSession(config);
+				throw new SQLException("A database session is required");
 			}
 
 			stmt = s.getConnection().createStatement();

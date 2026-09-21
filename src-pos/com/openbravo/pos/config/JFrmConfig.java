@@ -37,7 +37,7 @@ public class JFrmConfig extends javax.swing.JFrame {
 	private JPanelConfiguration config;
 
 	/** Creates new form JFrmConfig */
-	public JFrmConfig(AppProperties props) {
+	public JFrmConfig(AppConfig props) {
 
 		initComponents();
 
@@ -97,8 +97,7 @@ public class JFrmConfig extends javax.swing.JFrame {
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
 
-				AppConfig config = new AppConfig(args);
-				config.load();
+				AppConfig config = ConfigurationStore.load();
 
 				// Set the look and feel, with the Retail POS design system's tokens
 				// layered on top (design-system/swing-development.md).

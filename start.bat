@@ -36,4 +36,4 @@ if exist "%DIRNAME%runtime\bin\javaw.exe" (
 ) else (
     set JAVA=javaw
 )
-start "Retail POS" /B %JAVA% -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Djava.library.path="%DIRNAME%lib/Windows/i368-mingw32" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.forms.StartPOS %1
+start "Retail POS" /B %JAVA% -cp %CP% -Djava.util.logging.config.file="%DIRNAME%logging.properties" -Djava.library.path="%DIRNAME%lib/Windows/i368-mingw32" -Ddirname.path="%DIRNAME%./" com.openbravo.pos.forms.StartPOS

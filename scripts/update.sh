@@ -4,7 +4,6 @@ set -euo pipefail
 package="${1:?package is required}"
 install_dir="${2:?install directory is required}"
 pid="${3:?process id is required}"
-config_file="${4:-}"
 log_file="${install_dir}.update.log"
 exec >>"$log_file" 2>&1
 log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
@@ -42,9 +41,6 @@ if mv "$new_dir" "$install_dir"; then
   rm -rf "$backup"
   chmod +x "$install_dir/start.sh" "$install_dir/update.sh" 2>/dev/null || true
   log "Restarting application"
-  if [ -n "$config_file" ]; then
-    exec "$install_dir/start.sh" "$config_file"
-  fi
   exec "$install_dir/start.sh"
 fi
 log "ERROR: Could not install new application; restoring backup"

@@ -89,9 +89,6 @@ public class DatabaseBackupTest {
 			public String getHost() {
 				return "localhost";
 			}
-			public File getConfigFile() {
-				return new File("/tmp/test.properties");
-			}
 		};
 
 		// Daily disabled
@@ -137,9 +134,6 @@ public class DatabaseBackupTest {
 			}
 			public String getHost() {
 				return "localhost";
-			}
-			public File getConfigFile() {
-				return new File("/tmp/test.properties");
 			}
 		};
 
