@@ -24,9 +24,8 @@ public final class CatalogVariantModel {
 				|| "Selmark".equals(brand) || "Omsa".equals(brand) || "Filodoro".equals(brand)
 				|| "Cotonella".equals(brand) || "Dim".equals(brand) || "Mariola Playbra".equals(brand)
 				|| "Ocean".equals(brand) || "Princesa".equals(brand) || "Berkshire".equals(brand)
-				|| "Ejecutivo".equals(brand) || "Novedades Marcos".equals(brand)
-				|| "Babysanex".equals(brand) || "Sisi".equals(brand) || "Set".equals(brand)
-				|| "Selene".equals(brand)) {
+				|| "Ejecutivo".equals(brand) || "Novedades Marcos".equals(brand) || "Babysanex".equals(brand)
+				|| "Sisi".equals(brand) || "Set".equals(brand) || "Selene".equals(brand)) {
 			return before(value, '-');
 		}
 		if ("Gisela".equals(brand)) {
