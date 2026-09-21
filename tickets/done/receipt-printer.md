@@ -15,3 +15,7 @@ This ticket is wiring the shop machines, not rewriting that guide.
 ## Done when
 
 The tills that must print, print. Drawer kick works where there is a drawer.
+
+## Shipped
+
+- Receipt printing and drawer kick were tested on the shop tills and worked as expected.

@@ -23,3 +23,10 @@ Keep the string-based API temporarily for scripts, plugins, and legacy integrati
 - Invalid typed lookups fail with a clear exception.
 - Tests cover typed lookup, caching, initialization failures, and invalid types.
 - The project builds successfully and the relevant test suite passes.
+
+## Shipped
+
+- Added generic `AppView.getBean(Class<T>)` lookup while retaining the string-based API for legacy and script callers.
+- Migrated application call sites away from fully qualified bean-name strings and manual casts.
+- Preserved bean caching and lifecycle behavior, with typed lookup tests covering caching and invalid lookups.
+- Shipped in commit `3dc14d6`.

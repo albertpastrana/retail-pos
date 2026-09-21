@@ -45,3 +45,10 @@ LIMIT 10
 - Catalog queries are not significant: the `TAXES` query took `0.257 ms` and the root `CATEGORIES` query took `0.265 ms`.
 
 Conclusion: the recent-sales query does work over the complete result set, but it is currently below 120 ms. A multi-second delay is therefore unlikely to be caused by these database queries alone. If the delay is still reproducible, instrument the edit flow and Swing/UI initialization to identify the operation after the database calls.
+
+## Shipped
+
+- Restored the completed-sale edit action and operator-facing menu entry.
+- Preserved existing permissions and sale editing safeguards.
+- Restored the normal flow for opening, correcting, and saving completed sales.
+- Shipped in commit `b7e2d5d`.
