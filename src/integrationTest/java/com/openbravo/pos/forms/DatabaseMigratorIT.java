@@ -219,7 +219,7 @@ public class DatabaseMigratorIT {
 	private static int tableCount(Connection connection, String table) throws SQLException {
 		DatabaseMetaData metadata = connection.getMetaData();
 		try (ResultSet tables = metadata.getTables(connection.getCatalog(), connection.getSchema(), null,
-				new String[] { "TABLE" })) {
+				new String[]{"TABLE"})) {
 			int count = 0;
 			while (tables.next()) {
 				if (table.equalsIgnoreCase(tables.getString("TABLE_NAME"))) {
