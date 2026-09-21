@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: bash scripts/package-portable.sh "${{ matrix.platform }}" "$GITHUB_REF_NAME"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-${{ matrix.platform }}
           path: dist/*
