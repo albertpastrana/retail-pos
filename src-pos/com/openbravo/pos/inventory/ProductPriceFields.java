@@ -114,6 +114,10 @@ public final class ProductPriceFields {
 		}
 	}
 
+	public void setGrossPrice(double gross) {
+		sellTax.setText(ProductPriceMath.formatCurrency(Double.valueOf(gross)));
+	}
+
 	private void onBuyOrTaxChanged() {
 		if (!sellOverridden) {
 			offerFromCost();

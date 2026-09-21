@@ -186,15 +186,15 @@ public final class CatalogImportDialog {
 					if (!applyPriceModel.isSelected() || applyingFamilyPrice[0] || source.prices.reportlock) {
 						return;
 					}
-					Double margin = source.prices.readCommercialMargin();
-					if (margin == null) {
+					Double gross = ProductPriceMath.parsePositiveCurrency(source.prices.sellTax.getText(), false);
+					if (gross == null) {
 						return;
 					}
 					applyingFamilyPrice[0] = true;
 					try {
 						for (VariantImportEditor target : editors) {
 							if (target != source && target.selected) {
-								target.prices.setCommercialMargin(margin.doubleValue());
+								target.prices.setGrossPrice(gross.doubleValue());
 							}
 						}
 					} finally {
@@ -202,6 +202,29 @@ public final class CatalogImportDialog {
 					}
 				}
 			};
+		}
+		final boolean[] applyingFamilyCategory = new boolean[]{false};
+		for (final VariantImportEditor source : editors) {
+			source.category.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					if (applyingFamilyCategory[0]) {
+						return;
+					}
+					CategoryInfo selectedCategory = (CategoryInfo) source.category.getSelectedItem();
+					String categoryId = selectedCategory == null ? null : selectedCategory.getID();
+					applyingFamilyCategory[0] = true;
+					try {
+						for (VariantImportEditor target : editors) {
+							if (target != source && target.selected) {
+								target.selectCategory(categoryId, selectedCategory);
+							}
+						}
+					} finally {
+						applyingFamilyCategory[0] = false;
+					}
+				}
+			});
 		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setRowHeight(28);
@@ -649,6 +672,17 @@ public final class CatalogImportDialog {
 				return null;
 			}
 			return buildEditedProduct(product, product, reference, name, category, prices, stock);
+		}
+
+		private void selectCategory(String categoryId, CategoryInfo fallback) {
+			for (int i = 0; i < category.getItemCount(); i++) {
+				CategoryInfo candidate = category.getItemAt(i);
+				if (candidate != null && candidate.getID().equals(categoryId)) {
+					category.setSelectedIndex(i);
+					return;
+				}
+			}
+			category.setSelectedItem(fallback);
 		}
 	}
 
