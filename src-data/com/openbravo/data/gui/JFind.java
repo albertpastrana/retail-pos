@@ -67,7 +67,8 @@ public class JFind extends JDialog {
 
 		m_FindInfo = null;
 
-		// show();
+		pack();
+		setLocationRelativeTo(getOwner());
 		setVisible(true);
 
 		return m_FindInfo;
@@ -116,33 +117,51 @@ public class JFind extends JDialog {
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		setTitle(LocalRes.getIntString("title.find"));
-		setResizable(false);
-		jPanel1.setLayout(null);
+		jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		jPanel1.setLayout(new java.awt.GridBagLayout());
+		java.awt.GridBagConstraints formConstraints = new java.awt.GridBagConstraints();
+		formConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+		formConstraints.anchor = java.awt.GridBagConstraints.LINE_END;
+		formConstraints.gridx = 0;
+		formConstraints.weightx = 0.0;
 
 		jLabel1.setText(LocalRes.getIntString("label.findwhat"));
-		jPanel1.add(jLabel1);
-		jLabel1.setBounds(10, 20, 100, 14);
+		formConstraints.gridy = 0;
+		jPanel1.add(jLabel1, formConstraints);
 
-		jPanel1.add(m_jFind);
-		m_jFind.setBounds(110, 20, 230, 19);
+		m_jFind.setColumns(20);
+		formConstraints.gridx = 1;
+		formConstraints.weightx = 1.0;
+		formConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		jPanel1.add(m_jFind, formConstraints);
 
 		jLabel2.setText(LocalRes.getIntString("label.where"));
-		jPanel1.add(jLabel2);
-		jLabel2.setBounds(10, 50, 100, 14);
+		formConstraints.gridx = 0;
+		formConstraints.gridy = 1;
+		formConstraints.weightx = 0.0;
+		formConstraints.fill = java.awt.GridBagConstraints.NONE;
+		jPanel1.add(jLabel2, formConstraints);
 
-		jPanel1.add(m_jWhere);
-		m_jWhere.setBounds(110, 50, 230, 22);
+		formConstraints.gridx = 1;
+		formConstraints.weightx = 1.0;
+		formConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		jPanel1.add(m_jWhere, formConstraints);
 
 		jLabel3.setText(LocalRes.getIntString("label.match"));
-		jPanel1.add(jLabel3);
-		jLabel3.setBounds(10, 80, 100, 14);
+		formConstraints.gridx = 0;
+		formConstraints.gridy = 2;
+		formConstraints.weightx = 0.0;
+		formConstraints.fill = java.awt.GridBagConstraints.NONE;
+		jPanel1.add(jLabel3, formConstraints);
 
-		jPanel1.add(m_jMatch);
-		m_jMatch.setBounds(110, 80, 230, 22);
+		formConstraints.gridx = 1;
+		formConstraints.weightx = 1.0;
+		formConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		jPanel1.add(m_jMatch, formConstraints);
 
 		m_jMatchCase.setText(LocalRes.getIntString("label.casesensitive"));
-		jPanel1.add(m_jMatchCase);
-		m_jMatchCase.setBounds(110, 110, 230, 20);
+		formConstraints.gridy = 3;
+		jPanel1.add(m_jMatchCase, formConstraints);
 
 		getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
 
@@ -168,8 +187,6 @@ public class JFind extends JDialog {
 
 		getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 434) / 2, (screenSize.height - 222) / 2, 434, 222);
 	}// GEN-END:initComponents
 
 	private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdCancelActionPerformed
