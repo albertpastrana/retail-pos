@@ -243,12 +243,7 @@ dataHelper(
     "importCatalog",
     "ImportCatalog",
     "Wipe products and stock, then load the TSV catalogue. Destructive. Quit the POS first.",
-    listOf(
-        "data/retail-pos-database",
-        "data/import-categories.tsv",
-        "data/import-products.tsv",
-        "src-pos/com/openbravo/pos/templates/Ticket.Buttons.xml",
-    ),
+    listOf("data/retail-pos-database", "data/import-categories.tsv", "data/import-products.tsv"),
 )
 dataHelper(
     "insertCatalogRows",

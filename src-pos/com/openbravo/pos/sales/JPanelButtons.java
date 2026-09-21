@@ -19,20 +19,10 @@
 
 package com.openbravo.pos.sales;
 
-import com.openbravo.data.loader.LocalRes;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.io.StringReader;
 import javax.swing.JButton;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppUser;
 import com.openbravo.pos.forms.SupervisorAuthorization;
@@ -42,14 +32,8 @@ import com.openbravo.pos.util.TillButtons;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class JPanelButtons extends javax.swing.JPanel {
-
-	private static Logger logger = Logger.getLogger("com.openbravo.pos.sales.JPanelButtons");
-
-	private static SAXParser m_sp = null;
 
 	private Properties props;
 	private Map<String, String> events;
@@ -59,7 +43,7 @@ public class JPanelButtons extends javax.swing.JPanel {
 	private JPanelTicket panelticket;
 
 	/** Creates new form JPanelButtons */
-	public JPanelButtons(String sConfigKey, JPanelTicket panelticket) {
+	public JPanelButtons(JPanelTicket panelticket) {
 		initComponents();
 
 		// Load categories default thumbnail
@@ -71,25 +55,27 @@ public class JPanelButtons extends javax.swing.JPanel {
 		props = new Properties();
 		events = new HashMap<String, String>();
 
-		String sConfigRes = panelticket.getResourceAsXML(sConfigKey);
+		// These actions are part of the till, not an installation-specific resource.
+		props.setProperty("taxesincluded", "true");
+		props.setProperty("taxcategoryid", "001");
+		addButton("button.print", "Button.Print", AppLocal.getIntString("button.print"), "Printer.TicketPreview");
+		addButton("button.opendrawer", "Button.OpenDrawer", AppLocal.getIntString("button.opendrawer"),
+				"Printer.OpenDrawer");
 
-		if (sConfigRes != null) {
-			try {
-				if (m_sp == null) {
-					SAXParserFactory spf = SAXParserFactory.newInstance();
-					m_sp = spf.newSAXParser();
+	}
+
+	private void addButton(String key, String image, String title, final String template) {
+		JButton btn = new JButtonFunc(key, image, title);
+		btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				if ("Printer.OpenDrawer".equals(template) && !SupervisorAuthorization.authorize(panelticket,
+						panelticket.m_App, AppLocal.getIntString("message.authorizeddrawer"))) {
+					return;
 				}
-				m_sp.parse(new InputSource(new StringReader(sConfigRes)), new ConfigurationHandler());
-
-			} catch (ParserConfigurationException ePC) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.parserconfig"), ePC);
-			} catch (SAXException eSAX) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.xmlfile"), eSAX);
-			} catch (IOException eIO) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.iofile"), eIO);
+				panelticket.printTicket(template);
 			}
-		}
-
+		});
+		add(btn);
 	}
 
 	public void setPermissions(AppUser user) {
@@ -113,67 +99,6 @@ public class JPanelButtons extends javax.swing.JPanel {
 
 	public String getEvent(String key) {
 		return events.get(key);
-	}
-
-	private class ConfigurationHandler extends DefaultHandler {
-		@Override
-		public void startDocument() throws SAXException {
-		}
-		@Override
-		public void endDocument() throws SAXException {
-		}
-		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
-			if ("button".equals(qName)) {
-
-				// The button title text
-				String titlekey = attributes.getValue("titlekey");
-				if (titlekey == null) {
-					titlekey = attributes.getValue("name");
-				}
-				String title = titlekey == null ? attributes.getValue("title") : AppLocal.getIntString(titlekey);
-
-				// adding the button to the panel
-				JButton btn = new JButtonFunc(attributes.getValue("key"), attributes.getValue("image"), title);
-
-				// The template resource or the code resource
-				final String template = attributes.getValue("template");
-				if (template == null) {
-					final String code = attributes.getValue("code");
-					btn.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							panelticket.evalScriptAndRefresh(code);
-						}
-					});
-				} else {
-					btn.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							if ("Printer.OpenDrawer".equals(template) && !SupervisorAuthorization.authorize(panelticket,
-									panelticket.m_App, AppLocal.getIntString("message.authorizeddrawer"))) {
-								return;
-							}
-							panelticket.printTicket(template);
-						}
-					});
-				}
-				add(btn);
-
-			} else if ("event".equals(qName)) {
-				events.put(attributes.getValue("key"), attributes.getValue("code"));
-			} else {
-				String value = attributes.getValue("value");
-				if (value != null) {
-					props.setProperty(qName, attributes.getValue("value"));
-				}
-			}
-		}
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-		}
-		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {
-		}
 	}
 
 	private class JButtonFunc extends JButton {

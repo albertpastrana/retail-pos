@@ -25,7 +25,6 @@ public class ApplyStoreResources {
 			upsert(c, "Window.Logo", 1, new File(t, "Window.Logo.png"));
 			upsert(c, "Window.Title", 0, new File(t, "Window.Title.txt"));
 			upsert(c, "Menu.Root", 0, new File(t, "Menu.Root.txt"));
-			upsert(c, "Ticket.Buttons", 0, new File(t, "Ticket.Buttons.xml"));
 			upsert(c, "Button.Print", 1, new File(t, "Button.Print.png"));
 			upsert(c, "Button.OpenDrawer", 1, new File(t, "Button.OpenDrawer.png"));
 			patchRoles(c);
@@ -47,7 +46,7 @@ public class ApplyStoreResources {
 		File[] candidates = {new File(home, "src-pos/com/openbravo/pos/templates"),
 				new File("src-pos/com/openbravo/pos/templates"), new File("../src-pos/com/openbravo/pos/templates")};
 		for (File dir : candidates) {
-			if (new File(dir, "Ticket.Buttons.xml").isFile()) {
+			if (new File(dir, "Printer.Ticket.xml").isFile()) {
 				return dir;
 			}
 		}

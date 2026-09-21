@@ -161,8 +161,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_TTP = new TicketParser(m_App.getDeviceTicket(), dlSystem);
 
-		// Los botones configurables...
-		m_jbtnconfig = new JPanelButtons("Ticket.Buttons", this);
+		// Core till actions are owned by the application; layouts and other templates
+		// remain database-backed resources.
+		m_jbtnconfig = new JPanelButtons(this);
 		m_jButtonsExt.add(m_jbtnconfig);
 
 		alignOptionsRowHeight();
@@ -231,8 +232,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		paymentdialogrefund = JPaymentSelectRefund.getDialog(this);
 		paymentdialogrefund.init(m_App);
 
-		// The till sells at one tax category with the prices already including
-		// taxes, both taken from Ticket.Buttons instead of on-screen controls.
+		// The till sells at one tax category with prices already including taxes.
 		taxesincluded = "true".equals(m_jbtnconfig.getProperty("taxesincluded"));
 
 		java.util.List<TaxInfo> taxlist = senttax.list();

@@ -15,7 +15,6 @@ public class ImportCatalog {
 		String db = args[0];
 		String cats = args[1];
 		String prods = args[2];
-		String buttonsXml = args[3];
 		Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
 		Connection c = DriverManager.getConnection("jdbc:derby:" + db);
 		c.setAutoCommit(false);
@@ -32,12 +31,6 @@ public class ImportCatalog {
 
 			s.executeUpdate("UPDATE TAXCATEGORIES SET NAME = 'IVA 21%' WHERE ID = '001'");
 			s.executeUpdate("UPDATE TAXES SET NAME = 'IVA 21%', RATE = 0.21 WHERE ID = '001'");
-
-			byte[] xml = readAll(buttonsXml);
-			PreparedStatement updRes = c
-					.prepareStatement("UPDATE RESOURCES SET CONTENT = ? WHERE NAME = 'Ticket.Buttons'");
-			updRes.setBytes(1, xml);
-			updRes.executeUpdate();
 
 			PreparedStatement insCat = c
 					.prepareStatement("INSERT INTO CATEGORIES (ID, NAME, PARENTID, IMAGE) VALUES (?, ?, ?, NULL)");

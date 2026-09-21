@@ -158,8 +158,8 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 
 | Task                                                                                    | What it does                                                                                                                                     |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `./gradlew applyStoreResources`                                                         | Upserts ticket, logo, and button templates and adds discount permissions to Administrator and Manager. Default DB: `data/retail-pos-database`. |
-| `./gradlew importCatalog`                                                               | **Wipes** products, stock, and extra categories, then loads both TSVs, sets tax category `001`, and updates `Ticket.Buttons`. Destructive.       |
+| `./gradlew applyStoreResources`                                                         | Upserts receipt, logo, and button image resources and adds discount permissions to Administrator and Manager. Default DB: `data/retail-pos-database`. |
+| `./gradlew importCatalog`                                                               | **Wipes** products, stock, and extra categories, then loads both TSVs and sets tax category `001`. Destructive.                                  |
 | `./gradlew loadFallbackCatalog --args='JDBC_URL USER PASSWORD categories.tsv products.tsv prices.tsv'` | Replaces the shared fallback tables from TSVs. Does not modify products or stock. |
 | `./gradlew keepCatalog --args='data/retail-pos-database path/to/keep.csv'`            | Drops products whose `REFERENCE` does not match codes in a CSV (first column after a header). Unlinks ticket lines instead of deleting history.  |
 | `python3 data/apply-model-price.py Avet 3267 --cost 3.66 --price 5.95 --apply --insert` | Sets cost and ticket price on every variant of a model, then inserts them.                                                                       |
@@ -180,7 +180,7 @@ Example with a different Derby directory:
 - Management reports are being rebuilt; the former BeanShell/Jasper report menu is no longer installed by the default roles.
 - FlatLaf Light look and feel in Configuration → General
 
-Receipt content, shop name, logo, and on-screen buttons are resources, not code. Edit `src-pos/com/openbravo/pos/templates/` (`Printer.Ticket.xml`, `Printer.TicketPreview.xml`, `Ticket.Buttons.xml`, `Window.Title.txt`) and apply them to the database.
+Receipt content, shop name, logos, and other operator-customizable templates are database-backed resources. The stable sales actions Print and Open Drawer are code-owned in `JPanelButtons`; their role permissions (for example `button.print`) remain database-backed. Edit `src-pos/com/openbravo/pos/templates/` for receipt and branding resources and apply those resources to the database.
 
 ## Source layout
 

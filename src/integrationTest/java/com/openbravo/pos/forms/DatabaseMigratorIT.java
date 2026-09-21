@@ -63,7 +63,8 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(36, count(connection, "RESOURCES"));
+			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
@@ -126,7 +127,8 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(36, count(connection, "RESOURCES"));
+			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
 			assertEquals(1,
@@ -148,6 +150,9 @@ public class DatabaseMigratorIT {
 			assertTrue(roleContains(connection, "1", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "1", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "1", "JPanelLowStock"));
+			assertTrue(roleContains(connection, "0", "button.print"));
+			assertTrue(roleContains(connection, "1", "button.print"));
+			assertTrue(roleContains(connection, "2", "button.print"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Employee'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
@@ -165,7 +170,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(36, count(connection, "RESOURCES"));
+			assertEquals(35, count(connection, "RESOURCES"));
 			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();
