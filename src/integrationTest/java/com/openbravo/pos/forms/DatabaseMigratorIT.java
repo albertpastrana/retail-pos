@@ -155,6 +155,7 @@ public class DatabaseMigratorIT {
 			assertEquals(1, count(connection, "PRICE_RULES"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRICES"));
+			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();
 		}
@@ -165,6 +166,7 @@ public class DatabaseMigratorIT {
 		Connection connection = open(url, user, password);
 		try {
 			assertEquals(36, count(connection, "RESOURCES"));
+			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();
 		}
@@ -212,6 +214,20 @@ public class DatabaseMigratorIT {
 
 	private static int count(Connection connection, String table) throws SQLException {
 		return queryInt(connection, "SELECT COUNT(*) FROM " + quotedTable(connection, table));
+	}
+
+	private static int tableCount(Connection connection, String table) throws SQLException {
+		DatabaseMetaData metadata = connection.getMetaData();
+		try (ResultSet tables = metadata.getTables(connection.getCatalog(), connection.getSchema(), null,
+				new String[] { "TABLE" })) {
+			int count = 0;
+			while (tables.next()) {
+				if (table.equalsIgnoreCase(tables.getString("TABLE_NAME"))) {
+					count++;
+				}
+			}
+			return count;
+		}
 	}
 
 	private static int countWhereNotNull(Connection connection, String table, String column) throws SQLException {
