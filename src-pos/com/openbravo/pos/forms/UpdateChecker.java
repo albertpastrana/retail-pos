@@ -45,7 +45,7 @@ public final class UpdateChecker {
 			public void run() {
 				try {
 					Release release = findLocal(config.getProperty("update.dir"));
-					if (release == null) {
+					if (release == null || !hasNewerVersion(release)) {
 						release = fetch(endpoint);
 					}
 					if (release != null && hasNewerVersion(release)) {
@@ -204,28 +204,86 @@ public final class UpdateChecker {
 		}
 	}
 
-	private static boolean isNewer(String available, String current) {
-		String[] availableParts = numericParts(available);
-		String[] currentParts = numericParts(current);
-		int length = Math.max(availableParts.length, currentParts.length);
+	static boolean isNewer(String available, String current) {
+		return compareVersions(available, current) > 0;
+	}
+
+	private static int compareVersions(String available, String current) {
+		Version availableVersion = parseVersion(available);
+		Version currentVersion = parseVersion(current);
+		int length = Math.max(availableVersion.numericParts.length, currentVersion.numericParts.length);
 		for (int i = 0; i < length; i++) {
-			int availablePart = i < availableParts.length ? Integer.parseInt(availableParts[i]) : 0;
-			int currentPart = i < currentParts.length ? Integer.parseInt(currentParts[i]) : 0;
+			int availablePart = i < availableVersion.numericParts.length
+					? Integer.parseInt(availableVersion.numericParts[i])
+					: 0;
+			int currentPart = i < currentVersion.numericParts.length
+					? Integer.parseInt(currentVersion.numericParts[i])
+					: 0;
 			if (availablePart != currentPart) {
-				return availablePart > currentPart;
+				return Integer.compare(availablePart, currentPart);
 			}
 		}
-		return false;
+		if (availableVersion.preRelease == null && currentVersion.preRelease != null) {
+			return 1;
+		}
+		if (availableVersion.preRelease != null && currentVersion.preRelease == null) {
+			return -1;
+		}
+		if (availableVersion.preRelease == null) {
+			return 0;
+		}
+		return comparePreRelease(availableVersion.preRelease, currentVersion.preRelease);
 	}
 
 	private static String[] numericParts(String version) {
+		return parseVersion(version).numericParts;
+	}
+
+	private static Version parseVersion(String version) {
 		String normalized = version.toLowerCase().startsWith("v") ? version.substring(1) : version;
-		String numeric = normalized.split("[-+]")[0];
+		String[] versionParts = normalized.split("\\+", 2);
+		String[] baseAndPreRelease = versionParts[0].split("-", 2);
+		String numeric = baseAndPreRelease[0];
 		String[] parts = numeric.split("\\.");
 		for (String part : parts) {
 			Integer.parseInt(part);
 		}
-		return parts;
+		return new Version(parts, baseAndPreRelease.length > 1 ? baseAndPreRelease[1] : null);
+	}
+
+	private static int comparePreRelease(String available, String current) {
+		String[] availableParts = available.split("\\.");
+		String[] currentParts = current.split("\\.");
+		int length = Math.max(availableParts.length, currentParts.length);
+		for (int i = 0; i < length; i++) {
+			if (i >= availableParts.length) {
+				return -1;
+			}
+			if (i >= currentParts.length) {
+				return 1;
+			}
+			int comparison = comparePreReleasePart(availableParts[i], currentParts[i]);
+			if (comparison != 0) {
+				return comparison;
+			}
+		}
+		return 0;
+	}
+
+	private static int comparePreReleasePart(String available, String current) {
+		java.util.regex.Matcher availableMatcher = Pattern.compile("([a-z]+)(\\d*)").matcher(available);
+		java.util.regex.Matcher currentMatcher = Pattern.compile("([a-z]+)(\\d*)").matcher(current);
+		if (availableMatcher.matches() && currentMatcher.matches()
+				&& availableMatcher.group(1).equals(currentMatcher.group(1))) {
+			int prefixComparison = availableMatcher.group(1).compareTo(currentMatcher.group(1));
+			if (prefixComparison != 0) {
+				return prefixComparison;
+			}
+			int availableNumber = availableMatcher.group(2).isEmpty() ? 0 : Integer.parseInt(availableMatcher.group(2));
+			int currentNumber = currentMatcher.group(2).isEmpty() ? 0 : Integer.parseInt(currentMatcher.group(2));
+			return Integer.compare(availableNumber, currentNumber);
+		}
+		return available.compareTo(current);
 	}
 
 	private static void showUpdate(AppConfig config, Component parent, Release release) {
@@ -303,6 +361,16 @@ public final class UpdateChecker {
 			this.version = version;
 			this.pageUrl = pageUrl;
 			this.packageFile = packageFile;
+		}
+	}
+
+	private static final class Version {
+		private final String[] numericParts;
+		private final String preRelease;
+
+		private Version(String[] numericParts, String preRelease) {
+			this.numericParts = numericParts;
+			this.preRelease = preRelease;
 		}
 	}
 }
