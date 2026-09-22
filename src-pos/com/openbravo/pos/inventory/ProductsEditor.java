@@ -47,6 +47,7 @@ import com.openbravo.data.user.DirtyManager;
 import com.openbravo.data.user.EditorRecord;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.sales.TaxesLogic;
+import com.openbravo.pos.theme.RetailPOSColors;
 import java.util.Date;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -61,7 +62,6 @@ import java.lang.reflect.InvocationTargetException;
 public class ProductsEditor extends JPanel implements EditorRecord {
 	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
 			.getLogger(ProductsEditor.class.getName());
-
 	private SentenceList m_sentcat;
 	private ComboBoxValModel m_CategoryModel;
 
@@ -195,6 +195,14 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_bd = bd;
 	}
 
+	public void setDeleteAction(ActionListener listener) {
+		m_jDelete.addActionListener(listener);
+	}
+
+	public String getProductName() {
+		return m_jName.getText();
+	}
+
 	private void saveProduct() {
 		if (m_bd == null) {
 			return;
@@ -250,6 +258,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setText(null);
 		m_jCode.setText(null);
 		m_jName.setText(null);
+		m_jFamily.setText(null);
 		m_jComment.setSelected(false);
 		m_jScale.setSelected(false);
 		m_jVoucher.setSelected(false);
@@ -272,6 +281,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setEnabled(false);
 		m_jCode.setEnabled(false);
 		m_jName.setEnabled(false);
+		m_jFamily.setEnabled(false);
 		m_jComment.setEnabled(false);
 		m_jScale.setEnabled(false);
 		m_jVoucher.setEnabled(false);
@@ -315,6 +325,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setText(null);
 		m_jCode.setText(null);
 		m_jName.setText(null);
+		m_jFamily.setText(null);
 		m_jComment.setSelected(false);
 		m_jScale.setSelected(false);
 		m_jVoucher.setSelected(false);
@@ -337,6 +348,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setEnabled(true);
 		m_jCode.setEnabled(true);
 		m_jName.setEnabled(true);
+		m_jFamily.setEnabled(false);
 		m_jComment.setEnabled(true);
 		m_jScale.setEnabled(true);
 		m_jVoucher.setEnabled(true);
@@ -381,6 +393,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setText(Formats.STRING.formatValue(myprod[1]));
 		m_jCode.setText(Formats.STRING.formatValue(myprod[2]));
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
+		m_jFamily.setText(Formats.STRING.formatValue(myprod[18]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
 		m_jVoucher.setSelected(((Boolean) myprod[17]).booleanValue());
@@ -447,6 +460,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setText(Formats.STRING.formatValue(myprod[1]));
 		m_jCode.setText(Formats.STRING.formatValue(myprod[2]));
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
+		m_jFamily.setText(Formats.STRING.formatValue(myprod[18]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jScale.setSelected(((Boolean) myprod[5]).booleanValue());
 		m_jVoucher.setSelected(((Boolean) myprod[17]).booleanValue());
@@ -470,6 +484,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef.setEnabled(true);
 		m_jCode.setEnabled(true);
 		m_jName.setEnabled(true);
+		m_jFamily.setEnabled(false);
 		m_jComment.setEnabled(true);
 		m_jScale.setEnabled(true);
 		m_jVoucher.setEnabled(true);
@@ -935,6 +950,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		m_jRef = new javax.swing.JTextField(14);
 		m_jName = new javax.swing.JTextField(32);
+		m_jFamily = new javax.swing.JTextField(32);
 		m_jCode = new javax.swing.JTextField(14);
 		m_jImage = new com.openbravo.data.gui.JImageEditor();
 		m_jImage.setPreferredSize(new Dimension(200, 180));
@@ -985,6 +1001,9 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		txtAttributes.setFont(new Font("DialogInput", Font.PLAIN, 12));
 
 		m_jSave = new javax.swing.JButton(AppLocal.getIntString("Button.Save"));
+		RetailPOSColors.primaryButton(m_jSave);
+		m_jDelete = new javax.swing.JButton("Eliminar");
+		m_jDelete.setForeground(RetailPOSColors.danger());
 
 		m_jCode.addKeyListener(new KeyListener() {
 			public void keyPressed(KeyEvent ke) {
@@ -1027,6 +1046,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		header.add(m_jTitle, title);
 		ProductFormLayout.addRow(header, 1, AppLocal.getIntString("label.prodref"), ProductFormLayout.inline(m_jRef));
 		ProductFormLayout.addRow(header, 2, AppLocal.getIntString("label.prodname"), m_jName);
+		ProductFormLayout.addRow(header, 3, "Família", m_jFamily);
 		return header;
 	}
 
@@ -1091,6 +1111,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 	private JComponent buildActions() {
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+		actions.add(m_jDelete);
 		actions.add(m_jSave);
 		return actions;
 	}
@@ -1291,6 +1312,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private com.openbravo.data.gui.JImageEditor m_jImage;
 	private javax.swing.JCheckBox m_jInCatalog;
 	private javax.swing.JTextField m_jName;
+	private javax.swing.JTextField m_jFamily;
 	private javax.swing.JTextField m_jPriceBuy;
 	private javax.swing.JTextField m_jPriceBuyWholesale;
 	private javax.swing.JTextField m_jPriceSecondary;
@@ -1298,6 +1320,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JTextField m_jPriceSellTax;
 	private javax.swing.JTextField m_jRef;
 	private javax.swing.JButton m_jSave;
+	private javax.swing.JButton m_jDelete;
 	private javax.swing.JCheckBox m_jScale;
 	private javax.swing.JCheckBox m_jVoucher;
 	private javax.swing.JTextField m_jStock;

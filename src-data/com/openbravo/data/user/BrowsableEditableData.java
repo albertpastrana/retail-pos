@@ -46,6 +46,7 @@ public class BrowsableEditableData {
 	// private DocumentLoader m_keyvalue;
 	private int m_iIndex;
 	private boolean m_bIsAdjusting;
+	private Component m_navigationComponent;
 
 	private boolean iseditable = true;
 
@@ -85,6 +86,10 @@ public class BrowsableEditableData {
 	}
 	public final int getIndex() {
 		return m_iIndex;
+	}
+
+	public void setNavigationComponent(Component component) {
+		m_navigationComponent = component;
 	}
 
 	public final void addStateListener(StateListener l) {
@@ -174,18 +179,21 @@ public class BrowsableEditableData {
 	}
 
 	public void refreshData() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		m_bd.refreshData();
 		m_editorrecord.refresh();
 		baseMoveTo(0);
 	}
 	public void loadData() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		m_bd.loadData();
 		m_editorrecord.refresh();
 		baseMoveTo(0);
 	}
 	public void unloadData() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		m_bd.unloadData();
 		m_editorrecord.refresh();
@@ -193,12 +201,14 @@ public class BrowsableEditableData {
 	}
 
 	public void sort(Comparator c) throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		m_bd.sort(c);
 		baseMoveTo(0);
 	}
 
 	public void moveTo(int i) throws BasicException {
+		if (m_iIndex == i || !confirmPendingChanges()) return;
 		saveData();
 		if (m_iIndex != i) {
 			baseMoveTo(i);
@@ -206,24 +216,28 @@ public class BrowsableEditableData {
 	}
 
 	public final void movePrev() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		if (m_iIndex > 0) {
 			baseMoveTo(m_iIndex - 1);
 		}
 	}
 	public final void moveNext() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		if (m_iIndex < m_bd.getSize() - 1) {
 			baseMoveTo(m_iIndex + 1);
 		}
 	}
 	public final void moveFirst() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		if (m_bd.getSize() > 0) {
 			baseMoveTo(0);
 		}
 	}
 	public final void moveLast() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		saveData();
 		if (m_bd.getSize() > 0) {
 			baseMoveTo(m_bd.getSize() - 1);
@@ -250,6 +264,20 @@ public class BrowsableEditableData {
 				baseMoveTo(i);
 			} // queda ST_NORECORD
 		}
+	}
+
+	private boolean confirmPendingChanges() throws BasicException {
+		if (!m_Dirty.isDirty()) return true;
+		int result = JConfirmationDialog.show(m_navigationComponent,
+				"Tens canvis sense desar.", "Canvis sense desar", "Cancel·la", "Descartar", "Desar", false);
+		if (result == JOptionPane.YES_OPTION) {
+			saveData();
+			return true;
+		} else if (result == JOptionPane.NO_OPTION) {
+			refreshCurrent();
+			return true;
+		}
+		return false;
 	}
 
 	public void actionReloadCurrent(Component c) {
@@ -291,6 +319,7 @@ public class BrowsableEditableData {
 	}
 
 	public final void actionInsert() throws BasicException {
+		if (!confirmPendingChanges()) return;
 		// primero persistimos
 		saveData();
 

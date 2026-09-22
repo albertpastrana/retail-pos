@@ -79,6 +79,9 @@ public class JListNavigator extends javax.swing.JPanel implements BrowseListener
 
 					try {
 						m_bd.moveTo(i);
+						if (m_bd.getIndex() != i) {
+							m_jlist.setSelectedIndex(m_bd.getIndex());
+						}
 					} catch (BasicException eD) {
 						MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, LocalRes.getIntString("message.nomove"),
 								eD);

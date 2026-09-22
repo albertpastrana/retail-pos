@@ -19,9 +19,14 @@
 
 package com.openbravo.pos.inventory;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.user.EditorListener;
@@ -31,7 +36,9 @@ import com.openbravo.data.user.SaveProvider;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.panels.JPanelTable2;
+import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.ticket.ProductFilter;
+import com.openbravo.data.user.BrowsableEditableData;
 
 /**
  *
@@ -51,13 +58,12 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	protected void init() {
 		m_dlSales = app.getBean(DataLogicSales.class);
+		row = m_dlSales.getProductsRow();
 
 		// el panel del filtro
 		jproductfilter = new ProductFilter();
 		jproductfilter.init(app);
 		jproductfilter.addActionListener(new ReloadActionListener());
-
-		row = m_dlSales.getProductsRow();
 
 		lpr = new ListProviderCreator(m_dlSales.getProductCatQBF(), jproductfilter);
 
@@ -66,6 +72,11 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 		// el panel del editor
 		jeditor = new ProductsEditor(app, m_dlSales, dirty);
+		jeditor.setDeleteAction(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				confirmDelete();
+			}
+		});
 	}
 
 	public EditorRecord getEditor() {
@@ -74,7 +85,45 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	@Override
 	public Component getFilter() {
-		return jproductfilter.getComponent();
+		JPanel header = new JPanel(new BorderLayout(0, 6));
+		JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		JButton newProduct = new JButton("+ Nou producte");
+		RetailPOSColors.primaryButton(newProduct);
+		newProduct.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					bd.actionInsert();
+				} catch (BasicException ex) {
+					new MessageInf(ex).show(ProductsPanel.this);
+				}
+			}
+		});
+		// La pantalla ja mostra "Productes" a la capçalera de l'aplicació
+		// (JPrincipalApp usa getTitle()); no cal repetir-ho aqui.
+		actionBar.add(newProduct);
+		header.add(actionBar, BorderLayout.NORTH);
+		header.add(jproductfilter.getComponent(), BorderLayout.CENTER);
+		return header;
+	}
+
+	@Override
+	protected boolean showToolbar() {
+		return false;
+	}
+
+	@Override
+	protected double getSplitResizeWeight(boolean editorKeepsSize) {
+		return 1.0 / 3.0;
+	}
+
+	@Override
+	protected double getSplitDividerLocation() {
+		return 1.0 / 3.0;
+	}
+
+	@Override
+	protected Component getListComponent(BrowsableEditableData data) {
+		return new ProductTableNavigator(data);
 	}
 
 	public String getTitle() {
@@ -96,6 +145,9 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	private class ReloadActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
+			if (bd == null) {
+				return;
+			}
 			try {
 				bd.actionLoad();
 			} catch (BasicException eD) {
@@ -108,6 +160,22 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 				offerCatalogImport();
 			} catch (BasicException eD) {
 				new MessageInf(eD).show(ProductsPanel.this);
+			}
+		}
+	}
+
+	private void confirmDelete() {
+		String name = jeditor.getProductName();
+		Object[] options = {"Eliminar", "Cancel·la"};
+		int answer = JOptionPane.showOptionDialog(this,
+				"Eliminar «" + name + "» permanentment? Aquesta acció no es pot desfer.",
+				"Eliminar producte", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+				null, options, options[1]);
+		if (answer == 0) {
+			try {
+				bd.actionDelete();
+			} catch (BasicException e) {
+				new MessageInf(e).show(this);
 			}
 		}
 	}

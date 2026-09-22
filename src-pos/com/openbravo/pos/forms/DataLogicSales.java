@@ -109,7 +109,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				new Field("STOCKVOLUME", Datas.DOUBLE, Formats.DOUBLE),
 				new Field("ISCATALOG", Datas.BOOLEAN, Formats.BOOLEAN), new Field("CATORDER", Datas.INT, Formats.INT),
 				new Field("PROPERTIES", Datas.BYTES, Formats.NULL),
-				new Field("ISVOUCHER", Datas.BOOLEAN, Formats.BOOLEAN));
+				new Field("ISVOUCHER", Datas.BOOLEAN, Formats.BOOLEAN),
+				new Field("FAMILY", Datas.STRING, Formats.STRING));
 	}
 
 	public void init(Session s) {
@@ -763,7 +764,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						+ " FROM PRODUCTS P LEFT JOIN CATEGORIES CAT ON P.CATEGORY = CAT.ID WHERE " + where
 						+ " ORDER BY P.REFERENCE", new String[]{"P.NAME", "CAT.NAME", "P.BRAND", "P.CODE"}),
 				new SerializerWriteBasic(new Datas[]{Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
-						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING}),
+						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING}),
 				ProductInfoExt.getSerializerRead());
 	}
 
@@ -1198,14 +1199,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				"SELECT PRODUCTS.ID, PRODUCTS.REFERENCE, PRODUCTS.CODE, PRODUCTS.NAME, PRODUCTS.ISCOM, PRODUCTS.ISSCALE, PRODUCTS.PRICEBUY, PRODUCTS.PRICESELL, PRODUCTS.CATEGORY, PRODUCTS.TAXCAT, PRODUCTS.ATTRIBUTESET_ID, "
 						+ s.DB.CHAR_NULL()
 						+ ", PRODUCTS.STOCKCOST, PRODUCTS.STOCKVOLUME, CASE WHEN C.PRODUCT IS NULL THEN " + s.DB.FALSE()
-						+ " ELSE " + s.DB.TRUE() + " END, C.CATORDER, PRODUCTS.ATTRIBUTES " + ", PRODUCTS.ISVOUCHER "
+						+ " ELSE " + s.DB.TRUE() + " END, C.CATORDER, PRODUCTS.ATTRIBUTES " + ", PRODUCTS.ISVOUCHER, PRODUCTS.FAMILY "
 						+ "FROM PRODUCTS, PRODUCTS_CAT C " + "WHERE ?(QBF_FILTER) AND PRODUCTS.ID = C.PRODUCT "
 						+ "ORDER BY PRODUCTS.REFERENCE",
 				new String[]{"PRODUCTS.NAME", "PRODUCTS.PRICEBUY", "PRODUCTS.PRICESELL", "PRODUCTS.CATEGORY",
-						"PRODUCTS.CODE", "PRODUCTS.BRAND", "PRODUCTS.REFERENCE"}),
+						"PRODUCTS.CODE", "PRODUCTS.BRAND", "PRODUCTS.REFERENCE", "PRODUCTS.FAMILY"}),
 				new SerializerWriteBasic(new Datas[]{Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.DOUBLE,
 						Datas.OBJECT, Datas.DOUBLE, Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
-						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING}),
+						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING}),
 				productsRow.getSerializerRead());
 	}
 

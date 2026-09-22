@@ -55,7 +55,6 @@
     <class name="com.openbravo.pos.inventory.ReplenishmentPanel"/>
     <class name="Menu.Replenishment.Add"/>
     <class name="com.openbravo.pos.inventory.StockManagement"/>
-    <class name="com.openbravo.pos.inventory.AuxiliarPanel"/>
     <class name="com.openbravo.pos.forms.MenuSalesManagement"/>
     <class name="com.openbravo.pos.reports.JPanelSalesSummary"/>
     <class name="com.openbravo.pos.reports.JPanelProductSales"/>
@@ -63,6 +62,7 @@
     <class name="com.openbravo.pos.reports.JPanelLowStock"/>
     <class name="com.openbravo.pos.forms.MenuMaintenance"/>
     <class name="com.openbravo.pos.admin.PeoplePanel"/>
+    <class name="com.openbravo.pos.admin.RolesPanel"/>
     <class name="com.openbravo.pos.inventory.LocationsPanel"/>
     <class name="com.openbravo.pos.mant.JPanelFloors"/>
     <class name="com.openbravo.pos.mant.JPanelPlaces"/>

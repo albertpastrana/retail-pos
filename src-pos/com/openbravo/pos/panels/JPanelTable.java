@@ -76,6 +76,7 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 
 			// init browsable editable data
 			bd = new BrowsableEditableData(getListProvider(), getSaveProvider(), getEditor(), dirty);
+			bd.setNavigationComponent(this);
 
 			// Add the filter panel
 			Component c = getFilter();
@@ -94,14 +95,7 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 			}
 
 			// el panel este
-			Component list = null;
-			ListCellRenderer cr = getListCellRenderer();
-			if (cr != null) {
-				JListNavigator nl = new JListNavigator(bd);
-				nl.applyComponentOrientation(getComponentOrientation());
-				nl.setCellRenderer(cr);
-				list = nl;
-			}
+			Component list = getListComponent(bd);
 
 			if (list != null && editor != null) {
 				container.add(splitListAndEditor(list, editor, editorkeepssize), BorderLayout.CENTER);
@@ -118,20 +112,28 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 				toolbar.add(c);
 			}
 
-			// La Toolbar
-			c = new JLabelDirty(dirty);
-			c.applyComponentOrientation(getComponentOrientation());
-			toolbar.add(c);
-			c = new JCounter(bd);
-			c.applyComponentOrientation(getComponentOrientation());
-			toolbar.add(c);
-			c = new JNavigator(bd, getVectorer(), getComparatorCreator());
-			c.applyComponentOrientation(getComponentOrientation());
-			toolbar.add(c);
-			c = new JSaver(bd, dirty);
-			c.applyComponentOrientation(getComponentOrientation());
-			toolbar.add(c);
+			if (showToolbar()) {
+				// La Toolbar
+				c = new JLabelDirty(dirty);
+				c.applyComponentOrientation(getComponentOrientation());
+				toolbar.add(c);
+				c = new JCounter(bd);
+				c.applyComponentOrientation(getComponentOrientation());
+				toolbar.add(c);
+				c = new JNavigator(bd, getVectorer(), getComparatorCreator());
+				c.applyComponentOrientation(getComponentOrientation());
+				toolbar.add(c);
+				c = new JSaver(bd, dirty);
+				c.applyComponentOrientation(getComponentOrientation());
+				toolbar.add(c);
+			} else {
+				container.remove(toolbar);
+			}
 		}
+	}
+
+	protected boolean showToolbar() {
+		return true;
 	}
 
 	/**
@@ -146,12 +148,28 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 		split.setBorder(null);
 		split.setContinuousLayout(true);
 		split.setOneTouchExpandable(true);
-		split.setResizeWeight(editorkeepssize ? 1.0 : 0.0);
+		split.setResizeWeight(getSplitResizeWeight(editorkeepssize));
+		final double dividerLocation = getSplitDividerLocation();
+		if (dividerLocation >= 0.0) {
+			javax.swing.SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					split.setDividerLocation(dividerLocation);
+				}
+			});
+		}
 		list.setMinimumSize(new Dimension(60, 0));
 		editor.setMinimumSize(
 				editorkeepssize ? new Dimension(editor.getPreferredSize().width, 0) : new Dimension(60, 0));
 		split.applyComponentOrientation(getComponentOrientation());
 		return split;
+	}
+
+	protected double getSplitResizeWeight(boolean editorKeepsSize) {
+		return editorKeepsSize ? 1.0 : 0.0;
+	}
+
+	protected double getSplitDividerLocation() {
+		return -1.0;
 	}
 
 	public Component getToolbarExtras() {
@@ -180,6 +198,15 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 
 	public ListCellRenderer getListCellRenderer() {
 		return null;
+	}
+
+	protected Component getListComponent(BrowsableEditableData data) {
+		ListCellRenderer cr = getListCellRenderer();
+		if (cr == null) return null;
+		JListNavigator nl = new JListNavigator(data);
+		nl.applyComponentOrientation(getComponentOrientation());
+		nl.setCellRenderer(cr);
+		return nl;
 	}
 
 	public JComponent getComponent() {

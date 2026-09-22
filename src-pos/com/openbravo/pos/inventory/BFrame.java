@@ -191,9 +191,10 @@ public class BFrame extends JFrame {
 	private void lookupDetails() {
 
 		String REGEX = "0{0,2}" + text_barcode.getText() + "{0,1}";
-		String query = "SELECT * FROM products, barcode_table WHERE products.code REGEXP '" + REGEX
-				+ "' OR (barcode_table.pid=products.id and barcode_table.code REGEXP '" + REGEX
-				+ "') GROUP BY products.id";
+		String regexOperator = "PostgreSQL".equalsIgnoreCase(databaseProductName()) ? "~" : "REGEXP";
+		String query = "SELECT products.* FROM products WHERE products.code " + regexOperator + " '" + REGEX
+				+ "' OR EXISTS (SELECT 1 FROM barcode_table WHERE barcode_table.pid=products.id AND barcode_table.code "
+				+ regexOperator + " '" + REGEX + "')";
 		SQLQueryer sql = new SQLQueryer(pe.session, query);
 		try {
 			label_name_val.setText(sql.getAttribute("NAME"));
@@ -209,6 +210,14 @@ public class BFrame extends JFrame {
 					"ERROR: No s'ha trobat el codi de barres a la base de dades.\nJa s'hi ha afegit?");
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "ERROR: Comproveu el format del valor de l'impost");
+		}
+	}
+
+	private String databaseProductName() {
+		try {
+			return pe.session.getConnection().getMetaData().getDatabaseProductName();
+		} catch (SQLException e) {
+			return "";
 		}
 	}
 
