@@ -20,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -28,6 +29,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.AncestorEvent;
@@ -312,8 +314,7 @@ public final class CatalogImportDialog {
 		String title = AppLocal.getIntString("title.importproductfamily");
 		Object[] options = new Object[]{confirmLabel(true), AppLocal.getIntString("button.skipitem")};
 		while (true) {
-			int result = JOptionPane.showOptionDialog(parent, content, title, JOptionPane.OK_CANCEL_OPTION,
-					JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+			int result = showImportOptionDialog(content, title, options);
 			if (result != 0) {
 				return null;
 			}
@@ -395,8 +396,7 @@ public final class CatalogImportDialog {
 		String title = AppLocal.getIntString("title.importproduct");
 		Object[] options = new Object[]{confirmLabel(false), AppLocal.getIntString("button.skipitem")};
 		while (true) {
-			int result = JOptionPane.showOptionDialog(parent, content, title, JOptionPane.OK_CANCEL_OPTION,
-					JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+			int result = showImportOptionDialog(content, title, options);
 			if (result != 0) {
 				return null;
 			}
@@ -420,6 +420,32 @@ public final class CatalogImportDialog {
 	private JLabel buildImportMessage(String code, boolean fromCatalog) {
 		String message = AppLocal.getIntString(importMessageKey(fromCatalog), code);
 		return new JLabel("<html><body style='width: 320px'>" + message + "</body></html>");
+	}
+
+	private int showImportOptionDialog(JComponent content, String title, Object[] options) {
+		final JOptionPane optionPane = new JOptionPane(content, JOptionPane.PLAIN_MESSAGE,
+				JOptionPane.OK_CANCEL_OPTION, null, options, null);
+		final JDialog dialog = optionPane.createDialog(parent, title);
+		dialog.getRootPane().setDefaultButton(null);
+		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke("ENTER"), "ignoreEnter");
+		dialog.getRootPane().getActionMap().put("ignoreEnter", new javax.swing.AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+			}
+		});
+		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+				.put(KeyStroke.getKeyStroke("ctrl ENTER"), "confirmImport");
+		dialog.getRootPane().getActionMap().put("confirmImport", new javax.swing.AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				optionPane.setValue(options[0]);
+				dialog.dispose();
+			}
+		});
+		dialog.setVisible(true);
+		Object value = optionPane.getValue();
+		return options[0].equals(value) ? 0 : 1;
 	}
 
 	private void enlargeDialogFont(JComponent component) {
