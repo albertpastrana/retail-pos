@@ -50,6 +50,8 @@ import org.jdesktop.swingx.JXTaskPaneContainer;
 public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private static Logger logger = Logger.getLogger("com.openbravo.pos.forms.JPrincipalApp");
+	private static final String MENU_STATE_KEY = "ui.menu.state";
+	private static final int MENU_RAIL_WIDTH = 72;
 
 	private JRootApp m_appview;
 	private AppUser m_appuser;
@@ -64,6 +66,10 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private Icon menu_open;
 	private Icon menu_close;
+	private JPanel m_jMenuRail;
+	private Component m_jMenuFull;
+	private boolean m_menuRail;
+	private java.util.List<Action> m_menuActions;
 
 	/** Creates new form JPrincipalApp */
 	public JPrincipalApp(JRootApp appview, AppUser appuser) {
@@ -80,6 +86,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		m_jLastView = null;
 		m_aPreparedViews = new HashMap<String, JPanelView>();
 		m_aCreatedViews = new HashMap<String, JPanelView>();
+		m_menuActions = new ArrayList<Action>();
 
 		initComponents();
 
@@ -106,12 +113,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 		try {
 
-			m_jPanelLeft.setViewportView(getScriptMenu(m_dlSystem.getResourceAsText("Menu.Root")));
+			setMenuViews(getScriptMenu(m_dlSystem.getResourceAsText("Menu.Root")));
 		} catch (ScriptException e) {
 			logger.log(Level.SEVERE, "Cannot read Menu.Root resource. Trying defaut menu.", e);
 			try {
-				m_jPanelLeft.setViewportView(
-						getScriptMenu(StringUtils.readResource("/com/openbravo/pos/templates/Menu.Root.txt")));
+				setMenuViews(getScriptMenu(StringUtils.readResource("/com/openbravo/pos/templates/Menu.Root.txt")));
 			} catch (IOException ex) {
 				logger.log(Level.SEVERE, "Cannot read default menu", ex);
 			} catch (ScriptException es) {
@@ -150,7 +156,19 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		ScriptEngine eng = ScriptFactory.getScriptEngine(ScriptFactory.BEANSHELL);
 		eng.put("menu", menu);
 		eng.eval(menutext);
+		m_jMenuRail = menu.getRailMenu();
 		return menu.getTaskPane();
+	}
+
+	private void setMenuViews(Component fullMenu) {
+		m_jMenuFull = fullMenu;
+		m_jPanelLeft.setViewportView(fullMenu);
+		setMenuRail(isRailPreference(), false);
+	}
+
+	private boolean isRailPreference() {
+		String state = m_appview.getProperties().getProperty(MENU_STATE_KEY);
+		return state == null ? getBounds().width <= 800 : "rail".equals(state);
 	}
 
 	private boolean isAvailableTask(String classname) {
@@ -166,7 +184,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	}
 
 	private void assignMenuButtonIcon() {
-		jButton1.setIcon(m_jPanelLeft.isVisible() ? menu_close : menu_open);
+		jButton1.setIcon(m_menuRail ? menu_open : menu_close);
 	}
 
 	public class ScriptMenu {
@@ -188,6 +206,27 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		// public JTaskPane getTaskPane() {
 		public JXTaskPaneContainer getTaskPane() {
 			return taskPane;
+		}
+
+		private JPanel getRailMenu() {
+			JPanel rail = new JPanel();
+			rail.setLayout(new BoxLayout(rail, BoxLayout.Y_AXIS));
+			rail.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
+			for (Action action : m_menuActions) {
+				JButton button = new JButton(action);
+				button.setText(null);
+				button.setToolTipText((String) action.getValue(Action.NAME));
+				button.setAlignmentX(Component.CENTER_ALIGNMENT);
+				button.setFocusPainted(false);
+				button.setFocusable(false);
+				button.setRequestFocusEnabled(false);
+				button.setPreferredSize(new Dimension(56, 56));
+				button.setMinimumSize(new Dimension(56, 56));
+				button.setMaximumSize(new Dimension(56, 56));
+				rail.add(button);
+				rail.add(Box.createVerticalStrut(4));
+			}
+			return rail;
 		}
 	}
 
@@ -240,15 +279,15 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			if (m_appuser.hasPermission((String) act.getValue(AppUserView.ACTION_TASKNAME))) {
 				// add the action
 				Component c = taskGroup.add(act);
+				m_actionfirst = m_actionfirst == null ? act : m_actionfirst;
+				// Keep the same actions available in the compact icon rail.
+				m_menuActions.add(act);
 				c.applyComponentOrientation(getComponentOrientation());
 				c.setFocusable(false);
 				// c.setRequestFocusEnabled(false);
 
 				taskGroup.setVisible(true);
 
-				if (m_actionfirst == null) {
-					m_actionfirst = act;
-				}
 			}
 		}
 
@@ -304,17 +343,28 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		}
 	}
 
-	private void setMenuVisible(boolean value) {
-
-		m_jPanelLeft.setVisible(value);
+	private void setMenuRail(boolean value, boolean persist) {
+		m_menuRail = value;
+		m_jPanelLeft.setVisible(true);
+		m_jPanelLeft.setPreferredSize(value ? new Dimension(MENU_RAIL_WIDTH, 0) : null);
+		m_jPanelLeft.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		m_jPanelLeft.setViewportView(value ? m_jMenuRail : m_jMenuFull);
+		jButton1.setPreferredSize(value ? new Dimension(56, 56) : null);
+		jButton1.setMinimumSize(value ? new Dimension(56, 56) : null);
 		assignMenuButtonIcon();
+		if (persist && m_appview.getProperties() instanceof AppConfig) {
+			AppConfig config = (AppConfig) m_appview.getProperties();
+			config.setProperty(MENU_STATE_KEY, value ? "rail" : "full");
+			try {
+				ConfigurationStore.save(config);
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "Cannot save the menu state", e);
+			}
+		}
 		revalidate();
 	}
 
 	public void activate() {
-
-		setMenuVisible(getBounds().width > 800);
-
 		// arranco la primera opcion
 		if (m_actionfirst != null) {
 			m_actionfirst.actionPerformed(null);
@@ -423,8 +473,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				// se tiene que mostrar el panel
 				m_jLastView = m_jMyView;
 
-				setMenuVisible(getBounds().width > 800);
-
 				showView(sTaskClass);
 				// Y ahora que he cerrado la antigua me abro yo
 				String sTitle = m_jMyView.getTitle();
@@ -530,7 +578,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
 
-		setMenuVisible(!m_jPanelLeft.isVisible());
+		setMenuRail(!m_menuRail, true);
 
 	}// GEN-LAST:event_jButton1ActionPerformed
 

@@ -71,8 +71,7 @@ public class JNumberKeys extends javax.swing.JPanel {
 		setBackground(tokenColor("retailpos.surface200", 0xece5d6));
 		setOpaque(false);
 		setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-		setPreferredSize(new java.awt.Dimension(280, 340));
-		setMaximumSize(new java.awt.Dimension(280, 340));
+		updateSize();
 
 		Font numberFont = new Font("IBM Plex Mono", Font.BOLD, 24);
 		Font actionFont = new Font("IBM Plex Mono", Font.BOLD, 24);
@@ -157,6 +156,22 @@ public class JNumberKeys extends javax.swing.JPanel {
 		m_jMinus.setVisible(value);
 		m_jPlus.setVisible(value);
 		m_jMultiply.setVisible(value);
+		updateSize();
+	}
+
+	private void updateSize() {
+		int columns = m_jEquals != null && m_jEquals.isVisible() ? 4 : 3;
+		int width = columns * 56 + (columns - 1) * 5 + 41;
+		int height = 5 * 56 + 4 * 5 + 32;
+		java.awt.Dimension size = new java.awt.Dimension(width, height);
+		setMinimumSize(size);
+		setPreferredSize(size);
+		setMaximumSize(size);
+	}
+
+	public void setDotVisible(boolean value) {
+		m_jKeyDot.setVisible(value);
+		updateSize();
 	}
 
 	@Override

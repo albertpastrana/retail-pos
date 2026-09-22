@@ -200,9 +200,10 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.setBorder(BorderFactory.createTitledBorder(AppLocal.getIntString("label.recentsales")));
-		panel.setPreferredSize(new Dimension(720, 0));
 		panel.add(scroll, BorderLayout.CENTER);
 		add(panel, BorderLayout.WEST);
+		m_jPanelTicket.setMinimumSize(new Dimension(
+				com.openbravo.pos.printer.ticket.BasicTicketForScreen.getLineWidth(42) + 26, 0));
 
 		java.awt.event.ActionListener reloadRecent = new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -489,6 +490,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 			}
 		});
 		m_jNumberKeys.setNumbersOnly(false);
+		m_jNumberKeys.setDotVisible(false);
 		m_jNumberKeys.addJNumberEventListener(new JNumberEventListener() {
 			@Override
 			public void keyPerformed(JNumberEvent event) {

@@ -20,7 +20,10 @@
 package com.openbravo.pos.printer.ticket;
 
 import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 
 public class BasicTicketForScreen extends BasicTicket {
 
@@ -28,6 +31,25 @@ public class BasicTicketForScreen extends BasicTicket {
 			.deriveFont(AffineTransform.getScaleInstance(1.0, 1.40));
 	private static int FONTHEIGHT = 20;
 	private static double IMAGE_SCALE = 1.0;
+
+	public static int getLineWidth(int columns) {
+		BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = image.createGraphics();
+		FontMetrics normal = graphics.getFontMetrics(BASEFONT);
+		FontMetrics doubleWidth = graphics.getFontMetrics(new MyPrinterState(3).getFont(BASEFONT, 0));
+		int normalWidth = normal.stringWidth(repeat('0', columns));
+		int doubleWidthValue = doubleWidth.stringWidth(repeat('0', columns / 2));
+		graphics.dispose();
+		return Math.max(normalWidth, doubleWidthValue);
+	}
+
+	private static String repeat(char character, int count) {
+		StringBuilder result = new StringBuilder(count);
+		for (int i = 0; i < count; i++) {
+			result.append(character);
+		}
+		return result.toString();
+	}
 
 	@Override
 	protected Font getBaseFont() {

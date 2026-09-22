@@ -21,6 +21,7 @@ package com.openbravo.pos.printer.screen;
 
 import java.awt.*;
 import com.openbravo.pos.printer.ticket.BasicTicket;
+import com.openbravo.pos.printer.ticket.BasicTicketForScreen;
 import java.util.Map;
 
 class JTicket extends javax.swing.JPanel {
@@ -28,7 +29,7 @@ class JTicket extends javax.swing.JPanel {
 	private static final int H_GAP = 8;
 	private static final int V_GAP = 8;
 	private static final int COLUMNS = 42;
-	private static final int LINEWIDTH = COLUMNS * 7;
+	private static final int LINEWIDTH = BasicTicketForScreen.getLineWidth(COLUMNS);
 
 	private BasicTicket basict;
 	private Map desktophints;
