@@ -35,14 +35,15 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		m_jCboName.setModel(ListQBFModelNumber.getMandatoryString());
 		m_jCboCategory.setModel(ListQBFModelNumber.getMandatoryString());
 		m_jCboBrand.setModel(ListQBFModelNumber.getMandatoryString());
+		m_jCboFamily.setModel(ListQBFModelNumber.getMandatoryString());
 	}
 
 	public void activate() {
 
-		m_jtxtBarCode.setText(null);
 		m_jtxtName.setText(null);
 		m_jtxtCategory.setText(null);
 		m_jtxtBrand.setText(null);
+		m_jtxtFamily.setText(null);
 
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -51,12 +52,37 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		});
 	}
 
-	/** Pressing enter on any of the filter fields runs the search. */
+	/** Search after the user pauses typing, so each keystroke does not hit the database. */
 	public void addActionListener(ActionListener listener) {
-		m_jtxtBarCode.addActionListener(listener);
-		m_jtxtName.addActionListener(listener);
-		m_jtxtCategory.addActionListener(listener);
-		m_jtxtBrand.addActionListener(listener);
+		final javax.swing.Timer timer = new javax.swing.Timer(300, listener);
+		timer.setRepeats(false);
+		addDebouncedSearchListener(m_jtxtName, timer);
+		addDebouncedSearchListener(m_jtxtCategory, timer);
+		addDebouncedSearchListener(m_jtxtBrand, timer);
+		addDebouncedSearchListener(m_jtxtFamily, timer);
+		m_jCboName.addActionListener(e -> timer.restart());
+		m_jCboCategory.addActionListener(e -> timer.restart());
+		m_jCboBrand.addActionListener(e -> timer.restart());
+		m_jCboFamily.addActionListener(e -> timer.restart());
+	}
+
+	private void addDebouncedSearchListener(javax.swing.JTextField field, javax.swing.Timer timer) {
+		field.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+			@Override
+			public void insertUpdate(javax.swing.event.DocumentEvent event) {
+				timer.restart();
+			}
+
+			@Override
+			public void removeUpdate(javax.swing.event.DocumentEvent event) {
+				timer.restart();
+			}
+
+			@Override
+			public void changedUpdate(javax.swing.event.DocumentEvent event) {
+				timer.restart();
+			}
+		});
 	}
 
 	public Object createValue() throws BasicException {
@@ -65,15 +91,7 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		putStringFilter(afilter, 0, m_jCboName, m_jtxtName);
 		putStringFilter(afilter, 2, m_jCboCategory, m_jtxtCategory);
 		putStringFilter(afilter, 4, m_jCboBrand, m_jtxtBrand);
-
-		String sBarCode = m_jtxtBarCode.getText();
-		if (sBarCode == null || sBarCode.equals("")) {
-			afilter[6] = QBFCompareEnum.COMP_NONE;
-			afilter[7] = null;
-		} else {
-			afilter[6] = QBFCompareEnum.COMP_CONTAINS;
-			afilter[7] = sBarCode;
-		}
+		putStringFilter(afilter, 6, m_jCboFamily, m_jtxtFamily);
 
 		return afilter;
 	}
@@ -108,55 +126,71 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		jLabel6 = new javax.swing.JLabel();
 		m_jCboBrand = new javax.swing.JComboBox();
 		m_jtxtBrand = new javax.swing.JTextField();
-		m_jtxtBarCode = new javax.swing.JTextField();
-		jLabel1 = new javax.swing.JLabel();
+		jLabel7 = new javax.swing.JLabel();
+		m_jCboFamily = new javax.swing.JComboBox();
+		m_jtxtFamily = new javax.swing.JTextField();
 
-		setPreferredSize(new java.awt.Dimension(570, 140));
-		setLayout(null);
+		setLayout(new java.awt.GridBagLayout());
 
 		jLabel5.setText(AppLocal.getIntString("label.prodname")); // NOI18N
-		add(jLabel5);
-		jLabel5.setBounds(20, 40, 110, 15);
-		add(m_jCboName);
-		m_jCboName.setBounds(130, 40, 130, 24);
-		add(m_jtxtName);
-		m_jtxtName.setBounds(270, 40, 290, 25);
-
 		jLabel2.setText(AppLocal.getIntString("label.prodcategory")); // NOI18N
-		add(jLabel2);
-		jLabel2.setBounds(20, 70, 110, 15);
-		add(m_jCboCategory);
-		m_jCboCategory.setBounds(130, 70, 130, 24);
-		add(m_jtxtCategory);
-		m_jtxtCategory.setBounds(270, 70, 290, 25);
-
 		jLabel6.setText(AppLocal.getIntString("label.prodbrand")); // NOI18N
-		add(jLabel6);
-		jLabel6.setBounds(20, 100, 110, 15);
-		add(m_jCboBrand);
-		m_jCboBrand.setBounds(130, 100, 130, 24);
-		add(m_jtxtBrand);
-		m_jtxtBrand.setBounds(270, 100, 290, 25);
+		jLabel7.setText(AppLocal.getIntString("label.prodfamily")); // NOI18N
 
-		add(m_jtxtBarCode);
-		m_jtxtBarCode.setBounds(270, 10, 290, 25);
+		java.awt.GridBagConstraints labelConstraints = new java.awt.GridBagConstraints();
+		labelConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+		labelConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		labelConstraints.weightx = 1.0;
+		labelConstraints.insets = new java.awt.Insets(5, 20, 5, 12);
 
-		jLabel1.setText(AppLocal.getIntString("label.prodbarcode")); // NOI18N
-		add(jLabel1);
-		jLabel1.setBounds(20, 10, 110, 15);
+		java.awt.GridBagConstraints comboConstraints = new java.awt.GridBagConstraints();
+		comboConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		comboConstraints.weightx = 1.0;
+		comboConstraints.insets = new java.awt.Insets(5, 0, 5, 12);
+
+		java.awt.GridBagConstraints fieldConstraints = new java.awt.GridBagConstraints();
+		fieldConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		fieldConstraints.weightx = 1.0;
+		fieldConstraints.insets = new java.awt.Insets(5, 0, 5, 20);
+
+		addFilterRow(jLabel5, m_jCboName, m_jtxtName, 0, labelConstraints, comboConstraints, fieldConstraints);
+		addFilterRow(jLabel2, m_jCboCategory, m_jtxtCategory, 1, labelConstraints, comboConstraints,
+				fieldConstraints);
+		addFilterRow(jLabel6, m_jCboBrand, m_jtxtBrand, 2, labelConstraints, comboConstraints, fieldConstraints);
+		addFilterRow(jLabel7, m_jCboFamily, m_jtxtFamily, 3, labelConstraints, comboConstraints, fieldConstraints);
 	}// </editor-fold>//GEN-END:initComponents
 
+	private void addFilterRow(javax.swing.JLabel label, javax.swing.JComboBox combo, javax.swing.JTextField field,
+			int row, java.awt.GridBagConstraints labelConstraints, java.awt.GridBagConstraints comboConstraints,
+			java.awt.GridBagConstraints fieldConstraints) {
+		java.awt.GridBagConstraints labelRow = (java.awt.GridBagConstraints) labelConstraints.clone();
+		labelRow.gridx = 0;
+		labelRow.gridy = row;
+		add(label, labelRow);
+
+		java.awt.GridBagConstraints comboRow = (java.awt.GridBagConstraints) comboConstraints.clone();
+		comboRow.gridx = 1;
+		comboRow.gridy = row;
+		add(combo, comboRow);
+
+		java.awt.GridBagConstraints fieldRow = (java.awt.GridBagConstraints) fieldConstraints.clone();
+		fieldRow.gridx = 2;
+		fieldRow.gridy = row;
+		add(field, fieldRow);
+	}
+
 	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JLabel jLabel1;
 	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel5;
 	private javax.swing.JLabel jLabel6;
+	private javax.swing.JLabel jLabel7;
 	private javax.swing.JComboBox m_jCboBrand;
 	private javax.swing.JComboBox m_jCboCategory;
+	private javax.swing.JComboBox m_jCboFamily;
 	private javax.swing.JComboBox m_jCboName;
-	private javax.swing.JTextField m_jtxtBarCode;
 	private javax.swing.JTextField m_jtxtBrand;
 	private javax.swing.JTextField m_jtxtCategory;
+	private javax.swing.JTextField m_jtxtFamily;
 	private javax.swing.JTextField m_jtxtName;
 	// End of variables declaration//GEN-END:variables
 

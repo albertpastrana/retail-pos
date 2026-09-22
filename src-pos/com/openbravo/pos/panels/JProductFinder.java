@@ -1,110 +1,72 @@
-//    Openbravo POS is a point of sales application designed for touch screens.
-//    Copyright (C) 2007-2009 Openbravo, S.L.
-//    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.openbravo.pos.panels;
 
-import com.openbravo.pos.ticket.ProductFilterSales;
-import com.openbravo.pos.ticket.ProductInfoExt;
-import com.openbravo.pos.ticket.ProductRenderer;
-import javax.swing.*;
-import java.awt.*;
-import com.openbravo.pos.forms.AppLocal;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.Window;
+import java.util.List;
+
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.AbstractTableModel;
+
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.user.ListProvider;
 import com.openbravo.data.user.ListProviderCreator;
+import com.openbravo.format.Formats;
+import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.ticket.ProductFilterSales;
+import com.openbravo.pos.ticket.ProductInfoExt;
 
-/**
- *
- * @author adrianromero
- */
-public class JProductFinder extends javax.swing.JDialog {
-
+public class JProductFinder extends JDialog {
 	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
 			.getLogger(JProductFinder.class.getName());
-
 	private ProductInfoExt m_ReturnProduct;
 	private ListProvider lpr;
 
-	public final static int PRODUCT_ALL = 0;
-	public final static int PRODUCT_NORMAL = 1;
-	public final static int PRODUCT_AUXILIAR = 2;
+	public static final int PRODUCT_ALL = 0;
+	public static final int PRODUCT_NORMAL = 1;
+	public static final int PRODUCT_AUXILIAR = 2;
 
-	/** Creates new form JProductFinder */
-	private JProductFinder(java.awt.Frame parent, boolean modal) {
-		super(parent, modal);
-	}
-
-	/** Creates new form JProductFinder */
-	private JProductFinder(java.awt.Dialog parent, boolean modal) {
-		super(parent, modal);
-	}
+	private JProductFinder(Frame parent, boolean modal) { super(parent, modal); }
+	private JProductFinder(Dialog parent, boolean modal) { super(parent, modal); }
 
 	private ProductInfoExt init(DataLogicSales dlSales, int productsType, String actionKey) {
-
 		initComponents();
 		jcmdOK.setText(AppLocal.getIntString(actionKey));
-
-		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
-
-		// ProductFilter jproductfilter = new ProductFilter(app);
-		ProductFilterSales jproductfilter = new ProductFilterSales();
-		jproductfilter.activate();
-		jproductfilter.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				executeSearch();
-			}
-		});
-		m_jProductSelect.add(jproductfilter, BorderLayout.CENTER);
+		ProductFilterSales filter = new ProductFilterSales();
+		filter.activate();
+		filter.addActionListener(event -> executeSearch());
+		m_jProductSelect.add(filter, BorderLayout.CENTER);
 		switch (productsType) {
-			case PRODUCT_NORMAL :
-				lpr = new ListProviderCreator(dlSales.getProductListNormal(), jproductfilter);
+			case PRODUCT_NORMAL:
+				lpr = new ListProviderCreator(dlSales.getProductListNormal(), filter);
 				break;
-			case PRODUCT_AUXILIAR :
-				lpr = new ListProviderCreator(dlSales.getProductListAuxiliar(), jproductfilter);
+			case PRODUCT_AUXILIAR:
+				lpr = new ListProviderCreator(dlSales.getProductListAuxiliar(), filter);
 				break;
-			default : // PRODUCT_ALL
-				lpr = new ListProviderCreator(dlSales.getProductList(), jproductfilter);
+			default:
+				lpr = new ListProviderCreator(dlSales.getProductList(), filter);
 				break;
-
 		}
-
-		jListProducts.setCellRenderer(new ProductRenderer());
-
+		pack();
+		m_jSplitPane.setDividerLocation(0.4);
+		setLocationRelativeTo(getOwner());
 		getRootPane().setDefaultButton(jcmdOK);
-
 		m_ReturnProduct = null;
-
-		// show();
 		setVisible(true);
-
 		return m_ReturnProduct;
 	}
 
 	private static Window getWindow(Component parent) {
-		if (parent == null) {
-			return new JFrame();
-		} else if (parent instanceof Frame || parent instanceof Dialog) {
-			return (Window) parent;
-		} else {
-			return getWindow(parent.getParent());
-		}
+		if (parent == null) return new JFrame();
+		if (parent instanceof Frame || parent instanceof Dialog) return (Window) parent;
+		return getWindow(parent.getParent());
 	}
 
 	public static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales) {
@@ -121,185 +83,139 @@ public class JProductFinder extends javax.swing.JDialog {
 
 	private static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, int productsType,
 			String actionKey) {
-
 		Window window = getWindow(parent);
-
-		JProductFinder myMsg;
-		if (window instanceof Frame) {
-			myMsg = new JProductFinder((Frame) window, true);
-		} else {
-			myMsg = new JProductFinder((Dialog) window, true);
-		}
-		return myMsg.init(dlSales, productsType, actionKey);
+		JProductFinder finder = window instanceof Frame
+				? new JProductFinder((Frame) window, true)
+				: new JProductFinder((Dialog) window, true);
+		return finder.init(dlSales, productsType, actionKey);
 	}
 
-	private static class MyListData extends javax.swing.AbstractListModel {
+	private static class ProductTableModel extends AbstractTableModel {
+		private final List<ProductInfoExt> products;
+		private final String[] columns = {AppLocal.getIntString("label.prodref"),
+				AppLocal.getIntString("label.prodname"), AppLocal.getIntString("label.price")};
 
-		private java.util.List m_data;
+		ProductTableModel(List<ProductInfoExt> products) { this.products = products; }
 
-		public MyListData(java.util.List data) {
-			m_data = data;
-		}
-
-		public Object getElementAt(int index) {
-			return m_data.get(index);
-		}
-
-		public int getSize() {
-			return m_data.size();
+		@Override public int getRowCount() { return products.size(); }
+		@Override public int getColumnCount() { return columns.length; }
+		@Override public String getColumnName(int column) { return columns[column]; }
+		@Override public Object getValueAt(int row, int column) {
+			ProductInfoExt product = products.get(row);
+			switch (column) {
+				case 0: return product.getReference();
+				case 1: return product.getName();
+				case 2: return Formats.CURRENCY.formatValue(new Double(product.getPriceSell()));
+				default: return "";
+			}
 		}
 	}
 
-	/**
-	 * This method is called from within the constructor to initialize the form.
-	 * WARNING: Do NOT modify this code. The content of this method is always
-	 * regenerated by the Form Editor.
-	 */
-	// <editor-fold defaultstate="collapsed" desc="Generated
-	// Code">//GEN-BEGIN:initComponents
 	private void initComponents() {
-
-		jPanel2 = new javax.swing.JPanel();
-		m_jProductSelect = new javax.swing.JPanel();
-		jPanel3 = new javax.swing.JPanel();
-		jButton3 = new javax.swing.JButton();
-		jPanel5 = new javax.swing.JPanel();
-		jScrollPane1 = new javax.swing.JScrollPane();
-		jListProducts = new javax.swing.JList();
-		jPanel1 = new javax.swing.JPanel();
+		jPanel2 = new javax.swing.JPanel(new BorderLayout());
+		m_jProductSelect = new javax.swing.JPanel(new BorderLayout());
+		jPanel5 = new javax.swing.JPanel(new BorderLayout());
+		jScrollPane1 = new JScrollPane();
+		jTableProducts = new JTable();
+		jPanel1 = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 		jcmdOK = new javax.swing.JButton();
 		jcmdCancel = new javax.swing.JButton();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		setTitle(AppLocal.getIntString("form.productslist")); // NOI18N
-
-		jPanel2.setLayout(new java.awt.BorderLayout());
-
-		m_jProductSelect.setLayout(new java.awt.BorderLayout());
-
-		jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/launch.png"))); // NOI18N
-		jButton3.setText(AppLocal.getIntString("button.executefilter")); // NOI18N
-		jButton3.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton3ActionPerformed(evt);
+		setTitle(AppLocal.getIntString("form.productslist"));
+		jTableProducts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		jTableProducts.setAutoCreateRowSorter(true);
+		jTableProducts.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		jTableProducts.setFillsViewportHeight(true);
+		jTableProducts.setRowHeight(32);
+		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList()));
+		jTableProducts.setPreferredScrollableViewportSize(
+				new java.awt.Dimension(800, jTableProducts.getRowHeight() * 8));
+		jTableProducts.getSelectionModel().addListSelectionListener(event ->
+				jcmdOK.setEnabled(hasSelectableProduct()));
+		jTableProducts.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (event.getClickCount() == 2) selectProduct();
 			}
 		});
-		jPanel3.add(jButton3);
-
-		m_jProductSelect.add(jPanel3, java.awt.BorderLayout.SOUTH);
-
-		jPanel2.add(m_jProductSelect, java.awt.BorderLayout.NORTH);
-
+		jScrollPane1.setViewportView(jTableProducts);
+		jScrollPane1.setPreferredSize(new java.awt.Dimension(800, 300));
 		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		jPanel5.setLayout(new java.awt.BorderLayout());
+		jPanel5.add(jScrollPane1, BorderLayout.CENTER);
+		showProductMessage("message.productfilter");
 
-		jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		m_jSplitPane = new javax.swing.JSplitPane(javax.swing.JSplitPane.VERTICAL_SPLIT,
+				m_jProductSelect, jPanel5);
+		m_jSplitPane.setResizeWeight(0.4);
+		m_jSplitPane.setContinuousLayout(true);
+		jPanel2.add(m_jSplitPane, BorderLayout.CENTER);
 
-		jListProducts.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-		jListProducts.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-			public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-				jListProductsValueChanged(evt);
-			}
-		});
-		jListProducts.addMouseListener(new java.awt.event.MouseAdapter() {
-			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				jListProductsMouseClicked(evt);
-			}
-		});
-		jScrollPane1.setViewportView(jListProducts);
-
-		jPanel5.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-		jPanel2.add(jPanel5, java.awt.BorderLayout.CENTER);
-
-		jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
-
-		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		jcmdOK.setText(AppLocal.getIntString("Button.OK")); // NOI18N
+		jcmdOK.setText(AppLocal.getIntString("Button.OK"));
 		jcmdOK.setEnabled(false);
 		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdOKActionPerformed(evt);
-			}
-		});
-		jcmdCancel
-				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("button.cancelselection")); // NOI18N
+		jcmdOK.addActionListener(event -> selectProduct());
+		jcmdCancel.setText(AppLocal.getIntString("button.cancelselection"));
 		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdCancelActionPerformed(evt);
-			}
-		});
+		jcmdCancel.addActionListener(event -> dispose());
 		jPanel1.add(jcmdCancel);
 		jPanel1.add(jcmdOK);
+		jPanel2.add(jPanel1, BorderLayout.SOUTH);
+		getContentPane().add(jPanel2, BorderLayout.CENTER);
+	}
 
-		jPanel2.add(jPanel1, java.awt.BorderLayout.SOUTH);
-
-		getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
-
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 665) / 2, (screenSize.height - 565) / 2, 665, 565);
-	}// </editor-fold>//GEN-END:initComponents
-
-	private void jListProductsMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jListProductsMouseClicked
-
-		if (evt.getClickCount() == 2) {
-			m_ReturnProduct = (ProductInfoExt) jListProducts.getSelectedValue();
+	private void selectProduct() {
+		int selectedRow = jTableProducts.getSelectedRow();
+		if (selectedRow >= 0) {
+			int modelRow = jTableProducts.convertRowIndexToModel(selectedRow);
+			ProductTableModel model = (ProductTableModel) jTableProducts.getModel();
+			m_ReturnProduct = model.products.get(modelRow);
 			dispose();
-		}
-
-	}// GEN-LAST:event_jListProductsMouseClicked
-
-	private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdOKActionPerformed
-
-		m_ReturnProduct = (ProductInfoExt) jListProducts.getSelectedValue();
-		dispose();
-
-	}// GEN-LAST:event_jcmdOKActionPerformed
-
-	private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdCancelActionPerformed
-
-		dispose();
-
-	}// GEN-LAST:event_jcmdCancelActionPerformed
-
-	private void jListProductsValueChanged(javax.swing.event.ListSelectionEvent evt) {// GEN-FIRST:event_jListProductsValueChanged
-
-		jcmdOK.setEnabled(jListProducts.getSelectedValue() != null);
-
-	}// GEN-LAST:event_jListProductsValueChanged
-
-	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
-
-		executeSearch();
-
-	}// GEN-LAST:event_jButton3ActionPerformed
-
-	private void executeSearch() {
-
-		try {
-			jListProducts.setModel(new MyListData(lpr.loadData()));
-			if (jListProducts.getModel().getSize() > 0) {
-				jListProducts.setSelectedIndex(0);
-			}
-		} catch (BasicException e) {
-			LOGGER.log(java.util.logging.Level.WARNING, "event=product_search_failed", e);
 		}
 	}
 
-	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JButton jButton3;
-	private javax.swing.JList jListProducts;
+	private boolean hasSelectableProduct() {
+		return jTableProducts.getModel() instanceof ProductTableModel
+				&& !((ProductTableModel) jTableProducts.getModel()).products.isEmpty()
+				&& jTableProducts.getSelectedRow() >= 0;
+	}
+
+	private void executeSearch() {
+		try {
+			List<ProductInfoExt> products = lpr.loadData();
+			jTableProducts.setModel(new ProductTableModel(products));
+			if (products.isEmpty()) {
+				showProductMessage("message.productfilter.empty");
+				jcmdOK.setEnabled(false);
+			} else {
+				jScrollPane1.setViewportView(jTableProducts);
+				setColumnWidths();
+				jTableProducts.setRowSelectionInterval(0, 0);
+			}
+		} catch (BasicException exception) {
+			LOGGER.log(java.util.logging.Level.WARNING, "event=product_search_failed", exception);
+		}
+	}
+
+	private void showProductMessage(String messageKey) {
+		javax.swing.JLabel message = new javax.swing.JLabel(AppLocal.getIntString(messageKey),
+				javax.swing.SwingConstants.CENTER);
+		jScrollPane1.setViewportView(message);
+	}
+
+	private void setColumnWidths() {
+		int width = jTableProducts.getPreferredScrollableViewportSize().width;
+		jTableProducts.getColumnModel().getColumn(0).setPreferredWidth(width / 5);
+		jTableProducts.getColumnModel().getColumn(1).setPreferredWidth(width * 7 / 10);
+		jTableProducts.getColumnModel().getColumn(2).setPreferredWidth(width / 10);
+	}
+
+	private javax.swing.JTable jTableProducts;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JPanel jPanel2;
-	private javax.swing.JPanel jPanel3;
 	private javax.swing.JPanel jPanel5;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JButton jcmdCancel;
 	private javax.swing.JButton jcmdOK;
 	private javax.swing.JPanel m_jProductSelect;
-	// End of variables declaration//GEN-END:variables
-
+	private javax.swing.JSplitPane m_jSplitPane;
 }
