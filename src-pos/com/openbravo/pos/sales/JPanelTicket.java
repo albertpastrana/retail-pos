@@ -654,11 +654,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private ProductInfoExt findOrImportProduct(String code) throws BasicException {
+		LOGGER.log(Level.INFO, "event=sale_product_lookup_start code=\"{0}\"", code);
 		CatalogImportDialog dialog = new CatalogImportDialog(this, m_App, dlSales, taxeslogic, m_oTicket.getDate(),
 				m_oTicket.getCustomer(), senttaxcategories.list(), (String) taxcategoriesmodel.getSelectedKey(),
 				priceRuleService, priceTaxRegime, CatalogImportDialog.Copy.RECEIPT);
 		ProductInfoExt product = dialog.importIfAbsent(code);
 		m_bProductImportUnknown = dialog.wasUnknown();
+		LOGGER.log(Level.INFO, "event=sale_product_lookup_result code=\"{0}\" result={1} family={2}", new Object[]{code,
+				product == null ? "missing" : "found", product != null && product.getFamily() != null});
 		return product;
 	}
 

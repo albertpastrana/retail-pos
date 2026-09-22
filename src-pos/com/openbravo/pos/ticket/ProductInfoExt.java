@@ -51,6 +51,7 @@ public class ProductInfoExt {
 	protected double salePercent;
 	protected BufferedImage m_Image;
 	protected Properties attributes;
+	protected String family;
 
 	/** Creates new ProductInfo */
 	public ProductInfoExt() {
@@ -69,6 +70,7 @@ public class ProductInfoExt {
 		salePercent = 0.0;
 		m_Image = null;
 		attributes = new Properties();
+		family = null;
 	}
 
 	public final String getID() {
@@ -93,6 +95,14 @@ public class ProductInfoExt {
 
 	public final void setCode(String sCode) {
 		m_sCode = sCode;
+	}
+
+	public final String getFamily() {
+		return family;
+	}
+
+	public final void setFamily(String family) {
+		this.family = family;
 	}
 
 	public final String getName() {
@@ -183,7 +193,7 @@ public class ProductInfoExt {
 		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
 				+ prefix + "ISSCALE, " + prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, "
 				+ prefix + "TAXCAT, " + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, "
-				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT";
+				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix + "FAMILY";
 	}
 
 	public final double getPriceSellTax(TaxInfo tax) {
@@ -238,6 +248,7 @@ public class ProductInfoExt {
 				product.attributes = ImageUtils.readProperties(dr.getBytes(14));
 				Double marked = dr.getDouble(15);
 				product.salePercent = marked == null ? 0.0 : marked.doubleValue();
+				product.family = dr.getString(16);
 				return product;
 			}
 		};

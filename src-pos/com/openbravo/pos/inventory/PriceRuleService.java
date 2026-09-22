@@ -18,6 +18,7 @@ public final class PriceRuleService {
 	private static final double PRICE_TOLERANCE = 0.011;
 
 	private final Session session;
+	private final Map<String, PriceRule> rulesByBrand = new HashMap<String, PriceRule>();
 
 	public PriceRuleService(Session session) {
 		this.session = session;
@@ -38,22 +39,31 @@ public final class PriceRuleService {
 
 	public PriceRule findForBrand(String brand) throws SQLException {
 		Connection connection = session.getConnection();
-		if (brand != null && !brand.trim().isEmpty()) {
+		String normalizedBrand = brand == null || brand.trim().isEmpty() ? null : brand.trim();
+		if (rulesByBrand.containsKey(normalizedBrand)) {
+			return rulesByBrand.get(normalizedBrand);
+		}
+		PriceRule rule = null;
+		if (normalizedBrand != null) {
 			try (PreparedStatement statement = connection
 					.prepareStatement("SELECT ID, BRAND, MARKUP_PERCENT, ROUNDING FROM PRICE_RULES WHERE BRAND = ?")) {
-				statement.setString(1, brand.trim());
+				statement.setString(1, normalizedBrand);
 				try (ResultSet results = statement.executeQuery()) {
 					if (results.next()) {
-						return readRule(results);
+						rule = readRule(results);
 					}
 				}
 			}
 		}
-		try (PreparedStatement statement = connection
-				.prepareStatement("SELECT ID, BRAND, MARKUP_PERCENT, ROUNDING FROM PRICE_RULES WHERE BRAND IS NULL");
-				ResultSet results = statement.executeQuery()) {
-			return results.next() ? readRule(results) : new PriceRule("DEFAULT", null, 47.5, PriceRule.ROUND_CHARM);
+		if (rule == null) {
+			try (PreparedStatement statement = connection.prepareStatement(
+					"SELECT ID, BRAND, MARKUP_PERCENT, ROUNDING FROM PRICE_RULES WHERE BRAND IS NULL");
+					ResultSet results = statement.executeQuery()) {
+				rule = results.next() ? readRule(results) : new PriceRule("DEFAULT", null, 47.5, PriceRule.ROUND_CHARM);
+			}
 		}
+		rulesByBrand.put(normalizedBrand, rule);
+		return rule;
 	}
 
 	public List<String> findBrands() throws SQLException {
@@ -108,6 +118,7 @@ public final class PriceRuleService {
 				insert.executeUpdate();
 			}
 		}
+		rulesByBrand.clear();
 	}
 
 	public int countProductsUsingOldRule(String brand, PriceRule oldRule) throws SQLException {

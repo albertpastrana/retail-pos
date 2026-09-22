@@ -10,6 +10,8 @@ import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.openbravo.pos.inventory.CatalogVariantModel;
+
 /** Replaces the shared fallback catalogue from the source TSV files. */
 public class LoadFallbackCatalog {
 	public static void main(String[] args) throws Exception {
@@ -27,8 +29,8 @@ public class LoadFallbackCatalog {
 				Map<String, String[]> prices = readPrices(args[5]);
 				try (Statement clear = connection.createStatement();
 						PreparedStatement product = connection.prepareStatement("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
-								+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND) "
-								+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+								+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+								+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 						PreparedStatement price = connection.prepareStatement("INSERT INTO CATALOG_FALLBACK_PRICES "
 								+ "(LOOKUP_CODE, REFERENCE, PRICE_BUY, PRICE_SELL, BRAND, SOURCE) VALUES (?, ?, ?, ?, ?, ?)");
 						BufferedReader rows = reader(args[4])) {
@@ -71,6 +73,7 @@ public class LoadFallbackCatalog {
 			setDouble(insert, 7, row[5]);
 			setDouble(insert, 8, row[6]);
 			insert.setString(9, row.length > 7 ? row[7] : null);
+			insert.setString(10, CatalogVariantModel.family(row[1], row.length > 7 ? row[7] : null));
 			insert.addBatch();
 			count++;
 			if (count % 500 == 0) {
@@ -107,8 +110,17 @@ public class LoadFallbackCatalog {
 				statement.execute("CREATE TABLE CATALOG_FALLBACK_PRODUCTS ("
 						+ "ID VARCHAR(255) NOT NULL PRIMARY KEY, BARCODE VARCHAR(255) NOT NULL UNIQUE, "
 						+ "REFERENCE VARCHAR(255), NAME VARCHAR(255), CATEGORY_ID VARCHAR(255), "
-						+ "CATEGORY_NAME VARCHAR(255), PRICE_BUY DOUBLE PRECISION, PRICE_SELL DOUBLE PRECISION, "
-						+ "BRAND VARCHAR(255))");
+						+ "BRAND VARCHAR(255), FAMILY VARCHAR(255))");
+			}
+		} else if (!columnExists(connection, "CATALOG_FALLBACK_PRODUCTS", "FAMILY")) {
+			try (Statement statement = connection.createStatement()) {
+				statement.execute("ALTER TABLE CATALOG_FALLBACK_PRODUCTS ADD FAMILY VARCHAR(255)");
+			}
+		}
+		if (!indexExists(connection, "CATALOG_FALLBACK_PRODUCTS", "CATALOG_FALLBACK_PRODUCTS_FAMILY_INX")) {
+			try (Statement statement = connection.createStatement()) {
+				statement.execute(
+						"CREATE INDEX CATALOG_FALLBACK_PRODUCTS_FAMILY_INX ON CATALOG_FALLBACK_PRODUCTS(FAMILY)");
 			}
 		}
 		if (!tableExists(connection, "CATALOG_FALLBACK_PRICES")) {
@@ -125,6 +137,29 @@ public class LoadFallbackCatalog {
 		try (ResultSet tables = connection.getMetaData().getTables(null, null, null, new String[]{"TABLE"})) {
 			while (tables.next()) {
 				if (name.equalsIgnoreCase(tables.getString("TABLE_NAME"))) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private static boolean columnExists(Connection connection, String table, String column) throws Exception {
+		try (ResultSet columns = connection.getMetaData().getColumns(null, null, null, null)) {
+			while (columns.next()) {
+				if (table.equalsIgnoreCase(columns.getString("TABLE_NAME"))
+						&& column.equalsIgnoreCase(columns.getString("COLUMN_NAME"))) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private static boolean indexExists(Connection connection, String table, String index) throws Exception {
+		try (ResultSet indexes = connection.getMetaData().getIndexInfo(null, null, table, false, false)) {
+			while (indexes.next()) {
+				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))) {
 					return true;
 				}
 			}

@@ -13,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -48,6 +50,8 @@ import com.openbravo.pos.ticket.ProductInfoExt;
 
 public final class CatalogImportDialog {
 
+	private static final Logger LOGGER = Logger.getLogger(CatalogImportDialog.class.getName());
+
 	public enum Copy {
 		RECEIPT, STOCK
 	}
@@ -63,6 +67,7 @@ public final class CatalogImportDialog {
 	private final PriceRuleService priceRuleService;
 	private final TaxRegime priceTaxRegime;
 	private final Copy copy;
+	private List<CategoryInfo> importCategories;
 	private boolean cancelled;
 	private boolean unknown;
 
@@ -106,37 +111,54 @@ public final class CatalogImportDialog {
 	public ProductInfoExt importIfAbsent(String code) throws BasicException {
 		cancelled = false;
 		unknown = false;
+		LOGGER.log(Level.INFO, "event=catalog_import_start copy={0} code=\"{1}\"", new Object[]{copy, code});
 		ProductInfoExt product = dlSales.getProductInfoByCode(code);
 		if (product != null) {
+			LOGGER.log(Level.INFO, "event=catalog_import_existing_product code=\"{0}\"", code);
 			return product;
 		}
 		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, null, null);
 		if (catalogProduct == null && copy == Copy.RECEIPT) {
 			unknown = true;
+			LOGGER.log(Level.INFO, "event=catalog_fallback_miss code=\"{0}\"", code);
 			return null;
+		}
+		if (catalogProduct == null) {
+			LOGGER.log(Level.INFO, "event=catalog_fallback_miss code=\"{0}\" mode=stock", code);
+		} else {
+			LOGGER.log(Level.INFO, "event=catalog_fallback_match code=\"{0}\" family=\"{1}\"",
+					new Object[]{code, catalogProduct.getFamily()});
 		}
 		List<ProductInfoExt> family = catalogProduct == null
 				? new ArrayList<ProductInfoExt>()
 				: dlSales.getCatalogProductFamily(code, null, null);
 		if (family.size() > 1) {
+			LOGGER.log(Level.INFO, "event=catalog_fallback_family_match code=\"{0}\" family=\"{1}\" variants={2}",
+					new Object[]{code, catalogProduct.getFamily(), family.size()});
 			List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family);
 			if (editedFamily == null) {
 				cancelled = true;
+				LOGGER.log(Level.INFO, "event=catalog_import_cancelled code=\"{0}\" reason=family_edit", code);
 				return null;
 			}
 			dlSales.importProducts(editedFamily, null);
 			for (ProductInfoExt imported : editedFamily) {
 				applyImportedStock(imported);
 			}
+			LOGGER.log(Level.INFO, "event=catalog_import_family_success code=\"{0}\" variants={1}",
+					new Object[]{code, editedFamily.size()});
 			return dlSales.getProductInfoByCode(code);
 		}
 		ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
 		if (editedProduct == null) {
 			cancelled = true;
+			LOGGER.log(Level.INFO, "event=catalog_import_cancelled code=\"{0}\" reason=product_edit", code);
 			return null;
 		}
 		product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), null);
 		applyImportedStock(editedProduct);
+		LOGGER.log(Level.INFO, "event=catalog_import_success code=\"{0}\" family=\"{1}\"",
+				new Object[]{code, editedProduct.getFamily()});
 		return product;
 	}
 
@@ -160,11 +182,13 @@ public final class CatalogImportDialog {
 
 	private List<ProductInfoExt> editProductFamilyForImport(String code, List<ProductInfoExt> family)
 			throws BasicException {
+		LOGGER.log(Level.INFO, "event=catalog_family_editor_start code=\"{0}\" variants={1}",
+				new Object[]{code, family.size()});
 		// One model shared by the checkbox each variant card draws under its price,
 		// so the choice follows the cashier from card to card.
 		final JToggleButton.ToggleButtonModel applyPriceModel = new JToggleButton.ToggleButtonModel();
 		applyPriceModel.setSelected(true);
-		final List<VariantImportEditor> editors = new ArrayList<VariantImportEditor>();
+		final List<VariantImportState> variants = new ArrayList<VariantImportState>();
 		int scannedRow = 0;
 		for (int i = 0; i < family.size(); i++) {
 			ProductInfoExt variant = family.get(i);
@@ -173,59 +197,61 @@ public final class CatalogImportDialog {
 			if (scanned) {
 				scannedRow = i;
 			}
-			editors.add(new VariantImportEditor(variant, scanned, applyPriceModel));
+			variants.add(new VariantImportState(variant, scanned));
 		}
 
-		final VariantTableModel model = new VariantTableModel(editors);
+		final VariantImportEditor editor = new VariantImportEditor(variants.get(scannedRow));
+		editor.load(variants.get(scannedRow));
+		final VariantTableModel model = new VariantTableModel(variants);
 		final JTable table = new JTable(model);
 		final boolean[] applyingFamilyPrice = new boolean[]{false};
-		for (final VariantImportEditor source : editors) {
-			source.priceChangeListener = new Runnable() {
-				@Override
-				public void run() {
-					if (!applyPriceModel.isSelected() || applyingFamilyPrice[0] || source.prices.reportlock) {
-						return;
-					}
-					Double gross = ProductPriceMath.parsePositiveCurrency(source.prices.sellTax.getText(), false);
-					if (gross == null) {
-						return;
-					}
-					applyingFamilyPrice[0] = true;
-					try {
-						for (VariantImportEditor target : editors) {
-							if (target != source && target.selected) {
-								target.prices.setGrossPrice(gross.doubleValue());
-							}
-						}
-					} finally {
-						applyingFamilyPrice[0] = false;
-					}
+		editor.priceChangeListener = new Runnable() {
+			@Override
+			public void run() {
+				if (!applyPriceModel.isSelected() || applyingFamilyPrice[0] || editor.prices.reportlock) {
+					return;
 				}
-			};
-		}
+				Double gross = ProductPriceMath.parsePositiveCurrency(editor.prices.sellTax.getText(), false);
+				if (gross == null) {
+					return;
+				}
+				applyingFamilyPrice[0] = true;
+				try {
+					editor.save(editor.current);
+					for (VariantImportState target : variants) {
+						if (target != editor.current && target.selected) {
+							target.grossPrice = editor.prices.sellTax.getText();
+						}
+					}
+					model.fireTableDataChanged();
+				} finally {
+					applyingFamilyPrice[0] = false;
+				}
+			}
+		};
 		final boolean[] applyingFamilyCategory = new boolean[]{false};
-		for (final VariantImportEditor source : editors) {
-			source.category.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent event) {
-					if (applyingFamilyCategory[0]) {
-						return;
-					}
-					CategoryInfo selectedCategory = (CategoryInfo) source.category.getSelectedItem();
-					String categoryId = selectedCategory == null ? null : selectedCategory.getID();
-					applyingFamilyCategory[0] = true;
-					try {
-						for (VariantImportEditor target : editors) {
-							if (target != source && target.selected) {
-								target.selectCategory(categoryId, selectedCategory);
-							}
-						}
-					} finally {
-						applyingFamilyCategory[0] = false;
-					}
+		editor.categoryChangeListener = new Runnable() {
+			@Override
+			public void run() {
+				if (applyingFamilyCategory[0]) {
+					return;
 				}
-			});
-		}
+				CategoryInfo selectedCategory = (CategoryInfo) editor.category.getSelectedItem();
+				String categoryId = selectedCategory == null ? null : selectedCategory.getID();
+				applyingFamilyCategory[0] = true;
+				try {
+					editor.save(editor.current);
+					for (VariantImportState target : variants) {
+						if (target != editor.current && target.selected) {
+							target.categoryId = categoryId;
+							target.category = selectedCategory;
+						}
+					}
+				} finally {
+					applyingFamilyCategory[0] = false;
+				}
+			}
+		};
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setRowHeight(28);
 		table.getColumnModel().getColumn(0).setMaxWidth(42);
@@ -234,21 +260,19 @@ public final class CatalogImportDialog {
 		table.getColumnModel().getColumn(3).setPreferredWidth(90);
 
 		final JPanel cards = new JPanel(new CardLayout());
-		for (VariantImportEditor editor : editors) {
-			cards.add(editor.panel, editor.product.getCode());
-		}
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent event) {
 				int selected = table.getSelectedRow();
 				if (!event.getValueIsAdjusting() && selected >= 0) {
-					((CardLayout) cards.getLayout()).show(cards, editors.get(selected).product.getCode());
-					focusPriceField(editors.get(selected).stock);
+					editor.load(variants.get(selected));
+					focusPriceField(editor.stock);
 				}
 			}
 		});
 		table.setRowSelectionInterval(scannedRow, scannedRow);
-		focusImportField(editors.get(scannedRow).stock);
+		cards.add(editor.getPanel(applyPriceModel), "editor");
+		focusImportField(editor.stock);
 
 		JButton selectAll = new JButton(AppLocal.getIntString("button.variants.all"));
 		selectAll.addActionListener(new ActionListener() {
@@ -282,6 +306,8 @@ public final class CatalogImportDialog {
 		content.add(buildFamilyImportMessage(), BorderLayout.NORTH);
 		content.add(split, BorderLayout.CENTER);
 		enlargeDialogFont(content);
+		LOGGER.log(Level.INFO, "event=catalog_family_dialog_ready code=\"{0}\" variants={1}",
+				new Object[]{code, family.size()});
 
 		String title = AppLocal.getIntString("title.importproductfamily");
 		Object[] options = new Object[]{confirmLabel(true), AppLocal.getIntString("button.skipitem")};
@@ -292,11 +318,12 @@ public final class CatalogImportDialog {
 				return null;
 			}
 			List<ProductInfoExt> selected = new ArrayList<ProductInfoExt>();
-			for (int i = 0; i < editors.size(); i++) {
-				VariantImportEditor editor = editors.get(i);
-				if (!editor.selected) {
+			for (int i = 0; i < variants.size(); i++) {
+				VariantImportState variant = variants.get(i);
+				if (!variant.selected) {
 					continue;
 				}
+				editor.load(variant);
 				ProductInfoExt product = editor.buildProduct();
 				if (product == null) {
 					table.setRowSelectionInterval(i, i);
@@ -466,6 +493,7 @@ public final class CatalogImportDialog {
 		edited.setTaxCategoryID(tax.getID());
 		edited.setPriceBuy(buy.doubleValue());
 		edited.setPriceSell(sell.doubleValue());
+		edited.setFamily(availableProduct.getFamily());
 		String brand = availableProduct.getProperty("catalog.brand", "").trim();
 		if (!brand.isEmpty()) {
 			edited.setProperty("catalog.brand", brand);
@@ -530,9 +558,7 @@ public final class CatalogImportDialog {
 		JComboBox<CategoryInfo> category = new JComboBox<CategoryInfo>();
 		category.addItem(null);
 		CategoryInfo selectedCategory = null;
-		java.util.List categories = dlSales.getCategoriesList().list();
-		for (Object item : categories) {
-			CategoryInfo availableCategory = (CategoryInfo) item;
+		for (CategoryInfo availableCategory : getImportCategories()) {
 			category.addItem(availableCategory);
 			if (catalogProduct != null && availableCategory.getID().equals(catalogProduct.getCategoryID())) {
 				selectedCategory = availableCategory;
@@ -548,74 +574,184 @@ public final class CatalogImportDialog {
 		return category;
 	}
 
-	private final class VariantImportEditor {
+	private List<CategoryInfo> getImportCategories() throws BasicException {
+		if (importCategories == null) {
+			List<CategoryInfo> loaded = new ArrayList<CategoryInfo>();
+			for (Object item : dlSales.getCategoriesList().list()) {
+				loaded.add((CategoryInfo) item);
+			}
+			importCategories = loaded;
+		}
+		return importCategories;
+	}
+
+	private final class VariantImportState {
 		private final ProductInfoExt product;
 		private final boolean scanned;
 		private boolean selected = true;
-		private final JTextField name;
-		private final JTextField reference;
-		private final JComboBox<CategoryInfo> category;
-		private final ProductPriceFields prices;
-		private final JTextField stock;
-		private final JPanel panel;
-		private Runnable changeListener;
-		private Runnable priceChangeListener;
-		private boolean stockInvalid;
+		private String name;
+		private String reference;
+		private CategoryInfo category;
+		private String categoryId;
+		private String buy;
+		private String grossPrice;
+		private String taxId;
+		private String stock = "";
 
-		private VariantImportEditor(ProductInfoExt product, boolean scanned,
-				JToggleButton.ToggleButtonModel applyPriceModel) throws BasicException {
+		private VariantImportState(ProductInfoExt product, boolean scanned) {
 			this.product = product;
 			this.scanned = scanned;
-			name = new JTextField(product.getName(), 24);
-			name.setCaretPosition(0);
-			String initialReference = product.getReference();
-			if (initialReference == null || initialReference.trim().isEmpty()) {
-				initialReference = product.getCode();
+			this.name = product.getName();
+			this.reference = product.getReference();
+			if (Boolean.parseBoolean(product.getProperty("catalog.price.available", "false"))) {
+				this.buy = ProductPriceMath.formatCurrency(Double.valueOf(product.getPriceBuy()));
 			}
-			reference = new JTextField(initialReference, 16);
-			reference.setCaretPosition(0);
-			category = createImportCategoryCombo(product);
-			prices = createImportPrices(product);
-			stock = ProductFormLayout.numberField(true);
-			panel = buildPanel(applyPriceModel);
+			if (product.getPriceSell() > 0.0) {
+				this.grossPrice = ProductPriceMath.formatCurrency(Double.valueOf(product.getPriceSell()));
+			}
+		}
+	}
+
+	private final class VariantImportEditor {
+		private final JTextField name = new JTextField(24);
+		private final JTextField reference = new JTextField(16);
+		private final JComboBox<CategoryInfo> category;
+		private final ProductPriceFields prices;
+		private final JTextField stock = ProductFormLayout.numberField(true);
+		private JPanel panel;
+		private final JLabel headingLabel = new JLabel();
+		private final JLabel codeLabel = new JLabel();
+		private VariantImportState current;
+		private boolean loading;
+		private Runnable priceChangeListener;
+		private Runnable categoryChangeListener;
+		private boolean stockInvalid;
+
+		private VariantImportEditor(VariantImportState initial) throws BasicException {
+			category = createImportCategoryCombo(initial.product);
+			prices = createImportPrices(initial.product);
 			DocumentListener changed = new DocumentListener() {
 				@Override
 				public void insertUpdate(DocumentEvent event) {
 					changed();
 				}
-
 				@Override
 				public void removeUpdate(DocumentEvent event) {
 					changed();
 				}
-
 				@Override
 				public void changedUpdate(DocumentEvent event) {
 					changed();
 				}
 			};
 			name.getDocument().addDocumentListener(changed);
+			reference.getDocument().addDocumentListener(changed);
 			prices.buy.getDocument().addDocumentListener(changed);
 			prices.sellTax.getDocument().addDocumentListener(changed);
+			stock.getDocument().addDocumentListener(changed);
 			prices.sellTax.getDocument().addDocumentListener(new DocumentListener() {
 				@Override
 				public void insertUpdate(DocumentEvent event) {
 					priceChanged();
 				}
-
 				@Override
 				public void removeUpdate(DocumentEvent event) {
 					priceChanged();
 				}
-
 				@Override
 				public void changedUpdate(DocumentEvent event) {
 					priceChanged();
 				}
 			});
+			category.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent event) {
+					if (!loading && categoryChangeListener != null)
+						categoryChangeListener.run();
+				}
+			});
 		}
 
-		private JPanel buildPanel(JToggleButton.ToggleButtonModel applyPriceModel) {
+		private void load(VariantImportState variant) {
+			loading = true;
+			try {
+				current = variant;
+				name.setText(variant.name == null ? variant.product.getName() : variant.name);
+				String initialReference = variant.reference;
+				if (initialReference == null || initialReference.trim().isEmpty())
+					initialReference = variant.product.getCode();
+				reference.setText(initialReference);
+				selectCategory(variant.category == null ? variant.product.getCategoryID() : variant.category.getID());
+				String preferredTax = variant.taxId == null ? variant.product.getTaxCategoryID() : variant.taxId;
+				if (preferredTax == null || preferredTax.isEmpty())
+					preferredTax = defaultTaxCategoryId;
+				selectTax(preferredTax);
+				if (variant.buy != null) {
+					prices.buy.setText(variant.buy);
+				} else if (Boolean.parseBoolean(variant.product.getProperty("catalog.price.available", "false"))) {
+					prices.buy.setText(ProductPriceMath.formatCurrency(Double.valueOf(variant.product.getPriceBuy())));
+				} else {
+					prices.buy.setText("");
+				}
+				if (variant.grossPrice != null) {
+					prices.setGrossPrice(Double.parseDouble(variant.grossPrice));
+				} else if (!Boolean.parseBoolean(variant.product.getProperty("catalog.price.available", "false"))) {
+					prices.sellTax.setText("");
+				}
+				stock.setText(variant.stock);
+				headingLabel.setText("<html><b>" + variantLabel(variant.product, variant.scanned) + "</b></html>");
+				codeLabel.setText(variant.product.getCode());
+			} finally {
+				loading = false;
+			}
+		}
+
+		private void selectCategory(String categoryId) {
+			for (int i = 0; i < category.getItemCount(); i++) {
+				CategoryInfo candidate = category.getItemAt(i);
+				if (candidate != null && candidate.getID().equals(categoryId)) {
+					category.setSelectedIndex(i);
+					return;
+				}
+			}
+			category.setSelectedItem(null);
+		}
+
+		private void selectTax(String taxId) {
+			for (int i = 0; i < prices.tax.getItemCount(); i++) {
+				TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getItemAt(i);
+				if (taxId.equals(tax.getID())) {
+					prices.tax.setSelectedIndex(i);
+					return;
+				}
+			}
+		}
+
+		private void save(VariantImportState variant) {
+			if (variant == null)
+				return;
+			variant.name = name.getText();
+			variant.reference = reference.getText();
+			variant.category = (CategoryInfo) category.getSelectedItem();
+			variant.categoryId = variant.category == null ? null : variant.category.getID();
+			variant.buy = prices.buy.getText();
+			variant.grossPrice = prices.sellTax.getText();
+			TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getSelectedItem();
+			variant.taxId = tax == null ? null : tax.getID();
+			variant.stock = stock.getText();
+		}
+
+		private JPanel getPanel(JToggleButton.ToggleButtonModel applyPriceModel) {
+			if (panel != null)
+				return panel;
+			JCheckBox applyPrice = new JCheckBox(AppLocal.getIntString("label.variants.applyprice"));
+			applyPrice.setModel(applyPriceModel);
+			applyPrice.setToolTipText(AppLocal.getIntString("label.variants.applyprice.hint"));
+			panel = buildPanel(applyPrice);
+			return panel;
+		}
+
+		private JPanel buildPanel(JCheckBox applyPrice) {
 			JPanel fields = new JPanel(new GridBagLayout());
 			ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodname") + ":", name);
 			ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory") + ":", category);
@@ -632,17 +768,12 @@ public final class CatalogImportDialog {
 			ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
 					prices.priceBlock());
 
-			JCheckBox applyPrice = new JCheckBox(AppLocal.getIntString("label.variants.applyprice"));
-			applyPrice.setModel(applyPriceModel);
-			applyPrice.setToolTipText(AppLocal.getIntString("label.variants.applyprice.hint"));
 			constraints.gridy = 7;
 			fields.add(applyPrice, constraints);
 
 			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
 			ProductFormLayout.addRow(fields, 9, AppLocal.getIntString("label.prodstock") + ":", stock);
 
-			JLabel headingLabel = new JLabel("<html><b>" + variantLabel(product, scanned) + "</b></html>");
-			JLabel codeLabel = new JLabel(product.getCode());
 			codeLabel.setEnabled(false);
 			JPanel header = new JPanel(new BorderLayout());
 			header.add(headingLabel, BorderLayout.NORTH);
@@ -655,58 +786,38 @@ public final class CatalogImportDialog {
 		}
 
 		private void changed() {
-			if (changeListener != null) {
-				changeListener.run();
-			}
+			if (!loading && current != null)
+				save(current);
 		}
 
 		private void priceChanged() {
-			if (priceChangeListener != null) {
+			if (!loading && priceChangeListener != null) {
 				priceChangeListener.run();
 			}
 		}
 
 		private ProductInfoExt buildProduct() {
+			save(current);
 			stockInvalid = hasInvalidImportStock(stock.getText());
 			if (stockInvalid) {
 				return null;
 			}
-			return buildEditedProduct(product, product, reference, name, category, prices, stock);
-		}
-
-		private void selectCategory(String categoryId, CategoryInfo fallback) {
-			for (int i = 0; i < category.getItemCount(); i++) {
-				CategoryInfo candidate = category.getItemAt(i);
-				if (candidate != null && candidate.getID().equals(categoryId)) {
-					category.setSelectedIndex(i);
-					return;
-				}
-			}
-			category.setSelectedItem(fallback);
+			return buildEditedProduct(current.product, current.product, reference, name, category, prices, stock);
 		}
 	}
 
 	private final class VariantTableModel extends AbstractTableModel {
-		private final List<VariantImportEditor> editors;
+		private final List<VariantImportState> variants;
 		private final String[] columns = {"", AppLocal.getIntString("label.variant"),
 				AppLocal.getIntString("label.variants.cost"), AppLocal.getIntString("label.variants.price")};
 
-		private VariantTableModel(List<VariantImportEditor> editors) {
-			this.editors = editors;
-			for (int i = 0; i < editors.size(); i++) {
-				final int row = i;
-				editors.get(i).changeListener = new Runnable() {
-					@Override
-					public void run() {
-						fireTableRowsUpdated(row, row);
-					}
-				};
-			}
+		private VariantTableModel(List<VariantImportState> variants) {
+			this.variants = variants;
 		}
 
 		@Override
 		public int getRowCount() {
-			return editors.size();
+			return variants.size();
 		}
 
 		@Override
@@ -726,21 +837,21 @@ public final class CatalogImportDialog {
 
 		@Override
 		public boolean isCellEditable(int row, int column) {
-			return column == 0 && !editors.get(row).scanned;
+			return column == 0 && !variants.get(row).scanned;
 		}
 
 		@Override
 		public Object getValueAt(int row, int column) {
-			VariantImportEditor editor = editors.get(row);
+			VariantImportState variant = variants.get(row);
 			switch (column) {
 				case 0 :
-					return Boolean.valueOf(editor.selected);
+					return Boolean.valueOf(variant.selected);
 				case 1 :
-					return variantLabel(editor.product, editor.scanned);
+					return variantLabel(variant.product, variant.scanned);
 				case 2 :
-					return editor.prices.buy.getText();
+					return variant.buy == null ? "" : variant.buy;
 				case 3 :
-					return editor.prices.sellTax.getText();
+					return variant.grossPrice == null ? "" : variant.grossPrice;
 				default :
 					return "";
 			}
@@ -748,22 +859,22 @@ public final class CatalogImportDialog {
 
 		@Override
 		public void setValueAt(Object value, int row, int column) {
-			if (column == 0 && !editors.get(row).scanned) {
-				editors.get(row).selected = Boolean.TRUE.equals(value);
+			if (column == 0 && !variants.get(row).scanned) {
+				variants.get(row).selected = Boolean.TRUE.equals(value);
 				fireTableRowsUpdated(row, row);
 			}
 		}
 
 		private void selectAll() {
-			for (VariantImportEditor editor : editors) {
-				editor.selected = true;
+			for (VariantImportState variant : variants) {
+				variant.selected = true;
 			}
 			fireTableDataChanged();
 		}
 
 		private void selectScannedOnly() {
-			for (VariantImportEditor editor : editors) {
-				editor.selected = editor.scanned;
+			for (VariantImportState variant : variants) {
+				variant.selected = variant.scanned;
 			}
 			fireTableDataChanged();
 		}

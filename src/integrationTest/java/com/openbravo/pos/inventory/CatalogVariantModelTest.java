@@ -45,6 +45,13 @@ public class CatalogVariantModelTest {
 	}
 
 	@Test
+	public void familyIsNullWhenBrandOrReferenceIsMissing() {
+		assertEquals("Massana|P761237", CatalogVariantModel.family("P761237-R64-3XL", "Massana"));
+		assertEquals(null, CatalogVariantModel.family("P761237-R64-3XL", null));
+		assertEquals(null, CatalogVariantModel.family(null, "Massana"));
+	}
+
+	@Test
 	public void findsEveryVariantFromOneScannedBarcode() throws Exception {
 		DataLogicSales sales = new DataLogicSales();
 

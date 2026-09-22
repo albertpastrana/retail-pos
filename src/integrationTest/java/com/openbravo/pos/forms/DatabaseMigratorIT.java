@@ -54,6 +54,32 @@ public class DatabaseMigratorIT {
 	}
 
 	@Test
+	public void readsFallbackCatalogFamilyByFamilyKey() throws Exception {
+		String url = "jdbc:derby:memory:fallbackCatalogFamilyIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+						+ "VALUES ('fallback-family-1', '9990000000201', 'P761237-R64-3XL', 'Variant one', "
+						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Massana', 'Massana|P761237')");
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+						+ "VALUES ('fallback-family-2', '9990000000202', 'P761237-R65-3XL', 'Variant two', "
+						+ "'cat-1', 'Shirts', 11.0, 21.0, 'Massana', 'Massana|P761237')");
+			}
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			assertEquals(2, sales.getCatalogProductFamily("9990000000201", null, null).size());
+			assertEquals("Massana|P761237",
+					sales.getCatalogProductFamily("9990000000202", null, null).get(0).getFamily());
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	public void adoptsDerbySchemaCreatedBeforeFlyway() throws Exception {
 		String url = "jdbc:derby:memory:flywayLegacyIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);

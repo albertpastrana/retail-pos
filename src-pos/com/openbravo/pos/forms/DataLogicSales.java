@@ -172,7 +172,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		try {
 			Connection connection = s.getConnection();
 			try (PreparedStatement product = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
-					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND "
+					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY "
 					+ "FROM CATALOG_FALLBACK_PRODUCTS WHERE BARCODE IN (?, ?, ?)");
 					PreparedStatement price = connection
 							.prepareStatement("SELECT REFERENCE, PRICE_BUY, PRICE_SELL, BRAND "
@@ -218,10 +218,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		try {
 			Connection connection = s.getConnection();
 			try (PreparedStatement find = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
-					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND "
+					+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY "
 					+ "FROM CATALOG_FALLBACK_PRODUCTS WHERE BARCODE IN (?, ?, ?)");
 					PreparedStatement products = connection.prepareStatement("SELECT ID, REFERENCE, BARCODE, NAME, "
-							+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND FROM CATALOG_FALLBACK_PRODUCTS");
+							+ "CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY "
+							+ "FROM CATALOG_FALLBACK_PRODUCTS WHERE FAMILY = ?");
 					PreparedStatement price = connection
 							.prepareStatement("SELECT REFERENCE, PRICE_BUY, PRICE_SELL, BRAND "
 									+ "FROM CATALOG_FALLBACK_PRICES WHERE LOOKUP_CODE = ?")) {
@@ -233,14 +234,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					if (!scanned.next()) {
 						return family;
 					}
-					String brand = scanned.getString("BRAND");
-					String model = CatalogVariantModel.fromReference(scanned.getString("REFERENCE"), brand);
+					String familyKey = scanned.getString("FAMILY");
+					if (familyKey == null) {
+						return family;
+					}
+					products.setString(1, familyKey);
 					try (ResultSet result = products.executeQuery()) {
 						while (result.next()) {
-							if (equals(brand, result.getString("BRAND")) && model.equals(CatalogVariantModel
-									.fromReference(result.getString("REFERENCE"), result.getString("BRAND")))) {
-								family.add(catalogProduct(result, price, result.getString("BARCODE")));
-							}
+							family.add(catalogProduct(result, price, result.getString("BARCODE")));
 						}
 					}
 				}
@@ -267,6 +268,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		product.setCode(barcode);
 		product.setName(result.getString("NAME"));
 		product.setCategoryID(result.getString("CATEGORY_ID"));
+		product.setFamily(result.getString("FAMILY"));
 		product.setPriceBuy(priceBuy == null ? 0.0 : priceBuy.doubleValue());
 		product.setPriceSell(0.0);
 		product.setTaxCategoryID("001");
@@ -446,9 +448,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				PreparedStatement insert = connection
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
 								+ "PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, "
-								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND) "
+								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND, FAMILY) "
 								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, " + "NULL, NULL, NULL, "
-								+ s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
+								+ s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?, ?)");
 				insert.setString(1, product.getID());
 				insert.setString(2, product.getReference());
 				insert.setString(3, product.getCode());
@@ -457,6 +459,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				insert.setDouble(6, product.getPriceSell());
 				insert.setString(7, product.getCategoryID());
 				insert.setString(8, brand);
+				insert.setString(9, product.getFamily());
 				insert.executeUpdate();
 				insert.close();
 
@@ -490,12 +493,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			connection.setAutoCommit(false);
 			try (PreparedStatement find = connection.prepareStatement("SELECT ID FROM PRODUCTS WHERE CODE = ?");
 					PreparedStatement update = connection.prepareStatement(
-							"UPDATE PRODUCTS SET NAME = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, BRAND = ? WHERE ID = ?");
+							"UPDATE PRODUCTS SET NAME = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, BRAND = ?, FAMILY = ? WHERE ID = ?");
 					PreparedStatement insert = connection.prepareStatement(
 							"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
 									+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, "
-									+ "ATTRIBUTES, BRAND) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
-									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?)");
+									+ "ATTRIBUTES, BRAND, FAMILY) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
+									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?, ?)");
 					PreparedStatement findCat = connection
 							.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 					PreparedStatement insertCat = connection
@@ -514,7 +517,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							update.setString(4, product.getCategoryID());
 							update.setString(5, product.getTaxCategoryID());
 							update.setString(6, product.getProperty("catalog.brand"));
-							update.setString(7, productId);
+							update.setString(7, product.getFamily());
+							update.setString(8, productId);
 							update.executeUpdate();
 						} else {
 							productId = product.getID();
@@ -527,6 +531,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							insert.setString(7, product.getCategoryID());
 							insert.setString(8, product.getTaxCategoryID());
 							insert.setString(9, product.getProperty("catalog.brand"));
+							insert.setString(10, product.getFamily());
 							insert.executeUpdate();
 						}
 					}

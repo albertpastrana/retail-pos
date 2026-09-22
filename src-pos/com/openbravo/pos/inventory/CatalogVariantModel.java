@@ -38,6 +38,14 @@ public final class CatalogVariantModel {
 		return value;
 	}
 
+	public static String family(String reference, String brand) {
+		if (reference == null || reference.trim().isEmpty() || brand == null || brand.trim().isEmpty()) {
+			return null;
+		}
+		String model = fromReference(reference, brand);
+		return model.isEmpty() ? null : brand.trim() + "|" + model;
+	}
+
 	private static String before(String value, char separator) {
 		int position = value.indexOf(separator);
 		return position < 0 ? value : value.substring(0, position);

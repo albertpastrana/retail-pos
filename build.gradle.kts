@@ -41,6 +41,8 @@ sourceSets {
     }
     create("dataHelpers") {
         java.setSrcDirs(listOf("data"))
+        compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+        runtimeClasspath += output + compileClasspath + sourceSets.main.get().runtimeClasspath
     }
     create("integrationTest") {
         java.setSrcDirs(listOf("src/integrationTest/java"))
