@@ -618,7 +618,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			if (getText().length() == 0 && !isFocusOwner()) {
-				g.setColor(Color.GRAY);
+				g.setColor(RetailPOSColors.inkMuted());
 				g.drawString(hint, getInsets().left + 2, (getHeight() + g.getFontMetrics().getAscent()) / 2 - 2);
 			}
 		}

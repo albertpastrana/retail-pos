@@ -1,0 +1,1 @@
+Checkboxes are input controls, so their unchecked surface is `surface-200` with a `border` outline. A checked checkbox uses `brand` for its selected background and `on-brand` for its mark. Disabled checkboxes keep those normal colours and use the shared approximately 45% opacity state.

@@ -20,8 +20,8 @@ Panel.background = #f5f1ea
 @componentBackground = #fffdf9
 List.background = #fffdf9
 Table.background = #fffdf9
-TextField.background = #ece5d6
-Spinner.background = #ece5d6
+TextField.background = #e5dac5
+Spinner.background = #e5dac5
 
 # Text
 @foreground = #241c14
@@ -39,6 +39,15 @@ Button.focusedBorderColor = #6b5f47
 Button.default.background = #b8481f
 Button.default.foreground = #ffffff
 Button.default.hoverBackground = #8f3216
+Button.background = #fffdf9
+Button.hoverBackground = #fffdf9
+CheckBox.icon.background = #e5dac5
+CheckBox.icon.borderColor = #96896f
+CheckBox.icon.selectedBackground = #b8481f
+List.selectionBackground = #e7b8a4
+List.selectionForeground = #241c14
+Table.selectionBackground = #e7b8a4
+Table.selectionForeground = #241c14
 
 # Semantic — do not repurpose these keys for anything but their token's meaning
 retailpos.success = #1f6b5c
@@ -69,6 +78,8 @@ UIManager.setLookAndFeel(config.getProperty("swing.defaultlaf")); // FlatLaf Lig
 ```
 
 (`FlatLaf.registerCustomDefaultsSource(packageName)` is the supported hook — FlatLaf finds `FlatLightLaf.properties`-style overrides on the classpath at that package and layers them automatically; that's the cleanest way to slot these two files in without touching the setup call at all.)
+
+Disabled controls keep their normal background and foreground; FlatLaf's standard disabled painting supplies the approximately 45% attenuation documented in the design system. Do not set `TextField.disabledBackground` or a component-specific `disabledBackground` to a solid token, especially not to the same colour as the enabled state.
 
 ## 2. Fonts: register them, don't look them up by name
 

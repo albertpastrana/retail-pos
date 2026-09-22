@@ -7,9 +7,9 @@
   rather than hand-editing a value here.
 */
 :root, [data-theme="light"] {
-  --surface-0: #f5f1ea; --surface-100: #fffdf9; --surface-200: #ece5d6;
+  --surface-0: #f5f1ea; --surface-100: #fffdf9; --surface-200: #e5dac5;
   --ink: #241c14; --ink-muted: #6b6154; --border: #96896f; --border-strong: #6b5f47;
-  --brand: #b8481f; --brand-strong: #8f3216; --on-brand: #ffffff;
+  --brand: #b8481f; --brand-strong: #8f3216; --brand-subtle: #e7b8a4; --on-brand: #ffffff;
   --success: #1f6b5c; --warning: #7a5300; --danger: #8a2a22; --info: #3c6e8f;
   --shadow-raised: 0 1px 2px rgba(36,28,20,0.08);
   --shadow-overlay: 0 12px 32px rgba(36,28,20,0.18);
@@ -19,9 +19,9 @@
   --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, monospace;
 }
 [data-theme="dark"] {
-  --surface-0: #1b1712; --surface-100: #241f19; --surface-200: #2e2820;
+  --surface-0: #1b1712; --surface-100: #241f19; --surface-200: #352d23;
   --ink: #f3ece1; --ink-muted: #b2a695; --border: #786b57; --border-strong: #9c8e73;
-  --brand: #e2764c; --brand-strong: #f0925f; --on-brand: #2b1206;
+  --brand: #e2764c; --brand-strong: #f0925f; --brand-subtle: #6d3c2d; --on-brand: #2b1206;
   --success: #4fbfa0; --warning: #d9a23c; --danger: #c9463a; --info: #7cc0e0;
   --shadow-raised: 0 1px 2px rgba(0,0,0,0.4);
   --shadow-overlay: 0 12px 32px rgba(0,0,0,0.55);

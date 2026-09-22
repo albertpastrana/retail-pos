@@ -59,7 +59,7 @@ public final class RetailPOSColors {
 
 	/** Sunken fields: the numeric-pad well, input backgrounds, table stripes. */
 	public static Color surface200() {
-		return token("retailpos.surface200", 0xece5d6);
+		return token("retailpos.surface200", 0xe5dac5);
 	}
 
 	/** Primary text and icons on surface0/surface100/surface200. */
@@ -97,6 +97,11 @@ public final class RetailPOSColors {
 	/** Hover/pressed state of brand-filled controls. */
 	public static Color brandStrong() {
 		return token("retailpos.brandStrong", 0x8f3216);
+	}
+
+	/** Low-intensity brand surface for selected list and table rows. */
+	public static Color brandSubtle() {
+		return token("retailpos.brandSubtle", 0xe7b8a4);
 	}
 
 	/** Text and icons on a brand-filled surface. */

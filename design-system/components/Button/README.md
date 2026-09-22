@@ -2,4 +2,6 @@ The till's primary interactive control, sized for a touch screen first and a mou
 
 Minimum height is `space-12` (48px) on every size — this is a control a fast-moving thumb has to land, not a desktop button that can afford to be 28px. Label text is `body-lg`, Title Case, a verb or verb phrase (`New sale`, not `Sale`). An icon, when one is used, sits before the label with `space-2` between them and is drawn from this system's Icons set only.
 
-Do not add a fourth colour variant for "less important" actions — use `secondary` at a smaller size instead, so colour keeps meaning `primary` and `danger` mean what their names say.
+`secondary` is required, not optional: it is already used in production for `Cancel`, `Delete`, `Save`, `Print copy` and dialog back actions. Its background is `surface-100`, its text is `ink`, and its 1px border is `border`; on hover, strengthen the border to `border-strong` without turning the button into a primary.
+
+Disabled buttons and controls retain their normal variant and use approximately 45% opacity. Do not create a separate disabled colour variant.
