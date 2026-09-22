@@ -92,6 +92,8 @@ public class DatabaseMigratorIT {
 			assertEquals(35, count(connection, "RESOURCES"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
+			assertEquals(4, queryInt(connection,
+					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
@@ -181,6 +183,8 @@ public class DatabaseMigratorIT {
 			assertTrue(roleContains(connection, "2", "button.print"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '2' AND NAME = 'Employee'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
+			assertEquals(4, queryInt(connection,
+					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));
 			assertEquals(4, queryInt(connection, "SELECT COUNT(*) FROM PRODUCTS WHERE ISVOUCHER = TRUE"));
 			assertEquals(4, count(connection, "PEOPLE"));
 			assertEquals(1, count(connection, "PRICE_RULES"));
@@ -197,6 +201,8 @@ public class DatabaseMigratorIT {
 		Connection connection = open(url, user, password);
 		try {
 			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(4, queryInt(connection,
+					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));
 			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();

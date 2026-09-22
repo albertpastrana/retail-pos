@@ -26,13 +26,13 @@ public class InsertCatalogRows {
 		try {
 			Map<String, String[]> categories = readCategories(cats);
 			PreparedStatement find = c.prepareStatement("SELECT ID FROM PRODUCTS WHERE CODE = ?");
-			PreparedStatement update = c
-					.prepareStatement("UPDATE PRODUCTS SET PRICEBUY = ?, PRICESELL = ?, BRAND = ? WHERE CODE = ?");
+			PreparedStatement update = c.prepareStatement(
+					"UPDATE PRODUCTS SET PRICEBUY = ?, PRICESELL = ?, BRAND = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE CODE = ?");
 			PreparedStatement insert = c
 					.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
 							+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, "
-							+ "ATTRIBUTES, BRAND) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, NULL, NULL, "
-							+ "NULL, ?, ?, NULL, ?)");
+							+ "ATTRIBUTES, BRAND, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, NULL, NULL, "
+							+ "NULL, ?, ?, NULL, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 			PreparedStatement findCat = c.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 			PreparedStatement insertCat = c
 					.prepareStatement("INSERT INTO PRODUCTS_CAT (PRODUCT, CATORDER) VALUES (?, NULL)");

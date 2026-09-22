@@ -20,6 +20,7 @@
 package com.openbravo.pos.ticket;
 
 import java.awt.image.BufferedImage;
+import java.util.Date;
 import com.openbravo.data.loader.DataRead;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.ImageUtils;
@@ -52,6 +53,8 @@ public class ProductInfoExt {
 	protected BufferedImage m_Image;
 	protected Properties attributes;
 	protected String family;
+	protected Date createdAt;
+	protected Date updatedAt;
 
 	/** Creates new ProductInfo */
 	public ProductInfoExt() {
@@ -71,6 +74,8 @@ public class ProductInfoExt {
 		m_Image = null;
 		attributes = new Properties();
 		family = null;
+		createdAt = null;
+		updatedAt = null;
 	}
 
 	public final String getID() {
@@ -184,6 +189,14 @@ public class ProductInfoExt {
 		salePercent = percent;
 	}
 
+	public final Date getCreatedAt() {
+		return createdAt;
+	}
+
+	public final Date getUpdatedAt() {
+		return updatedAt;
+	}
+
 	public static String infoColumns() {
 		return infoColumns("");
 	}
@@ -193,7 +206,8 @@ public class ProductInfoExt {
 		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
 				+ prefix + "ISSCALE, " + prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, "
 				+ prefix + "TAXCAT, " + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, "
-				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix + "FAMILY";
+				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix + "FAMILY, " + prefix + "CREATED_AT, "
+				+ prefix + "UPDATED_AT";
 	}
 
 	public final double getPriceSellTax(TaxInfo tax) {
@@ -249,6 +263,8 @@ public class ProductInfoExt {
 				Double marked = dr.getDouble(15);
 				product.salePercent = marked == null ? 0.0 : marked.doubleValue();
 				product.family = dr.getString(16);
+				product.createdAt = dr.getTimestamp(17);
+				product.updatedAt = dr.getTimestamp(18);
 				return product;
 			}
 		};

@@ -448,9 +448,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				PreparedStatement insert = connection
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
 								+ "PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, "
-								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND, FAMILY) "
+								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) "
 								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, " + "NULL, NULL, NULL, "
-								+ s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?, ?)");
+								+ s.DB.FALSE() + ", " + s.DB.FALSE()
+								+ ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				insert.setString(1, product.getID());
 				insert.setString(2, product.getReference());
 				insert.setString(3, product.getCode());
@@ -493,12 +494,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			connection.setAutoCommit(false);
 			try (PreparedStatement find = connection.prepareStatement("SELECT ID FROM PRODUCTS WHERE CODE = ?");
 					PreparedStatement update = connection.prepareStatement(
-							"UPDATE PRODUCTS SET NAME = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, BRAND = ?, FAMILY = ? WHERE ID = ?");
+							"UPDATE PRODUCTS SET NAME = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, BRAND = ?, FAMILY = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?");
 					PreparedStatement insert = connection.prepareStatement(
 							"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
 									+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, "
-									+ "ATTRIBUTES, BRAND, FAMILY) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
-									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE() + ", NULL, ?, ?)");
+									+ "ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
+									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE()
+									+ ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 					PreparedStatement findCat = connection
 							.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 					PreparedStatement insertCat = connection
@@ -1212,7 +1214,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
 								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17}))
 						.exec(params);
@@ -1235,7 +1237,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, ISSCALE = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ? WHERE ID = ?",
+						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, ISSCALE = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
 								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 0}))
 						.exec(params);
