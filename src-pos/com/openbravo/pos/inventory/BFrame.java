@@ -191,7 +191,7 @@ public class BFrame extends JFrame {
 	private void lookupDetails() {
 
 		String REGEX = "0{0,2}" + text_barcode.getText() + "{0,1}";
-		String regexOperator = "PostgreSQL".equalsIgnoreCase(databaseProductName()) ? "~" : "REGEXP";
+		String regexOperator = databaseProductName().toLowerCase().contains("postgresql") ? "~" : "REGEXP";
 		String query = "SELECT products.* FROM products WHERE products.code " + regexOperator + " '" + REGEX
 				+ "' OR EXISTS (SELECT 1 FROM barcode_table WHERE barcode_table.pid=products.id AND barcode_table.code "
 				+ regexOperator + " '" + REGEX + "')";

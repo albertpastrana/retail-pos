@@ -27,15 +27,15 @@ public class SQLQueryer {
 
 			rs = stmt.executeQuery(query);
 
-			ResultSetMetaData rsmd = rs.getMetaData();
-
-			rs.last();
-			int length = rs.getRow();
-			rs.beforeFirst();
-
-			if (length > 1) {
+			boolean hasResult = rs.next();
+			if (!hasResult) {
+				return;
+			}
+			if (rs.next()) {
 				JOptionPane.showMessageDialog(null, "ERROR: La consulta SQL ha retornat més d'un resultat");
 			}
+			rs.close();
+			rs = stmt.executeQuery(query);
 			rs.next();
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "event=sql_query_failed", e);

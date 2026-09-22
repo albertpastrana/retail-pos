@@ -522,7 +522,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		if (m_jStockAdd.getText() != null && m_jStockAdd.getText().trim().length() > 0) {
 			throw new BasicException(AppLocal.getIntString("message.stockaddselectsource"));
 		}
-		Object[] myprod = new Object[23];
+		Object[] myprod = new Object[24];
 		myprod[0] = m_id;
 		myprod[1] = m_jRef.getText();
 		myprod[2] = m_jCode.getText();
@@ -541,11 +541,13 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		myprod[15] = Formats.INT.parseValue(m_jCatalogOrder.getText());
 		myprod[16] = Formats.BYTEA.parseValue(txtAttributes.getText());
 		myprod[17] = Boolean.valueOf(m_jVoucher.isSelected());
-		myprod[18] = Formats.DOUBLE.parseValue(m_jStock.getText());
-		myprod[19] = m_App.getInventoryLocation();
-		myprod[20] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
-		myprod[21] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
-		myprod[22] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
+		// Keep the editor extras after the products row fields; FAMILY is field 18.
+		myprod[18] = m_jFamily.getText();
+		myprod[19] = Formats.DOUBLE.parseValue(m_jStock.getText());
+		myprod[20] = m_App.getInventoryLocation();
+		myprod[21] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
+		myprod[22] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
+		myprod[23] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
 
 		return myprod;
 	}
@@ -1159,13 +1161,11 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 							String statement = "SELECT * FROM PRODUCTS WHERE PRODUCTS.CODE ='" + m_jCode.getText()
 									+ "'";
 							PreparedStatement ps = s.getConnection().prepareStatement(statement);
-							ps.execute();
-							ResultSet rs = ps.getResultSet();
-							rs.last();
-							if (rs.getRow() < 1) {
-								javax.swing.JOptionPane.showMessageDialog(null,
-										"Desa el producte abans d'afegir més codis de barres");
-							} else {
+							try (ResultSet rs = ps.executeQuery()) {
+								if (!rs.next()) {
+									javax.swing.JOptionPane.showMessageDialog(null,
+											"Desa el producte abans d'afegir més codis de barres");
+								} else {
 								submit.addActionListener(new ActionListener() {
 									public void actionPerformed(ActionEvent ae) {
 										try {
@@ -1256,22 +1256,21 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 										+ m_id + "'";
 
 								ps = s.getConnection().prepareStatement(statement);
-								ps.execute();
-
-								rs = ps.getResultSet();
-
 								int count = 0;
-								while (rs.next()) {
-									if (count > num - 1) {
-										break;
+								try (ResultSet loaded = ps.executeQuery()) {
+									while (loaded.next()) {
+										if (count > num - 1) {
+											break;
+										}
+										fields[count++].setText(loaded.getString(1));
 									}
-									fields[count++].setText(rs.getString(1));
 								}
 
 								pack();
 								setLocationRelativeTo(null);
 								setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 								setVisible(true);
+								}
 							}
 						} catch (Exception e) {
 							LOGGER.log(java.util.logging.Level.WARNING, "event=product_barcodes_load_failed", e);

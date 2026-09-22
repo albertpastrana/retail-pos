@@ -1286,12 +1286,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// much of that stock comes from units added rather than a correction
 	private void applyStockLevel(Object[] values) throws BasicException {
 
-		Double units = (Double) values[18];
-		String location = (String) values[19];
+		Double units = (Double) values[19];
+		String location = (String) values[20];
 		String product = (String) values[0];
-		Double addedFactory = values.length > 20 ? (Double) values[20] : null;
-		Double wholesale = values.length > 21 ? (Double) values[21] : null;
-		Double addedWholesale = values.length > 22 ? (Double) values[22] : null;
+		Double addedFactory = values.length > 21 ? (Double) values[21] : null;
+		Double wholesale = values.length > 22 ? (Double) values[22] : null;
+		Double addedWholesale = values.length > 23 ? (Double) values[23] : null;
 		Double pricebuy = (Double) values[6];
 		double added = unitsOf(addedFactory) + unitsOf(addedWholesale);
 
@@ -1313,11 +1313,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	private void applyWholesalePrice(Object[] values) throws BasicException {
-		if (values.length <= 21) {
+		if (values.length <= 22) {
 			return;
 		}
 		new PreparedSentence(s, "UPDATE PRODUCTS SET PRICEBUY_WHOLESALE = ? WHERE ID = ?",
-				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[21], values[0]);
+				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[22], values[0]);
 	}
 
 	private static double unitsOf(Double value) {
