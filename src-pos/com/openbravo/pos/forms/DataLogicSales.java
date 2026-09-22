@@ -369,7 +369,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			try {
 				String line;
 				while ((line = reader.readLine()) != null) {
-					String[] row = line.split("\t", -1);
+					String[] row = CatalogTsvParser.parse(line);
 					if (row.length >= 8 && brand.equals(row[7])
 							&& model.equals(CatalogVariantModel.fromReference(row[1], row[7]))) {
 						family.add(legacyCatalogProduct(row, productsPath, categories));
@@ -604,7 +604,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					header = false;
 					continue;
 				}
-				String[] priced = line.split("\t", -1);
+				String[] priced = CatalogTsvParser.parse(line);
 				if (priced.length >= 4) {
 					catalogPrices.put(priced[0], priced);
 					catalogPrices.put(priced[1], priced);
@@ -621,7 +621,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		try {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				String[] product = line.split("\t", -1);
+				String[] product = CatalogTsvParser.parse(line);
 				if (product.length >= 7 && (product[2].equals(code) || product[2].equals("0" + code)
 						|| product[2].equals("00" + code))) {
 					return product;
@@ -653,7 +653,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		try {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				String[] category = line.split("\t", -1);
+				String[] category = CatalogTsvParser.parse(line);
 				if (category.length >= 2) {
 					categories.put(category[0], category);
 				}

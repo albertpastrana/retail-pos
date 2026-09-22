@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.openbravo.pos.forms.CatalogTsvParser;
 import com.openbravo.pos.inventory.CatalogVariantModel;
 
 /** Replaces the shared fallback catalogue from the source TSV files. */
@@ -56,7 +57,7 @@ public class LoadFallbackCatalog {
 			if (line.isEmpty()) {
 				continue;
 			}
-			String[] row = line.split("\t", -1);
+			String[] row = CatalogTsvParser.parse(line);
 			if (row.length < 7) {
 				throw new IllegalArgumentException("Bad product row: " + line);
 			}
@@ -172,7 +173,7 @@ public class LoadFallbackCatalog {
 		try (BufferedReader rows = reader(path)) {
 			String line;
 			while ((line = rows.readLine()) != null) {
-				String[] row = line.split("\t", -1);
+				String[] row = CatalogTsvParser.parse(line);
 				if (row.length >= 2) {
 					categories.put(row[0], row);
 				}
@@ -191,7 +192,7 @@ public class LoadFallbackCatalog {
 					header = false;
 					continue;
 				}
-				String[] row = line.split("\t", -1);
+				String[] row = CatalogTsvParser.parse(line);
 				if (row.length >= 4) {
 					prices.put(row[0], row);
 					if (!row[1].isEmpty()) {

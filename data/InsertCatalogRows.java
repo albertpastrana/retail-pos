@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.openbravo.pos.forms.CatalogTsvParser;
+
 public class InsertCatalogRows {
 	public static void main(String[] args) throws Exception {
 		if (args.length != 5) {
@@ -44,7 +46,7 @@ public class InsertCatalogRows {
 				if (line.isEmpty()) {
 					continue;
 				}
-				String[] p = line.split("\t", -1);
+				String[] p = CatalogTsvParser.parse(line);
 				if (p.length < 8) {
 					throw new IllegalArgumentException("Bad product row: " + line);
 				}
@@ -160,7 +162,7 @@ public class InsertCatalogRows {
 		try {
 			String line;
 			while ((line = r.readLine()) != null) {
-				String[] category = line.split("\t", -1);
+				String[] category = CatalogTsvParser.parse(line);
 				if (category.length >= 2) {
 					categories.put(category[0], category);
 				}

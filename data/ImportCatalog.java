@@ -10,6 +10,8 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.openbravo.pos.forms.CatalogTsvParser;
+
 public class ImportCatalog {
 	public static void main(String[] args) throws Exception {
 		String db = args[0];
@@ -38,7 +40,7 @@ public class ImportCatalog {
 			BufferedReader r = reader(cats);
 			String line;
 			while ((line = r.readLine()) != null) {
-				String[] p = line.split("\t", -1);
+				String[] p = CatalogTsvParser.parse(line);
 				insCat.setString(1, p[0]);
 				insCat.setString(2, p[1]);
 				if (p.length > 2 && p[2].length() > 0) {
@@ -60,7 +62,7 @@ public class ImportCatalog {
 			int nProd = 0;
 			r = reader(prods);
 			while ((line = r.readLine()) != null) {
-				String[] p = line.split("\t", -1);
+				String[] p = CatalogTsvParser.parse(line);
 				String[] priced = prices.get(p[2]);
 				if (priced == null) {
 					priced = prices.get(p[1]);
@@ -119,7 +121,7 @@ public class ImportCatalog {
 					header = false;
 					continue;
 				}
-				String[] p = line.split("\t", -1);
+				String[] p = CatalogTsvParser.parse(line);
 				if (p.length >= 4) {
 					prices.put(p[0], p);
 					prices.put(p[1], p);
