@@ -202,7 +202,8 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 
 	protected Component getListComponent(BrowsableEditableData data) {
 		ListCellRenderer cr = getListCellRenderer();
-		if (cr == null) return null;
+		if (cr == null)
+			return null;
 		JListNavigator nl = new JListNavigator(data);
 		nl.applyComponentOrientation(getComponentOrientation());
 		nl.setCellRenderer(cr);

@@ -168,9 +168,8 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 		String name = jeditor.getProductName();
 		Object[] options = {"Eliminar", "Cancel·la"};
 		int answer = JOptionPane.showOptionDialog(this,
-				"Eliminar «" + name + "» permanentment? Aquesta acció no es pot desfer.",
-				"Eliminar producte", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
-				null, options, options[1]);
+				"Eliminar «" + name + "» permanentment? Aquesta acció no es pot desfer.", "Eliminar producte",
+				JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 		if (answer == 0) {
 			try {
 				bd.actionDelete();

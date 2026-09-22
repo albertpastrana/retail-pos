@@ -33,9 +33,15 @@ final class ProductTableNavigator extends javax.swing.JPanel implements BrowseLi
 		this.table.getSelectionModel().addListSelectionListener(this);
 		data.addBrowseListener(this);
 		data.getListModel().addListDataListener(new ListDataListener() {
-			public void intervalAdded(ListDataEvent e) { model.fireTableDataChanged(); }
-			public void intervalRemoved(ListDataEvent e) { model.fireTableDataChanged(); }
-			public void contentsChanged(ListDataEvent e) { model.fireTableDataChanged(); }
+			public void intervalAdded(ListDataEvent e) {
+				model.fireTableDataChanged();
+			}
+			public void intervalRemoved(ListDataEvent e) {
+				model.fireTableDataChanged();
+			}
+			public void contentsChanged(ListDataEvent e) {
+				model.fireTableDataChanged();
+			}
 		});
 		setLayout(new BorderLayout());
 		add(new JScrollPane(table), BorderLayout.CENTER);
@@ -55,13 +61,16 @@ final class ProductTableNavigator extends javax.swing.JPanel implements BrowseLi
 	}
 
 	public void valueChanged(ListSelectionEvent event) {
-		if (event.getValueIsAdjusting() || updating) return;
+		if (event.getValueIsAdjusting() || updating)
+			return;
 		int viewRow = table.getSelectedRow();
-		if (viewRow < 0 || data.isAdjusting()) return;
+		if (viewRow < 0 || data.isAdjusting())
+			return;
 		int modelRow = table.convertRowIndexToModel(viewRow);
 		try {
 			data.moveTo(modelRow);
-			if (data.getIndex() != modelRow) updateIndex(data.getIndex(), data.getListModel().getSize());
+			if (data.getIndex() != modelRow)
+				updateIndex(data.getIndex(), data.getListModel().getSize());
 		} catch (BasicException e) {
 			new MessageInf(MessageInf.SGN_NOTICE, LocalRes.getIntString("message.nomove"), e).show(this);
 		}
@@ -70,10 +79,18 @@ final class ProductTableNavigator extends javax.swing.JPanel implements BrowseLi
 	private static final class ProductTableModel extends AbstractTableModel {
 		private final BrowsableEditableData data;
 
-		ProductTableModel(BrowsableEditableData data) { this.data = data; }
-		public int getRowCount() { return data.getListModel().getSize(); }
-		public int getColumnCount() { return 2; }
-		public String getColumnName(int column) { return column == 0 ? "Referència" : "Nom"; }
+		ProductTableModel(BrowsableEditableData data) {
+			this.data = data;
+		}
+		public int getRowCount() {
+			return data.getListModel().getSize();
+		}
+		public int getColumnCount() {
+			return 2;
+		}
+		public String getColumnName(int column) {
+			return column == 0 ? "Referència" : "Nom";
+		}
 		public Object getValueAt(int row, int column) {
 			Object[] product = (Object[]) data.getListModel().getElementAt(row);
 			return product[column == 0 ? 1 : 3];

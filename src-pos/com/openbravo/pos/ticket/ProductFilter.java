@@ -65,19 +65,29 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		});
 		filterTimer.setRepeats(false);
 		DocumentListener textChanged = new DocumentListener() {
-			public void insertUpdate(DocumentEvent e) { scheduleFilter(); }
-			public void removeUpdate(DocumentEvent e) { scheduleFilter(); }
-			public void changedUpdate(DocumentEvent e) { scheduleFilter(); }
+			public void insertUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
+			public void changedUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
 		};
 		m_jBarcode.getDocument().addDocumentListener(textChanged);
 		m_jReference.getDocument().addDocumentListener(textChanged);
 		m_jName.getDocument().addDocumentListener(textChanged);
 		m_jFamily.getDocument().addDocumentListener(textChanged);
 		m_jCategory.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { fireFilterApplied(); }
+			public void actionPerformed(ActionEvent e) {
+				fireFilterApplied();
+			}
 		});
 		m_jBrand.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { fireFilterApplied(); }
+			public void actionPerformed(ActionEvent e) {
+				fireFilterApplied();
+			}
 		});
 	}
 
@@ -175,7 +185,8 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 					: qbfComparator(m_jCboReference.getSelectedItem());
 			String sFamily = m_jFamily.getText();
 			Object familyCompare = (sFamily == null || sFamily.equals(""))
-					? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_CONTAINS;
+					? QBFCompareEnum.COMP_NONE
+					: QBFCompareEnum.COMP_CONTAINS;
 			// Filtro por formulario
 			return new Object[]{nameCompare, sName, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 					m_CategoryModel.getSelectedKey() == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS,
@@ -186,8 +197,8 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 			// Filtro por codigo de barras.
 			return new Object[]{QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 					QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_BLOOKUP,
-				getBarcode(), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
-				QBFCompareEnum.COMP_NONE, null};
+					getBarcode(), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
+					QBFCompareEnum.COMP_NONE, null};
 		}
 	}
 
