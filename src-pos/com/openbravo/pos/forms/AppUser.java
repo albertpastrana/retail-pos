@@ -57,6 +57,7 @@ public class AppUser {
 	private String m_sPassword;
 	private String m_sRole;
 	private Icon m_Icon;
+	private UserInfo m_selectedTicketUser;
 
 	private Set<String> m_apermissions;
 	private boolean m_administrationMode;
@@ -198,6 +199,14 @@ public class AppUser {
 
 	public UserInfo getTicketUserInfo() {
 		return m_sellerSession ? null : getUserInfo();
+	}
+
+	public UserInfo getSelectedTicketUser() {
+		return m_selectedTicketUser;
+	}
+
+	public void setSelectedTicketUser(UserInfo user) {
+		m_selectedTicketUser = user;
 	}
 
 	private static String mapNewClass(String classname) {

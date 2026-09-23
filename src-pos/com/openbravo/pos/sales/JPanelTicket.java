@@ -329,9 +329,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	public UserInfo getSelectedSeller() {
-		if (m_ticketsbag instanceof JTicketsBagShared)
+		if (m_ticketsbag instanceof JTicketsBagShared) {
 			return ((JTicketsBagShared) m_ticketsbag).getSelectedSeller();
-		return m_oTicket == null ? null : m_oTicket.getUser();
+		}
+		if (m_oTicket != null && m_oTicket.getUser() != null) {
+			return m_oTicket.getUser();
+		}
+		return m_App.getAppUserView().getUser().getSelectedTicketUser();
 	}
 
 	public void setTicketChangeListener(Runnable listener) {
@@ -829,7 +833,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private void closeCurrentTicket() {
 		try (LogContext.Scope ignored = LogContext.beginOperation()) {
-			LOGGER.info("event=ticket_close_start lines=" + m_oTicket.getLinesCount());
+			LOGGER.info("event=ticket_close_start ticket=" + m_oTicket.getId() + " type=" + ticketTypeName(m_oTicket)
+					+ " total=" + m_oTicket.getTotal() + " lines=" + m_oTicket.getLinesCount());
 			if (m_oTicket.getLinesCount() > 0) {
 				if (!m_ticketsbag.preparePayment()) {
 					LOGGER.info("event=ticket_payment_cancelled reason=prepare_payment_rejected");
@@ -1143,6 +1148,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		if (m_App.getAppUserView().getUser().hasPermission("sales.Total")) {
 
 			try {
+				boolean refund = ticket.getTicketType() == TicketInfo.RECEIPT_REFUND;
+				if (refund) {
+					LOGGER.info("event=refund_flow_start ticket=" + ticket.getId() + " total=" + ticket.getTotal()
+							+ " lines=" + ticket.getLinesCount());
+				}
 				// reset the payment info
 				taxeslogic.calculateTaxes(ticket);
 				if (ticket.getTotal() >= 0.0) {
@@ -1162,13 +1172,31 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 					paymentdialog.setTransactionID(ticket.getTransactionID());
 
-					if (paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer())) {
+					boolean paymentAccepted = paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer());
+					if (refund) {
+						LOGGER.info("event=refund_payment_dialog_result ticket=" + ticket.getId() + " accepted="
+								+ paymentAccepted + " total=" + ticket.getTotal());
+					}
+					if (paymentAccepted) {
 
 						// assign the payments selected and calculate taxes.
 						ticket.setPayments(paymentdialog.getSelectedPayments());
+						if (refund) {
+							LOGGER.info("event=refund_payment_selected ticket=" + ticket.getId() + " payments="
+									+ ticket.getPayments().size());
+						}
 
 						// Asigno los valores definitivos del ticket...
 						ticket.setUserIfAbsent(m_App.getAppUserView().getUser().getTicketUserInfo());
+						if (ticket.getUser() == null) {
+							UserInfo selectedSeller = getSelectedSeller();
+							if (selectedSeller != null) {
+								// Seller sessions assign the selected main-screen seller at checkout.
+								ticket.setUser(selectedSeller);
+								LOGGER.warning("event=ticket_user_fallback_selected_seller ticket=" + ticket.getId()
+										+ " type=" + ticketTypeName(ticket) + " seller=" + selectedSeller.getId());
+							}
+						}
 						ticket.setActiveCash(m_App.getActiveCashIndex());
 						ticket.setDate(new Date()); // Le pongo la fecha de cobro
 
@@ -1176,6 +1204,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 							// Save the receipt and assign a receipt number
 							boolean saved = true;
 							try {
+								if (refund) {
+									LOGGER.info("event=refund_persistence_start ticket=" + ticket.getId() + " total="
+											+ ticket.getTotal());
+								}
 								new Transaction<Object>(m_App.getSession()) {
 									@Override
 									protected Object transact() throws BasicException {
@@ -1185,6 +1217,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 									}
 								}.execute();
 							} catch (BasicException eData) {
+								LOGGER.log(Level.SEVERE, "event=" + (refund ? "refund" : "ticket")
+										+ "_persistence_failed ticket=" + ticket.getId() + " total=" + ticket.getTotal(), eData);
 								MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE,
 										AppLocal.getIntString("message.nosaveticket"), eData);
 								msg.show(this);
@@ -1192,6 +1226,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 							}
 
 							if (saved) {
+								if (refund) {
+									LOGGER.info("event=refund_flow_success ticket=" + ticket.getId() + " total="
+											+ ticket.getTotal());
+								}
 								executeEvent(ticket, ticketext, "ticket.close",
 										new ScriptArg("print", paymentdialog.isPrintSelected()));
 
@@ -1204,9 +1242,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					}
 				}
 			} catch (TaxesException e) {
+				LOGGER.log(Level.SEVERE, "event=ticket_close_tax_failed ticket=" + ticket.getId()
+						+ " type=" + ticketTypeName(ticket), e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 						AppLocal.getIntString("message.cannotcalculatetaxes"));
 				msg.show(this);
+				resultok = false;
+			} catch (RuntimeException e) {
+				LOGGER.log(Level.SEVERE, "event=ticket_close_unexpected_failure ticket=" + ticket.getId()
+						+ " type=" + ticketTypeName(ticket) + " total=" + ticket.getTotal(), e);
+				new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.nosaveticket"), e).show(this);
 				resultok = false;
 			}
 
@@ -1219,6 +1264,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		// or canceled the payment dialog
 		// or canceled the ticket.close script
 		return resultok;
+	}
+
+	private static String ticketTypeName(TicketInfo ticket) {
+		return ticket.getTicketType() == TicketInfo.RECEIPT_REFUND ? "refund" : "sale";
 	}
 
 	private void printTicket(String sresourcename, TicketInfo ticket, Object ticketext) {

@@ -937,6 +937,15 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	public final void saveTicket(final TicketInfo ticket, final String location) throws BasicException {
+		if (ticket.getUser() == null) {
+			LOGGER.severe("event=ticket_save_rejected reason=missing_ticket_user ticket=" + ticket.getId()
+					+ " type=" + ticket.getTicketType() + " total=" + ticket.getTotal());
+			throw new BasicException("Cannot save ticket without seller");
+		}
+		if (ticket.getTicketType() == TicketInfo.RECEIPT_REFUND) {
+			LOGGER.info("event=refund_save_start ticket=" + ticket.getId() + " total=" + ticket.getTotal()
+					+ " lines=" + ticket.getLinesCount() + " payments=" + ticket.getPayments().size());
+		}
 		validatePaymentTotals(ticket);
 
 		Transaction t = new Transaction(s) {
@@ -1099,12 +1108,18 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					}
 				}
 
+				if (ticket.getTicketType() == TicketInfo.RECEIPT_REFUND) {
+					LOGGER.info("event=refund_save_success ticket=" + ticket.getId() + " ticketNumber="
+							+ ticket.getTicketId() + " total=" + ticket.getTotal());
+				}
 				return null;
 			}
 		};
 		try {
 			t.execute();
 		} catch (BasicException e) {
+			LOGGER.log(Level.SEVERE, "event=ticket_save_failed ticket=" + ticket.getId() + " type="
+					+ ticket.getTicketType() + " total=" + ticket.getTotal(), e);
 			for (TicketLineInfo line : ticket.getLines()) {
 				line.removeProperty("giftvoucher.codes");
 			}

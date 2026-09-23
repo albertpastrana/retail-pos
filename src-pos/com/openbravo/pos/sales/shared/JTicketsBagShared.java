@@ -234,6 +234,7 @@ public class JTicketsBagShared extends JTicketsBag {
 		TicketInfo ticket = new TicketInfo();
 		UserInfo selectedSeller = seller == null ? (m_lastSeller == null ? m_firstSeller : m_lastSeller) : seller;
 		ticket.setUser(selectedSeller);
+		m_App.getAppUserView().getUser().setSelectedTicketUser(selectedSeller);
 		m_lastSeller = selectedSeller;
 		m_sCurrentTicket = UUID.randomUUID().toString(); // m_fmtid.format(ticket.getId());
 		currentTicketPersisted = false;
@@ -247,6 +248,7 @@ public class JTicketsBagShared extends JTicketsBag {
 
 	private void switchToSeller(AppUser user) {
 		m_lastSeller = user.getUserInfo();
+		m_App.getAppUserView().getUser().setSelectedTicketUser(m_lastSeller);
 		TicketInfo currentTicket = m_panelticket.getActiveTicket();
 		if (currentTicket != null && currentTicket.getUser() != null
 				&& user.getId().equals(currentTicket.getUser().getId())) {
@@ -314,9 +316,11 @@ public class JTicketsBagShared extends JTicketsBag {
 			UserInfo currentSeller = m_sellers.get(seller.getId());
 			ticket.setUser(currentSeller == null ? m_firstSeller : currentSeller);
 			m_lastSeller = ticket.getUser();
+			m_App.getAppUserView().getUser().setSelectedTicketUser(m_lastSeller);
 		} else {
 			ticket.setUser(m_firstSeller);
 			m_lastSeller = m_firstSeller;
+			m_App.getAppUserView().getUser().setSelectedTicketUser(m_firstSeller);
 		}
 	}
 
