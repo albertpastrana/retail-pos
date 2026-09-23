@@ -105,6 +105,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 		printTicket();
 
 		m_jTicketEditor.setText("");
+		SwingUtilities.invokeLater(() -> {
+			m_jTicketEditor.requestFocusInWindow();
+		});
 
 		m_panelticketedit.setActiveTicket(null, null);
 
@@ -197,9 +200,31 @@ public class JTicketsBagTicket extends JTicketsBag {
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.setBorder(BorderFactory.createTitledBorder(AppLocal.getIntString("label.recentsales")));
 		panel.add(scroll, BorderLayout.CENTER);
-		add(panel, BorderLayout.WEST);
-		m_jPanelTicket.setMinimumSize(
-				new Dimension(com.openbravo.pos.printer.ticket.BasicTicketForScreen.getLineWidth(42) + 26, 0));
+
+		// Keep the ticket preview and keypad at their usable minimum widths and let
+		// the sales table consume the remaining space on the left.
+		Dimension ticketSize = new Dimension(
+				com.openbravo.pos.printer.ticket.BasicTicketForScreen.getLineWidth(42) + 46, 0);
+		m_jPanelTicket.setMinimumSize(ticketSize);
+		m_jPanelTicket.setPreferredSize(ticketSize);
+
+		JPanel content = new JPanel(new GridBagLayout());
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.weighty = 1.0;
+		constraints.weightx = 1.0;
+		content.add(panel, constraints);
+
+		constraints.gridx = 1;
+		constraints.weightx = 0.0;
+		content.add(m_jPanelTicket, constraints);
+
+		constraints.gridx = 2;
+		content.add(jPanel3, constraints);
+
+		remove(m_jPanelTicket);
+		remove(jPanel3);
+		add(content, BorderLayout.CENTER);
 
 		java.awt.event.ActionListener reloadRecent = new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
