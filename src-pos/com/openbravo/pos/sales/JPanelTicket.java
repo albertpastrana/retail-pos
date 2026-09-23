@@ -36,7 +36,6 @@ import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.panels.JProductFinder;
-import com.openbravo.pos.scale.ScaleException;
 import com.openbravo.pos.payment.JPaymentSelect;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ListKeyed;
@@ -145,6 +144,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	public void init(AppView app) throws BeanFactoryException {
+		long started = System.nanoTime();
+		LOGGER.log(Level.INFO, "event=sales_panel_init_start panel={0}", getClass().getName());
 
 		m_App = app;
 		dlSystem = m_App.getBean(DataLogicSystem.class);
@@ -153,10 +154,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		priceRuleService = new PriceRuleService(m_App.getSession());
 
 		m_ticketsbag = getJTicketsBag();
+		LOGGER.log(Level.INFO, "event=sales_panel_init_bag panel={0} duration_ms={1}",
+				new Object[]{getClass().getName(), elapsedMillis(started)});
 		m_jPanelBag.add(m_ticketsbag.getBagComponent(), BorderLayout.LINE_START);
 		add(m_ticketsbag.getNullComponent(), "null");
 
 		m_ticketlines = new JTicketLines(dlSystem.getResourceAsXML("Ticket.Line"));
+		LOGGER.log(Level.INFO, "event=sales_panel_init_ticket_lines panel={0} duration_ms={1}",
+				new Object[]{getClass().getName(), elapsedMillis(started)});
 		m_jPanelCentral.add(m_ticketlines, java.awt.BorderLayout.CENTER);
 
 		m_TTP = new TicketParser(m_App.getDeviceTicket(), dlSystem);
@@ -170,6 +175,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		// El panel de los productos o de las lineas...
 		catcontainer.add(getSouthComponent(), BorderLayout.CENTER);
+		LOGGER.log(Level.INFO, "event=sales_panel_init_south panel={0} duration_ms={1}",
+				new Object[]{getClass().getName(), elapsedMillis(started)});
 
 		// El modelo de impuestos
 		senttax = dlSales.getTaxList();
@@ -183,6 +190,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		// inicializamos
 		m_oTicket = null;
 		m_oTicketExt = null;
+		LOGGER.log(Level.INFO, "event=sales_panel_init_done panel={0} duration_ms={1}",
+				new Object[]{getClass().getName(), elapsedMillis(started)});
 	}
 
 	// The row above the receipt mixes named buttons with the seller ones, so every
@@ -199,6 +208,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		for (JComponent control : controls) {
 			control.setPreferredSize(new Dimension(control.getPreferredSize().width, height));
 		}
+	}
+
+	private static long elapsedMillis(long started) {
+		return (System.nanoTime() - started) / 1_000_000L;
 	}
 
 	private static void collectButtons(Container parent, List<JComponent> buttons) {
@@ -683,22 +696,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void incProduct(ProductInfoExt prod) {
-
-		if (prod.isScale() && m_App.getDeviceScale().existsScale()) {
-			try {
-				Double value = m_App.getDeviceScale().readWeight();
-				if (value != null) {
-					incProduct(value.doubleValue(), prod);
-				}
-			} catch (ScaleException e) {
-				Toolkit.getDefaultToolkit().beep();
-				new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noweight"), e).show(this);
-				stateToZero();
-			}
-		} else {
-			// No es un producto que se pese o no hay balanza
-			incProduct(1.0, prod);
-		}
+		incProduct(1.0, prod);
 	}
 
 	private void incProduct(double dPor, ProductInfoExt prod) {
@@ -1026,51 +1024,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				m_iNumberStatus = NUMBER_PORDEC;
 				m_iNumberStatusPor = NUMBERVALID;
 
-			} else if (cTrans == '\u00a7' && m_iNumberStatusInput == NUMBERVALID && m_iNumberStatusPor == NUMBERZERO) {
-				// Scale button pressed and a number typed as a price
-				if (m_App.getDeviceScale().existsScale()
-						&& m_App.getAppUserView().getUser().hasPermission("sales.EditLines")) {
-					try {
-						Double value = m_App.getDeviceScale().readWeight();
-						if (value != null) {
-							ProductInfoExt product = getInputProduct();
-							addTicketLine(product, value.doubleValue(), product.getPriceSell());
-						}
-					} catch (ScaleException e) {
-						Toolkit.getDefaultToolkit().beep();
-						new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noweight"), e).show(this);
-						stateToZero();
-					}
-				} else {
-					// No existe la balanza;
-					Toolkit.getDefaultToolkit().beep();
-				}
-			} else if (cTrans == '\u00a7' && m_iNumberStatusInput == NUMBERZERO && m_iNumberStatusPor == NUMBERZERO) {
-				// Scale button pressed and no number typed.
-				int i = m_ticketlines.getSelectedIndex();
-				if (i < 0) {
-					Toolkit.getDefaultToolkit().beep();
-				} else if (m_App.getDeviceScale().existsScale()) {
-					try {
-						Double value = m_App.getDeviceScale().readWeight();
-						if (value != null) {
-							TicketLineInfo newline = new TicketLineInfo(m_oTicket.getLine(i));
-							newline.setMultiply(value.doubleValue());
-							newline.setPrice(Math.abs(newline.getPrice()));
-							paintTicketLine(i, newline);
-						}
-					} catch (ScaleException e) {
-						// Error de pesada.
-						Toolkit.getDefaultToolkit().beep();
-						new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.noweight"), e).show(this);
-						stateToZero();
-					}
-				} else {
-					// No existe la balanza;
-					Toolkit.getDefaultToolkit().beep();
-				}
-
-				// Add one product more to the selected line
 			} else if (cTrans == '+' && m_iNumberStatusInput == NUMBERZERO && m_iNumberStatusPor == NUMBERZERO) {
 				int i = m_ticketlines.getSelectedIndex();
 				if (i < 0) {
