@@ -5,9 +5,10 @@
 ## 1. Search before entering a price
 
 1. Open the product finder from the sales screen.
-2. Search by the product name or model/reference.
-3. If several sizes or colours appear, compare them with the physical product.
-4. Select the exact product and add it to the receipt.
+2. Search by name, model/reference, category, brand, or family.
+3. If needed, choose the comparison type for each field and wait for the results.
+4. If several sizes or colours appear, compare them with the physical product.
+5. Select the exact product and add it to the receipt.
 
 ## 2. Change the price of a product that was found
 

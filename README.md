@@ -40,7 +40,7 @@ On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
 
 ## Releases
 
-Pushing a tag such as `v3.0.0-RC1` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Windows and macOS packages include a bundled JRE; the Linux package uses the system Java installation to avoid cross-platform JRE mismatches. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
+Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Windows and macOS packages include a bundled JRE; the Linux package uses the system Java installation to avoid cross-platform JRE mismatches. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
 
 ## Configuration
 
@@ -64,8 +64,6 @@ Important keys:
 | `db.driver` / `db.URL` / `db.driverlib` | Database (Derby, MySQL, or PostgreSQL); `db.driverlib` is optional for the bundled drivers          |
 | `user.language` / `user.country`        | UI locale; translations live in `locales/`                                                          |
 | `machine.printer`                       | `screen`, or `epson:file,<path>` for a raw ESC/POS printer ([escpos-printer.md](escpos-printer.md)) |
-| `catalog.import.products`               | Path to the products TSV (scan-to-import)                                                           |
-| `catalog.import.categories`             | Path to the categories TSV                                                                          |
 | `update.check`                          | Set to `false` to disable the startup update check                                                   |
 | `update.dir`                            | Directory containing platform packages and matching `.sha256` files for local updates              |
 | `update.url`                            | Compatible releases API endpoint; defaults to the project GitHub `latest` release                  |
@@ -101,7 +99,7 @@ Resources the till actually uses (ticket layout, logo, buttons, role XML) live i
 
 One sellable SKU per barcode. Colour and size are part of the product row, not attribute sets. Why, and how to group stock and sales by model: [catalog-variants.md](catalog-variants.md).
 
-TSV files (UTF-8, tab-separated, no header):
+The catalogue source files are UTF-8, tab-separated files. Product and category files have no header; the price file has a header. Fields may be enclosed in double quotes, and tabs or double quotes inside quoted fields are handled by the importer:
 
 - `data/import-categories.tsv` — `id`, `name`, optional `parentid`
 - `data/import-products.tsv` — `id`, `reference`, `barcode`, `name`, `category_id`, `price_buy`, `price_sell`, optional `brand`
@@ -141,7 +139,7 @@ existing products that still match the previous rule.
 
 ### Scan-to-import (preferred at the till)
 
-If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the products TSV and overlays a matching row from `import-prices.tsv`. When found, it opens an editable create-product dialog prefilled with the catalogue data. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged. If the barcode is also absent from the TSV, the sales screen does not open a dialog: it shows a notice below the keypad and logs `event=unknown_barcode code="<barcode>"`. Stock → Products still opens the blank create-product dialog when you search for an unknown barcode.
+If a scanned barcode is missing from `PRODUCTS`, the sales screen looks it up in the shared fallback catalogue and overlays a matching price row. When found, it opens an editable create-product dialog prefilled with the catalogue data. Saving creates the database product (and its catalog category if needed); cancelling leaves the database and ticket unchanged. If the barcode is also absent from the fallback catalogue, the sales screen does not open a dialog: it shows a notice below the keypad and logs `event=unknown_barcode code="<barcode>"`. Stock → Products still opens the blank create-product dialog when you search for an unknown barcode.
 
 When the catalogue contains several EANs for the same model, the dialog lists
 the whole family with every variant selected. Clicking a row opens that

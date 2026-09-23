@@ -5,9 +5,10 @@
 ## 1. Cercar abans d'introduir un preu
 
 1. Obre el cercador de productes des de la pantalla de vendes.
-2. Cerca pel nom o per la referència/model.
-3. Si apareixen diverses talles o colors, compara'ls amb el producte físic.
-4. Selecciona el producte exacte i afegeix-lo al tiquet.
+2. Cerca pel nom, la referència/model, la categoria, la marca o la família.
+3. Si cal, escull el tipus de comparació de cada camp i espera que apareguin els resultats.
+4. Si apareixen diverses talles o colors, compara'ls amb el producte físic.
+5. Selecciona el producte exacte i afegeix-lo al tiquet.
 
 ## 2. Canviar el preu d'un producte trobat
 
