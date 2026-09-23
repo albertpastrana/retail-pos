@@ -46,10 +46,7 @@
     <class name="com.openbravo.pos.inventory.PriceRulesPanel"/>
     <class name="com.openbravo.pos.inventory.SaleMarkPanel"/>
     <class name="com.openbravo.pos.inventory.CategoriesPanel"/>
-    <class name="com.openbravo.pos.inventory.AttributesPanel"/>
-    <class name="com.openbravo.pos.inventory.AttributeValuesPanel"/>
-    <class name="com.openbravo.pos.inventory.AttributeSetsPanel"/>
-    <class name="com.openbravo.pos.inventory.AttributeUsePanel"/>
+    <class name="com.openbravo.pos.inventory.AttributeManagementPanel"/>
     <class name="com.openbravo.pos.inventory.TaxPanel"/>
     <class name="com.openbravo.pos.inventory.TaxCategoriesPanel"/>
     <class name="com.openbravo.pos.inventory.StockDiaryPanel"/>

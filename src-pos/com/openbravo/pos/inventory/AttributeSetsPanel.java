@@ -42,7 +42,7 @@ public class AttributeSetsPanel extends JPanelTable2 {
 	public AttributeSetsPanel() {
 	}
 
-	protected void init() {
+	public void init() {
 
 		row = new Row(new Field("ID", Datas.STRING, Formats.STRING),
 				new Field(AppLocal.getIntString("Label.Name"), Datas.STRING, Formats.STRING, true, true, true));
@@ -50,7 +50,7 @@ public class AttributeSetsPanel extends JPanelTable2 {
 		Table table = new Table("ATTRIBUTESET", new PrimaryKey("ID"), new Column("NAME"));
 
 		lpr = row.getListProvider(app.getSession(), table);
-		spr = row.getSaveProvider(app.getSession(), table);
+		spr = AttributeSaveProvider.forSet(app.getSession(), row.getSaveProvider(app.getSession(), table));
 
 		editor = new AttributeSetsEditor(dirty);
 	}

@@ -34,6 +34,11 @@ public class SaveProvider {
 		m_sentinsert = sentinsert;
 		m_sentdelete = sentdelete;
 	}
+	protected SaveProvider(SaveProvider provider) {
+		m_sentupdate = provider.m_sentupdate;
+		m_sentinsert = provider.m_sentinsert;
+		m_sentdelete = provider.m_sentdelete;
+	}
 	public SaveProvider(TableDefinition table) {
 		m_sentupdate = table.getUpdateSentence();
 		m_sentdelete = table.getDeleteSentence();

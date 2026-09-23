@@ -112,17 +112,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		showView("<NULL>");
 
 		try {
-
-			setMenuViews(getScriptMenu(m_dlSystem.getResourceAsText("Menu.Root")));
+			setMenuViews(getScriptMenu(StringUtils.readResource("/com/openbravo/pos/templates/Menu.Root.txt")));
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Cannot read default menu", e);
 		} catch (ScriptException e) {
-			logger.log(Level.SEVERE, "Cannot read Menu.Root resource. Trying defaut menu.", e);
-			try {
-				setMenuViews(getScriptMenu(StringUtils.readResource("/com/openbravo/pos/templates/Menu.Root.txt")));
-			} catch (IOException ex) {
-				logger.log(Level.SEVERE, "Cannot read default menu", ex);
-			} catch (ScriptException es) {
-				logger.log(Level.SEVERE, "Cannot read default menu", es);
-			}
+			logger.log(Level.SEVERE, "Cannot parse default menu", e);
 		}
 	}
 

@@ -26,13 +26,18 @@ import com.openbravo.data.model.Field;
 import com.openbravo.data.model.PrimaryKey;
 import com.openbravo.data.model.Row;
 import com.openbravo.data.model.Table;
+import com.openbravo.data.loader.PreparedSentence;
+import com.openbravo.data.loader.SerializerWriteBasicExt;
 import com.openbravo.data.user.EditorRecord;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.panels.JPanelTable2;
+import java.awt.FlowLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 /**
  *
@@ -43,7 +48,7 @@ public class AttributeUsePanel extends JPanelTable2 {
 	private AttributeUseEditor editor;
 	private AttributeSetFilter filter;
 
-	protected void init() {
+	public void init() {
 
 		filter = new AttributeSetFilter();
 		filter.init(app);
@@ -83,6 +88,18 @@ public class AttributeUsePanel extends JPanelTable2 {
 		return filter.getComponent();
 	}
 
+	@Override
+	public Component getToolbarExtras() {
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 5, 0));
+		JButton up = new JButton(AppLocal.getIntString("button.moveup"));
+		JButton down = new JButton(AppLocal.getIntString("button.movedown"));
+		up.addActionListener(new MoveAction(-1));
+		down.addActionListener(new MoveAction(1));
+		buttons.add(up);
+		buttons.add(down);
+		return buttons;
+	}
+
 	public EditorRecord getEditor() {
 		return editor;
 	}
@@ -106,6 +123,62 @@ public class AttributeUsePanel extends JPanelTable2 {
 				reload();
 			} catch (BasicException w) {
 			}
+		}
+	}
+
+	private class MoveAction implements ActionListener {
+		private final int direction;
+
+		MoveAction(int direction) {
+			this.direction = direction;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent event) {
+			int index = bd.getIndex();
+			int target = index + direction;
+			if (index < 0 || target < 0 || target >= bd.getListModel().getSize()) {
+				return;
+			}
+			try {
+				bd.saveData();
+				reorder(index, target);
+				bd.actionLoad();
+			} catch (BasicException exception) {
+				new com.openbravo.data.gui.MessageInf(com.openbravo.data.gui.MessageInf.SGN_WARNING,
+						AppLocal.getIntString("message.cannotmoveattribute"), exception).show(AttributeUsePanel.this);
+			}
+		}
+	}
+
+	private void reorder(int index, int target) throws BasicException {
+		Object[] selected = (Object[]) bd.getListModel().getElementAt(index);
+		Object[] adjacent = (Object[]) bd.getListModel().getElementAt(target);
+		int selectedLine = ((Number) selected[3]).intValue();
+		int adjacentLine = ((Number) adjacent[3]).intValue();
+		PreparedSentence update = new PreparedSentence(app.getSession(),
+				"UPDATE ATTRIBUTEUSE SET LINENO = ? WHERE ID = ?",
+				new SerializerWriteBasicExt(new Datas[]{Datas.INT, Datas.STRING}, new int[]{1, 0}));
+
+		try {
+			app.getSession().begin();
+			update.exec(new Object[]{selected[0], -1});
+			update.exec(new Object[]{adjacent[0], selectedLine});
+			update.exec(new Object[]{selected[0], adjacentLine});
+			app.getSession().commit();
+		} catch (BasicException exception) {
+			rollback();
+			throw exception;
+		} catch (java.sql.SQLException exception) {
+			rollback();
+			throw new BasicException(exception);
+		}
+	}
+
+	private void rollback() {
+		try {
+			app.getSession().rollback();
+		} catch (java.sql.SQLException ignored) {
 		}
 	}
 }

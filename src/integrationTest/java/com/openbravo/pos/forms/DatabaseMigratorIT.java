@@ -89,7 +89,7 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection,
@@ -155,7 +155,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
@@ -163,10 +163,7 @@ public class DatabaseMigratorIT {
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
-			assertTrue(resourceContains(connection, "Menu.Root", "JPanelSalesSummary"));
-			assertTrue(resourceContains(connection, "Menu.Root", "JPanelProductSales"));
-			assertTrue(resourceContains(connection, "Menu.Root", "JPanelPaymentSales"));
-			assertTrue(resourceContains(connection, "Menu.Root", "JPanelLowStock"));
+			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Menu.Root'"));
 			assertTrue(resourceContains(connection, "Printer.Ticket", "Entregat:"));
 			assertTrue(resourceContains(connection, "Printer.Ticket", "printChange()"));
 			assertTrue(resourceContains(connection, "Printer.TicketPreview", "Entregat:"));
@@ -201,7 +198,7 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(35, count(connection, "RESOURCES"));
+			assertEquals(34, count(connection, "RESOURCES"));
 			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
 			assertEquals(4, queryInt(connection,
 					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));
