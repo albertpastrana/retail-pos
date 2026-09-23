@@ -60,6 +60,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -940,6 +941,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	public final void saveTicket(final TicketInfo ticket, final String location) throws BasicException {
+		validatePaymentTotals(ticket);
 
 		Transaction t = new Transaction(s) {
 			public Object transact() throws BasicException {
@@ -1208,6 +1210,38 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			}
 		};
 		t.execute();
+	}
+
+	static void validatePaymentTotals(TicketInfo ticket) throws BasicException {
+		if (ticket.getTicketType() != TicketInfo.RECEIPT_NORMAL
+				&& ticket.getTicketType() != TicketInfo.RECEIPT_REFUND) {
+			return;
+		}
+
+		double ticketTotal = ticket.getTotal();
+		double paymentTotal = ticket.getTotalPaid();
+		if (RoundUtils.compare(ticketTotal, paymentTotal) == 0) {
+			return;
+		}
+
+		String details = paymentSummary(ticket.getPayments());
+		LOGGER.log(Level.WARNING,
+				"event=ticket_payment_total_mismatch ticketId={0} ticketNumber={1} ticketType={2} "
+						+ "ticketTotal={3} paymentTotal={4} payments={5}",
+				new Object[]{ticket.getId(), ticket.getTicketId(), ticket.getTicketType(), ticketTotal, paymentTotal,
+						details});
+		throw new BasicException(AppLocal.getIntString("message.paymenttotalmismatch"));
+	}
+
+	private static String paymentSummary(List<PaymentInfo> payments) {
+		StringBuilder summary = new StringBuilder();
+		for (PaymentInfo payment : payments) {
+			if (summary.length() > 0) {
+				summary.append(',');
+			}
+			summary.append(payment.getName()).append(':').append(payment.getTotal());
+		}
+		return summary.toString();
 	}
 
 	public final Integer getNextTicketIndex() throws BasicException {

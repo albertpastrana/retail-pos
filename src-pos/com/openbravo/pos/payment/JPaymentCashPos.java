@@ -42,12 +42,15 @@ import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
+import java.util.logging.Logger;
 
 /**
  *
  * @author adrianromero
  */
 public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInterface {
+
+	private static final Logger LOGGER = Logger.getLogger(JPaymentCashPos.class.getName());
 
 	private JPaymentNotifier m_notifier;
 
@@ -89,6 +92,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 	public void activate(CustomerInfoExt customerext, double dTotal, String transID) {
 
 		m_dTotal = dTotal;
+		LOGGER.info("event=cash_payment_activated total=" + dTotal);
 
 		m_jTendered.reset();
 		m_jTendered.activate();
@@ -103,6 +107,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 	}
 
 	public PaymentInfo executePayment() {
+		LOGGER.info("event=cash_payment_confirmed total=" + m_dTotal + " paid=" + m_dPaid);
 		if (m_dPaid - m_dTotal >= 0.0) {
 			// pago completo
 			return new PaymentInfoCash(m_dTotal, m_dPaid);
