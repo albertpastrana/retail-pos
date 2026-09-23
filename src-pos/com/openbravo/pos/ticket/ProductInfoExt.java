@@ -42,7 +42,6 @@ public class ProductInfoExt {
 	protected String m_sCode;
 	protected String m_sName;
 	protected boolean m_bCom;
-	protected boolean m_bScale;
 	protected boolean m_bVoucher;
 	protected String categoryid;
 	protected String taxcategoryid;
@@ -63,7 +62,6 @@ public class ProductInfoExt {
 		m_sCode = "0000";
 		m_sName = null;
 		m_bCom = false;
-		m_bScale = false;
 		m_bVoucher = false;
 		categoryid = null;
 		taxcategoryid = null;
@@ -124,14 +122,6 @@ public class ProductInfoExt {
 
 	public final void setCom(boolean bValue) {
 		m_bCom = bValue;
-	}
-
-	public final boolean isScale() {
-		return m_bScale;
-	}
-
-	public final void setScale(boolean bValue) {
-		m_bScale = bValue;
 	}
 
 	public final boolean isVoucher() {
@@ -204,10 +194,9 @@ public class ProductInfoExt {
 	public static String infoColumns(String alias) {
 		String prefix = alias == null || alias.length() == 0 ? "" : alias + ".";
 		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
-				+ prefix + "ISSCALE, " + prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, "
-				+ prefix + "TAXCAT, " + prefix + "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, "
-				+ prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix + "FAMILY, " + prefix + "CREATED_AT, "
-				+ prefix + "UPDATED_AT";
+				+ prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, " + prefix + "TAXCAT, " + prefix
+				+ "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, " + prefix + "ATTRIBUTES, " + prefix
+				+ "SALE_PERCENT, " + prefix + "FAMILY, " + prefix + "CREATED_AT, " + prefix + "UPDATED_AT";
 	}
 
 	public final double getPriceSellTax(TaxInfo tax) {
@@ -251,20 +240,19 @@ public class ProductInfoExt {
 				product.m_sCode = dr.getString(3);
 				product.m_sName = dr.getString(4);
 				product.m_bCom = dr.getBoolean(5).booleanValue();
-				product.m_bScale = dr.getBoolean(6).booleanValue();
-				product.m_bVoucher = dr.getBoolean(7).booleanValue();
-				product.m_dPriceBuy = dr.getDouble(8).doubleValue();
-				product.m_dPriceSell = dr.getDouble(9).doubleValue();
-				product.taxcategoryid = dr.getString(10);
-				product.categoryid = dr.getString(11);
-				product.attributesetid = dr.getString(12);
-				product.m_Image = ImageUtils.readImage(dr.getBytes(13));
-				product.attributes = ImageUtils.readProperties(dr.getBytes(14));
-				Double marked = dr.getDouble(15);
+				product.m_bVoucher = dr.getBoolean(6).booleanValue();
+				product.m_dPriceBuy = dr.getDouble(7).doubleValue();
+				product.m_dPriceSell = dr.getDouble(8).doubleValue();
+				product.taxcategoryid = dr.getString(9);
+				product.categoryid = dr.getString(10);
+				product.attributesetid = dr.getString(11);
+				product.m_Image = ImageUtils.readImage(dr.getBytes(12));
+				product.attributes = ImageUtils.readProperties(dr.getBytes(13));
+				Double marked = dr.getDouble(14);
 				product.salePercent = marked == null ? 0.0 : marked.doubleValue();
-				product.family = dr.getString(16);
-				product.createdAt = dr.getTimestamp(17);
-				product.updatedAt = dr.getTimestamp(18);
+				product.family = dr.getString(15);
+				product.createdAt = dr.getTimestamp(16);
+				product.updatedAt = dr.getTimestamp(17);
 				return product;
 			}
 		};

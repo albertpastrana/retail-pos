@@ -159,6 +159,7 @@ public class DatabaseMigratorIT {
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
+			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
@@ -201,6 +202,7 @@ public class DatabaseMigratorIT {
 		Connection connection = open(url, user, password);
 		try {
 			assertEquals(35, count(connection, "RESOURCES"));
+			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
 			assertEquals(4, queryInt(connection,
 					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));
 			assertEquals(0, tableCount(connection, "APPLICATIONS"));
@@ -220,6 +222,18 @@ public class DatabaseMigratorIT {
 			}
 		} finally {
 			connection.close();
+		}
+	}
+
+	private static boolean indexExists(Connection connection, String table, String index) throws SQLException {
+		DatabaseMetaData metadata = connection.getMetaData();
+		try (ResultSet indexes = metadata.getIndexInfo(connection.getCatalog(), connection.getSchema(), table, false, true)) {
+			while (indexes.next()) {
+				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 

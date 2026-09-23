@@ -129,7 +129,6 @@ public class AppConfig implements AppProperties {
 		m_propsconfig.setProperty("machine.printer.2", "Not defined");
 		m_propsconfig.setProperty("machine.printer.3", "Not defined");
 		m_propsconfig.setProperty("machine.display", "screen");
-		m_propsconfig.setProperty("machine.scale", "Not defined");
 		m_propsconfig.setProperty("machine.screenmode", "window"); // fullscreen / window
 		m_propsconfig.setProperty("machine.ticketsbag", "standard");
 		m_propsconfig.setProperty("machine.scanner", "Not defined");

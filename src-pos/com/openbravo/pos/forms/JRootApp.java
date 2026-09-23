@@ -40,7 +40,6 @@ import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.data.loader.Session;
-import com.openbravo.pos.scale.DeviceScale;
 import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -86,7 +85,6 @@ public class JRootApp extends JPanel implements AppView {
 	private StringBuffer inputtext;
 	private boolean m_administrationLogin;
 
-	private DeviceScale m_Scale;
 	private DeviceTicket m_TP;
 	private TicketParser m_TTP;
 
@@ -222,9 +220,6 @@ public class JRootApp extends JPanel implements AppView {
 		m_TTP = new TicketParser(getDeviceTicket(), m_dlSystem);
 		printerStart();
 
-		// Inicializamos la bascula
-		m_Scale = new DeviceScale(this, m_props);
-
 		// Leemos los recursos basicos
 		BufferedImage imgicon = m_dlSystem.getResourceAsImage("Window.Logo");
 		m_jLblTitle.setIcon(imgicon == null ? null : new ImageIcon(scaleLogo(imgicon)));
@@ -241,8 +236,7 @@ public class JRootApp extends JPanel implements AppView {
 			}
 		}, 3600000L, 3600000L);
 
-		LOGGER.info("event=pos_initialization_success printer=" + m_props.getProperty("machine.printer") + " scale="
-				+ m_props.getProperty("machine.scale"));
+		LOGGER.info("event=pos_initialization_success printer=" + m_props.getProperty("machine.printer"));
 		return true;
 	}
 
@@ -265,10 +259,6 @@ public class JRootApp extends JPanel implements AppView {
 	// Interfaz de aplicacion
 	public DeviceTicket getDeviceTicket() {
 		return m_TP;
-	}
-
-	public DeviceScale getDeviceScale() {
-		return m_Scale;
 	}
 
 	public Session getSession() {

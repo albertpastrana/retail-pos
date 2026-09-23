@@ -97,7 +97,6 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				new Field(AppLocal.getIntString("label.prodbarcode"), Datas.STRING, Formats.STRING, false, true, true),
 				new Field(AppLocal.getIntString("label.prodname"), Datas.STRING, Formats.STRING, true, true, true),
 				new Field("ISCOM", Datas.BOOLEAN, Formats.BOOLEAN),
-				new Field("ISSCALE", Datas.BOOLEAN, Formats.BOOLEAN),
 				new Field(AppLocal.getIntString("label.prodpricebuy"), Datas.DOUBLE, Formats.CURRENCY, false, true,
 						true),
 				new Field(AppLocal.getIntString("label.prodpricesell"), Datas.DOUBLE, Formats.CURRENCY, false, true,
@@ -487,10 +486,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				PreparedStatement insert = connection
 						.prepareStatement("INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, "
 								+ "PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, "
-								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) "
+								+ "STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) "
 								+ "VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, '001', NULL, " + "NULL, NULL, NULL, "
-								+ s.DB.FALSE() + ", " + s.DB.FALSE()
-								+ ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+								+ s.DB.FALSE() + ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 				insert.setString(1, product.getID());
 				insert.setString(2, product.getReference());
 				insert.setString(3, product.getCode());
@@ -536,10 +534,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							"UPDATE PRODUCTS SET NAME = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, BRAND = ?, FAMILY = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?");
 					PreparedStatement insert = connection.prepareStatement(
 							"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
-									+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, ISSCALE, "
+									+ "CATEGORY, TAXCAT, ATTRIBUTESET_ID, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, "
 									+ "ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, NULL, "
-									+ "NULL, " + s.DB.FALSE() + ", " + s.DB.FALSE()
-									+ ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+									+ "NULL, " + s.DB.FALSE() + ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 					PreparedStatement findCat = connection
 							.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 					PreparedStatement insertCat = connection
@@ -1267,7 +1264,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final SentenceList getProductCatQBF() {
 		return new StaticSentence(s, new QBFBuilder(
-				"SELECT PRODUCTS.ID, PRODUCTS.REFERENCE, PRODUCTS.CODE, PRODUCTS.NAME, PRODUCTS.ISCOM, PRODUCTS.ISSCALE, PRODUCTS.PRICEBUY, PRODUCTS.PRICESELL, PRODUCTS.CATEGORY, PRODUCTS.TAXCAT, PRODUCTS.ATTRIBUTESET_ID, "
+				"SELECT PRODUCTS.ID, PRODUCTS.REFERENCE, PRODUCTS.CODE, PRODUCTS.NAME, PRODUCTS.ISCOM, PRODUCTS.PRICEBUY, PRODUCTS.PRICESELL, PRODUCTS.CATEGORY, PRODUCTS.TAXCAT, PRODUCTS.ATTRIBUTESET_ID, "
 						+ s.DB.CHAR_NULL()
 						+ ", PRODUCTS.STOCKCOST, PRODUCTS.STOCKVOLUME, CASE WHEN C.PRODUCT IS NULL THEN " + s.DB.FALSE()
 						+ " ELSE " + s.DB.TRUE() + " END, C.CATORDER, PRODUCTS.ATTRIBUTES "
@@ -1286,17 +1283,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, ISSCALE, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, ATTRIBUTESET_ID, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17}))
+								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16}))
 						.exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
 					applyStockLevel(values);
 				}
-				if (i > 0 && ((Boolean) values[14]).booleanValue()) {
+				if (i > 0 && ((Boolean) values[13]).booleanValue()) {
 					return new PreparedSentence(s, "INSERT INTO PRODUCTS_CAT (PRODUCT, CATORDER) VALUES (?, ?)",
-							new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 15})).exec(params);
+							new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 14})).exec(params);
 				} else {
 					return i;
 				}
@@ -1309,19 +1306,19 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, ISSCALE = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
+						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, ATTRIBUTESET_ID = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 0}))
+								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 0}))
 						.exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
 					applyStockLevel(values);
-					if (((Boolean) values[14]).booleanValue()) {
+					if (((Boolean) values[13]).booleanValue()) {
 						if (new PreparedSentence(s, "UPDATE PRODUCTS_CAT SET CATORDER = ? WHERE PRODUCT = ?",
-								new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{15, 0}))
+								new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{14, 0}))
 								.exec(params) == 0) {
 							new PreparedSentence(s, "INSERT INTO PRODUCTS_CAT (PRODUCT, CATORDER) VALUES (?, ?)",
-									new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 15})).exec(params);
+									new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 14})).exec(params);
 						}
 					} else {
 						new PreparedSentence(s, "DELETE FROM PRODUCTS_CAT WHERE PRODUCT = ?",
@@ -1357,13 +1354,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// much of that stock comes from units added rather than a correction
 	private void applyStockLevel(Object[] values) throws BasicException {
 
-		Double units = (Double) values[19];
-		String location = (String) values[20];
+		Double units = (Double) values[18];
+		String location = (String) values[19];
 		String product = (String) values[0];
-		Double addedFactory = values.length > 21 ? (Double) values[21] : null;
-		Double wholesale = values.length > 22 ? (Double) values[22] : null;
-		Double addedWholesale = values.length > 23 ? (Double) values[23] : null;
-		Double pricebuy = (Double) values[6];
+		Double addedFactory = values.length > 20 ? (Double) values[20] : null;
+		Double wholesale = values.length > 21 ? (Double) values[21] : null;
+		Double addedWholesale = values.length > 22 ? (Double) values[22] : null;
+		Double pricebuy = (Double) values[5];
 		double added = unitsOf(addedFactory) + unitsOf(addedWholesale);
 
 		if (units != null) {
@@ -1384,11 +1381,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	private void applyWholesalePrice(Object[] values) throws BasicException {
-		if (values.length <= 22) {
+		if (values.length <= 21) {
 			return;
 		}
 		new PreparedSentence(s, "UPDATE PRODUCTS SET PRICEBUY_WHOLESALE = ? WHERE ID = ?",
-				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[22], values[0]);
+				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[21], values[0]);
 	}
 
 	private static double unitsOf(Double value) {

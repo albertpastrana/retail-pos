@@ -22,7 +22,6 @@ package com.openbravo.pos.forms;
 import java.util.Date;
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.printer.*;
-import com.openbravo.pos.scale.DeviceScale;
 
 /**
  *
@@ -30,7 +29,6 @@ import com.openbravo.pos.scale.DeviceScale;
  */
 public interface AppView {
 
-	public DeviceScale getDeviceScale();
 	public DeviceTicket getDeviceTicket();
 
 	public Session getSession();

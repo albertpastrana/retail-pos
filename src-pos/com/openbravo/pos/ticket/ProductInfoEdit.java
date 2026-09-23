@@ -33,7 +33,6 @@ public class ProductInfoEdit {
 	protected String m_sCode;
 	protected String m_sName;
 	protected boolean m_bCom;
-	protected boolean m_bScale;
 	protected String m_sCategoryID;
 	protected String m_sTaxID;
 	protected String attributeuseid;
@@ -52,7 +51,6 @@ public class ProductInfoEdit {
 		m_sCode = "0000";
 		m_sName = null;
 		m_bCom = false;
-		m_bScale = false;
 		m_sCategoryID = null;
 		m_sTaxID = null;
 		attributeuseid = null;
@@ -95,12 +93,6 @@ public class ProductInfoEdit {
 	}
 	public final void setCom(boolean bValue) {
 		m_bCom = bValue;
-	}
-	public final boolean isScale() {
-		return m_bScale;
-	}
-	public final void setScale(boolean bValue) {
-		m_bScale = bValue;
 	}
 	public final String getCategoryID() {
 		return m_sCategoryID;

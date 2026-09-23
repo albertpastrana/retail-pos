@@ -27,6 +27,8 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -54,6 +56,8 @@ import com.openbravo.beans.JNumberKeys;
 
 public class JTicketsBagTicket extends JTicketsBag {
 
+	private static final Logger LOGGER = Logger.getLogger(JTicketsBagTicket.class.getName());
+
 	private DataLogicSystem m_dlSystem = null;
 	protected DataLogicCustomers dlCustomers = null;
 
@@ -75,6 +79,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 	public JTicketsBagTicket(AppView app, JPanelTicketEdits panelticket) {
 
 		super(app, panelticket);
+		long started = System.nanoTime();
+		LOGGER.log(Level.INFO, "event=recent_sales_bag_init_start");
 		m_panelticketedit = panelticket;
 		m_dlSystem = m_App.getBean(DataLogicSystem.class);
 		dlCustomers = m_App.getBean(DataLogicCustomers.class);
@@ -87,15 +93,20 @@ public class JTicketsBagTicket extends JTicketsBag {
 		m_TTP2 = new TicketParser(m_App.getDeviceTicket(), m_dlSystem); // para imprimir el ticket
 
 		initComponents();
+		LOGGER.log(Level.INFO, "event=recent_sales_bag_init_components duration_ms={0}", elapsedMillis(started));
 		initRecentTickets();
+		LOGGER.log(Level.INFO, "event=recent_sales_bag_init_recent_table duration_ms={0}", elapsedMillis(started));
 
 		m_TicketsBagTicketBag = new JTicketsBagTicketBag(this);
+		LOGGER.log(Level.INFO, "event=recent_sales_bag_init_actions duration_ms={0}", elapsedMillis(started));
 
 		// Este deviceticket solo tiene una impresora, la de pantalla
 		m_jPanelTicket.add(m_TP.getDevicePrinter("1").getPrinterComponent(), BorderLayout.CENTER);
+		LOGGER.log(Level.INFO, "event=recent_sales_bag_init_done duration_ms={0}", elapsedMillis(started));
 	}
 
 	public void activate() {
+		long started = System.nanoTime();
 
 		// precondicion es que no tenemos ticket activado ni ticket en el panel
 
@@ -113,6 +124,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		jrbSales.setSelected(true);
 		loadRecentTickets();
+		LOGGER.log(Level.INFO, "event=recent_sales_activate duration_ms={0}", elapsedMillis(started));
 
 		m_jEdit.setVisible(m_App.getAppUserView().getUser().hasPermission("sales.EditTicket"));
 		m_jRefund.setVisible(m_App.getAppUserView().getUser().hasPermission("sales.RefundTicket"));
@@ -236,8 +248,10 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private void loadRecentTickets() {
+		long started = System.nanoTime();
 		RecentTicketsTableModel model = (RecentTicketsTableModel) m_jRecentTickets.getModel();
 		List<FindTicketsInfo> tickets = new ArrayList<FindTicketsInfo>();
+		long queryStarted = System.nanoTime();
 		try {
 			tickets = m_dlSales.getRecentTickets(jrbSales.isSelected() ? 0 : 1, RECENT_TICKETS);
 		} catch (BasicException e) {
@@ -245,12 +259,22 @@ public class JTicketsBagTicket extends JTicketsBag {
 					e);
 			msg.show(this);
 		}
+		long queryMillis = elapsedMillis(queryStarted);
 		m_jRecentTickets.clearSelection();
+		long tableStarted = System.nanoTime();
 		model.setTickets(tickets);
+		long tableMillis = elapsedMillis(tableStarted);
+		long selectionMillis = 0;
 		if (model.getRowCount() > 0) {
 			// Make the normal correction flow immediately actionable.
+			long selectionStarted = System.nanoTime();
 			m_jRecentTickets.setRowSelectionInterval(0, 0);
+			selectionMillis = elapsedMillis(selectionStarted);
 		}
+		LOGGER.log(Level.INFO,
+				"event=recent_sales_loaded ticket_type={0} rows={1} query_ms={2} table_ms={3} selection_ms={4} total_ms={5}",
+				new Object[]{jrbSales.isSelected() ? 0 : 1, model.getRowCount(), queryMillis, tableMillis,
+						selectionMillis, elapsedMillis(started)});
 	}
 
 	private static class RecentTicketsTableModel extends AbstractTableModel {
@@ -311,6 +335,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private void readTicket(int iTicketid, int iTickettype) {
+		long started = System.nanoTime();
+		long loadStarted = System.nanoTime();
+		boolean found = false;
 
 		try {
 			int ticketId = iTicketid;
@@ -324,6 +351,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 						AppLocal.getIntString("message.notexiststicket"));
 				msg.show(this);
 			} else {
+				found = true;
 				m_ticket = ticket;
 				m_ticketCopy = null; // se asigna al pulsar el boton de editar o devolver
 				printTicket();
@@ -337,11 +365,16 @@ public class JTicketsBagTicket extends JTicketsBag {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notexiststicket"));
 			msg.show(this);
 		}
+		long loadMillis = elapsedMillis(loadStarted);
 
 		m_jTicketEditor.setText("");
+		LOGGER.log(Level.INFO,
+				"event=recent_sale_selected ticket_id={0} ticket_type={1} found={2} load_ms={3} total_ms={4}",
+				new Object[]{iTicketid, iTickettype, found, loadMillis, elapsedMillis(started)});
 	}
 
 	private void printTicket() {
+		long started = System.nanoTime();
 
 		// imprimo m_ticket
 
@@ -377,6 +410,12 @@ public class JTicketsBagTicket extends JTicketsBag {
 				msg.show(this);
 			}
 		}
+		LOGGER.log(Level.INFO, "event=recent_sale_preview ticket_id={0} has_ticket={1} duration_ms={2}", new Object[]{
+				m_ticket == null ? null : m_ticket.getTicketId(), m_ticket != null, elapsedMillis(started)});
+	}
+
+	private static long elapsedMillis(long started) {
+		return (System.nanoTime() - started) / 1_000_000L;
 	}
 
 	/**
