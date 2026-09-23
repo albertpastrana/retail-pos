@@ -27,9 +27,6 @@
     group.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.Closing", "com.openbravo.pos.panels.JPanelClosedCash");
 
     group = menu.addGroup("Menu.Backoffice");
-    submenu = group.addSubmenu("/com/openbravo/images/menu-customers.png", "Menu.Customers", "com.openbravo.pos.forms.MenuCustomers");
-        submenu.addTitle("Menu.Customers");
-        submenu.addPanel("/com/openbravo/images/menu-customers-mgmt.png", "Menu.CustomersManagement", "com.openbravo.pos.customers.CustomersPanel");
     submenu = group.addSubmenu("/com/openbravo/images/menu-stock.png", "Menu.StockManagement", "com.openbravo.pos.forms.MenuStockManagement");
         submenu.addTitle("Menu.StockManagement.Edit");
         submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.Products", "com.openbravo.pos.inventory.ProductsPanel");
