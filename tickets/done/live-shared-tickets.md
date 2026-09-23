@@ -2,7 +2,7 @@
 
 Captured: 2026-09-11
 
-Related: `tickets/todo/postgres-lan.md`, `tickets/todo/operator-docs.md`
+Related: `tickets/done/postgres-lan.md`, `tickets/todo/operator-docs.md`
 
 ## Goal
 

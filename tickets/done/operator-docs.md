@@ -2,7 +2,7 @@
 
 Captured: 2026-09-14
 
-Related: `tickets/done/customer-on-ticket.md`, `tickets/backlog/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/done/live-shared-tickets.md`, `tickets/todo/postgres-lan.md`, `tickets/done/login-vs-seller.md`
+Related: `tickets/done/customer-on-ticket.md`, `tickets/backlog/loyalty-customer-balance.md`, `tickets/todo/pending-barcodes.md`, `tickets/done/live-shared-tickets.md`, `tickets/done/postgres-lan.md`, `tickets/done/login-vs-seller.md`, `tickets/backlog/catalog-variants.md`, `tickets/backlog/broken-sales-reports.md`
 
 ## Goal
 
@@ -10,9 +10,9 @@ A shop-floor guide with screenshots: how this shop works. Not the whole Openbrav
 
 ## Context
 
-Floors, tables, ERP/JMS: one line “do not use”. Not size/colour as attribute sets (`catalog-variants.md` already says no). Reports: only ones you actually look at; `productsaletotals` / `soldproducts` are broken (`tickets/todo/broken-sales-reports.md`).
+Floors, tables, ERP/JMS: one line “do not use”. Not size/colour as attribute sets (`tickets/backlog/catalog-variants.md` already says no). Reports: only ones you actually look at; `productsaletotals` / `soldproducts` are broken (`tickets/backlog/broken-sales-reports.md`). The PostgreSQL LAN has now been validated and can be documented as the shop's current operating model.
 
-First cut: **till + loyalty + unknown EAN**. Next: **two tills** (today’s workaround vs target flow, clearly split — if they mix, people will do tomorrow’s flow and fail).
+First cut: **till + loyalty + unknown EAN**. The two-till flow is now validated and should be documented as the current operating model, not as a future target.
 
 Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close cash, (5) shop on the LAN.
 
@@ -38,7 +38,7 @@ Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close 
 - Gift voucher (`ISVOUCHER`): sell vs redeem. Not the −5 € loyalty line.
 - Customers: one field (name / phone); create name+phone; chip (debt); same sheet at till and backoffice. Debt stays; search key/fax/tax category not on create. Pay from the sheet.
 - Loyalty: customer with card; 10 € eligible base (remainder stored); sale / discount / voucher / redemption line do not count; ticket text “this ticket: +N · total: X/12”; 12 → −5 € (one per ticket); refund undoes the movement; at close cash it is a discount, not a payment.
-- Two tills (1+3): today you must park on till-2 for central to see it; opening sales can grab the other till’s ticket. Target: persist on first line, list all open, lock by `machine.hostname`, pay only on central.
+- Two tills: PostgreSQL is shared today. A satellite till can send a live ticket to the central till without parking; the ticket lock transfers when it is opened, and only the central till with the receipt printer takes payment.
 
 **3. Stock and catalogue**
 
@@ -54,7 +54,7 @@ Possible split of the doc itself: (1) till, (2) two tills, (3) stock, (4) close 
 
 - Close cash (count, what prints)
 - Closed cash (lookup)
-- 2–3 reports you actually use (e.g. sales by model, slow stock, close cash)
+- 2–3 reports you actually use. The current reports are sales summary, sales by product, sales by payment method, and low stock; sales by model and CSV export are not available yet.
 
 **5. Start of day, LAN, if it breaks**
 
@@ -69,3 +69,7 @@ For whoever starts Linux and the other PCs, not the build README.
 ## Done when
 
 Staff can follow the first cut (till + loyalty + unknown EAN) from the doc without a developer. Two-till workaround and target flow are in different sections.
+
+## Shipped
+
+Added the bilingual operator guide pages for everyday till work, two tills and PostgreSQL LAN, stock and catalogue, cash closing, and current management reports. The validated shop flows are documented in `docs/user/ca/` and `docs/user/en/`.

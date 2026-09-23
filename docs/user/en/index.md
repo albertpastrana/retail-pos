@@ -16,8 +16,12 @@ This guide is organised by everyday situations at the counter. Open the use case
 10. [A customer wants the drawer opened without a sale](use-cases/open-drawer.md)
 11. [A sale must be continued later](use-cases/park-ticket.md)
 12. [A completed sale must be corrected or returned](use-cases/refund-or-edit.md)
+13. [Two tills and the shop LAN](use-cases/two-tills-and-lan.md)
+14. [Stock and catalogue](use-cases/stock-and-catalogue.md)
+15. [Close and review cash](use-cases/cash-closing.md)
+16. [Management reports](use-cases/reports.md)
 
-Stock management, two-till operation, cash closing, reports, and the shop LAN will be documented separately.
+The operations pages describe the shop's validated flow. Screenshots will be added during a later shop-floor review.
 
 ## Screenshots still needed
 

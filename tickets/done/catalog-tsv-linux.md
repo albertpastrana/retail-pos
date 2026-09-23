@@ -2,7 +2,7 @@
 
 Captured: 2026-09-11, 2026-09-18
 
-Related: `tickets/todo/postgres-lan.md`, `tickets/todo/pending-barcodes.md`
+Related: `tickets/done/postgres-lan.md`, `tickets/todo/pending-barcodes.md`
 
 ## Goal
 

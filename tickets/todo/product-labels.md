@@ -2,7 +2,7 @@
 
 Captured: 2026-09-10
 
-Related: `tickets/todo/catalog-variants.md`, `tickets/todo/brand-offers.md`, `tickets/done/gift-vouchers.md`
+Related: `tickets/backlog/catalog-variants.md`, `tickets/todo/brand-offers.md`, `tickets/done/gift-vouchers.md`
 
 ## Goal
 
@@ -12,7 +12,7 @@ Staff can attach labels or tags to products so the catalogue can be classified b
 
 Shop **families** (Sostenidors, Calces, Samarretes Home…) are already categories. Mapping rules: `external-data/categories-botiga.md`. Do not use tags to rebuild that tree.
 
-**Model family** (same t-shirt, other size/colour, scan a barcode to see siblings) is `tickets/todo/catalog-variants.md`. Colour and size stay on the SKU name / reference, not as tags.
+**Model family** (same t-shirt, other size/colour, scan a barcode to see siblings) is `tickets/backlog/catalog-variants.md`. Colour and size stay on the SKU name / reference, not as tags.
 
 Tags are the extra layer: e.g. tèrmic, novetat, rebaixes, encàrrec — things that cut across categories and are not a sellable variant.
 

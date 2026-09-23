@@ -2,7 +2,7 @@
 
 Captured: 2026-09-11, 2026-09-14
 
-Related: `tickets/done/unknown-barcode-notice.md`, `tickets/todo/stock-orders.md`, `tickets/todo/postgres-lan.md`
+Related: `tickets/done/unknown-barcode-notice.md`, `tickets/todo/stock-orders.md`, `tickets/done/postgres-lan.md`
 
 ## Goal
 

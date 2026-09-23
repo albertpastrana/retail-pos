@@ -93,7 +93,13 @@ docker compose down -v
 
 Compose publishes PostgreSQL on `127.0.0.1:15432` (user/password/database `pos`) and MySQL on `127.0.0.1:13306` (user `root`, password `pos`, database `pos`). `docker compose down -v` drops those containers so the next run starts from an empty schema.
 
-Resources the till actually uses (ticket layout, logo, buttons, role XML) live in the `RESOURCES` table, not only in `src-pos/com/openbravo/pos/templates/`. Edit templates in git, then push them into the database (Maintenance → Resources, or the helpers below).
+Receipt layouts, logos, and other customizable resources the till uses live in the `RESOURCES` table, not only in `src-pos/com/openbravo/pos/templates/`. Stable sales actions such as Print and Open Drawer are code-owned; their role permissions remain database-backed. Edit customizable templates in git, then push them into the database (Maintenance → Resources, or the helpers below).
+
+## Shop LAN
+
+For a shop with more than one till, run PostgreSQL on the Linux host and configure every till with the same `db.URL`. Keep the printer, display, locale, and other machine-specific settings in each till's properties file. The validated operator procedure is documented in [Two tills and the shop LAN](docs/user/en/use-cases/two-tills-and-lan.md) (Catalan: [Dos caixers i LAN](docs/user/ca/use-cases/dos-caixers-i-lan.md)).
+
+The tills share tickets, catalogue, stock, and cash data. If the Linux PostgreSQL host is unavailable, the other tills cannot sell. Do not synchronize Derby databases with Syncthing or git.
 
 ## Catalogue
 

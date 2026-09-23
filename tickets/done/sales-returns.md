@@ -15,3 +15,7 @@ A return could not be completed. Investigate the blocked or missing return flow 
 - An operator can start a return from the expected sales or ticket screen.
 - Returned items, refund payment, and stock quantities are recorded correctly.
 - Invalid quantities and already returned items are rejected with a clear message.
+
+## Shipped
+
+The completed-sale return flow, seller assignment, payment validation, and refund diagnostics shipped in commits `7d5ec89` and `31b0b5e`.

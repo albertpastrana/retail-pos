@@ -32,3 +32,7 @@ Do not sync Derby copies with Syncthing or git. Stock, tickets, pending EANs, or
 ## Done when
 
 The shop’s tills have been configured and tested against the shared PostgreSQL server, including the live shared-ticket flow. Two tills can read and write the same catalogue, stock, and tickets; the central till alone can take payment; and the documented failure behaviour is confirmed.
+
+## Shipped
+
+The shared PostgreSQL shop LAN, multi-till ticket flow, central payment ownership, backup check, and failure behaviour were validated in the shop environment.
