@@ -63,6 +63,29 @@ public class ProductPriceMathTest {
 	}
 
 	@Test
+	public void parsesCommaAndPointDecimalSeparators() throws Exception {
+		Locale originalLocale = Locale.getDefault();
+		try {
+			Locale.setDefault(Locale.US);
+			Formats.setCurrencyPattern(null);
+			Formats.setDoublePattern(null);
+			assertEquals(12.62, ProductPriceMath.parseCurrency("12,62").doubleValue(), 0.0001);
+			assertEquals(12.62, ProductPriceMath.parseCurrency("12.62").doubleValue(), 0.0001);
+		} finally {
+			Locale.setDefault(originalLocale);
+			Formats.setCurrencyPattern(null);
+			Formats.setDoublePattern(null);
+		}
+	}
+
+	@Test
+	public void rejectsNonFiniteCurrencyValues() {
+		assertNull(ProductPriceMath.parseCurrency("NaN"));
+		assertNull(ProductPriceMath.parseCurrency("Infinity"));
+		assertNull(ProductPriceMath.parseCurrency("-Infinity"));
+	}
+
+	@Test
 	public void numberFieldConvertsKeyboardDecimalPoint() {
 		Locale originalLocale = Locale.getDefault();
 		try {

@@ -33,8 +33,12 @@ public class JProductFinder extends JDialog {
 	public static final int PRODUCT_NORMAL = 1;
 	public static final int PRODUCT_AUXILIAR = 2;
 
-	private JProductFinder(Frame parent, boolean modal) { super(parent, modal); }
-	private JProductFinder(Dialog parent, boolean modal) { super(parent, modal); }
+	private JProductFinder(Frame parent, boolean modal) {
+		super(parent, modal);
+	}
+	private JProductFinder(Dialog parent, boolean modal) {
+		super(parent, modal);
+	}
 
 	private ProductInfoExt init(DataLogicSales dlSales, int productsType, String actionKey) {
 		initComponents();
@@ -44,13 +48,13 @@ public class JProductFinder extends JDialog {
 		filter.addActionListener(event -> executeSearch());
 		m_jProductSelect.add(filter, BorderLayout.CENTER);
 		switch (productsType) {
-			case PRODUCT_NORMAL:
+			case PRODUCT_NORMAL :
 				lpr = new ListProviderCreator(dlSales.getProductListNormal(), filter);
 				break;
-			case PRODUCT_AUXILIAR:
+			case PRODUCT_AUXILIAR :
 				lpr = new ListProviderCreator(dlSales.getProductListAuxiliar(), filter);
 				break;
-			default:
+			default :
 				lpr = new ListProviderCreator(dlSales.getProductList(), filter);
 				break;
 		}
@@ -64,8 +68,10 @@ public class JProductFinder extends JDialog {
 	}
 
 	private static Window getWindow(Component parent) {
-		if (parent == null) return new JFrame();
-		if (parent instanceof Frame || parent instanceof Dialog) return (Window) parent;
+		if (parent == null)
+			return new JFrame();
+		if (parent instanceof Frame || parent instanceof Dialog)
+			return (Window) parent;
 		return getWindow(parent.getParent());
 	}
 
@@ -95,18 +101,34 @@ public class JProductFinder extends JDialog {
 		private final String[] columns = {AppLocal.getIntString("label.prodref"),
 				AppLocal.getIntString("label.prodname"), AppLocal.getIntString("label.price")};
 
-		ProductTableModel(List<ProductInfoExt> products) { this.products = products; }
+		ProductTableModel(List<ProductInfoExt> products) {
+			this.products = products;
+		}
 
-		@Override public int getRowCount() { return products.size(); }
-		@Override public int getColumnCount() { return columns.length; }
-		@Override public String getColumnName(int column) { return columns[column]; }
-		@Override public Object getValueAt(int row, int column) {
+		@Override
+		public int getRowCount() {
+			return products.size();
+		}
+		@Override
+		public int getColumnCount() {
+			return columns.length;
+		}
+		@Override
+		public String getColumnName(int column) {
+			return columns[column];
+		}
+		@Override
+		public Object getValueAt(int row, int column) {
 			ProductInfoExt product = products.get(row);
 			switch (column) {
-				case 0: return product.getReference();
-				case 1: return product.getName();
-				case 2: return Formats.CURRENCY.formatValue(new Double(product.getPriceSell()));
-				default: return "";
+				case 0 :
+					return product.getReference();
+				case 1 :
+					return product.getName();
+				case 2 :
+					return Formats.CURRENCY.formatValue(new Double(product.getPriceSell()));
+				default :
+					return "";
 			}
 		}
 	}
@@ -129,13 +151,14 @@ public class JProductFinder extends JDialog {
 		jTableProducts.setFillsViewportHeight(true);
 		jTableProducts.setRowHeight(32);
 		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList()));
-		jTableProducts.setPreferredScrollableViewportSize(
-				new java.awt.Dimension(800, jTableProducts.getRowHeight() * 8));
-		jTableProducts.getSelectionModel().addListSelectionListener(event ->
-				jcmdOK.setEnabled(hasSelectableProduct()));
+		jTableProducts
+				.setPreferredScrollableViewportSize(new java.awt.Dimension(800, jTableProducts.getRowHeight() * 8));
+		jTableProducts.getSelectionModel().addListSelectionListener(event -> jcmdOK.setEnabled(hasSelectableProduct()));
 		jTableProducts.addMouseListener(new java.awt.event.MouseAdapter() {
-			@Override public void mouseClicked(java.awt.event.MouseEvent event) {
-				if (event.getClickCount() == 2) selectProduct();
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (event.getClickCount() == 2)
+					selectProduct();
 			}
 		});
 		jScrollPane1.setViewportView(jTableProducts);
@@ -144,8 +167,7 @@ public class JProductFinder extends JDialog {
 		jPanel5.add(jScrollPane1, BorderLayout.CENTER);
 		showProductMessage("message.productfilter");
 
-		m_jSplitPane = new javax.swing.JSplitPane(javax.swing.JSplitPane.VERTICAL_SPLIT,
-				m_jProductSelect, jPanel5);
+		m_jSplitPane = new javax.swing.JSplitPane(javax.swing.JSplitPane.VERTICAL_SPLIT, m_jProductSelect, jPanel5);
 		m_jSplitPane.setResizeWeight(0.4);
 		m_jSplitPane.setContinuousLayout(true);
 		jPanel2.add(m_jSplitPane, BorderLayout.CENTER);

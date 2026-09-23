@@ -144,11 +144,11 @@ public final class RetailPOSColors {
 		button.setOpaque(true);
 		button.setBackground(brand());
 		button.setForeground(onBrand());
-		button.putClientProperty("FlatLaf.style", "background: " + toHex(brand()) + "; foreground: "
-				+ toHex(onBrand()) + "; focusedBackground: " + toHex(brand()) + "; focusedForeground: "
-				+ toHex(onBrand()) + "; hoverBackground: " + toHex(brandStrong())
-				+ "; hoverForeground: " + toHex(onBrand()) + "; pressedBackground: " + toHex(brandStrong())
-				+ "; pressedForeground: " + toHex(onBrand()));
+		button.putClientProperty("FlatLaf.style",
+				"background: " + toHex(brand()) + "; foreground: " + toHex(onBrand()) + "; focusedBackground: "
+						+ toHex(brand()) + "; focusedForeground: " + toHex(onBrand()) + "; hoverBackground: "
+						+ toHex(brandStrong()) + "; hoverForeground: " + toHex(onBrand()) + "; pressedBackground: "
+						+ toHex(brandStrong()) + "; pressedForeground: " + toHex(onBrand()));
 	}
 
 	private static String toHex(Color color) {

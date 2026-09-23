@@ -167,3 +167,7 @@ flowchart TD
 - Any "undo after delete" mechanism — not reliable given the current
   autosave-on-navigate behaviour; would need Flow A fixed first.
 - Redesigning the product editor's tabs/fields themselves.
+
+## Shipped
+
+The products screen redesign, delete confirmation, and unsaved-change navigation guard shipped in commit `d013cd9`.

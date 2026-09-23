@@ -202,8 +202,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 		panel.setBorder(BorderFactory.createTitledBorder(AppLocal.getIntString("label.recentsales")));
 		panel.add(scroll, BorderLayout.CENTER);
 		add(panel, BorderLayout.WEST);
-		m_jPanelTicket.setMinimumSize(new Dimension(
-				com.openbravo.pos.printer.ticket.BasicTicketForScreen.getLineWidth(42) + 26, 0));
+		m_jPanelTicket.setMinimumSize(
+				new Dimension(com.openbravo.pos.printer.ticket.BasicTicketForScreen.getLineWidth(42) + 26, 0));
 
 		java.awt.event.ActionListener reloadRecent = new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {

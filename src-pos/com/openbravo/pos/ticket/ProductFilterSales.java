@@ -52,7 +52,10 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		});
 	}
 
-	/** Search after the user pauses typing, so each keystroke does not hit the database. */
+	/**
+	 * Search after the user pauses typing, so each keystroke does not hit the
+	 * database.
+	 */
 	public void addActionListener(ActionListener listener) {
 		final javax.swing.Timer timer = new javax.swing.Timer(300, listener);
 		timer.setRepeats(false);
@@ -154,8 +157,7 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		fieldConstraints.insets = new java.awt.Insets(5, 0, 5, 20);
 
 		addFilterRow(jLabel5, m_jCboName, m_jtxtName, 0, labelConstraints, comboConstraints, fieldConstraints);
-		addFilterRow(jLabel2, m_jCboCategory, m_jtxtCategory, 1, labelConstraints, comboConstraints,
-				fieldConstraints);
+		addFilterRow(jLabel2, m_jCboCategory, m_jtxtCategory, 1, labelConstraints, comboConstraints, fieldConstraints);
 		addFilterRow(jLabel6, m_jCboBrand, m_jtxtBrand, 2, labelConstraints, comboConstraints, fieldConstraints);
 		addFilterRow(jLabel7, m_jCboFamily, m_jtxtFamily, 3, labelConstraints, comboConstraints, fieldConstraints);
 	}// </editor-fold>//GEN-END:initComponents

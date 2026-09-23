@@ -1166,110 +1166,110 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 									javax.swing.JOptionPane.showMessageDialog(null,
 											"Desa el producte abans d'afegir més codis de barres");
 								} else {
-								submit.addActionListener(new ActionListener() {
-									public void actionPerformed(ActionEvent ae) {
-										try {
-											Session s = AppViewConnection.createSession(m_App.getProperties());
-											String statement;
-											PreparedStatement ps;
-											ResultSet rs;
+									submit.addActionListener(new ActionListener() {
+										public void actionPerformed(ActionEvent ae) {
+											try {
+												Session s = AppViewConnection.createSession(m_App.getProperties());
+												String statement;
+												PreparedStatement ps;
+												ResultSet rs;
 
-											// check for duplication attempt
-											statement = "SELECT BARCODE_TABLE.Code,PRODUCTS.NAME FROM BARCODE_TABLE, PRODUCTS WHERE BARCODE_TABLE.PID = PRODUCTS.ID AND PRODUCTS.ID != '"
-													+ m_id + "'";
-											ps = s.getConnection().prepareStatement(statement);
-											ps.execute();
-											rs = ps.getResultSet();
+												// check for duplication attempt
+												statement = "SELECT BARCODE_TABLE.Code,PRODUCTS.NAME FROM BARCODE_TABLE, PRODUCTS WHERE BARCODE_TABLE.PID = PRODUCTS.ID AND PRODUCTS.ID != '"
+														+ m_id + "'";
+												ps = s.getConnection().prepareStatement(statement);
+												ps.execute();
+												rs = ps.getResultSet();
 
-											String code;
-											while (rs.next()) {
-												code = rs.getString(1);
+												String code;
+												while (rs.next()) {
+													code = rs.getString(1);
+													for (int n = 0; n < num; n++) {
+														Matcher m = Pattern
+																.compile("0{0,2}" + fields[n].getText() + "{0,1}")
+																.matcher(code);
+														if (m.matches()) {
+															javax.swing.JOptionPane.showMessageDialog(null, code
+																	+ " is a duplicate. It is already assigned to '"
+																	+ rs.getString(2) + "'");
+															return;
+														}
+													}
+												}
+												// check local codes against products.code
+												statement = "SELECT Products.Code,PRODUCTS.NAME FROM PRODUCTS";
+												ps = s.getConnection().prepareStatement(statement);
+												ps.execute();
+												rs = ps.getResultSet();
+
+												while (rs.next()) {
+													code = rs.getString(1);
+													for (int n = 0; n < num; n++) {
+														Matcher m = Pattern
+																.compile("0{0,2}" + fields[n].getText() + "{0,1}")
+																.matcher(code);
+														if (m.matches()) {
+															javax.swing.JOptionPane.showMessageDialog(null, code
+																	+ " is a duplicate. It is already assigned to '"
+																	+ rs.getString(2) + "'");
+															return;
+														}
+													}
+												}
+												// check for 2 same entries on form
 												for (int n = 0; n < num; n++) {
-													Matcher m = Pattern
-															.compile("0{0,2}" + fields[n].getText() + "{0,1}")
-															.matcher(code);
-													if (m.matches()) {
-														javax.swing.JOptionPane.showMessageDialog(null,
-																code + " is a duplicate. It is already assigned to '"
-																		+ rs.getString(2) + "'");
-														return;
+													for (int m = 0; m < num; m++) {
+														if (n != m && !fields[m].getText().equals("")
+																&& fields[m].getText().equals(fields[n].getText())) {
+															javax.swing.JOptionPane.showMessageDialog(null, fields[n]
+																	.getText()
+																	+ " is a duplicate. It has been entered more than once on this form");
+															return;
+														}
 													}
 												}
-											}
-											// check local codes against products.code
-											statement = "SELECT Products.Code,PRODUCTS.NAME FROM PRODUCTS";
-											ps = s.getConnection().prepareStatement(statement);
-											ps.execute();
-											rs = ps.getResultSet();
 
-											while (rs.next()) {
-												code = rs.getString(1);
-												for (int n = 0; n < num; n++) {
-													Matcher m = Pattern
-															.compile("0{0,2}" + fields[n].getText() + "{0,1}")
-															.matcher(code);
-													if (m.matches()) {
-														javax.swing.JOptionPane.showMessageDialog(null,
-																code + " is a duplicate. It is already assigned to '"
-																		+ rs.getString(2) + "'");
-														return;
+												// delete old
+												statement = "DELETE FROM BARCODE_TABLE WHERE pid = '" + m_id + "'";
+												ps = s.getConnection().prepareStatement(statement);
+												ps = s.getConnection().prepareStatement(statement);
+												ps.execute();
+
+												// insert new
+												for (int p = 0; p < num; p++) {
+													if (!"".equals(fields[p].getText())) {
+														statement = "INSERT INTO BARCODE_TABLE (pid, code) VALUES ('"
+																+ m_id + "','" + fields[p].getText() + "')";
+														ps = s.getConnection().prepareStatement(statement);
+														ps.execute();
 													}
 												}
+											} catch (Exception e) {
+												LOGGER.log(java.util.logging.Level.WARNING,
+														"event=product_barcodes_save_failed", e);
 											}
-											// check for 2 same entries on form
-											for (int n = 0; n < num; n++) {
-												for (int m = 0; m < num; m++) {
-													if (n != m && !fields[m].getText().equals("")
-															&& fields[m].getText().equals(fields[n].getText())) {
-														javax.swing.JOptionPane.showMessageDialog(null, fields[n]
-																.getText()
-																+ " is a duplicate. It has been entered more than once on this form");
-														return;
-													}
-												}
-											}
-
-											// delete old
-											statement = "DELETE FROM BARCODE_TABLE WHERE pid = '" + m_id + "'";
-											ps = s.getConnection().prepareStatement(statement);
-											ps = s.getConnection().prepareStatement(statement);
-											ps.execute();
-
-											// insert new
-											for (int p = 0; p < num; p++) {
-												if (!"".equals(fields[p].getText())) {
-													statement = "INSERT INTO BARCODE_TABLE (pid, code) VALUES ('" + m_id
-															+ "','" + fields[p].getText() + "')";
-													ps = s.getConnection().prepareStatement(statement);
-													ps.execute();
-												}
-											}
-										} catch (Exception e) {
-											LOGGER.log(java.util.logging.Level.WARNING,
-													"event=product_barcodes_save_failed", e);
+											hid();
 										}
-										hid();
-									}
-								});
+									});
 
-								statement = "SELECT barcode_table.code FROM barcode_table,products WHERE barcode_table.pid = products.ID AND products.ID = '"
-										+ m_id + "'";
+									statement = "SELECT barcode_table.code FROM barcode_table,products WHERE barcode_table.pid = products.ID AND products.ID = '"
+											+ m_id + "'";
 
-								ps = s.getConnection().prepareStatement(statement);
-								int count = 0;
-								try (ResultSet loaded = ps.executeQuery()) {
-									while (loaded.next()) {
-										if (count > num - 1) {
-											break;
+									ps = s.getConnection().prepareStatement(statement);
+									int count = 0;
+									try (ResultSet loaded = ps.executeQuery()) {
+										while (loaded.next()) {
+											if (count > num - 1) {
+												break;
+											}
+											fields[count++].setText(loaded.getString(1));
 										}
-										fields[count++].setText(loaded.getString(1));
 									}
-								}
 
-								pack();
-								setLocationRelativeTo(null);
-								setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-								setVisible(true);
+									pack();
+									setLocationRelativeTo(null);
+									setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+									setVisible(true);
 								}
 							}
 						} catch (Exception e) {

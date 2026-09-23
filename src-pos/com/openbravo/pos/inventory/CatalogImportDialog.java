@@ -423,19 +423,19 @@ public final class CatalogImportDialog {
 	}
 
 	private int showImportOptionDialog(JComponent content, String title, Object[] options) {
-		final JOptionPane optionPane = new JOptionPane(content, JOptionPane.PLAIN_MESSAGE,
-				JOptionPane.OK_CANCEL_OPTION, null, options, null);
+		final JOptionPane optionPane = new JOptionPane(content, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION,
+				null, options, null);
 		final JDialog dialog = optionPane.createDialog(parent, title);
 		dialog.getRootPane().setDefaultButton(null);
-		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-				.put(KeyStroke.getKeyStroke("ENTER"), "ignoreEnter");
+		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ENTER"),
+				"ignoreEnter");
 		dialog.getRootPane().getActionMap().put("ignoreEnter", new javax.swing.AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 			}
 		});
-		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-				.put(KeyStroke.getKeyStroke("ctrl ENTER"), "confirmImport");
+		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl ENTER"),
+				"confirmImport");
 		dialog.getRootPane().getActionMap().put("confirmImport", new javax.swing.AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -720,7 +720,7 @@ public final class CatalogImportDialog {
 					prices.buy.setText("");
 				}
 				if (variant.grossPrice != null) {
-					prices.setGrossPrice(Double.parseDouble(variant.grossPrice));
+					prices.setGrossPrice(ProductPriceMath.parseCurrency(variant.grossPrice));
 				} else if (!Boolean.parseBoolean(variant.product.getProperty("catalog.price.available", "false"))) {
 					prices.sellTax.setText("");
 				}

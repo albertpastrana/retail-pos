@@ -15,9 +15,41 @@ public final class ProductPriceMath {
 	}
 
 	public static Double parseCurrency(String value) {
+		if (value != null) {
+			String trimmed = value.trim();
+			if (trimmed.matches("[+-]?\\d+(?:[,.]\\d+)?")) {
+				try {
+					return Double.valueOf(trimmed.replace(',', '.'));
+				} catch (NumberFormatException e) {
+					return null;
+				}
+			}
+		}
 		try {
-			return (Double) Formats.CURRENCY.parseValue(value);
+			Double parsed = (Double) Formats.CURRENCY.parseValue(value);
+			if (parsed != null && Double.isFinite(parsed.doubleValue())) {
+				return parsed;
+			}
 		} catch (BasicException e) {
+			// Try the alternate decimal separator below.
+		}
+		if (value == null) {
+			return null;
+		}
+		String normalized = value.trim();
+		if (normalized.indexOf(',') >= 0 && normalized.indexOf('.') >= 0) {
+			if (normalized.lastIndexOf(',') > normalized.lastIndexOf('.')) {
+				normalized = normalized.replace(".", "").replace(',', '.');
+			} else {
+				normalized = normalized.replace(",", "");
+			}
+		} else {
+			normalized = normalized.replace(',', '.');
+		}
+		try {
+			Double parsed = Double.valueOf(normalized);
+			return Double.isFinite(parsed.doubleValue()) ? parsed : null;
+		} catch (NumberFormatException e) {
 			return null;
 		}
 	}

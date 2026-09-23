@@ -26,6 +26,7 @@ data/__pycache__/
 devdb/
 dev.properties
 dev-derby.properties
+dev-pg.properties
 till-lan.properties
 .postgres-lan-password
 external-data/

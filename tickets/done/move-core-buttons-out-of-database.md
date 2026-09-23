@@ -29,6 +29,6 @@ Role permissions such as `button.print` are a separate concern and must continue
 - Fresh and upgraded Derby, MySQL, and PostgreSQL databases pass the relevant tests.
 - Documentation explains the boundary between code-owned UI and database-owned configuration.
 
-## Parked
+## Shipped
 
-This is backlog work because the current resource mechanism is functional and the migration boundary should be designed before changing persisted installations.
+Core till buttons moved out of database resources, with migration and database coverage, in commit `717d5d5`.
