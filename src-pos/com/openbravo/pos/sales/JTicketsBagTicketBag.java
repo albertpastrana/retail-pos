@@ -20,7 +20,10 @@
 package com.openbravo.pos.sales;
 
 import java.awt.CardLayout;
+import java.awt.Dimension;
+import javax.swing.AbstractButton;
 import javax.swing.JOptionPane;
+import javax.swing.SwingConstants;
 import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.forms.AppLocal;
 
@@ -34,6 +37,12 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 		initComponents();
 	}
 
+	@Override
+	public java.awt.Dimension getMinimumSize() {
+		// Keep the action labels inside the natural size of their FlowLayout.
+		return getPreferredSize();
+	}
+
 	public void showEdit() {
 		showView("edit");
 	}
@@ -45,6 +54,17 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 	private void showView(String view) {
 		CardLayout cl = (CardLayout) (getLayout());
 		cl.show(this, view);
+	}
+
+	private static void preserveButtonText(AbstractButton button) {
+		String label = button.getText();
+		button.setText("<html><nobr>" + label + "</nobr></html>");
+		button.getAccessibleContext().setAccessibleName(label);
+		button.setVerticalTextPosition(SwingConstants.CENTER);
+		button.setHorizontalTextPosition(SwingConstants.TRAILING);
+		button.setIconTextGap(2);
+		Dimension preferredSize = button.getPreferredSize();
+		button.setMinimumSize(preferredSize);
 	}
 
 	/**
@@ -71,6 +91,7 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 		m_jBtnDelete.setFocusPainted(false);
 		m_jBtnDelete.setFocusable(false);
 		m_jBtnDelete.setMargin(new java.awt.Insets(8, 14, 8, 14));
+		preserveButtonText(m_jBtnDelete);
 		m_jBtnDelete.setRequestFocusEnabled(false);
 		m_jBtnDelete.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -84,6 +105,7 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 		m_jBtnCancel.setFocusPainted(false);
 		m_jBtnCancel.setFocusable(false);
 		m_jBtnCancel.setMargin(new java.awt.Insets(8, 14, 8, 14));
+		preserveButtonText(m_jBtnCancel);
 		m_jBtnCancel.setRequestFocusEnabled(false);
 		m_jBtnCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -101,6 +123,7 @@ public class JTicketsBagTicketBag extends javax.swing.JPanel {
 		m_jBtnCancel1.setFocusPainted(false);
 		m_jBtnCancel1.setFocusable(false);
 		m_jBtnCancel1.setMargin(new java.awt.Insets(8, 14, 8, 14));
+		preserveButtonText(m_jBtnCancel1);
 		m_jBtnCancel1.setRequestFocusEnabled(false);
 		m_jBtnCancel1.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
