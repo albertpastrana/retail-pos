@@ -80,6 +80,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	protected Datas[] stockdatas;
 
 	protected Row productsRow;
+	protected Row stockDiaryRow;
 
 	/** Creates a new instance of SentenceContainerGeneric */
 	public DataLogicSales() {
@@ -111,6 +112,22 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				new Field("PROPERTIES", Datas.BYTES, Formats.NULL),
 				new Field("ISVOUCHER", Datas.BOOLEAN, Formats.BOOLEAN),
 				new Field("FAMILY", Datas.STRING, Formats.STRING));
+
+		stockDiaryRow = new Row(new Field("ID", Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("label.stockdate"), Datas.TIMESTAMP, Formats.TIMESTAMP, true, false,
+						true),
+				new Field(AppLocal.getIntString("label.stockreason"), Datas.INT, Formats.INT, true, false, true),
+				new Field(AppLocal.getIntString("label.warehouse"), Datas.STRING, Formats.STRING, true, true, true),
+				new Field("PRODUCT_ID", Datas.STRING, Formats.STRING),
+				new Field("ATTRIBUTESETINSTANCE_ID", Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("label.units"), Datas.DOUBLE, Formats.DOUBLE, true, true, true),
+				new Field(AppLocal.getIntString("label.price"), Datas.DOUBLE, Formats.CURRENCY, false, true, true),
+				new Field(AppLocal.getIntString("label.prodref"), Datas.STRING, Formats.STRING, true, true, true),
+				new Field(AppLocal.getIntString("label.prodbarcode"), Datas.STRING, Formats.STRING, false, true, true),
+				new Field(AppLocal.getIntString("label.stockproduct"), Datas.STRING, Formats.STRING, true, true, true),
+				new Field("ATTRIBUTESET_ID", Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("label.attributes"), Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("label.warehouse"), Datas.STRING, Formats.STRING));
 	}
 
 	public void init(Session s) {
@@ -123,6 +140,27 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final Row getProductsRow() {
 		return productsRow;
+	}
+
+	public final Row getStockDiaryRow() {
+		return stockDiaryRow;
+	}
+
+	public final SentenceList getStockDiaryList() {
+		return new PreparedSentence(s,
+				"SELECT D.ID, D.DATENEW, D.REASON, D.LOCATION, D.PRODUCT, D.ATTRIBUTESETINSTANCE_ID, D.UNITS, D.PRICE, "
+						+ "P.REFERENCE, P.CODE, P.NAME, P.ATTRIBUTESET_ID, A.DESCRIPTION, L.NAME "
+						+ "FROM STOCKDIARY D JOIN PRODUCTS P ON D.PRODUCT = P.ID "
+						+ "JOIN LOCATIONS L ON D.LOCATION = L.ID "
+						+ "LEFT JOIN ATTRIBUTESETINSTANCE A ON D.ATTRIBUTESETINSTANCE_ID = A.ID "
+						+ "WHERE (? = '' OR UPPER(P.NAME) LIKE UPPER(?) OR UPPER(P.REFERENCE) LIKE UPPER(?) "
+						+ "OR UPPER(P.CODE) LIKE UPPER(?) " + ") "
+						+ "AND (CAST(? AS INTEGER) IS NULL OR D.REASON = ?) "
+						+ "AND (CAST(? AS VARCHAR(255)) IS NULL OR D.LOCATION = ?) "
+						+ "AND D.DATENEW >= ? ORDER BY D.DATENEW DESC",
+				new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
+						Datas.OBJECT, Datas.OBJECT, Datas.OBJECT, Datas.OBJECT, Datas.TIMESTAMP}),
+				stockDiaryRow.getSerializerRead());
 	}
 
 	// Utilidades de productos

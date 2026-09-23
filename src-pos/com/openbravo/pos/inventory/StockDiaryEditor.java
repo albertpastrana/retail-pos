@@ -44,6 +44,9 @@ import com.openbravo.pos.panels.JProductFinder;
 import com.openbravo.pos.sales.JProductAttEdit;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 /**
  *
@@ -80,7 +83,6 @@ public class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord
 		initComponents();
 
 		m_cat = new JCatalog(m_dlSales);
-		m_cat.getComponent().setPreferredSize(new Dimension(0, 245));
 		m_cat.addActionListener(new CatalogListener());
 		add(m_cat.getComponent(), BorderLayout.SOUTH);
 
@@ -543,7 +545,51 @@ public class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord
 		jLabel9.setBounds(10, 210, 150, 15);
 
 		add(jPanel1, java.awt.BorderLayout.CENTER);
+		layoutForm();
 	}// </editor-fold>//GEN-END:initComponents
+
+	private void layoutForm() {
+		jPanel1.removeAll();
+		jPanel1.setLayout(new GridBagLayout());
+		GridBagConstraints label = new GridBagConstraints();
+		label.anchor = GridBagConstraints.LINE_START;
+		label.insets = new Insets(4, 8, 4, 8);
+		GridBagConstraints field = new GridBagConstraints();
+		field.fill = GridBagConstraints.HORIZONTAL;
+		field.weightx = 1.0;
+		field.insets = new Insets(4, 0, 4, 8);
+		GridBagConstraints button = new GridBagConstraints();
+		button.insets = new Insets(4, 0, 4, 8);
+
+		addFormRow(0, jLabel1, m_jdate, m_jbtndate, label, field, button);
+		addFormRow(1, jLabel2, m_jreason, null, label, field, button);
+		addFormRow(2, jLabel8, m_jLocation, null, label, field, button);
+		addFormRow(3, jLabel6, m_jreference, m_jEnter1, label, field, button);
+		addFormRow(4, jLabel7, m_jcodebar, m_jEnter, label, field, button);
+		addFormRow(5, jLabel3, jproduct, jEditProduct, label, field, button);
+		addFormRow(6, jLabel9, jattributes, jEditAttributes, label, field, button);
+		addFormRow(7, jLabel4, m_junits, null, label, field, button);
+		addFormRow(8, jLabel5, m_jprice, null, label, field, button);
+		jPanel1.revalidate();
+		jPanel1.repaint();
+	}
+
+	private void addFormRow(int row, Component labelComponent, Component fieldComponent, Component buttonComponent,
+			GridBagConstraints label, GridBagConstraints field, GridBagConstraints button) {
+		label.gridx = 0;
+		label.gridy = row;
+		label.weightx = 0;
+		jPanel1.add(labelComponent, label);
+		field.gridx = 1;
+		field.gridy = row;
+		field.gridwidth = buttonComponent == null ? 2 : 1;
+		jPanel1.add(fieldComponent, field);
+		if (buttonComponent != null) {
+			button.gridx = 2;
+			button.gridy = row;
+			jPanel1.add(buttonComponent, button);
+		}
+	}
 
 	private void m_jEnter1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jEnter1ActionPerformed
 
