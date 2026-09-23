@@ -37,6 +37,8 @@ import com.openbravo.beans.JNumberEventListener;
 import com.openbravo.beans.JNumberKeys;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
@@ -90,6 +92,12 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 
 		m_jTendered.reset();
 		m_jTendered.activate();
+		java.awt.EventQueue.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				m_jKeyFactory.requestFocusInWindow();
+			}
+		});
 
 		printState();
 	}
@@ -222,6 +230,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 		m_jKeys = new JNumberKeys();
 		jPanel3 = new javax.swing.JPanel();
 		m_jTendered = new com.openbravo.editor.JEditorCurrencyPositive();
+		m_jKeyFactory = new javax.swing.JTextField();
 
 		setLayout(new java.awt.BorderLayout());
 
@@ -275,6 +284,21 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 		jPanel3.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		jPanel3.setLayout(new java.awt.BorderLayout());
 		jPanel3.add(m_jTendered, java.awt.BorderLayout.CENTER);
+		m_jKeyFactory.setPreferredSize(new java.awt.Dimension(0, 0));
+		m_jKeyFactory.setBorder(null);
+		m_jKeyFactory.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent event) {
+				char key = event.getKeyChar();
+				if ((key >= '0' && key <= '9') || key == '.' || key == ',') {
+					m_jTendered.transChar(key == ',' ? '.' : key);
+				} else if (key == '\b' || key == '\u007f') {
+					m_jTendered.transChar('\u007f');
+				}
+				m_jKeyFactory.setText(null);
+			}
+		});
+		jPanel3.add(m_jKeyFactory, java.awt.BorderLayout.SOUTH);
 
 		jPanel1.add(jPanel3);
 
@@ -295,6 +319,7 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 	private javax.swing.JLabel m_jChangeEuros;
 	private JNumberKeys m_jKeys;
 	private javax.swing.JLabel m_jMoneyEuros;
+	private javax.swing.JTextField m_jKeyFactory;
 	private com.openbravo.editor.JEditorCurrencyPositive m_jTendered;
 	// End of variables declaration//GEN-END:variables
 

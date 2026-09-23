@@ -91,8 +91,6 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		m_TicketsBagTicketBag = new JTicketsBagTicketBag(this);
 
-		m_jTicketEditor.addEditorKeys(m_jKeys);
-
 		// Este deviceticket solo tiene una impresora, la de pantalla
 		m_jPanelTicket.add(m_TP.getDevicePrinter("1").getPrinterComponent(), BorderLayout.CENTER);
 	}
@@ -106,8 +104,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		printTicket();
 
-		m_jTicketEditor.reset();
-		m_jTicketEditor.activate();
+		m_jTicketEditor.setText("");
 
 		m_panelticketedit.setActiveTicket(null, null);
 
@@ -157,8 +154,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	private void resetToTicket() {
 		printTicket();
-		m_jTicketEditor.reset();
-		m_jTicketEditor.activate();
+		m_jTicketEditor.setText("");
 		m_panelticketedit.setActiveTicket(null, null);
 		loadRecentTickets();
 	}
@@ -292,9 +288,11 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private void readTicket(int iTicketid, int iTickettype) {
 
 		try {
-			TicketInfo ticket = (iTicketid == -1)
-					? m_dlSales.loadTicket(iTickettype, m_jTicketEditor.getValueInteger())
-					: m_dlSales.loadTicket(iTickettype, iTicketid);
+			int ticketId = iTicketid;
+			if (ticketId == -1) {
+				ticketId = Integer.parseInt(m_jTicketEditor.getText().trim());
+			}
+			TicketInfo ticket = m_dlSales.loadTicket(iTickettype, ticketId);
 
 			if (ticket == null) {
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
@@ -310,10 +308,13 @@ public class JTicketsBagTicket extends JTicketsBag {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadticket"),
 					e);
 			msg.show(this);
+		} catch (NumberFormatException e) {
+			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
+					AppLocal.getIntString("message.notexiststicket"));
+			msg.show(this);
 		}
 
-		m_jTicketEditor.reset();
-		m_jTicketEditor.activate();
+		m_jTicketEditor.setText("");
 	}
 
 	private void printTicket() {
@@ -377,11 +378,16 @@ public class JTicketsBagTicket extends JTicketsBag {
 		m_jPanelTicket = new javax.swing.JPanel();
 		jPanel3 = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
-		m_jKeys = new com.openbravo.editor.JEditorKeys();
 		m_jNumberKeys = new com.openbravo.beans.JNumberKeys();
 		jPanel5 = new javax.swing.JPanel();
 		jButton1 = new javax.swing.JButton();
-		m_jTicketEditor = new com.openbravo.editor.JEditorIntegerPositive();
+		m_jTicketEditor = new javax.swing.JTextField();
+		m_jTicketEditor.addActionListener(new java.awt.event.ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent event) {
+				readTicket(-1, jrbSales.isSelected() ? 0 : 1);
+			}
+		});
 		jPanel1 = new javax.swing.JPanel();
 		jrbSales = new javax.swing.JRadioButton();
 		jrbRefunds = new javax.swing.JRadioButton();
@@ -484,11 +490,6 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.Y_AXIS));
 
-		m_jKeys.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				m_jKeysActionPerformed(evt);
-			}
-		});
 		m_jNumberKeys.setNumbersOnly(false);
 		m_jNumberKeys.setDotVisible(false);
 		m_jNumberKeys.addJNumberEventListener(new JNumberEventListener() {
@@ -497,9 +498,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 				if (event.getKey() == '=') {
 					readTicket(-1, jrbSales.isSelected() ? 0 : 1);
 				} else if (event.getKey() == '\u007f') {
-					m_jTicketEditor.reset();
+					m_jTicketEditor.setText("");
 				} else if (event.getKey() >= '0' && event.getKey() <= '9') {
-					m_jTicketEditor.transChar(event.getKey());
+					m_jTicketEditor.setText(m_jTicketEditor.getText() + event.getKey());
 				}
 			}
 		});
@@ -645,19 +646,13 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	}// GEN-LAST:event_jButton1ActionPerformed
 
-	private void m_jKeysActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jKeysActionPerformed
-
-		readTicket(-1, jrbSales.isSelected() ? 0 : 1);
-
-	}// GEN-LAST:event_m_jKeysActionPerformed
-
 	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
 		JTicketsFinder finder = JTicketsFinder.getReceiptFinder(this, m_dlSales, dlCustomers);
 		finder.setVisible(true);
 		FindTicketsInfo selectedTicket = finder.getSelectedCustomer();
 		if (selectedTicket == null) {
-			m_jTicketEditor.reset();
-			m_jTicketEditor.activate();
+			m_jTicketEditor.setText("");
+			m_jTicketEditor.requestFocusInWindow();
 		} else {
 			readTicket(selectedTicket.getTicketId(), selectedTicket.getTicketType());
 		}
@@ -676,14 +671,13 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private javax.swing.JRadioButton jrbSales;
 	private javax.swing.JPanel m_jButtons;
 	private javax.swing.JButton m_jEdit;
-	private com.openbravo.editor.JEditorKeys m_jKeys;
 	private com.openbravo.beans.JNumberKeys m_jNumberKeys;
 	private javax.swing.JPanel m_jOptions;
 	private javax.swing.JPanel m_jPanelTicket;
 	private javax.swing.JButton m_jPrint;
 	private javax.swing.JButton m_jGiftPrint;
 	private javax.swing.JButton m_jRefund;
-	private com.openbravo.editor.JEditorIntegerPositive m_jTicketEditor;
+	private javax.swing.JTextField m_jTicketEditor;
 	private javax.swing.JLabel m_jTicketId;
 	// End of variables declaration//GEN-END:variables
 
