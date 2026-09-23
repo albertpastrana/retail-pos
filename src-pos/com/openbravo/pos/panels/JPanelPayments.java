@@ -24,6 +24,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -39,14 +40,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.JTextField;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumnModel;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.TableRendererBasic;
-import com.openbravo.editor.JEditorCurrency;
-import com.openbravo.editor.JEditorKeys;
+import com.openbravo.beans.JNumberEvent;
+import com.openbravo.beans.JNumberEventListener;
+import com.openbravo.beans.JNumberKeys;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
@@ -76,8 +79,8 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 	private AbstractTableModel m_movementsmodel;
 
 	private JLabel m_jCashTotal;
-	private JEditorCurrency m_jAmount;
-	private JEditorKeys m_jKeys;
+	private JTextField m_jAmount;
+	private JNumberKeys m_jKeys;
 	private JTable m_jMovements;
 	private JButton m_jDelete;
 
@@ -109,9 +112,13 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 
 	public void activate() throws BasicException {
 
-		m_jAmount.reset();
+		m_jAmount.setText(null);
 		loadData();
-		m_jAmount.activate();
+		java.awt.EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				m_jAmount.requestFocusInWindow();
+			}
+		});
 	}
 
 	public boolean deactivate() {
@@ -133,16 +140,16 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 			return;
 		}
 
-		Double amount = m_jAmount.getDoubleValue();
+		Double amount = getAmount();
 		if (amount == null || amount.doubleValue() <= 0.0) {
 			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cashamountpositive")).show(this);
-			m_jAmount.activate();
+			m_jAmount.requestFocusInWindow();
 			return;
 		}
 
 		saveMovement(cashin, amount.doubleValue());
-		m_jAmount.reset();
-		m_jAmount.activate();
+		m_jAmount.setText(null);
+		m_jAmount.requestFocusInWindow();
 	}
 
 	private void reverseSelected() {
@@ -153,19 +160,27 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 		int row = m_jMovements.getSelectedRow();
 		if (row < 0 || row >= m_movements.size()) {
 			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cashmovementselect")).show(this);
-			m_jAmount.activate();
+			m_jAmount.requestFocusInWindow();
 			return;
 		}
 
 		Object[] selected = m_movements.get(row);
 		Double total = (Double) selected[2];
 		if (total == null || total.doubleValue() == 0.0) {
-			m_jAmount.activate();
+			m_jAmount.requestFocusInWindow();
 			return;
 		}
 
 		saveMovement(!"cashin".equals(selected[1]), Math.abs(total.doubleValue()));
-		m_jAmount.activate();
+		m_jAmount.requestFocusInWindow();
+	}
+
+	private Double getAmount() {
+		try {
+			return (Double) Formats.CURRENCY.parseValue(m_jAmount.getText());
+		} catch (BasicException e) {
+			return null;
+		}
 	}
 
 	private void saveMovement(boolean cashin, double amount) {
@@ -211,11 +226,23 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 
 	private JComponent createMovementPanel() {
 
-		m_jAmount = new JEditorCurrency();
+		m_jAmount = new JTextField();
+		m_jAmount.setHorizontalAlignment(SwingConstants.RIGHT);
+		m_jAmount.setFont(m_jAmount.getFont().deriveFont(Font.BOLD, 24f));
 		m_jAmount.setPreferredSize(new Dimension(0, 45));
+		m_jAmount.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface200());
 
-		m_jKeys = new JEditorKeys();
-		m_jAmount.addEditorKeys(m_jKeys);
+		m_jKeys = new JNumberKeys();
+		m_jKeys.setNumbersOnly(true);
+		m_jKeys.addJNumberEventListener(new JNumberEventListener() {
+			public void keyPerformed(JNumberEvent event) {
+				if (event.getKey() == '\u007f') {
+					m_jAmount.setText(null);
+				} else {
+					m_jAmount.replaceSelection(Character.toString(event.getKey()));
+				}
+			}
+		});
 
 		JButton cashin = actionButton(AppLocal.getIntString("button.cashin"), true);
 		JButton cashout = actionButton(AppLocal.getIntString("button.cashout"), false);
@@ -224,11 +251,17 @@ public class JPanelPayments extends JPanel implements JPanelView, BeanFactoryApp
 		actions.add(cashin);
 		actions.add(cashout);
 
+		JPanel keypadPanel = new JPanel(new GridBagLayout());
+		keypadPanel.add(m_jKeys);
+
+		JPanel inputPanel = new JPanel(new BorderLayout(0, 10));
+		inputPanel.add(m_jAmount, BorderLayout.NORTH);
+		inputPanel.add(keypadPanel, BorderLayout.CENTER);
+
 		JPanel panel = new JPanel(new BorderLayout(0, 10));
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 10));
 		panel.setPreferredSize(new Dimension(380, 0));
-		panel.add(m_jAmount, BorderLayout.NORTH);
-		panel.add(m_jKeys, BorderLayout.CENTER);
+		panel.add(inputPanel, BorderLayout.CENTER);
 		panel.add(actions, BorderLayout.SOUTH);
 		return panel;
 	}
