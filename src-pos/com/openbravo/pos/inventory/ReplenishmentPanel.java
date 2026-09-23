@@ -171,16 +171,19 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JButton ordered = new JButton(AppLocal.getIntString("Replenishment.MarkOrdered")),
 				received = new JButton(AppLocal.getIntString("Replenishment.MarkReceived")),
 				reopen = new JButton(AppLocal.getIntString("Replenishment.Reopen"));
+		JButton delete = new JButton(AppLocal.getIntString("Replenishment.Delete"));
 		JButton export = new JButton(AppLocal.getIntString("Replenishment.Export"));
 		tableActions.add(ordered);
 		tableActions.add(received);
 		tableActions.add(reopen);
+		tableActions.add(delete);
 		actions.add(tableActions, BorderLayout.WEST);
 		actions.add(export, BorderLayout.EAST);
 		list.add(actions, BorderLayout.SOUTH);
 		ordered.setMargin(new Insets(6, 10, 6, 10));
 		received.setMargin(new Insets(6, 10, 6, 10));
 		reopen.setMargin(new Insets(6, 10, 6, 10));
+		delete.setMargin(new Insets(6, 10, 6, 10));
 		javax.swing.table.TableColumnModel columns = table.getColumnModel();
 		columns.getColumn(0).setPreferredWidth(85);
 		columns.getColumn(0).setMaxWidth(105);
@@ -229,8 +232,27 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		ordered.addActionListener(e -> change("ORDERED"));
 		received.addActionListener(e -> change("RECEIVED"));
 		reopen.addActionListener(e -> change("PENDING"));
+		delete.addActionListener(e -> deleteSelected());
 		export.addActionListener(e -> exportVisibleEntries());
 		javax.swing.SwingUtilities.invokeLater(() -> formCode.requestFocusInWindow());
+	}
+	private void deleteSelected() {
+		int row = table.getSelectedRow();
+		if (row < 0)
+			return;
+		ReplenishmentEntry entry = entries.get(row);
+		int answer = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("Replenishment.ConfirmDelete"),
+				AppLocal.getIntString("Replenishment.Delete"), JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE);
+		if (answer != JOptionPane.YES_OPTION)
+			return;
+		try {
+			data.delete(entry.id);
+			clearForm();
+			load("", false);
+		} catch (BasicException e) {
+			JOptionPane.showMessageDialog(this, e.getMessage());
+		}
 	}
 	private void exportVisibleEntries() {
 		if (entries == null || entries.isEmpty()) {

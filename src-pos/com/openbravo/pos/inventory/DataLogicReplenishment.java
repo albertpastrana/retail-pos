@@ -154,6 +154,18 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 	}
 
+	public void delete(String id) throws BasicException {
+		if (id == null)
+			return;
+		try (PreparedStatement ps = connection()
+				.prepareStatement("DELETE FROM REPLENISHMENT_ENTRIES WHERE ID=?")) {
+			ps.setString(1, id);
+			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
 	private void insert(Connection c, ReplenishmentEntry e) throws SQLException {
 		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
