@@ -6,7 +6,9 @@ import java.sql.Statement;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 
-/** Indexes the payment-to-receipt join used by recent sales and ticket views. */
+/**
+ * Indexes the payment-to-receipt join used by recent sales and ticket views.
+ */
 public class V41__payments_receipt_index extends BaseJavaMigration {
 
 	@Override

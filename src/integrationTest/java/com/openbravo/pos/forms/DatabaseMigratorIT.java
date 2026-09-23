@@ -227,7 +227,8 @@ public class DatabaseMigratorIT {
 
 	private static boolean indexExists(Connection connection, String table, String index) throws SQLException {
 		DatabaseMetaData metadata = connection.getMetaData();
-		try (ResultSet indexes = metadata.getIndexInfo(connection.getCatalog(), connection.getSchema(), table, false, true)) {
+		try (ResultSet indexes = metadata.getIndexInfo(connection.getCatalog(), connection.getSchema(), table, false,
+				true)) {
 			while (indexes.next()) {
 				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))) {
 					return true;

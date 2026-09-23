@@ -938,13 +938,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
 	public final void saveTicket(final TicketInfo ticket, final String location) throws BasicException {
 		if (ticket.getUser() == null) {
-			LOGGER.severe("event=ticket_save_rejected reason=missing_ticket_user ticket=" + ticket.getId()
-					+ " type=" + ticket.getTicketType() + " total=" + ticket.getTotal());
+			LOGGER.severe("event=ticket_save_rejected reason=missing_ticket_user ticket=" + ticket.getId() + " type="
+					+ ticket.getTicketType() + " total=" + ticket.getTotal());
 			throw new BasicException("Cannot save ticket without seller");
 		}
 		if (ticket.getTicketType() == TicketInfo.RECEIPT_REFUND) {
-			LOGGER.info("event=refund_save_start ticket=" + ticket.getId() + " total=" + ticket.getTotal()
-					+ " lines=" + ticket.getLinesCount() + " payments=" + ticket.getPayments().size());
+			LOGGER.info("event=refund_save_start ticket=" + ticket.getId() + " total=" + ticket.getTotal() + " lines="
+					+ ticket.getLinesCount() + " payments=" + ticket.getPayments().size());
 		}
 		validatePaymentTotals(ticket);
 

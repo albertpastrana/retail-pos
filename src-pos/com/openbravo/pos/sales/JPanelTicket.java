@@ -1217,8 +1217,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 									}
 								}.execute();
 							} catch (BasicException eData) {
-								LOGGER.log(Level.SEVERE, "event=" + (refund ? "refund" : "ticket")
-										+ "_persistence_failed ticket=" + ticket.getId() + " total=" + ticket.getTotal(), eData);
+								LOGGER.log(Level.SEVERE,
+										"event=" + (refund ? "refund" : "ticket") + "_persistence_failed ticket="
+												+ ticket.getId() + " total=" + ticket.getTotal(),
+										eData);
 								MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE,
 										AppLocal.getIntString("message.nosaveticket"), eData);
 								msg.show(this);
@@ -1242,15 +1244,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					}
 				}
 			} catch (TaxesException e) {
-				LOGGER.log(Level.SEVERE, "event=ticket_close_tax_failed ticket=" + ticket.getId()
-						+ " type=" + ticketTypeName(ticket), e);
+				LOGGER.log(Level.SEVERE,
+						"event=ticket_close_tax_failed ticket=" + ticket.getId() + " type=" + ticketTypeName(ticket),
+						e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 						AppLocal.getIntString("message.cannotcalculatetaxes"));
 				msg.show(this);
 				resultok = false;
 			} catch (RuntimeException e) {
-				LOGGER.log(Level.SEVERE, "event=ticket_close_unexpected_failure ticket=" + ticket.getId()
-						+ " type=" + ticketTypeName(ticket) + " total=" + ticket.getTotal(), e);
+				LOGGER.log(Level.SEVERE, "event=ticket_close_unexpected_failure ticket=" + ticket.getId() + " type="
+						+ ticketTypeName(ticket) + " total=" + ticket.getTotal(), e);
 				new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.nosaveticket"), e).show(this);
 				resultok = false;
 			}
