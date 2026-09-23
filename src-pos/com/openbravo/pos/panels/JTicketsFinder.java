@@ -1,22 +1,38 @@
 //    Openbravo POS is a point of sales application designed for touch screens.
 //    Copyright (C) 2008-2009 Openbravo, S.L.
 //    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
 package com.openbravo.pos.panels;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.WindowConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.beans.JCalendarDialog;
@@ -24,7 +40,6 @@ import com.openbravo.data.gui.ComboBoxValModel;
 import com.openbravo.data.gui.ListQBFModelNumber;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.loader.QBFCompareEnum;
-import com.openbravo.data.loader.SentenceList;
 import com.openbravo.data.user.EditorCreator;
 import com.openbravo.data.user.ListProvider;
 import com.openbravo.data.user.ListProviderCreator;
@@ -35,639 +50,350 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
 import com.openbravo.pos.ticket.FindTicketsInfo;
-import com.openbravo.pos.ticket.FindTicketsRenderer;
-import java.awt.Component;
-import java.awt.Dialog;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.Window;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFrame;
 
-/**
- *
- * @author Mikel irurita
- */
-public class JTicketsFinder extends javax.swing.JDialog implements EditorCreator {
+public class JTicketsFinder extends JDialog implements EditorCreator {
 
 	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
 			.getLogger(JTicketsFinder.class.getName());
 
 	private ListProvider lpr;
-	private SentenceList m_sentcat;
-	private ComboBoxValModel m_CategoryModel;
 	private DataLogicSales dlSales;
 	private DataLogicCustomers dlCustomers;
+	private ComboBoxValModel userModel;
 	private FindTicketsInfo selectedTicket;
+	private JTable ticketTable;
+	private JScrollPane resultScrollPane;
+	private JTextField ticketIdField;
+	private JComboBox<String> ticketTypeCombo;
+	private JTextField startDateField;
+	private JTextField endDateField;
+	private JTextField customerField;
+	private JComboBox userCombo;
+	private JComboBox moneyCompareCombo;
+	private JTextField moneyField;
+	private JButton selectButton;
+	private Timer searchTimer;
 
-	/** Creates new form JCustomerFinder */
-	private JTicketsFinder(java.awt.Frame parent, boolean modal) {
-		super(parent, modal);
-	}
-
-	/** Creates new form JCustomerFinder */
-	private JTicketsFinder(java.awt.Dialog parent, boolean modal) {
-		super(parent, modal);
-	}
+	private JTicketsFinder(Frame parent, boolean modal) { super(parent, modal); }
+	private JTicketsFinder(Dialog parent, boolean modal) { super(parent, modal); }
 
 	public static JTicketsFinder getReceiptFinder(Component parent, DataLogicSales dlSales,
 			DataLogicCustomers dlCustomers) {
 		Window window = getWindow(parent);
-
-		JTicketsFinder myMsg;
-		if (window instanceof Frame) {
-			myMsg = new JTicketsFinder((Frame) window, true);
-		} else {
-			myMsg = new JTicketsFinder((Dialog) window, true);
-		}
-		myMsg.init(dlSales, dlCustomers);
-		myMsg.applyComponentOrientation(parent.getComponentOrientation());
-		return myMsg;
+		JTicketsFinder finder = window instanceof Frame
+				? new JTicketsFinder((Frame) window, true)
+				: new JTicketsFinder((Dialog) window, true);
+		finder.init(dlSales, dlCustomers);
+		finder.applyComponentOrientation(parent.getComponentOrientation());
+		return finder;
 	}
 
 	public FindTicketsInfo getSelectedCustomer() {
 		return selectedTicket;
 	}
 
-	private void init(DataLogicSales dlSales, DataLogicCustomers dlCustomers) {
-
-		this.dlSales = dlSales;
-		this.dlCustomers = dlCustomers;
-
+	private void init(DataLogicSales sales, DataLogicCustomers customers) {
+		dlSales = sales;
+		dlCustomers = customers;
 		initComponents();
-
-		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
-
-		java.awt.event.ActionListener searchonenter = new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				executeSearch();
-			}
-		};
-		jtxtTicketID.addActionListener(searchonenter);
-		jtxtMoney.addActionListener(searchonenter);
-		jtxtCustomer.addActionListener(searchonenter);
-		jTxtStartDate.addActionListener(searchonenter);
-		jTxtEndDate.addActionListener(searchonenter);
-
 		lpr = new ListProviderCreator(dlSales.getTicketsList(), this);
-
-		jListTickets.setCellRenderer(new FindTicketsRenderer());
-
-		getRootPane().setDefaultButton(jcmdOK);
-
 		initCombos();
-
 		defaultValues();
+		installSearchListeners();
+		setLocationRelativeTo(getOwner());
+	}
 
+	private void initCombos() {
+		ticketTypeCombo.setModel(new DefaultComboBoxModel<>(new String[]{
+				AppLocal.getIntString("label.sales"), AppLocal.getIntString("label.refunds"),
+				AppLocal.getIntString("label.all")}));
+		moneyCompareCombo.setModel(ListQBFModelNumber.getMandatoryNumber());
+
+		try {
+			List users = dlSales.getUserList().list();
+			users.add(0, null);
+			userModel = new ComboBoxValModel(users);
+			userCombo.setModel(userModel);
+		} catch (BasicException exception) {
+			LOGGER.log(java.util.logging.Level.WARNING, "event=ticket_users_load_failed", exception);
+			userModel = new ComboBoxValModel(Collections.emptyList());
+			userCombo.setModel(userModel);
+		}
+	}
+
+	private void defaultValues() {
 		selectedTicket = null;
+		ticketTable.setModel(new TicketTableModel(Collections.emptyList()));
+		showTicketMessage("message.ticketfilter");
+		selectButton.setEnabled(false);
+		userCombo.setSelectedItem(null);
+		ticketIdField.setText("");
+		ticketTypeCombo.setSelectedIndex(0);
+		moneyCompareCombo.setSelectedItem(((ListQBFModelNumber) moneyCompareCombo.getModel()).getElementAt(0));
+		moneyField.setText("");
+		startDateField.setText("");
+		endDateField.setText("");
+		customerField.setText("");
+	}
+
+	private void installSearchListeners() {
+		searchTimer = new Timer(300, event -> executeSearch());
+		searchTimer.setRepeats(false);
+		addDebouncedListener(ticketIdField);
+		addDebouncedListener(startDateField);
+		addDebouncedListener(endDateField);
+		addDebouncedListener(customerField);
+		addDebouncedListener(moneyField);
+		addDebouncedListener(ticketTypeCombo);
+		addDebouncedListener(userCombo);
+		addDebouncedListener(moneyCompareCombo);
+	}
+
+	private void addDebouncedListener(JComboBox component) {
+		component.addActionListener(event -> searchTimer.restart());
+	}
+
+	private void addDebouncedListener(JTextField field) {
+		field.getDocument().addDocumentListener(new DocumentListener() {
+			@Override public void insertUpdate(DocumentEvent event) { searchTimer.restart(); }
+			@Override public void removeUpdate(DocumentEvent event) { searchTimer.restart(); }
+			@Override public void changedUpdate(DocumentEvent event) { searchTimer.restart(); }
+		});
 	}
 
 	public void executeSearch() {
 		try {
-			jListTickets.setModel(new MyListData(lpr.loadData()));
-			if (jListTickets.getModel().getSize() > 0) {
-				jListTickets.setSelectedIndex(0);
+			List<FindTicketsInfo> tickets = lpr.loadData();
+			ticketTable.setModel(new TicketTableModel(tickets));
+			if (tickets.isEmpty()) {
+				showTicketMessage("message.ticketfilter.empty");
+				selectButton.setEnabled(false);
+			} else {
+				resultScrollPane.setViewportView(ticketTable);
+				setColumnWidths();
+				ticketTable.setRowSelectionInterval(0, 0);
 			}
-		} catch (BasicException e) {
-			LOGGER.log(java.util.logging.Level.WARNING, "event=ticket_search_failed", e);
+		} catch (BasicException exception) {
+			LOGGER.log(java.util.logging.Level.WARNING, "event=ticket_search_failed", exception);
 		}
-	}
-
-	private void initCombos() {
-		String[] values = new String[]{AppLocal.getIntString("label.sales"), AppLocal.getIntString("label.refunds"),
-				AppLocal.getIntString("label.all")};
-		jComboBoxTicket.setModel(new DefaultComboBoxModel(values));
-
-		jcboMoney.setModel(ListQBFModelNumber.getMandatoryNumber());
-
-		m_sentcat = dlSales.getUserList();
-		m_CategoryModel = new ComboBoxValModel();
-
-		List catlist = null;
-		try {
-			catlist = m_sentcat.list();
-		} catch (BasicException ex) {
-			ex.getMessage();
-		}
-		catlist.add(0, null);
-		m_CategoryModel = new ComboBoxValModel(catlist);
-		jcboUser.setModel(m_CategoryModel);
-	}
-
-	private void defaultValues() {
-
-		jListTickets.setModel(new MyListData(new ArrayList()));
-
-		jcboUser.setSelectedItem(null);
-
-		jtxtTicketID.setText(null);
-
-		jComboBoxTicket.setSelectedIndex(0);
-
-		jcboUser.setSelectedItem(null);
-
-		jcboMoney.setSelectedItem(((ListQBFModelNumber) jcboMoney.getModel()).getElementAt(0));
-		jcboMoney.revalidate();
-		jcboMoney.repaint();
-
-		jtxtMoney.setText(null);
-
-		jTxtStartDate.setText(null);
-		jTxtEndDate.setText(null);
-
-		jtxtCustomer.setText(null);
-
-		java.awt.EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				jtxtTicketID.requestFocus();
-			}
-		});
 	}
 
 	@Override
 	public Object createValue() throws BasicException {
+		Object[] filter = new Object[14];
+		String ticketId = ticketIdField.getText();
+		filter[0] = ticketId.isEmpty() ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS;
+		filter[1] = ticketId.isEmpty() ? null : Formats.INT.parseValue(ticketId);
 
-		Object[] afilter = new Object[14];
-
-		// Ticket ID
-		if (jtxtTicketID.getText() == null || jtxtTicketID.getText().equals("")) {
-			afilter[0] = QBFCompareEnum.COMP_NONE;
-			afilter[1] = null;
+		if (ticketTypeCombo.getSelectedIndex() == 2) {
+			filter[2] = QBFCompareEnum.COMP_DISTINCT;
+			filter[3] = 2;
 		} else {
-			afilter[0] = QBFCompareEnum.COMP_EQUALS;
-			afilter[1] = Formats.INT.parseValue(jtxtTicketID.getText());
+			filter[2] = QBFCompareEnum.COMP_EQUALS;
+			filter[3] = ticketTypeCombo.getSelectedIndex();
 		}
 
-		// Sale and refund checkbox
-		if (jComboBoxTicket.getSelectedIndex() == 2) {
-			afilter[2] = QBFCompareEnum.COMP_DISTINCT;
-			afilter[3] = 2;
-		} else if (jComboBoxTicket.getSelectedIndex() == 0) {
-			afilter[2] = QBFCompareEnum.COMP_EQUALS;
-			afilter[3] = 0;
-		} else if (jComboBoxTicket.getSelectedIndex() == 1) {
-			afilter[2] = QBFCompareEnum.COMP_EQUALS;
-			afilter[3] = 1;
-		}
+		filter[5] = Formats.CURRENCY.parseValue(moneyField.getText());
+		filter[4] = filter[5] == null ? QBFCompareEnum.COMP_NONE : moneyCompareCombo.getSelectedItem();
+		Date startDate = (Date) Formats.TIMESTAMP.parseValue(startDateField.getText());
+		Date endDate = (Date) Formats.TIMESTAMP.parseValue(endDateField.getText());
+		filter[6] = startDate == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_GREATEROREQUALS;
+		filter[7] = startDate;
+		filter[8] = endDate == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_LESS;
+		filter[9] = endDate;
 
-		// Receipt money
-		afilter[5] = Formats.CURRENCY.parseValue(jtxtMoney.getText());
-		afilter[4] = afilter[5] == null ? QBFCompareEnum.COMP_NONE : jcboMoney.getSelectedItem();
-
-		// Date range
-		Object startdate = Formats.TIMESTAMP.parseValue(jTxtStartDate.getText());
-		Object enddate = Formats.TIMESTAMP.parseValue(jTxtEndDate.getText());
-
-		afilter[6] = (startdate == null) ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_GREATEROREQUALS;
-		afilter[7] = startdate;
-		afilter[8] = (enddate == null) ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_LESS;
-		afilter[9] = enddate;
-
-		// User
-		if (jcboUser.getSelectedItem() == null) {
-			afilter[10] = QBFCompareEnum.COMP_NONE;
-			afilter[11] = null;
-		} else {
-			afilter[10] = QBFCompareEnum.COMP_EQUALS;
-			afilter[11] = ((TaxCategoryInfo) jcboUser.getSelectedItem()).getName();
-		}
-
-		// Customer
-		if (jtxtCustomer.getText() == null || jtxtCustomer.getText().equals("")) {
-			afilter[12] = QBFCompareEnum.COMP_NONE;
-			afilter[13] = null;
-		} else {
-			afilter[12] = QBFCompareEnum.COMP_CONTAINS;
-			afilter[13] = jtxtCustomer.getText();
-		}
-
-		return afilter;
-
+		Object user = userCombo.getSelectedItem();
+		filter[10] = user == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS;
+		filter[11] = user == null ? null : ((TaxCategoryInfo) user).getName();
+		String customer = customerField.getText();
+		filter[12] = customer.isEmpty() ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_CONTAINS;
+		filter[13] = customer.isEmpty() ? null : customer;
+		return filter;
 	}
 
-	private static Window getWindow(Component parent) {
-		if (parent == null) {
-			return new JFrame();
-		} else if (parent instanceof Frame || parent instanceof Dialog) {
-			return (Window) parent;
-		} else {
-			return getWindow(parent.getParent());
-		}
-	}
-
-	private static class MyListData extends javax.swing.AbstractListModel {
-
-		private java.util.List m_data;
-
-		public MyListData(java.util.List data) {
-			m_data = data;
-		}
-
-		@Override
-		public Object getElementAt(int index) {
-			return m_data.get(index);
-		}
-
-		@Override
-		public int getSize() {
-			return m_data.size();
-		}
-	}
-
-	/**
-	 * This method is called from within the constructor to initialize the form.
-	 * WARNING: Do NOT modify this code. The content of this method is always
-	 * regenerated by the Form Editor.
-	 */
-	// <editor-fold defaultstate="collapsed" desc="Generated
-	// Code">//GEN-BEGIN:initComponents
 	private void initComponents() {
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		setTitle(AppLocal.getIntString("form.tickettitle"));
 
-		jPanel3 = new javax.swing.JPanel();
-		jPanel5 = new javax.swing.JPanel();
-		jPanel7 = new javax.swing.JPanel();
-		jLabel1 = new javax.swing.JLabel();
-		jLabel6 = new javax.swing.JLabel();
-		jLabel7 = new javax.swing.JLabel();
-		jtxtMoney = new javax.swing.JTextField();
-		jcboUser = new javax.swing.JComboBox();
-		jcboMoney = new javax.swing.JComboBox();
-		jtxtTicketID = new javax.swing.JTextField();
-		labelCustomer = new javax.swing.JLabel();
-		jLabel3 = new javax.swing.JLabel();
-		jLabel4 = new javax.swing.JLabel();
-		jTxtStartDate = new javax.swing.JTextField();
-		jTxtEndDate = new javax.swing.JTextField();
-		btnDateStart = new javax.swing.JButton();
-		btnDateEnd = new javax.swing.JButton();
-		jtxtCustomer = new javax.swing.JTextField();
-		btnCustomer = new javax.swing.JButton();
-		jComboBoxTicket = new javax.swing.JComboBox();
-		jPanel6 = new javax.swing.JPanel();
-		jButton1 = new javax.swing.JButton();
-		jButton3 = new javax.swing.JButton();
-		jPanel4 = new javax.swing.JPanel();
-		jScrollPane1 = new javax.swing.JScrollPane();
-		jListTickets = new javax.swing.JList();
-		jPanel8 = new javax.swing.JPanel();
-		jPanel1 = new javax.swing.JPanel();
-		jcmdOK = new javax.swing.JButton();
-		jcmdCancel = new javax.swing.JButton();
+		ticketIdField = new JTextField();
+		ticketTypeCombo = new JComboBox<>();
+		startDateField = new JTextField();
+		endDateField = new JTextField();
+		customerField = new JTextField();
+		userCombo = new JComboBox();
+		moneyCompareCombo = new JComboBox();
+		moneyField = new JTextField();
+		JPanel filterPanel = new JPanel(new GridBagLayout());
+		filterPanel.setBorder(BorderFactory.createEmptyBorder(12, 18, 8, 18));
 
-		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		setTitle(AppLocal.getIntString("form.tickettitle")); // NOI18N
+		addFilterRow(filterPanel, 0, AppLocal.getIntString("label.ticketid"), ticketIdField, ticketTypeCombo,
+				AppLocal.getIntString("label.sales"));
+		addDateRow(filterPanel, 1, AppLocal.getIntString("Label.StartDate"), startDateField,
+				createDateButton(startDateField));
+		addDateRow(filterPanel, 2, AppLocal.getIntString("Label.EndDate"), endDateField,
+				createDateButton(endDateField));
+		addCustomerRow(filterPanel, 3);
+		addSingleRow(filterPanel, 4, AppLocal.getIntString("label.user"), userCombo);
+		addFilterRow(filterPanel, 5, AppLocal.getIntString("label.totalcash"), moneyCompareCombo, moneyField,
+				AppLocal.getIntString("label.totalcash"));
 
-		jPanel3.setLayout(new java.awt.BorderLayout());
+		ticketTable = new JTable(new TicketTableModel(Collections.emptyList()));
+		ticketTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		ticketTable.setAutoCreateRowSorter(true);
+		ticketTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		ticketTable.setRowHeight(36);
+		resultScrollPane = new JScrollPane(ticketTable);
+		resultScrollPane.setPreferredSize(new java.awt.Dimension(800, 350));
 
-		jPanel5.setLayout(new java.awt.BorderLayout());
+		JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+		selectButton = new JButton(AppLocal.getIntString("button.selectticket"));
+		selectButton.setEnabled(false);
+		selectButton.addActionListener(event -> selectTicket());
+		JButton cancelButton = new JButton(AppLocal.getIntString("button.cancelticket"));
+		cancelButton.addActionListener(event -> dispose());
+		buttons.add(cancelButton);
+		buttons.add(selectButton);
 
-		jPanel7.setPreferredSize(new java.awt.Dimension(0, 210));
-
-		jLabel1.setText(AppLocal.getIntString("label.ticketid")); // NOI18N
-
-		jLabel6.setText(AppLocal.getIntString("label.user")); // NOI18N
-
-		jLabel7.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
-
-		labelCustomer.setText(AppLocal.getIntString("label.customer")); // NOI18N
-
-		jLabel3.setText(AppLocal.getIntString("Label.StartDate")); // NOI18N
-
-		jLabel4.setText(AppLocal.getIntString("Label.EndDate")); // NOI18N
-
-		jTxtStartDate.setPreferredSize(new java.awt.Dimension(200, 25));
-
-		jTxtEndDate.setPreferredSize(new java.awt.Dimension(200, 25));
-
-		btnDateStart.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/date.png"))); // NOI18N
-		btnDateStart.setPreferredSize(new java.awt.Dimension(50, 25));
-		btnDateStart.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				btnDateStartActionPerformed(evt);
+		ticketTable.getSelectionModel().addListSelectionListener(event ->
+				selectButton.setEnabled(ticketTable.getSelectedRow() >= 0
+						&& ticketTable.getModel().getRowCount() > 0));
+		ticketTable.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (event.getClickCount() == 2) selectTicket();
 			}
 		});
 
-		btnDateEnd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/date.png"))); // NOI18N
-		btnDateEnd.setPreferredSize(new java.awt.Dimension(50, 25));
-		btnDateEnd.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				btnDateEndActionPerformed(evt);
-			}
-		});
+		JPanel content = new JPanel(new BorderLayout());
+		content.add(filterPanel, BorderLayout.NORTH);
+		content.add(resultScrollPane, BorderLayout.CENTER);
+		content.add(buttons, BorderLayout.SOUTH);
+		setContentPane(content);
+		showTicketMessage("message.ticketfilter");
+		pack();
+	}
 
-		jtxtCustomer.setPreferredSize(new java.awt.Dimension(200, 25));
+	private void addFilterRow(JPanel panel, int row, String label, Component first, Component second,
+			String secondLabel) {
+		GridBagConstraints labelConstraints = constraints(0, row, 0, 0, GridBagConstraints.LINE_END);
+		GridBagConstraints firstConstraints = constraints(1, row, 1, 1, GridBagConstraints.LINE_START);
+		GridBagConstraints secondConstraints = constraints(2, row, 1, 1, GridBagConstraints.LINE_START);
+		panel.add(new JLabel(label), labelConstraints);
+		panel.add(first, firstConstraints);
+		panel.add(second, secondConstraints);
+	}
 
-		btnCustomer.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/kuser.png"))); // NOI18N
-		btnCustomer.setFocusPainted(false);
-		btnCustomer.setFocusable(false);
-		btnCustomer.setMargin(new java.awt.Insets(8, 14, 8, 14));
-		btnCustomer.setPreferredSize(new java.awt.Dimension(50, 25));
-		btnCustomer.setRequestFocusEnabled(false);
-		btnCustomer.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				btnCustomerActionPerformed(evt);
-			}
-		});
+	private void addDateRow(JPanel panel, int row, String label, JTextField field, JButton button) {
+		panel.add(new JLabel(label), constraints(0, row, 0, 0, GridBagConstraints.LINE_END));
+		panel.add(field, constraints(1, row, 1, 1, GridBagConstraints.LINE_START));
+		panel.add(button, constraints(2, row, 0, 0, GridBagConstraints.LINE_START));
+	}
 
-		javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-		jPanel7.setLayout(jPanel7Layout);
-		jPanel7Layout.setHorizontalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(jPanel7Layout.createSequentialGroup().addGap(33, 33, 33).addGroup(jPanel7Layout
-						.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-										jPanel7Layout.createSequentialGroup().addComponent(jLabel3).addGap(62, 62, 62))
-								.addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-										jPanel7Layout.createSequentialGroup().addComponent(jLabel1).addGap(83, 83, 83))
-								.addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-										jPanel7Layout.createSequentialGroup().addComponent(jLabel4).addGap(68, 68, 68))
-								.addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-										jPanel7Layout.createSequentialGroup().addComponent(labelCustomer).addGap(61, 61,
-												61)))
-						.addComponent(jLabel7).addComponent(jLabel6))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-								javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(jcboUser, javax.swing.GroupLayout.PREFERRED_SIZE, 255,
-										javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jcboMoney, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(jtxtMoney, javax.swing.GroupLayout.PREFERRED_SIZE, 182,
-												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jtxtCustomer, javax.swing.GroupLayout.PREFERRED_SIZE,
-												javax.swing.GroupLayout.DEFAULT_SIZE,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(btnCustomer, javax.swing.GroupLayout.PREFERRED_SIZE,
-												javax.swing.GroupLayout.DEFAULT_SIZE,
-												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanel7Layout.createSequentialGroup()
-										.addComponent(jTxtEndDate, javax.swing.GroupLayout.PREFERRED_SIZE,
-												javax.swing.GroupLayout.DEFAULT_SIZE,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(btnDateEnd, javax.swing.GroupLayout.PREFERRED_SIZE,
-												javax.swing.GroupLayout.DEFAULT_SIZE,
-												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanel7Layout
-										.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-										.addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel7Layout
-												.createSequentialGroup()
-												.addComponent(jtxtTicketID, javax.swing.GroupLayout.PREFERRED_SIZE, 120,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-														javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-												.addComponent(jComboBoxTicket, javax.swing.GroupLayout.PREFERRED_SIZE,
-														130, javax.swing.GroupLayout.PREFERRED_SIZE))
-										.addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel7Layout
-												.createSequentialGroup()
-												.addComponent(jTxtStartDate, javax.swing.GroupLayout.PREFERRED_SIZE,
-														javax.swing.GroupLayout.DEFAULT_SIZE,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(btnDateStart, javax.swing.GroupLayout.PREFERRED_SIZE,
-														javax.swing.GroupLayout.DEFAULT_SIZE,
-														javax.swing.GroupLayout.PREFERRED_SIZE))))
-						.addGap(59, 59, 59)));
-		jPanel7Layout.setVerticalGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-						.addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(jLabel1)
-								.addComponent(jtxtTicketID, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(jComboBoxTicket, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(jLabel3)
-								.addComponent(jTxtStartDate, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(btnDateStart, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(jLabel4)
-								.addComponent(jTxtEndDate, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(btnDateEnd, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(labelCustomer)
-								.addComponent(jtxtCustomer, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(btnCustomer, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(jLabel6).addComponent(jcboUser, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-						.addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-								.addComponent(jLabel7)
-								.addComponent(jcboMoney, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(jtxtMoney, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addGap(19, 19, 19)));
+	private void addCustomerRow(JPanel panel, int row) {
+		panel.add(new JLabel(AppLocal.getIntString("label.customer")), constraints(0, row, 0, 0,
+				GridBagConstraints.LINE_END));
+		panel.add(customerField, constraints(1, row, 1, 1, GridBagConstraints.LINE_START));
+		JButton button = new JButton(AppLocal.getIntString("button.selectcustomer"));
+		button.addActionListener(event -> selectCustomer());
+		panel.add(button, constraints(2, row, 0, 0, GridBagConstraints.LINE_START));
+	}
 
-		jPanel5.add(jPanel7, java.awt.BorderLayout.CENTER);
+	private void addSingleRow(JPanel panel, int row, String label, Component component) {
+		GridBagConstraints value = constraints(1, row, 1, 1, GridBagConstraints.LINE_START);
+		value.gridwidth = 2;
+		panel.add(new JLabel(label), constraints(0, row, 0, 0, GridBagConstraints.LINE_END));
+		panel.add(component, value);
+	}
 
-		jButton1.setText(AppLocal.getIntString("button.clean")); // NOI18N
-		jButton1.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton1ActionPerformed(evt);
-			}
-		});
-		jPanel6.add(jButton1);
+	private GridBagConstraints constraints(int x, int y, double weightx, double weighty, int anchor) {
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.gridx = x;
+		constraints.gridy = y;
+		constraints.weightx = weightx;
+		constraints.weighty = weighty;
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.anchor = anchor;
+		constraints.insets = new Insets(5, 8, 5, 8);
+		return constraints;
+	}
 
-		jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/launch.png"))); // NOI18N
-		jButton3.setText(AppLocal.getIntString("button.executefilter")); // NOI18N
-		jButton3.setFocusPainted(false);
-		jButton3.setFocusable(false);
-		jButton3.setRequestFocusEnabled(false);
-		jButton3.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton3ActionPerformed(evt);
-			}
-		});
-		jPanel6.add(jButton3);
+	private JButton createDateButton(JTextField field) {
+		JButton button = new JButton("...");
+		button.addActionListener(event -> selectDate(field));
+		return button;
+	}
 
-		jPanel5.add(jPanel6, java.awt.BorderLayout.SOUTH);
-
-		jPanel3.add(jPanel5, java.awt.BorderLayout.PAGE_START);
-
-		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		jPanel4.setLayout(new java.awt.BorderLayout());
-
-		jListTickets.setFocusable(false);
-		jListTickets.setRequestFocusEnabled(false);
-		jListTickets.addMouseListener(new java.awt.event.MouseAdapter() {
-			public void mouseClicked(java.awt.event.MouseEvent evt) {
-				jListTicketsMouseClicked(evt);
-			}
-		});
-		jListTickets.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-			public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-				jListTicketsValueChanged(evt);
-			}
-		});
-		jScrollPane1.setViewportView(jListTickets);
-
-		jPanel4.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-		jPanel3.add(jPanel4, java.awt.BorderLayout.CENTER);
-
-		jPanel8.setLayout(new java.awt.BorderLayout());
-
-		jcmdOK.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_ok.png"))); // NOI18N
-		jcmdOK.setText(AppLocal.getIntString("button.selectticket")); // NOI18N
-		jcmdOK.setEnabled(false);
-		jcmdOK.setFocusPainted(false);
-		jcmdOK.setFocusable(false);
-		jcmdOK.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdOK.setRequestFocusEnabled(false);
-		jcmdOK.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdOKActionPerformed(evt);
-			}
-		});
-		jcmdCancel
-				.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/button_cancel.png"))); // NOI18N
-		jcmdCancel.setText(AppLocal.getIntString("button.cancelticket")); // NOI18N
-		jcmdCancel.setFocusPainted(false);
-		jcmdCancel.setFocusable(false);
-		jcmdCancel.setMargin(new java.awt.Insets(8, 16, 8, 16));
-		jcmdCancel.setRequestFocusEnabled(false);
-		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jcmdCancelActionPerformed(evt);
-			}
-		});
-		jPanel1.add(jcmdCancel);
-		jPanel1.add(jcmdOK);
-
-		jPanel8.add(jPanel1, java.awt.BorderLayout.LINE_END);
-
-		jPanel3.add(jPanel8, java.awt.BorderLayout.SOUTH);
-
-		getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
-
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 695) / 2, (screenSize.height - 684) / 2, 695, 684);
-	}// </editor-fold>//GEN-END:initComponents
-
-	private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdOKActionPerformed
-		selectedTicket = (FindTicketsInfo) jListTickets.getSelectedValue();
-		dispose();
-	}// GEN-LAST:event_jcmdOKActionPerformed
-
-	private void jcmdCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdCancelActionPerformed
-		dispose();
-	}// GEN-LAST:event_jcmdCancelActionPerformed
-
-	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
-		executeSearch();
-	}// GEN-LAST:event_jButton3ActionPerformed
-
-	private void jListTicketsValueChanged(javax.swing.event.ListSelectionEvent evt) {// GEN-FIRST:event_jListTicketsValueChanged
-		jcmdOK.setEnabled(jListTickets.getSelectedValue() != null);
-
-	}// GEN-LAST:event_jListTicketsValueChanged
-
-	private void jListTicketsMouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jListTicketsMouseClicked
-
-		if (evt.getClickCount() == 2) {
-			selectedTicket = (FindTicketsInfo) jListTickets.getSelectedValue();
-			dispose();
-		}
-
-	}// GEN-LAST:event_jListTicketsMouseClicked
-
-	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
-		defaultValues();
-	}// GEN-LAST:event_jButton1ActionPerformed
-
-	private void btnDateStartActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnDateStartActionPerformed
+	private void selectDate(JTextField field) {
 		Date date;
 		try {
-			date = (Date) Formats.TIMESTAMP.parseValue(jTxtStartDate.getText());
-		} catch (BasicException e) {
+			date = (Date) Formats.TIMESTAMP.parseValue(field.getText());
+		} catch (BasicException exception) {
 			date = null;
 		}
 		date = JCalendarDialog.showCalendarTimeHours(this, date);
-		if (date != null) {
-			jTxtStartDate.setText(Formats.TIMESTAMP.formatValue(date));
-		}
-	}// GEN-LAST:event_btnDateStartActionPerformed
+		if (date != null) field.setText(Formats.TIMESTAMP.formatValue(date));
+	}
 
-	private void btnDateEndActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnDateEndActionPerformed
-		Date date;
-		try {
-			date = (Date) Formats.TIMESTAMP.parseValue(jTxtEndDate.getText());
-		} catch (BasicException e) {
-			date = null;
-		}
-		date = JCalendarDialog.showCalendarTimeHours(this, date);
-		if (date != null) {
-			jTxtEndDate.setText(Formats.TIMESTAMP.formatValue(date));
-		}
-	}// GEN-LAST:event_btnDateEndActionPerformed
-
-	private void btnCustomerActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnCustomerActionPerformed
+	private void selectCustomer() {
 		JCustomerFinder finder = JCustomerFinder.getCustomerFinder(this, dlCustomers);
 		finder.search(null);
 		finder.setVisible(true);
-
 		try {
-			jtxtCustomer.setText(finder.getSelectedCustomer() == null
-					? null
+			customerField.setText(finder.getSelectedCustomer() == null ? ""
 					: dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()).toString());
-		} catch (BasicException e) {
-			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"),
-					e);
-			msg.show(this);
+		} catch (BasicException exception) {
+			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"), exception)
+					.show(this);
 		}
+	}
 
-	}// GEN-LAST:event_btnCustomerActionPerformed
+	private void selectTicket() {
+		int row = ticketTable.getSelectedRow();
+		if (row >= 0) {
+			selectedTicket = ((TicketTableModel) ticketTable.getModel()).tickets
+					.get(ticketTable.convertRowIndexToModel(row));
+			dispose();
+		}
+	}
 
-	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JButton btnCustomer;
-	private javax.swing.JButton btnDateEnd;
-	private javax.swing.JButton btnDateStart;
-	private javax.swing.JButton jButton1;
-	private javax.swing.JButton jButton3;
-	private javax.swing.JComboBox jComboBoxTicket;
-	private javax.swing.JLabel jLabel1;
-	private javax.swing.JLabel jLabel3;
-	private javax.swing.JLabel jLabel4;
-	private javax.swing.JLabel jLabel6;
-	private javax.swing.JLabel jLabel7;
-	private javax.swing.JList jListTickets;
-	private javax.swing.JPanel jPanel1;
-	private javax.swing.JPanel jPanel3;
-	private javax.swing.JPanel jPanel4;
-	private javax.swing.JPanel jPanel5;
-	private javax.swing.JPanel jPanel6;
-	private javax.swing.JPanel jPanel7;
-	private javax.swing.JPanel jPanel8;
-	private javax.swing.JScrollPane jScrollPane1;
-	private javax.swing.JTextField jTxtEndDate;
-	private javax.swing.JTextField jTxtStartDate;
-	private javax.swing.JComboBox jcboMoney;
-	private javax.swing.JComboBox jcboUser;
-	private javax.swing.JButton jcmdCancel;
-	private javax.swing.JButton jcmdOK;
-	private javax.swing.JTextField jtxtCustomer;
-	private javax.swing.JTextField jtxtMoney;
-	private javax.swing.JTextField jtxtTicketID;
-	private javax.swing.JLabel labelCustomer;
-	// End of variables declaration//GEN-END:variables
+	private void showTicketMessage(String messageKey) {
+		resultScrollPane.setViewportView(new JLabel(AppLocal.getIntString(messageKey), SwingConstants.CENTER));
+	}
+
+	private void setColumnWidths() {
+		int width = resultScrollPane.getPreferredSize().width;
+		ticketTable.getColumnModel().getColumn(0).setPreferredWidth(width / 8);
+		ticketTable.getColumnModel().getColumn(1).setPreferredWidth(width / 4);
+		ticketTable.getColumnModel().getColumn(2).setPreferredWidth(width * 3 / 8);
+		ticketTable.getColumnModel().getColumn(3).setPreferredWidth(width / 8);
+		ticketTable.getColumnModel().getColumn(4).setPreferredWidth(width / 8);
+	}
+
+	private static Window getWindow(Component parent) {
+		if (parent == null) return new JFrame();
+		if (parent instanceof Frame || parent instanceof Dialog) return (Window) parent;
+		return getWindow(parent.getParent());
+	}
+
+	private static class TicketTableModel extends AbstractTableModel {
+		private final List<FindTicketsInfo> tickets;
+		private final String[] columns = {AppLocal.getIntString("label.ticketid"),
+				AppLocal.getIntString("label.date"), AppLocal.getIntString("label.customer"),
+				AppLocal.getIntString("label.totalcash"), AppLocal.getIntString("label.user")};
+
+		TicketTableModel(List<FindTicketsInfo> tickets) { this.tickets = tickets; }
+		@Override public int getRowCount() { return tickets.size(); }
+		@Override public int getColumnCount() { return columns.length; }
+		@Override public String getColumnName(int column) { return columns[column]; }
+		@Override public Object getValueAt(int row, int column) {
+			FindTicketsInfo ticket = tickets.get(row);
+			switch (column) {
+				case 0: return ticket.getTicketId();
+				case 1: return Formats.TIMESTAMP.formatValue(ticket.getDate());
+				case 2: return ticket.getCustomer() == null ? "" : ticket.getCustomer();
+				case 3: return Formats.CURRENCY.formatValue(ticket.getTotal());
+				case 4: return ticket.getName() == null ? "" : ticket.getName();
+				default: return "";
+			}
+		}
+	}
 }
