@@ -74,8 +74,12 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 	private JButton selectButton;
 	private Timer searchTimer;
 
-	private JTicketsFinder(Frame parent, boolean modal) { super(parent, modal); }
-	private JTicketsFinder(Dialog parent, boolean modal) { super(parent, modal); }
+	private JTicketsFinder(Frame parent, boolean modal) {
+		super(parent, modal);
+	}
+	private JTicketsFinder(Dialog parent, boolean modal) {
+		super(parent, modal);
+	}
 
 	public static JTicketsFinder getReceiptFinder(Component parent, DataLogicSales dlSales,
 			DataLogicCustomers dlCustomers) {
@@ -104,9 +108,8 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 	}
 
 	private void initCombos() {
-		ticketTypeCombo.setModel(new DefaultComboBoxModel<>(new String[]{
-				AppLocal.getIntString("label.sales"), AppLocal.getIntString("label.refunds"),
-				AppLocal.getIntString("label.all")}));
+		ticketTypeCombo.setModel(new DefaultComboBoxModel<>(new String[]{AppLocal.getIntString("label.sales"),
+				AppLocal.getIntString("label.refunds"), AppLocal.getIntString("label.all")}));
 		moneyCompareCombo.setModel(ListQBFModelNumber.getMandatoryNumber());
 
 		try {
@@ -155,9 +158,18 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 
 	private void addDebouncedListener(JTextField field) {
 		field.getDocument().addDocumentListener(new DocumentListener() {
-			@Override public void insertUpdate(DocumentEvent event) { searchTimer.restart(); }
-			@Override public void removeUpdate(DocumentEvent event) { searchTimer.restart(); }
-			@Override public void changedUpdate(DocumentEvent event) { searchTimer.restart(); }
+			@Override
+			public void insertUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
+			@Override
+			public void removeUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
+			@Override
+			public void changedUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
 		});
 	}
 
@@ -254,12 +266,13 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 		buttons.add(cancelButton);
 		buttons.add(selectButton);
 
-		ticketTable.getSelectionModel().addListSelectionListener(event ->
-				selectButton.setEnabled(ticketTable.getSelectedRow() >= 0
-						&& ticketTable.getModel().getRowCount() > 0));
+		ticketTable.getSelectionModel().addListSelectionListener(event -> selectButton
+				.setEnabled(ticketTable.getSelectedRow() >= 0 && ticketTable.getModel().getRowCount() > 0));
 		ticketTable.addMouseListener(new java.awt.event.MouseAdapter() {
-			@Override public void mouseClicked(java.awt.event.MouseEvent event) {
-				if (event.getClickCount() == 2) selectTicket();
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (event.getClickCount() == 2)
+					selectTicket();
 			}
 		});
 
@@ -289,8 +302,8 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 	}
 
 	private void addCustomerRow(JPanel panel, int row) {
-		panel.add(new JLabel(AppLocal.getIntString("label.customer")), constraints(0, row, 0, 0,
-				GridBagConstraints.LINE_END));
+		panel.add(new JLabel(AppLocal.getIntString("label.customer")),
+				constraints(0, row, 0, 0, GridBagConstraints.LINE_END));
 		panel.add(customerField, constraints(1, row, 1, 1, GridBagConstraints.LINE_START));
 		JButton button = new JButton(AppLocal.getIntString("button.selectcustomer"));
 		button.addActionListener(event -> selectCustomer());
@@ -330,7 +343,8 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 			date = null;
 		}
 		date = JCalendarDialog.showCalendarTimeHours(this, date);
-		if (date != null) field.setText(Formats.TIMESTAMP.formatValue(date));
+		if (date != null)
+			field.setText(Formats.TIMESTAMP.formatValue(date));
 	}
 
 	private void selectCustomer() {
@@ -338,7 +352,8 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 		finder.search(null);
 		finder.setVisible(true);
 		try {
-			customerField.setText(finder.getSelectedCustomer() == null ? ""
+			customerField.setText(finder.getSelectedCustomer() == null
+					? ""
 					: dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()).toString());
 		} catch (BasicException exception) {
 			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"), exception)
@@ -369,30 +384,50 @@ public class JTicketsFinder extends JDialog implements EditorCreator {
 	}
 
 	private static Window getWindow(Component parent) {
-		if (parent == null) return new JFrame();
-		if (parent instanceof Frame || parent instanceof Dialog) return (Window) parent;
+		if (parent == null)
+			return new JFrame();
+		if (parent instanceof Frame || parent instanceof Dialog)
+			return (Window) parent;
 		return getWindow(parent.getParent());
 	}
 
 	private static class TicketTableModel extends AbstractTableModel {
 		private final List<FindTicketsInfo> tickets;
-		private final String[] columns = {AppLocal.getIntString("label.ticketid"),
-				AppLocal.getIntString("label.date"), AppLocal.getIntString("label.customer"),
-				AppLocal.getIntString("label.totalcash"), AppLocal.getIntString("label.user")};
+		private final String[] columns = {AppLocal.getIntString("label.ticketid"), AppLocal.getIntString("label.date"),
+				AppLocal.getIntString("label.customer"), AppLocal.getIntString("label.totalcash"),
+				AppLocal.getIntString("label.user")};
 
-		TicketTableModel(List<FindTicketsInfo> tickets) { this.tickets = tickets; }
-		@Override public int getRowCount() { return tickets.size(); }
-		@Override public int getColumnCount() { return columns.length; }
-		@Override public String getColumnName(int column) { return columns[column]; }
-		@Override public Object getValueAt(int row, int column) {
+		TicketTableModel(List<FindTicketsInfo> tickets) {
+			this.tickets = tickets;
+		}
+		@Override
+		public int getRowCount() {
+			return tickets.size();
+		}
+		@Override
+		public int getColumnCount() {
+			return columns.length;
+		}
+		@Override
+		public String getColumnName(int column) {
+			return columns[column];
+		}
+		@Override
+		public Object getValueAt(int row, int column) {
 			FindTicketsInfo ticket = tickets.get(row);
 			switch (column) {
-				case 0: return ticket.getTicketId();
-				case 1: return Formats.TIMESTAMP.formatValue(ticket.getDate());
-				case 2: return ticket.getCustomer() == null ? "" : ticket.getCustomer();
-				case 3: return Formats.CURRENCY.formatValue(ticket.getTotal());
-				case 4: return ticket.getName() == null ? "" : ticket.getName();
-				default: return "";
+				case 0 :
+					return ticket.getTicketId();
+				case 1 :
+					return Formats.TIMESTAMP.formatValue(ticket.getDate());
+				case 2 :
+					return ticket.getCustomer() == null ? "" : ticket.getCustomer();
+				case 3 :
+					return Formats.CURRENCY.formatValue(ticket.getTotal());
+				case 4 :
+					return ticket.getName() == null ? "" : ticket.getName();
+				default :
+					return "";
 			}
 		}
 	}

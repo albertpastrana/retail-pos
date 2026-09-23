@@ -63,8 +63,8 @@ public class JNumberKeys extends javax.swing.JPanel {
 		m_jMinus.addActionListener(new MyKeyNumberListener('-'));
 		m_jEquals.addActionListener(new MyKeyNumberListener('='));
 
-		javax.swing.JButton[] keys = {m_jKey0, m_jKey1, m_jKey2, m_jKey3, m_jKey4, m_jKey5, m_jKey6, m_jKey7,
-				m_jKey8, m_jKey9, m_jKeyDot, m_jMultiply, m_jCE, m_jPlus, m_jMinus, m_jEquals};
+		javax.swing.JButton[] keys = {m_jKey0, m_jKey1, m_jKey2, m_jKey3, m_jKey4, m_jKey5, m_jKey6, m_jKey7, m_jKey8,
+				m_jKey9, m_jKeyDot, m_jMultiply, m_jCE, m_jPlus, m_jMinus, m_jEquals};
 		for (javax.swing.JButton key : keys) {
 			key.setFocusable(false);
 			key.setRequestFocusEnabled(false);

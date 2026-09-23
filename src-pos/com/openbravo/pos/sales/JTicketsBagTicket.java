@@ -334,8 +334,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 					e);
 			msg.show(this);
 		} catch (NumberFormatException e) {
-			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
-					AppLocal.getIntString("message.notexiststicket"));
+			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notexiststicket"));
 			msg.show(this);
 		}
 

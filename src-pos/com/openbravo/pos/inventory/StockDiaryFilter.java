@@ -52,9 +52,15 @@ final class StockDiaryFilter extends JPanel implements FilterEditorCreator {
 		filterTimer.setRepeats(false);
 
 		DocumentListener changed = new DocumentListener() {
-			public void insertUpdate(DocumentEvent e) { scheduleFilter(); }
-			public void removeUpdate(DocumentEvent e) { scheduleFilter(); }
-			public void changedUpdate(DocumentEvent e) { scheduleFilter(); }
+			public void insertUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
+			public void changedUpdate(DocumentEvent e) {
+				scheduleFilter();
+			}
 		};
 		product.getDocument().addDocumentListener(changed);
 		reason.addActionListener(new ActionListener() {

@@ -86,10 +86,9 @@ final class StockDiaryTableNavigator extends JPanel implements BrowseListener, L
 			return 6;
 		}
 		public String getColumnName(int column) {
-			return new String[]{AppLocal.getIntString("label.stockdate"),
-					AppLocal.getIntString("label.stockproduct"), AppLocal.getIntString("label.stockreason"),
-					AppLocal.getIntString("label.units"), AppLocal.getIntString("label.warehouse"),
-					AppLocal.getIntString("label.price")}[column];
+			return new String[]{AppLocal.getIntString("label.stockdate"), AppLocal.getIntString("label.stockproduct"),
+					AppLocal.getIntString("label.stockreason"), AppLocal.getIntString("label.units"),
+					AppLocal.getIntString("label.warehouse"), AppLocal.getIntString("label.price")}[column];
 		}
 		public Object getValueAt(int row, int column) {
 			Object[] movement = (Object[]) data.getListModel().getElementAt(row);

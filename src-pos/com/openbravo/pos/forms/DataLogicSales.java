@@ -155,8 +155,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						+ "JOIN LOCATIONS L ON D.LOCATION = L.ID "
 						+ "LEFT JOIN ATTRIBUTESETINSTANCE A ON D.ATTRIBUTESETINSTANCE_ID = A.ID "
 						+ "WHERE (? = '' OR UPPER(P.NAME) LIKE UPPER(?) OR UPPER(P.REFERENCE) LIKE UPPER(?) "
-						+ "OR UPPER(P.CODE) LIKE UPPER(?) " + ") "
-						+ "AND (CAST(? AS INTEGER) IS NULL OR D.REASON = ?) "
+						+ "OR UPPER(P.CODE) LIKE UPPER(?) " + ") " + "AND (CAST(? AS INTEGER) IS NULL OR D.REASON = ?) "
 						+ "AND (CAST(? AS VARCHAR(255)) IS NULL OR D.LOCATION = ?) "
 						+ "AND D.DATENEW >= ? ORDER BY D.DATENEW DESC",
 				new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
