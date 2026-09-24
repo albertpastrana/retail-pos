@@ -89,6 +89,13 @@ public class StartPOS {
 	public static void main(final String args[]) {
 
 		FileLogging.install();
+		logger.info("event=application_process_start app=" + AppLocal.APP_ID + " appVersion=" + AppLocal.APP_VERSION
+				+ " gitRevision=" + AppLocal.GIT_REVISION + " javaVersion="
+				+ LogSanitizer.field(System.getProperty("java.version")) + " javaVendor="
+				+ LogSanitizer.field(System.getProperty("java.vendor")) + " os="
+				+ LogSanitizer.field(System.getProperty("os.name")) + " osVersion="
+				+ LogSanitizer.field(System.getProperty("os.version")) + " osArch="
+				+ LogSanitizer.field(System.getProperty("os.arch")) + " args=" + args.length);
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread thread, Throwable throwable) {
@@ -112,6 +119,9 @@ public class StartPOS {
 				}
 
 				AppConfig config = ConfigurationStore.load();
+				logger.info("event=configuration_loaded source=" + ConfigurationStore.source() + " path="
+						+ LogSanitizer.field(ConfigurationStore.resolveFile().getAbsolutePath()) + " "
+						+ LogSanitizer.configuration(config));
 
 				// set Locale.
 				String slang = config.getProperty("user.language");
@@ -121,7 +131,8 @@ public class StartPOS {
 					Locale.setDefault(new Locale(slang, scountry, svariant));
 				}
 
-				logger.info("event=application_start version=" + AppLocal.APP_VERSION + " args=" + args.length);
+				logger.info(
+						"event=application_start version=" + AppLocal.APP_VERSION + " locale=" + Locale.getDefault());
 
 				// Set the format patterns
 				Formats.setIntegerPattern(config.getProperty("format.integer"));
@@ -159,6 +170,7 @@ public class StartPOS {
 					rootframe.initFrame(config);
 					UpdateChecker.checkAsync(config, rootframe);
 				}
+				logger.info("event=application_ready screenMode=" + screenmode);
 			}
 		});
 	}
