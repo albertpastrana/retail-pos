@@ -12,11 +12,7 @@ case "$platform" in
   *) echo "Unsupported platform: $platform" >&2; exit 2 ;;
 esac
 
-if [ "$platform" = "linux" ]; then
-  runtime_note="This package uses Java installed on the system."
-else
-  runtime_note="This package includes its Java runtime."
-fi
+runtime_note="This package includes its Java 21 runtime."
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dist="$root/dist"
@@ -31,17 +27,20 @@ cp -R "$root/build/runtime-libs/." "$staging/runtime-libs/"
 cp "$root/logging.properties" "$root/start.sh" "$root/start.bat" "$root/scripts/update.sh" "$root/scripts/update.bat" "$staging/"
 cp -R "$root/licensing" "$staging/"
 
-if [ "$platform" != "linux" ]; then
-  jlink="${JAVA_HOME:-}/bin/jlink"
-  if [ ! -x "$jlink" ]; then jlink="$(command -v jlink)"; fi
-  "$jlink" \
-    --add-modules ALL-MODULE-PATH \
-    --strip-debug \
-    --no-man-pages \
-    --no-header-files \
-    --compress=2 \
-    --output "$staging/runtime"
-fi
+jlink="${JAVA_HOME:-}/bin/jlink"
+if [ ! -x "$jlink" ]; then jlink="$(command -v jlink)"; fi
+jlink_version="$($jlink --version 2>&1)"
+case "$jlink_version" in
+  21.*) ;;
+  *) echo "Java 21 jlink is required; found: $jlink_version" >&2; exit 1 ;;
+esac
+"$jlink" \
+  --add-modules ALL-MODULE-PATH \
+  --strip-debug \
+  --no-man-pages \
+  --no-header-files \
+  --compress=2 \
+  --output "$staging/runtime"
 
 cat > "$staging/README.txt" <<EOF
 Retail POS ${version}
