@@ -69,14 +69,6 @@ Other third party libraries in /lib/
 
 - jcommon-1.0.15.jar (a dependency of jfreechart) and jfreechart-1.0.12.jar - available from http://www.jfree.org/jfreechart/. � 2005-2008 Object Refinery Limited. Distributed under the GNU LESSER GENERAL PUBLIC LICENSE
 
-- RXTXcomm.jar
-- librxtxParallel.so
-- librxtxSerial.so
-- librxtxParallel.dll
-- librxtxSerial.dll
-- librxtxSerial.jnilib
-All available from http://www.rxtx.org/. Copyright 1998-2006 Keane Jarvi. Distributed under the RXTX License v 2.1 (LGPL v 2.1 + Linking Over Controlled Interface)
-
 - swingx-0.9.5.jar - available from https://swingx.dev.java.net/. Copyright (c) 2005-2006 Sun Microsystems, Inc. Distributed under the Lesser General Public License (LGPL).
 
 - substance.jar - available from https://substance.dev.java.net/. Copyright (c) 2005-2008 Kirill Grouchnikov. Distributed under the Berkeley Software Distribution (BSD) License

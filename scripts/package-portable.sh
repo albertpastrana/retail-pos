@@ -6,9 +6,9 @@ version="${2:-${GITHUB_REF_NAME:-local}}"
 version="${version#v}"
 
 case "$platform" in
-  linux) native_lib="Linux/x86_64-unknown-linux-gnu"; archive_suffix="tar.gz" ;;
-  windows) native_lib="Windows/i368-mingw32"; archive_suffix="zip" ;;
-  macos) native_lib="Mac_OS_X"; archive_suffix="tar.gz" ;;
+  linux) archive_suffix="tar.gz" ;;
+  windows) archive_suffix="zip" ;;
+  macos) archive_suffix="tar.gz" ;;
   *) echo "Unsupported platform: $platform" >&2; exit 2 ;;
 esac
 
@@ -22,7 +22,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 dist="$root/dist"
 staging="$dist/RetailPOS-${platform}-x86_64"
 rm -rf "$staging"
-mkdir -p "$staging/runtime-libs" "$staging/lib/$(dirname "$native_lib")" "$dist"
+mkdir -p "$staging/runtime-libs" "$dist"
 
 for file in retail-pos.jar locales.jar reports.jar; do
   cp "$root/build/jar/$file" "$staging/$file"
@@ -30,7 +30,6 @@ done
 cp -R "$root/build/runtime-libs/." "$staging/runtime-libs/"
 cp "$root/logging.properties" "$root/start.sh" "$root/start.bat" "$root/scripts/update.sh" "$root/scripts/update.bat" "$staging/"
 cp -R "$root/licensing" "$staging/"
-cp -R "$root/lib/$native_lib" "$staging/lib/$native_lib"
 
 if [ "$platform" != "linux" ]; then
   jlink="${JAVA_HOME:-}/bin/jlink"

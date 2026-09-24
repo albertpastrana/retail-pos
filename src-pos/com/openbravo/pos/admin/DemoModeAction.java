@@ -74,7 +74,6 @@ public class DemoModeAction implements BeanFactoryApp, ProcessAction {
 		List<String> command = new ArrayList<String>();
 		command.add(java);
 		addSystemProperty(command, "dirname.path");
-		addSystemProperty(command, "java.library.path");
 		addSystemProperty(command, "java.util.logging.config.file");
 		command.add("-cp");
 		command.add(System.getProperty("java.class.path"));

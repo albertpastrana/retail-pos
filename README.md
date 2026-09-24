@@ -195,7 +195,6 @@ Receipt content, shop name, logos, and other operator-customizable templates are
 | `src-beans/` | Shared beans                                         |
 | `reports/`   | Retained invoice JRXML templates pending installation audit |
 | `locales/`   | UI translations                                      |
-| `lib/`       | Native serial-port libraries for supported platforms |
 | `data/`      | Local database, TSV catalogue, resource dump tools   |
 
 ## Observability
