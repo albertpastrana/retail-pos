@@ -1,7 +1,7 @@
 package com.openbravo.pos.forms;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.payment.PaymentInfoCash;
@@ -20,7 +20,7 @@ public class DataLogicSalesPaymentValidationTest {
 		};
 		ticket.getPayments().add(new PaymentInfoCash(0.0, 0.0));
 
-		assertThrows(BasicException.class, () -> DataLogicSales.validatePaymentTotals(ticket));
+		assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class);
 	}
 
 	@Test
@@ -33,6 +33,6 @@ public class DataLogicSalesPaymentValidationTest {
 		};
 		ticket.getPayments().add(new PaymentInfoCash(89.60, 100.0));
 
-		assertDoesNotThrow(() -> DataLogicSales.validatePaymentTotals(ticket));
+		assertThatCode(() -> DataLogicSales.validatePaymentTotals(ticket)).doesNotThrowAnyException();
 	}
 }
