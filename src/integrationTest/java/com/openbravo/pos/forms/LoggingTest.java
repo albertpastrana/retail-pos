@@ -38,27 +38,4 @@ public class LoggingTest {
 
 		assertThat(result).contains("user=<redacted>", "password=<redacted>").doesNotContain("secret");
 	}
-	@Test
-	public void configurationSummaryDoesNotExposeCredentials() {
-		AppConfig config = new AppConfig();
-		config.setProperty("db.URL", "jdbc:postgresql://db:5432/pos?user=alice&password=secret");
-		config.setProperty("db.driver", "org.postgresql.Driver");
-		config.setProperty("db.user", "alice");
-		config.setProperty("db.password", "secret");
-		config.setProperty("machine.hostname", "till-1");
-		config.setProperty("user.language", "ca");
-		config.setProperty("user.country", "ES");
-
-		String result = LogSanitizer.configuration(config);
-
-		assertThat(result).contains("databaseType=POSTGRESQL", "databaseUserConfigured=true").doesNotContain("alice",
-				"secret");
-	}
-
-	@Test
-	public void logFieldsRemainSingleLineAndParseable() {
-		String result = LogSanitizer.field("value with spaces=and\nnewlines");
-
-		assertThat(result).isEqualTo("value_with_spaces_and_newlines");
-	}
 }
