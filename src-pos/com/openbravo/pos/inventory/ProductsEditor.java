@@ -165,12 +165,21 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 				saveProduct();
 			}
 		});
+		m_jDiscard.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (m_bd != null) {
+					m_bd.refreshCurrent();
+				}
+			}
+		});
 		m_dirty.addDirtyListener(new DirtyListener() {
 			public void changedDirty(boolean bDirty) {
 				m_jSave.setEnabled(bDirty);
+				m_jDiscard.setEnabled(bDirty);
 			}
 		});
 		m_jSave.setEnabled(false);
+		m_jDiscard.setEnabled(false);
 
 		FieldsManager fm = new FieldsManager();
 		m_jPriceBuy.getDocument().addDocumentListener(fm);
@@ -944,7 +953,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		m_jRef = new javax.swing.JTextField(14);
 		m_jName = new javax.swing.JTextField(32);
-		m_jFamily = new javax.swing.JTextField(32);
+		m_jFamily = new javax.swing.JTextField(14);
 		m_jCode = new javax.swing.JTextField(14);
 		m_jImage = new com.openbravo.data.gui.JImageEditor();
 		m_jImage.setPreferredSize(new Dimension(200, 180));
@@ -993,6 +1002,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 		m_jSave = new javax.swing.JButton(AppLocal.getIntString("Button.Save"));
 		RetailPOSColors.primaryButton(m_jSave);
+		m_jDiscard = new javax.swing.JButton(AppLocal.getIntString("confirm.discard"));
 		m_jDelete = new javax.swing.JButton("Eliminar");
 		m_jDelete.setForeground(RetailPOSColors.danger());
 
@@ -1017,6 +1027,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 				ProductFormLayout.scrollable(buildStockTab()));
 		jTabbedPane1.addTab(AppLocal.getIntString("label.prodcatalog"),
 				ProductFormLayout.scrollable(buildCatalogTab()));
+		jTabbedPane1.addTab(AppLocal.getIntString("label.image"), ProductFormLayout.scrollable(buildImageTab()));
 		jTabbedPane1.addTab(AppLocal.getIntString("label.attributes"), productAttributes);
 
 		setLayout(new BorderLayout(0, 8));
@@ -1035,29 +1046,33 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		title.gridwidth = 2;
 		title.weightx = 1.0;
 		header.add(m_jTitle, title);
-		ProductFormLayout.addRow(header, 1, AppLocal.getIntString("label.prodref"), ProductFormLayout.inline(m_jRef));
+		ProductFormLayout.addRow(header, 1, AppLocal.getIntString("label.prodref"),
+				ProductFormLayout.inline(m_jRef, new JLabel(AppLocal.getIntString("label.prodfamily")), m_jFamily));
 		ProductFormLayout.addRow(header, 2, AppLocal.getIntString("label.prodname"), m_jName);
-		ProductFormLayout.addRow(header, 3, "Família", m_jFamily);
+		ProductFormLayout.addRow(header, 3, AppLocal.getIntString("label.prodbarcode"),
+				ProductFormLayout.inline(m_jCode, buildOtherCodesButton(), buildLabelButton()));
 		return header;
 	}
 
 	private JComponent buildGeneralTab() {
 		JPanel fields = new JPanel(new GridBagLayout());
-		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodbarcode"),
-				ProductFormLayout.inline(m_jCode, buildOtherCodesButton(), buildLabelButton()));
-		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory"), m_jCategory);
-		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.taxcategory"), m_jTax);
-		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpricebuy"),
-				ProductFormLayout.inline(m_jPriceBuy, jLabelMarginNet, m_jmargin));
-		ProductFormLayout.addRow(fields, 4, jLabelPriceSecondary, ProductFormLayout.inline(m_jPriceSecondary));
-		ProductFormLayout.addRow(fields, 5, AppLocal.getIntString("label.prodpriceselltax"),
+		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodcategory"), m_jCategory);
+		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.taxcategory"), m_jTax);
+		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodpricebuy"), ProductFormLayout
+				.inline(m_jPriceBuy, jLabelMarginNet, m_jmargin, jLabelPriceSecondary, m_jPriceSecondary));
+		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpriceselltax"),
 				ProductFormLayout.inline(m_jPriceSellTax, jLabelMarginTax, m_jmarginTax));
-		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodvoucher"),
+		ProductFormLayout.addRow(fields, 4, AppLocal.getIntString("label.prodvoucher"),
 				ProductFormLayout.inline(m_jVoucher));
 
 		JPanel tab = new JPanel(new BorderLayout(12, 0));
 		tab.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
-		tab.add(ProductFormLayout.topAligned(m_jImage), BorderLayout.EAST);
+		return tab;
+	}
+
+	private JComponent buildImageTab() {
+		JPanel tab = new JPanel(new BorderLayout());
+		tab.add(m_jImage, BorderLayout.NORTH);
 		return tab;
 	}
 
@@ -1099,6 +1114,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 
 	private JComponent buildActions() {
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+		actions.add(m_jDiscard);
 		actions.add(m_jDelete);
 		actions.add(m_jSave);
 		return actions;
@@ -1304,6 +1320,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JTextField m_jPriceSellTax;
 	private javax.swing.JTextField m_jRef;
 	private javax.swing.JButton m_jSave;
+	private javax.swing.JButton m_jDiscard;
 	private javax.swing.JButton m_jDelete;
 	private javax.swing.JCheckBox m_jVoucher;
 	private javax.swing.JTextField m_jStock;
