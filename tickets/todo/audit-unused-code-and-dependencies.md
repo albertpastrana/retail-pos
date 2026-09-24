@@ -25,6 +25,11 @@ The following methods also appear unused:
 - `ListQBFModelNumber.getNonMandatoryString()`
 - `ListQBFModelNumber.getNonMandatoryNumber()`
 
+The public `AppView.getBean(String)` lookup is also being retired. There are no
+in-repository callers that require the untyped API after the dynamic task
+lookups are migrated to typed-by-name lookup. The internal class-name
+resolution remains in `JRootApp` for menu tasks and bean factories.
+
 `BarcodeImage` is separate from the active Barcode4J usage in `PrintItemBarcode`; its removal must not remove Barcode4J itself.
 
 The following declared dependencies in `build.gradle.kts` have no application imports or other repository references and are high-confidence removal candidates:

@@ -23,11 +23,11 @@ public class TypeSafeBeanLookupTest {
 	}
 
 	@Test
-	public void stringLookupRemainsAvailable() {
+	public void typedNameLookupRemainsAvailableForDynamicTasks() {
 		CountingBean.reset();
 		JRootApp app = new JRootApp();
 
-		assertSame(app.getBean(CountingBean.class.getName()), app.getBean(CountingBean.class));
+		assertSame(app.getBean(CountingBean.class.getName(), CountingBean.class), app.getBean(CountingBean.class));
 	}
 
 	@Test

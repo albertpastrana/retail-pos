@@ -539,7 +539,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 					if (m_jMyView == null) {
 						// The view is not prepared. Try to get as a Bean...
 						try {
-							m_jMyView = (JPanelView) m_appview.getBean(sTaskClass);
+							m_jMyView = m_appview.getBean(sTaskClass, JPanelView.class);
 						} catch (BeanFactoryException e) {
 							m_jMyView = new JPanelNull(m_appview, e);
 						}
@@ -587,7 +587,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 		if (m_appuser.hasPermission(sTaskClass)) {
 			try {
-				ProcessAction myProcess = (ProcessAction) m_appview.getBean(sTaskClass);
+				ProcessAction myProcess = m_appview.getBean(sTaskClass, ProcessAction.class);
 
 				// execute the proces
 				try {
