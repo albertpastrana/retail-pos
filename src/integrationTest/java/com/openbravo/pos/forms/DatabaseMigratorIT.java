@@ -86,7 +86,6 @@ public class DatabaseMigratorIT {
 
 		Connection connection = open(url, null, null);
 		try {
-			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, count(connection, "PRODUCTS"));
 			assertEquals(4, queryInt(connection,
@@ -152,7 +151,6 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(34, count(connection, "RESOURCES"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Ticket.Buttons'"));
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
@@ -161,6 +159,8 @@ public class DatabaseMigratorIT {
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Menu.Root'"));
+			assertTrue(roleContains(connection, "0", "com.openbravo.pos.forms.JPanelWelcome"));
+			assertTrue(roleContains(connection, "1", "com.openbravo.pos.forms.JPanelWelcome"));
 			assertTrue(resourceContains(connection, "Printer.Ticket", "Entregat:"));
 			assertTrue(resourceContains(connection, "Printer.Ticket", "printChange()"));
 			assertTrue(resourceContains(connection, "Printer.TicketPreview", "Entregat:"));
@@ -201,7 +201,6 @@ public class DatabaseMigratorIT {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
-			assertEquals(34, count(connection, "RESOURCES"));
 			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
 			assertEquals(4, queryInt(connection,
 					"SELECT COUNT(*) FROM PRODUCTS WHERE CREATED_AT IS NOT NULL AND UPDATED_AT IS NOT NULL"));

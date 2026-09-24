@@ -24,7 +24,6 @@ public class ApplyStoreResources {
 			upsert(c, "Printer.Ticket.Logo", 1, new File(t, "Printer.Ticket.Logo.png"));
 			upsert(c, "Window.Logo", 1, new File(t, "Window.Logo.png"));
 			upsert(c, "Window.Title", 0, new File(t, "Window.Title.txt"));
-			upsert(c, "Menu.Root", 0, new File(t, "Menu.Root.txt"));
 			upsert(c, "Button.Print", 1, new File(t, "Button.Print.png"));
 			upsert(c, "Button.OpenDrawer", 1, new File(t, "Button.OpenDrawer.png"));
 			patchRoles(c);
