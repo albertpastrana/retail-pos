@@ -36,7 +36,6 @@ public class V43__product_attributes extends BaseJavaMigration {
 				statement.execute("ALTER TABLE STOCKCURRENT DROP CONSTRAINT STOCKCURRENT_ATTSETINST");
 				statement.execute("ALTER TABLE TICKETLINES DROP CONSTRAINT TICKETLINES_ATTSETINST");
 				dropStockCurrentIndex(connection, statement);
-				statement.execute("DROP INDEX STOCKCURRENT_INX");
 			}
 			statement.execute("ALTER TABLE PRODUCTS DROP COLUMN ATTRIBUTESET_ID");
 			statement.execute("ALTER TABLE STOCKDIARY DROP COLUMN ATTRIBUTESETINSTANCE_ID");
