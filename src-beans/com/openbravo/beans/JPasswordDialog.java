@@ -51,9 +51,19 @@ public class JPasswordDialog extends javax.swing.JDialog {
 		initComponents();
 		getRootPane().setDefaultButton(jcmdOK);
 
-		m_jpassword.addEditorKeys(m_jKeys);
-		m_jpassword.reset();
-		m_jpassword.activate();
+		m_jKeys.addJNumberEventListener(event -> {
+			if (event.getKey() == '\u007f') {
+				m_jpassword.setText("");
+			} else if (Character.isDigit(event.getKey())) {
+				m_jpassword.replaceSelection(Character.toString(event.getKey()));
+			}
+			m_jpassword.requestFocusInWindow();
+		});
+		m_jKeys.setNumbersOnly(false);
+		m_jKeys.setDotVisible(false);
+		m_jpassword.setEchoChar('*');
+		m_jpassword.setColumns(18);
+		m_jpassword.requestFocusInWindow();
 
 		m_jPanelTitle.setBorder(RoundedBorder.createGradientBorder());
 
@@ -94,6 +104,8 @@ public class JPasswordDialog extends javax.swing.JDialog {
 		}
 
 		myMsg.setTitle(title, message, icon);
+		myMsg.pack();
+		myMsg.setLocationRelativeTo(window);
 		myMsg.setVisible(true);
 		return myMsg.m_sPassword;
 	}
@@ -113,14 +125,20 @@ public class JPasswordDialog extends javax.swing.JDialog {
 		jPanel2 = new javax.swing.JPanel();
 		jPanelGrid = new javax.swing.JPanel();
 		jPanel3 = new javax.swing.JPanel();
-		m_jKeys = new com.openbravo.editor.JEditorKeys();
+		m_jKeys = new com.openbravo.beans.JNumberKeys();
 		jPanel4 = new javax.swing.JPanel();
-		m_jpassword = new com.openbravo.editor.JEditorPassword();
+		m_jpassword = new javax.swing.JPasswordField();
 		m_jPanelTitle = new javax.swing.JPanel();
 		m_lblMessage = new javax.swing.JLabel();
 
 		setResizable(false);
 		addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowOpened(java.awt.event.WindowEvent evt) {
+				m_jpassword.requestFocusInWindow();
+			}
+
+			@Override
 			public void windowClosing(java.awt.event.WindowEvent evt) {
 				closeWindow(evt);
 			}
@@ -178,17 +196,11 @@ public class JPasswordDialog extends javax.swing.JDialog {
 
 		getContentPane().add(m_jPanelTitle, java.awt.BorderLayout.NORTH);
 
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 258) / 2, (screenSize.height - 428) / 2, 258, 428);
 	}// </editor-fold>//GEN-END:initComponents
-
-	private void jNumberKeys21KeyPerformed(com.openbravo.beans.JNumberEvent evt) {// GEN-FIRST:event_jNumberKeys21KeyPerformed
-
-	}// GEN-LAST:event_jNumberKeys21KeyPerformed
 
 	private void jcmdOKActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jcmdOKActionPerformed
 
-		m_sPassword = m_jpassword.getPassword();
+		m_sPassword = new String(m_jpassword.getPassword());
 		setVisible(false);
 		dispose();
 
@@ -216,9 +228,9 @@ public class JPasswordDialog extends javax.swing.JDialog {
 	private javax.swing.JPanel jPanelGrid;
 	private javax.swing.JButton jcmdCancel;
 	private javax.swing.JButton jcmdOK;
-	private com.openbravo.editor.JEditorKeys m_jKeys;
+	private com.openbravo.beans.JNumberKeys m_jKeys;
 	private javax.swing.JPanel m_jPanelTitle;
-	private com.openbravo.editor.JEditorPassword m_jpassword;
+	private javax.swing.JPasswordField m_jpassword;
 	private javax.swing.JLabel m_lblMessage;
 	// End of variables declaration//GEN-END:variables
 
