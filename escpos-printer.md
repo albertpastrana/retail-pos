@@ -1,6 +1,6 @@
 # ESC/POS receipt printers
 
-The POS does not talk to CUPS or the Windows spooler for tickets. It writes **raw ESC/POS bytes** to a file or a serial port. Set this in Configuration → General, or in the properties file:
+The POS does not talk to CUPS or the Windows spooler for tickets. It writes **raw ESC/POS bytes** to a file or device path. Set this in Configuration → General, or in the properties file:
 
 ```properties
 machine.printer=epson:file,<path>
@@ -8,7 +8,7 @@ machine.printer=epson:file,<path>
 
 Use type **epson** for thermal TM-T printers (TM-T88, TM-T20, …). Use **tmu220** only for a TM-U220 impact printer. Type **printer** goes through the OS driver and is the wrong path for cutter and cash-drawer commands.
 
-The port combo is editable. `serial` is only for a real COM / `/dev/cu.*` / USB–serial adapter; this tree has no macOS RXTX native library.
+The output path is editable. Use a regular file, FIFO, or operating-system device path.
 
 ## Windows
 
@@ -34,8 +34,6 @@ The kernel device is usually `/dev/usb/lp0`. The till user needs the `lp` group.
 ```properties
 machine.printer=epson:file,/dev/usb/lp0
 ```
-
-USB–serial adapters: `epson:serial,/dev/ttyUSB0`.
 
 ## macOS
 

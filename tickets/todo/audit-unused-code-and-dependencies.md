@@ -41,7 +41,7 @@ The following declared dependencies in `build.gradle.kts` have no application im
 The following dependencies are used directly or may be required at runtime and must not be removed based only on import searches:
 
 - Derby, Flyway, Flyway MySQL, MySQL, and PostgreSQL drivers.
-- Barbecue, Barcode4J, BeanShell, Velocity, FlatLaf, JavaPOS, and RXTX.
+- Barbecue, Barcode4J, BeanShell, Velocity, FlatLaf, and JavaPOS.
 - Axis, JAX-RPC, SAAJ, WSDL4J, Commons Logging, Commons Discovery, Commons Collections, Commons Lang, and ORO.
 - Commons Codec.
 
@@ -66,7 +66,7 @@ Do not classify these as unused without targeted verification:
 - Flyway migrations under `src-pos/db/migration/`, which are discovered by naming convention.
 - Classes loaded with `Class.forName`, including database-specific bean factories and look-and-feel classes.
 - Payment gateway implementations selected through `PaymentGatewayFac` and configuration.
-- JavaPOS, ESC/POS, RXTX, scale, drawer, and display implementations selected by configuration.
+- JavaPOS, ESC/POS, scale, drawer, and display implementations selected by configuration.
 - BeanShell and Velocity engines selected by `ScriptFactory`.
 - `Printer.*`, `Role.*`, `Menu.Root`, and other resources loaded from or inserted into the `RESOURCES` database table.
 - Native libraries under `lib/`, launch scripts, `locales.jar`, and `reports.jar`.
@@ -77,7 +77,7 @@ Do not classify these as unused without targeted verification:
 1. Confirm every code candidate with graph references, repository-wide searches, reflection/configuration review, and a check for external/public API expectations.
 2. For each dependency candidate, remove it temporarily in an isolated change and run compilation plus the relevant runtime tests.
 3. Inspect the resolved runtime classpath and use `dependencyInsight` to distinguish direct requirements from manually declared support jars.
-4. Exercise or test Velocity ticket rendering, BeanShell resources, barcode generation, FlatLaf, JavaPOS, RXTX, Axis/PayPoint, and all supported database drivers.
+4. Exercise or test Velocity ticket rendering, BeanShell resources, barcode generation, FlatLaf, JavaPOS, Axis/PayPoint, and all supported database drivers.
 5. Audit deployed database `RESOURCES` rows and event scripts before deleting JRXML or database-configured templates.
 6. Remove confirmed dead classes, methods, resources, and dependencies in small reviewable commits.
 7. Document retained legacy or optional dependencies with the runtime feature that requires them.

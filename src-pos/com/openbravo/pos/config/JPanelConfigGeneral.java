@@ -136,18 +136,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboMachinePrinter.addItem("javapos");
 		jcboMachinePrinter.addItem("Not defined");
 
-		jcboConnPrinter.addItem("serial");
 		jcboConnPrinter.addItem("file");
-
-		jcboSerialPrinter.addItem("COM1");
-		jcboSerialPrinter.addItem("COM2");
-		jcboSerialPrinter.addItem("COM3");
-		jcboSerialPrinter.addItem("COM4");
-		jcboSerialPrinter.addItem("LPT1");
-		jcboSerialPrinter.addItem("/dev/ttyS0");
-		jcboSerialPrinter.addItem("/dev/ttyS1");
-		jcboSerialPrinter.addItem("/dev/ttyS2");
-		jcboSerialPrinter.addItem("/dev/ttyS3");
 
 		// Printer 2
 		jcboMachinePrinter2.addItem("screen");
@@ -161,18 +150,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboMachinePrinter2.addItem("javapos");
 		jcboMachinePrinter2.addItem("Not defined");
 
-		jcboConnPrinter2.addItem("serial");
 		jcboConnPrinter2.addItem("file");
-
-		jcboSerialPrinter2.addItem("COM1");
-		jcboSerialPrinter2.addItem("COM2");
-		jcboSerialPrinter2.addItem("COM3");
-		jcboSerialPrinter2.addItem("COM4");
-		jcboSerialPrinter2.addItem("LPT1");
-		jcboSerialPrinter2.addItem("/dev/ttyS0");
-		jcboSerialPrinter2.addItem("/dev/ttyS1");
-		jcboSerialPrinter2.addItem("/dev/ttyS2");
-		jcboSerialPrinter2.addItem("/dev/ttyS3");
 
 		// Printer 3
 		jcboMachinePrinter3.addItem("screen");
@@ -186,18 +164,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboMachinePrinter3.addItem("javapos");
 		jcboMachinePrinter3.addItem("Not defined");
 
-		jcboConnPrinter3.addItem("serial");
 		jcboConnPrinter3.addItem("file");
-
-		jcboSerialPrinter3.addItem("COM1");
-		jcboSerialPrinter3.addItem("COM2");
-		jcboSerialPrinter3.addItem("COM3");
-		jcboSerialPrinter3.addItem("COM4");
-		jcboSerialPrinter3.addItem("LPT1");
-		jcboSerialPrinter3.addItem("/dev/ttyS0");
-		jcboSerialPrinter3.addItem("/dev/ttyS1");
-		jcboSerialPrinter3.addItem("/dev/ttyS2");
-		jcboSerialPrinter3.addItem("/dev/ttyS3");
 
 		// Display
 		jcboMachineDisplay.addItem("screen");
@@ -208,30 +175,10 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboMachineDisplay.addItem("surepos");
 		jcboMachineDisplay.addItem("Not defined");
 
-		jcboConnDisplay.addItem("serial");
 		jcboConnDisplay.addItem("file");
-
-		jcboSerialDisplay.addItem("COM1");
-		jcboSerialDisplay.addItem("COM2");
-		jcboSerialDisplay.addItem("COM3");
-		jcboSerialDisplay.addItem("COM4");
-		jcboSerialDisplay.addItem("LPT1");
-		jcboSerialDisplay.addItem("/dev/ttyS0");
-		jcboSerialDisplay.addItem("/dev/ttyS1");
-		jcboSerialDisplay.addItem("/dev/ttyS2");
-		jcboSerialDisplay.addItem("/dev/ttyS3");
 
 		// Scanner
 		jcboMachineScanner.addItem("Not defined");
-
-		jcboSerialScanner.addItem("COM1");
-		jcboSerialScanner.addItem("COM2");
-		jcboSerialScanner.addItem("COM3");
-		jcboSerialScanner.addItem("COM4");
-		jcboSerialScanner.addItem("/dev/ttyS0");
-		jcboSerialScanner.addItem("/dev/ttyS1");
-		jcboSerialScanner.addItem("/dev/ttyS2");
-		jcboSerialScanner.addItem("/dev/ttyS3");
 
 		// Printers
 		cboPrinters.addItem("(Default)");
@@ -268,8 +215,8 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboTicketsBag.setSelectedItem(config.getProperty("machine.ticketsbag"));
 
 		StringParser p = new StringParser(config.getProperty("machine.printer"));
-		String sparam = unifySerialInterface(p.nextToken(':'));
-		if ("serial".equals(sparam) || "file".equals(sparam)) {
+		String sparam = p.nextToken(':');
+		if ("file".equals(sparam)) {
 			jcboMachinePrinter.setSelectedItem("epson");
 			jcboConnPrinter.setSelectedItem(sparam);
 			jcboSerialPrinter.setSelectedItem(p.nextToken(','));
@@ -282,13 +229,13 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 			printer1printerparams.setParameters(p);
 		} else {
 			jcboMachinePrinter.setSelectedItem(sparam);
-			jcboConnPrinter.setSelectedItem(unifySerialInterface(p.nextToken(',')));
+			jcboConnPrinter.setSelectedItem(p.nextToken(','));
 			jcboSerialPrinter.setSelectedItem(p.nextToken(','));
 		}
 
 		p = new StringParser(config.getProperty("machine.printer.2"));
-		sparam = unifySerialInterface(p.nextToken(':'));
-		if ("serial".equals(sparam) || "file".equals(sparam)) {
+		sparam = p.nextToken(':');
+		if ("file".equals(sparam)) {
 			jcboMachinePrinter2.setSelectedItem("epson");
 			jcboConnPrinter2.setSelectedItem(sparam);
 			jcboSerialPrinter2.setSelectedItem(p.nextToken(','));
@@ -301,13 +248,13 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 			printer2printerparams.setParameters(p);
 		} else {
 			jcboMachinePrinter2.setSelectedItem(sparam);
-			jcboConnPrinter2.setSelectedItem(unifySerialInterface(p.nextToken(',')));
+			jcboConnPrinter2.setSelectedItem(p.nextToken(','));
 			jcboSerialPrinter2.setSelectedItem(p.nextToken(','));
 		}
 
 		p = new StringParser(config.getProperty("machine.printer.3"));
-		sparam = unifySerialInterface(p.nextToken(':'));
-		if ("serial".equals(sparam) || "file".equals(sparam)) {
+		sparam = p.nextToken(':');
+		if ("file".equals(sparam)) {
 			jcboMachinePrinter3.setSelectedItem("epson");
 			jcboConnPrinter3.setSelectedItem(sparam);
 			jcboSerialPrinter3.setSelectedItem(p.nextToken(','));
@@ -320,13 +267,13 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 			printer3printerparams.setParameters(p);
 		} else {
 			jcboMachinePrinter3.setSelectedItem(sparam);
-			jcboConnPrinter3.setSelectedItem(unifySerialInterface(p.nextToken(',')));
+			jcboConnPrinter3.setSelectedItem(p.nextToken(','));
 			jcboSerialPrinter3.setSelectedItem(p.nextToken(','));
 		}
 
 		p = new StringParser(config.getProperty("machine.display"));
-		sparam = unifySerialInterface(p.nextToken(':'));
-		if ("serial".equals(sparam) || "file".equals(sparam)) {
+		sparam = p.nextToken(':');
+		if ("file".equals(sparam)) {
 			jcboMachineDisplay.setSelectedItem("epson");
 			jcboConnDisplay.setSelectedItem(sparam);
 			jcboSerialDisplay.setSelectedItem(p.nextToken(','));
@@ -335,7 +282,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 			m_jtxtJPOSName.setText(p.nextToken(','));
 		} else {
 			jcboMachineDisplay.setSelectedItem(sparam);
-			jcboConnDisplay.setSelectedItem(unifySerialInterface(p.nextToken(',')));
+			jcboConnDisplay.setSelectedItem(p.nextToken(','));
 			jcboSerialDisplay.setSelectedItem(p.nextToken(','));
 		}
 
@@ -421,12 +368,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		config.setProperty("machine.printername", comboValue(cboPrinters.getSelectedItem()));
 
 		dirty.setDirty(false);
-	}
-
-	private String unifySerialInterface(String sparam) {
-
-		// for backward compatibility
-		return ("rxtx".equals(sparam)) ? "serial" : sparam;
 	}
 
 	private String comboValue(Object value) {

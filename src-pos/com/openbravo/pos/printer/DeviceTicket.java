@@ -83,8 +83,7 @@ public class DeviceTicket {
 		String sDisplayParam1 = sd.nextToken(',');
 		String sDisplayParam2 = sd.nextToken(',');
 
-		// compatibilidad hacia atras.
-		if ("serial".equals(sDisplayType) || "rxtx".equals(sDisplayType) || "file".equals(sDisplayType)) {
+		if ("file".equals(sDisplayType)) {
 			sDisplayParam2 = sDisplayParam1;
 			sDisplayParam1 = sDisplayType;
 			sDisplayType = "epson";
@@ -129,8 +128,7 @@ public class DeviceTicket {
 			String sPrinterParam1 = sp.nextToken(',');
 			String sPrinterParam2 = sp.nextToken(',');
 
-			// compatibilidad hacia atras.
-			if ("serial".equals(sPrinterType) || "rxtx".equals(sPrinterType) || "file".equals(sPrinterType)) {
+			if ("file".equals(sPrinterType)) {
 				sPrinterParam2 = sPrinterParam1;
 				sPrinterParam1 = sPrinterType;
 				sPrinterType = "epson";
@@ -206,10 +204,7 @@ public class DeviceTicket {
 			String skey = con + "-->" + port;
 			PrinterWritter pw = (PrinterWritter) m_apool.get(skey);
 			if (pw == null) {
-				if ("serial".equals(con) || "rxtx".equals(con)) {
-					pw = new PrinterWritterRXTX(port);
-					m_apool.put(skey, pw);
-				} else if ("file".equals(con)) {
+				if ("file".equals(con)) {
 					pw = new PrinterWritterFile(port);
 					m_apool.put(skey, pw);
 				} else {

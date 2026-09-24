@@ -78,7 +78,6 @@ dependencies {
         "org.apache.poi:poi:3.2-FINAL",
         "org.eclipse.jdt:core:3.1.1",
         "org.javapos:javapos:1.12.2",
-        "org.rxtx:rxtx:2.1.7",
         "oro:oro:2.0.8",
         "org.swinglabs:swingx:0.9.5",
         "org.apache.velocity:velocity:1.7",
