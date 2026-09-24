@@ -44,15 +44,14 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 	private TaxInfo tax;
 	private Properties attributes;
 	private String productid;
-	private String attsetinstid;
 
 	/** Creates new TicketLineInfo */
 	public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax, Properties props) {
-		init(productid, null, dMultiply, dPrice, tax, props);
+		init(productid, dMultiply, dPrice, tax, props);
 	}
 
 	public TicketLineInfo(String productid, double dMultiply, double dPrice, TaxInfo tax) {
-		init(productid, null, dMultiply, dPrice, tax, new Properties());
+		init(productid, dMultiply, dPrice, tax, new Properties());
 	}
 
 	public TicketLineInfo(String productid, String productname, String producttaxcategory, double dMultiply,
@@ -60,7 +59,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		Properties props = new Properties();
 		props.setProperty("product.name", productname);
 		props.setProperty("product.taxcategoryid", producttaxcategory);
-		init(productid, null, dMultiply, dPrice, tax, props);
+		init(productid, dMultiply, dPrice, tax, props);
 	}
 
 	public TicketLineInfo(String productname, String producttaxcategory, double dMultiply, double dPrice, TaxInfo tax) {
@@ -68,11 +67,11 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		Properties props = new Properties();
 		props.setProperty("product.name", productname);
 		props.setProperty("product.taxcategoryid", producttaxcategory);
-		init(null, null, dMultiply, dPrice, tax, props);
+		init(null, dMultiply, dPrice, tax, props);
 	}
 
 	public TicketLineInfo() {
-		init(null, null, 0.0, 0.0, null, new Properties());
+		init(null, 0.0, 0.0, null, new Properties());
 	}
 
 	public TicketLineInfo(ProductInfoExt product, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
@@ -89,15 +88,12 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 			}
 			attributes.setProperty("product.com", product.isCom() ? "true" : "false");
 			attributes.setProperty("product.voucher", product.isVoucher() ? "true" : "false");
-			if (product.getAttributeSetID() != null) {
-				attributes.setProperty("product.attsetid", product.getAttributeSetID());
-			}
 			attributes.setProperty("product.taxcategoryid", product.getTaxCategoryID());
 			if (product.getCategoryID() != null) {
 				attributes.setProperty("product.categoryid", product.getCategoryID());
 			}
 		}
-		init(pid, null, dMultiply, dPrice, tax, attributes);
+		init(pid, dMultiply, dPrice, tax, attributes);
 	}
 
 	public TicketLineInfo(ProductInfoExt oProduct, double dPrice, TaxInfo tax, Properties attributes) {
@@ -105,15 +101,12 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 	}
 
 	public TicketLineInfo(TicketLineInfo line) {
-		init(line.productid, line.attsetinstid, line.multiply, line.price, line.tax,
-				(Properties) line.attributes.clone());
+		init(line.productid, line.multiply, line.price, line.tax, (Properties) line.attributes.clone());
 	}
 
-	private void init(String productid, String attsetinstid, double dMultiply, double dPrice, TaxInfo tax,
-			Properties attributes) {
+	private void init(String productid, double dMultiply, double dPrice, TaxInfo tax, Properties attributes) {
 
 		this.productid = productid;
-		this.attsetinstid = attsetinstid;
 		multiply = dMultiply;
 		price = dPrice;
 		this.tax = tax;
@@ -132,18 +125,16 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		dp.setString(1, m_sTicket);
 		dp.setInt(2, new Integer(m_iLine));
 		dp.setString(3, productid);
-		dp.setString(4, attsetinstid);
+		dp.setDouble(4, new Double(multiply));
+		dp.setDouble(5, new Double(price));
 
-		dp.setDouble(5, new Double(multiply));
-		dp.setDouble(6, new Double(price));
-
-		dp.setString(7, tax.getId());
+		dp.setString(6, tax.getId());
 		try {
 			ByteArrayOutputStream o = new ByteArrayOutputStream();
 			attributes.storeToXML(o, AppLocal.APP_NAME, "UTF-8");
-			dp.setBytes(8, o.toByteArray());
+			dp.setBytes(7, o.toByteArray());
 		} catch (IOException e) {
-			dp.setBytes(8, null);
+			dp.setBytes(7, null);
 		}
 	}
 
@@ -151,16 +142,14 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		m_sTicket = dr.getString(1);
 		m_iLine = dr.getInt(2).intValue();
 		productid = dr.getString(3);
-		attsetinstid = dr.getString(4);
+		multiply = dr.getDouble(4);
+		price = dr.getDouble(5);
 
-		multiply = dr.getDouble(5);
-		price = dr.getDouble(6);
-
-		tax = new TaxInfo(dr.getString(7), dr.getString(8), dr.getString(9), dr.getTimestamp(10), dr.getString(11),
-				dr.getString(12), dr.getDouble(13), dr.getBoolean(14), dr.getInt(15));
+		tax = new TaxInfo(dr.getString(6), dr.getString(7), dr.getString(8), dr.getTimestamp(9), dr.getString(10),
+				dr.getString(11), dr.getDouble(12), dr.getBoolean(13), dr.getInt(14));
 		attributes = new Properties();
 		try {
-			byte[] img = dr.getBytes(16);
+			byte[] img = dr.getBytes(15);
 			if (img != null) {
 				attributes.loadFromXML(new ByteArrayInputStream(img));
 			}
@@ -173,7 +162,6 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		// l.m_sTicket = null;
 		// l.m_iLine = -1;
 		l.productid = productid;
-		l.attsetinstid = attsetinstid;
 		l.multiply = multiply;
 		l.price = price;
 		l.tax = tax;
@@ -191,30 +179,6 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
 	public String getProductName() {
 		return attributes.getProperty("product.name");
-	}
-
-	public String getProductAttSetId() {
-		return attributes.getProperty("product.attsetid");
-	}
-
-	public String getProductAttSetInstDesc() {
-		return attributes.getProperty("product.attsetdesc", "");
-	}
-
-	public void setProductAttSetInstDesc(String value) {
-		if (value == null) {
-			attributes.remove(value);
-		} else {
-			attributes.setProperty("product.attsetdesc", value);
-		}
-	}
-
-	public String getProductAttSetInstId() {
-		return attsetinstid;
-	}
-
-	public void setProductAttSetInstId(String value) {
-		attsetinstid = value;
 	}
 
 	public boolean isProductCom() {

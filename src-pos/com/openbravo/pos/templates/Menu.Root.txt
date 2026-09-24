@@ -34,7 +34,6 @@
         submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.SaleMark", "com.openbravo.pos.inventory.SaleMarkPanel");
         submenu.addPanel("/com/openbravo/images/menu-products-warehouse.png", "Menu.ProductsWarehouse", "com.openbravo.pos.inventory.ProductsWarehousePanel");
         submenu.addPanel("/com/openbravo/images/menu-categories.png", "Menu.Categories", "com.openbravo.pos.inventory.CategoriesPanel");
-        submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.AttributeManagement", "com.openbravo.pos.inventory.AttributeManagementPanel");
         submenu.addPanel("/com/openbravo/images/menu-taxes.png", "Menu.Taxes", "com.openbravo.pos.inventory.TaxPanel");
          submenu.addPanel("/com/openbravo/images/menu-stock-diary.png", "Menu.StockDiary", "com.openbravo.pos.inventory.StockDiaryPanel");
         submenu.addPanel("/com/openbravo/images/menu-stock-movement.png", "Menu.StockMovement", "com.openbravo.pos.inventory.StockManagement");
