@@ -8,6 +8,12 @@ plugins {
 version = providers.gradleProperty("appVersion").orElse("3.0.0-RC1").get()
 description = "Retail POS"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -52,7 +58,7 @@ sourceSets {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
+    options.release.set(21)
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:-options")
 }

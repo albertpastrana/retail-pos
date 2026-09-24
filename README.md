@@ -8,7 +8,7 @@ This file is the project entry point. Catalogue variant rules live in [catalog-v
 
 ## Requirements
 
-- Any JDK to launch the wrapper; Gradle then runs on JDK 21, downloading it if the machine has none (`gradle/gradle-daemon-jvm.properties`). The build still emits Java 8 bytecode. SDKMAN users: `.sdkmanrc` pins Temurin 21 (`sdk env`, or `sdkman_auto_env=true` so `cd` switches it).
+- JDK 21 to build and launch the application. Gradle downloads it if the machine has none (`gradle/gradle-daemon-jvm.properties`). SDKMAN users: `.sdkmanrc` pins Temurin 21 (`sdk env`, or `sdkman_auto_env=true` so `cd` switches it).
 - The [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) (`./gradlew`); no local Gradle install needed
 - Access to Maven Central when dependencies are not already in the Gradle cache
 
@@ -40,7 +40,7 @@ On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
 
 ## Releases
 
-Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Windows and macOS packages include a bundled JRE; the Linux package uses the system Java installation to avoid cross-platform JRE mismatches. The workflow uses `macos-13` for the current Intel macOS package; Apple Silicon and native installers are follow-up work.
+Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Every package includes a bundled Java 21 runtime. The workflow uses an Intel macOS runner for the current x86_64 package; Apple Silicon and native installers are follow-up work.
 
 ## Configuration
 
