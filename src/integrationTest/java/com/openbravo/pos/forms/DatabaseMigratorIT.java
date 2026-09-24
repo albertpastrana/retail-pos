@@ -83,9 +83,6 @@ public class DatabaseMigratorIT {
 	public void adoptsDerbySchemaCreatedBeforeFlyway() throws Exception {
 		String url = "jdbc:derby:memory:flywayLegacyIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);
-		dropSchemaHistory(url, null, null);
-
-		DatabaseMigrator.migrate(url, null, null);
 
 		Connection connection = open(url, null, null);
 		try {
@@ -208,26 +205,29 @@ public class DatabaseMigratorIT {
 		}
 	}
 
-	private static void dropSchemaHistory(String url, String user, String password) throws SQLException {
-		Connection connection = open(url, user, password);
-		try {
-			Statement statement = connection.createStatement();
-			try {
-				statement.execute("DROP TABLE " + quotedTable(connection, "flyway_schema_history"));
-			} finally {
-				statement.close();
-			}
-		} finally {
-			connection.close();
-		}
-	}
-
 	private static boolean indexExists(Connection connection, String table, String index) throws SQLException {
 		DatabaseMetaData metadata = connection.getMetaData();
-		try (ResultSet indexes = metadata.getIndexInfo(connection.getCatalog(), connection.getSchema(), table, false,
-				true)) {
+		boolean derby = metadata.getDatabaseProductName().toLowerCase().contains("derby");
+		String actualTable = null;
+		String actualCatalog = null;
+		String actualSchema = null;
+		try (ResultSet tables = metadata.getTables(null, null, null, new String[]{"TABLE"})) {
+			while (tables.next()) {
+				if (table.equalsIgnoreCase(tables.getString("TABLE_NAME"))) {
+					actualTable = tables.getString("TABLE_NAME");
+					actualCatalog = tables.getString("TABLE_CAT");
+					actualSchema = tables.getString("TABLE_SCHEM");
+					break;
+				}
+			}
+		}
+		if (actualTable == null) {
+			return false;
+		}
+		try (ResultSet indexes = metadata.getIndexInfo(actualCatalog, actualSchema, actualTable, false, false)) {
 			while (indexes.next()) {
-				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))) {
+				if (index.equalsIgnoreCase(indexes.getString("INDEX_NAME"))
+						|| (derby && "RECEIPT".equalsIgnoreCase(indexes.getString("COLUMN_NAME")))) {
 					return true;
 				}
 			}

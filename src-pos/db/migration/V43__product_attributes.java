@@ -41,11 +41,6 @@ public class V43__product_attributes extends BaseJavaMigration {
 			statement.execute("ALTER TABLE STOCKDIARY DROP COLUMN ATTRIBUTESETINSTANCE_ID");
 			statement.execute("ALTER TABLE STOCKCURRENT DROP COLUMN ATTRIBUTESETINSTANCE_ID");
 			statement.execute("ALTER TABLE TICKETLINES DROP COLUMN ATTRIBUTESETINSTANCE_ID");
-			if (database.toLowerCase().contains("mysql")) {
-				if (indexExists(connection, "STOCKCURRENT_INX")) {
-					statement.execute("ALTER TABLE STOCKCURRENT DROP INDEX STOCKCURRENT_INX");
-				}
-			}
 			statement.execute("DROP TABLE ATTRIBUTEINSTANCE");
 			statement.execute("DROP TABLE ATTRIBUTESETINSTANCE");
 			statement.execute("DROP TABLE ATTRIBUTEUSE");
@@ -72,4 +67,5 @@ public class V43__product_attributes extends BaseJavaMigration {
 		}
 		return false;
 	}
+
 }
