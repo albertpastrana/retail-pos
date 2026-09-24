@@ -25,5 +25,5 @@ or requests to commit and push a release-related change.
    the live installation.
 6. Report the exact artifact, verification commands, CI result, and remaining
    platform risks. Publish changes through a pull request, wait for all required
-   checks to be green, and get user approval before merging, tagging, pushing a
-   release, or publishing an artifact.
+   checks to be green and user approval, then use GitHub's rebase merge. Do not
+   use a merge commit or squash merge unless explicitly requested.
