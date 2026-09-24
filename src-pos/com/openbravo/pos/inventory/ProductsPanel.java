@@ -36,6 +36,7 @@ import com.openbravo.data.user.SaveProvider;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.panels.JPanelTable2;
+import com.openbravo.pos.sales.TaxesLogic;
 import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.ticket.ProductFilter;
 import com.openbravo.data.user.BrowsableEditableData;
@@ -51,6 +52,7 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 	private ProductFilter jproductfilter;
 
 	private DataLogicSales m_dlSales = null;
+	private TaxesLogic taxesLogic;
 
 	/** Creates a new instance of ProductsPanel2 */
 	public ProductsPanel() {
@@ -58,6 +60,11 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	protected void init() {
 		m_dlSales = app.getBean(DataLogicSales.class);
+		try {
+			taxesLogic = new TaxesLogic(m_dlSales.getTaxList().list());
+		} catch (BasicException e) {
+			throw new IllegalStateException("Cannot load product taxes", e);
+		}
 		row = m_dlSales.getProductsRow();
 
 		// el panel del filtro
@@ -123,7 +130,7 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	@Override
 	protected Component getListComponent(BrowsableEditableData data) {
-		return new ProductTableNavigator(data);
+		return new ProductTableNavigator(data, taxesLogic);
 	}
 
 	public String getTitle() {

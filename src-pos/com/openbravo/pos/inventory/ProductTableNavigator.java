@@ -12,8 +12,12 @@ import javax.swing.event.ListSelectionListener;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.loader.LocalRes;
+import com.openbravo.format.Formats;
+import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.BrowseListener;
+import com.openbravo.pos.sales.TaxesLogic;
+import java.util.Date;
 
 final class ProductTableNavigator extends javax.swing.JPanel implements BrowseListener, ListSelectionListener {
 	private final BrowsableEditableData data;
@@ -21,15 +25,16 @@ final class ProductTableNavigator extends javax.swing.JPanel implements BrowseLi
 	private final ProductTableModel model;
 	private boolean updating;
 
-	ProductTableNavigator(BrowsableEditableData data) {
+	ProductTableNavigator(BrowsableEditableData data, TaxesLogic taxesLogic) {
 		this.data = data;
-		this.model = new ProductTableModel(data);
+		this.model = new ProductTableModel(data, taxesLogic);
 		this.table = new JTable(model);
 		this.table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.table.setAutoCreateRowSorter(true);
 		this.table.setFillsViewportHeight(true);
 		this.table.getColumnModel().getColumn(0).setPreferredWidth(90);
-		this.table.getColumnModel().getColumn(1).setPreferredWidth(220);
+		this.table.getColumnModel().getColumn(1).setPreferredWidth(245);
+		this.table.getColumnModel().getColumn(2).setPreferredWidth(60);
 		this.table.getSelectionModel().addListSelectionListener(this);
 		data.addBrowseListener(this);
 		data.getListModel().addListDataListener(new ListDataListener() {
@@ -78,22 +83,32 @@ final class ProductTableNavigator extends javax.swing.JPanel implements BrowseLi
 
 	private static final class ProductTableModel extends AbstractTableModel {
 		private final BrowsableEditableData data;
+		private final TaxesLogic taxesLogic;
 
-		ProductTableModel(BrowsableEditableData data) {
+		ProductTableModel(BrowsableEditableData data, TaxesLogic taxesLogic) {
 			this.data = data;
+			this.taxesLogic = taxesLogic;
 		}
 		public int getRowCount() {
 			return data.getListModel().getSize();
 		}
 		public int getColumnCount() {
-			return 2;
+			return 3;
 		}
 		public String getColumnName(int column) {
-			return column == 0 ? "Referència" : "Nom";
+			if (column == 0) {
+				return "Referència";
+			}
+			return column == 1 ? "Nom" : "PVP";
 		}
 		public Object getValueAt(int row, int column) {
 			Object[] product = (Object[]) data.getListModel().getElementAt(row);
-			return product[column == 0 ? 1 : 3];
+			if (column != 2) {
+				return product[column == 0 ? 1 : 3];
+			}
+			double priceSell = ((Number) product[6]).doubleValue();
+			double taxRate = taxesLogic.getTaxRate((String) product[8], new Date(), null);
+			return Formats.CURRENCY.formatValue(Double.valueOf(priceSell * (1.0 + taxRate)));
 		}
 	}
 }
