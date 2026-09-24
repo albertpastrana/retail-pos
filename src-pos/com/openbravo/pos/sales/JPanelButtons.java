@@ -29,15 +29,11 @@ import com.openbravo.pos.forms.SupervisorAuthorization;
 import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
 import com.openbravo.pos.util.TillButtons;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 public class JPanelButtons extends javax.swing.JPanel {
 
 	private Properties props;
-	private Map<String, String> events;
-
 	private ThumbNailBuilder tnbmacro;
 
 	private JPanelTicket panelticket;
@@ -53,8 +49,6 @@ public class JPanelButtons extends javax.swing.JPanel {
 		this.panelticket = panelticket;
 
 		props = new Properties();
-		events = new HashMap<String, String>();
-
 		// These actions are part of the till, not an installation-specific resource.
 		props.setProperty("taxesincluded", "true");
 		props.setProperty("taxcategoryid", "001");
@@ -95,10 +89,6 @@ public class JPanelButtons extends javax.swing.JPanel {
 
 	public String getProperty(String key, String defaultvalue) {
 		return props.getProperty(key, defaultvalue);
-	}
-
-	public String getEvent(String key) {
-		return events.get(key);
 	}
 
 	private class JButtonFunc extends JButton {
