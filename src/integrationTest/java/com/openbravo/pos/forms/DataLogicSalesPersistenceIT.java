@@ -95,6 +95,7 @@ public class DataLogicSalesPersistenceIT {
 			session.close();
 		}
 	}
+<<<<<<< HEAD
 
 	@Test
 	public void deletingSaleRemovesReceiptAndReversesStock() throws Exception {
