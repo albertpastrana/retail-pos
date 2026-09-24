@@ -13,10 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import com.openbravo.pos.forms.DatabaseBackup.ConnectionInfo;
 import com.openbravo.pos.forms.DatabaseBackup.DatabaseType;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DatabaseBackupTest {
 
@@ -27,35 +24,35 @@ public class DatabaseBackupTest {
 	public void parsesPostgresUrls() {
 		ConnectionInfo info = DatabaseBackup
 				.parseConnectionInfo("jdbc:postgresql://192.168.1.100:5433/retailpos?sslmode=disable");
-		assertEquals(DatabaseType.POSTGRESQL, info.getType());
-		assertEquals("192.168.1.100", info.getHost());
-		assertEquals(5433, info.getPort());
-		assertEquals("retailpos", info.getDatabaseName());
+		assertThat(info.getType()).isEqualTo(DatabaseType.POSTGRESQL);
+		assertThat(info.getHost()).isEqualTo("192.168.1.100");
+		assertThat(info.getPort()).isEqualTo(5433);
+		assertThat(info.getDatabaseName()).isEqualTo("retailpos");
 
 		ConnectionInfo defaultPort = DatabaseBackup.parseConnectionInfo("jdbc:postgresql://dbserver/pos");
-		assertEquals(DatabaseType.POSTGRESQL, defaultPort.getType());
-		assertEquals("dbserver", defaultPort.getHost());
-		assertEquals(5432, defaultPort.getPort());
-		assertEquals("pos", defaultPort.getDatabaseName());
+		assertThat(defaultPort.getType()).isEqualTo(DatabaseType.POSTGRESQL);
+		assertThat(defaultPort.getHost()).isEqualTo("dbserver");
+		assertThat(defaultPort.getPort()).isEqualTo(5432);
+		assertThat(defaultPort.getDatabaseName()).isEqualTo("pos");
 
 		ConnectionInfo localSimple = DatabaseBackup.parseConnectionInfo("jdbc:postgresql:testdb");
-		assertEquals(DatabaseType.POSTGRESQL, localSimple.getType());
-		assertEquals("localhost", localSimple.getHost());
-		assertEquals(5432, localSimple.getPort());
-		assertEquals("testdb", localSimple.getDatabaseName());
+		assertThat(localSimple.getType()).isEqualTo(DatabaseType.POSTGRESQL);
+		assertThat(localSimple.getHost()).isEqualTo("localhost");
+		assertThat(localSimple.getPort()).isEqualTo(5432);
+		assertThat(localSimple.getDatabaseName()).isEqualTo("testdb");
 	}
 
 	@Test
 	public void parsesMySqlAndDerbyUrls() {
 		ConnectionInfo mysql = DatabaseBackup.parseConnectionInfo("jdbc:mysql://mysqlhost:3307/mysqldb?useSSL=false");
-		assertEquals(DatabaseType.MYSQL, mysql.getType());
-		assertEquals("mysqlhost", mysql.getHost());
-		assertEquals(3307, mysql.getPort());
-		assertEquals("mysqldb", mysql.getDatabaseName());
+		assertThat(mysql.getType()).isEqualTo(DatabaseType.MYSQL);
+		assertThat(mysql.getHost()).isEqualTo("mysqlhost");
+		assertThat(mysql.getPort()).isEqualTo(3307);
+		assertThat(mysql.getDatabaseName()).isEqualTo("mysqldb");
 
 		ConnectionInfo derby = DatabaseBackup.parseConnectionInfo("jdbc:derby:/path/to/myposdb;create=true");
-		assertEquals(DatabaseType.DERBY, derby.getType());
-		assertEquals("myposdb", derby.getDatabaseName());
+		assertThat(derby.getType()).isEqualTo(DatabaseType.DERBY);
+		assertThat(derby.getDatabaseName()).isEqualTo("myposdb");
 	}
 
 	@Test
@@ -64,23 +61,14 @@ public class DatabaseBackupTest {
 		File target = new File("/tmp/backup.sql");
 		List<String> cmd = DatabaseBackup.buildPgDumpCommand("/usr/bin/pg_dump", info, "posuser", target);
 
-		assertEquals(10, cmd.size());
-		assertEquals("/usr/bin/pg_dump", cmd.get(0));
-		assertEquals("-h", cmd.get(1));
-		assertEquals("dbhost", cmd.get(2));
-		assertEquals("-p", cmd.get(3));
-		assertEquals("5432", cmd.get(4));
-		assertEquals("-U", cmd.get(5));
-		assertEquals("posuser", cmd.get(6));
-		assertEquals("-f", cmd.get(7));
-		assertEquals(target.getAbsolutePath(), cmd.get(8));
-		assertEquals("posdb", cmd.get(9));
+		assertThat(cmd).containsExactly("/usr/bin/pg_dump", "-h", "dbhost", "-p", "5432", "-U", "posuser", "-f",
+				target.getAbsolutePath(), "posdb");
 	}
 
 	@Test
 	public void checksDailyBackupStatus() throws Exception {
 		File backupDir = new File(temp, "backups");
-		assertTrue(backupDir.mkdirs());
+		assertThat(backupDir.mkdirs()).isTrue();
 		final Properties props = new Properties();
 		AppProperties appProps = new AppProperties() {
 			public String getProperty(String sKey) {
@@ -94,16 +82,16 @@ public class DatabaseBackupTest {
 		// Daily disabled
 		props.setProperty("backup.daily", "false");
 		props.setProperty("backup.dir", backupDir.getAbsolutePath());
-		assertFalse(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
 
 		// Daily enabled, no dir
 		props.setProperty("backup.daily", "true");
 		props.remove("backup.dir");
-		assertFalse(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
 
 		// Daily enabled, valid dir, no backups yet today
 		props.setProperty("backup.dir", backupDir.getAbsolutePath());
-		assertTrue(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isTrue();
 
 		// Simulate backup file created today
 		String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
@@ -112,7 +100,7 @@ public class DatabaseBackupTest {
 		out.write("DUMP".getBytes());
 		out.close();
 
-		assertFalse(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
 	}
 
 	@Test
@@ -122,7 +110,7 @@ public class DatabaseBackupTest {
 		DatabaseMigrator.migrate(url, null, null);
 
 		File backupDir = new File(temp, "derby-backups");
-		assertTrue(backupDir.mkdirs());
+		assertThat(backupDir.mkdirs()).isTrue();
 		final Properties props = new Properties();
 		props.setProperty("db.URL", url);
 		props.setProperty("backup.dir", backupDir.getAbsolutePath());
@@ -137,14 +125,12 @@ public class DatabaseBackupTest {
 			}
 		};
 
-		assertTrue(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isTrue();
 
 		File result = DatabaseBackup.backup(appProps);
-		assertNotNull(result);
-		assertTrue(result.exists());
-		assertTrue(result.isDirectory());
+		assertThat(result).isNotNull().exists().isDirectory();
 
 		// After backup, daily backup is no longer needed
-		assertFalse(DatabaseBackup.isDailyBackupNeeded(appProps));
+		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
 	}
 }

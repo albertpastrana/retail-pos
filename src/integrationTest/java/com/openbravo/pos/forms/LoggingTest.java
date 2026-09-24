@@ -1,7 +1,6 @@
 package com.openbravo.pos.forms;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -18,30 +17,49 @@ public class LoggingTest {
 
 		String formatted = formatter.format(record);
 
-		assertTrue(formatted.contains("level=WARNING"));
-		assertTrue(formatted.contains("logger=test.logger"));
-		assertTrue(formatted.contains("runId="));
-		assertTrue(formatted.contains("message=message\\nwith newline"));
-		assertFalse(formatted.substring(0, formatted.length() - System.lineSeparator().length())
-				.contains(System.lineSeparator()));
+		assertThat(formatted).contains("level=WARNING", "logger=test.logger", "runId=",
+				"message=message\\nwith newline");
+		assertThat(formatted.substring(0, formatted.length() - System.lineSeparator().length()))
+				.doesNotContain(System.lineSeparator());
 	}
 
 	@Test
 	public void operationContextIsRestoredAfterScope() {
-		assertTrue(LogContext.getOperationId() == null);
+		assertThat(LogContext.getOperationId()).isNull();
 		try (LogContext.Scope ignored = LogContext.beginOperation()) {
-			assertTrue(LogContext.getOperationId() != null);
+			assertThat(LogContext.getOperationId()).isNotNull();
 		}
-		assertTrue(LogContext.getOperationId() == null);
+		assertThat(LogContext.getOperationId()).isNull();
 	}
 
 	@Test
 	public void jdbcCredentialsAreRedacted() {
 		String result = LogSanitizer.jdbcUrl("jdbc:postgresql://db/pos?user=alice&password=secret");
 
-		assertTrue(result.contains("user=<redacted>"));
-		assertTrue(result.contains("password=<redacted>"));
-		assertFalse(result.contains("secret"));
+		assertThat(result).contains("user=<redacted>", "password=<redacted>").doesNotContain("secret");
+	}
+	@Test
+	public void configurationSummaryDoesNotExposeCredentials() {
+		AppConfig config = new AppConfig();
+		config.setProperty("db.URL", "jdbc:postgresql://db:5432/pos?user=alice&password=secret");
+		config.setProperty("db.driver", "org.postgresql.Driver");
+		config.setProperty("db.user", "alice");
+		config.setProperty("db.password", "secret");
+		config.setProperty("machine.hostname", "till-1");
+		config.setProperty("user.language", "ca");
+		config.setProperty("user.country", "ES");
+
+		String result = LogSanitizer.configuration(config);
+
+		assertThat(result).contains("databaseType=POSTGRESQL", "databaseUserConfigured=true").doesNotContain("alice",
+				"secret");
+	}
+
+	@Test
+	public void logFieldsRemainSingleLineAndParseable() {
+		String result = LogSanitizer.field("value with spaces=and\nnewlines");
+
+		assertThat(result).isEqualTo("value_with_spaces_and_newlines");
 	}
 
 	@Test
