@@ -1,6 +1,6 @@
 package com.openbravo.pos.forms;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,12 +8,12 @@ public class CatalogTsvParserTest {
 
 	@Test
 	public void removesCsvFieldQuotesAndUnescapesQuotes() {
-		assertArrayEquals(new String[]{"id", "Product \"name\"", "Brand"},
-				CatalogTsvParser.parse("id\t\"Product \"\"name\"\"\"\tBrand"));
+		assertThat(CatalogTsvParser.parse("id\t\"Product \"\"name\"\"\"\tBrand")).containsExactly("id",
+				"Product \"name\"", "Brand");
 	}
 
 	@Test
 	public void preservesEmptyAndUnquotedFields() {
-		assertArrayEquals(new String[]{"id", "", "plain", ""}, CatalogTsvParser.parse("id\t\tplain\t"));
+		assertThat(CatalogTsvParser.parse("id\t\tplain\t")).containsExactly("id", "", "plain", "");
 	}
 }
