@@ -95,4 +95,40 @@ public class DataLogicSalesPersistenceIT {
 			session.close();
 		}
 	}
+
+	@Test
+	public void deletingSaleRemovesReceiptAndReversesStock() throws Exception {
+		String url = "jdbc:derby:memory:voidPersistenceIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CLOSEDCASH VALUES ('cash-1', 'test-host', 1, "
+						+ "TIMESTAMP('2026-09-24 10:00:00'), NULL)");
+			}
+
+			TaxInfo tax = new TaxInfo("000", "Tax Exempt", "000", new Date(0L), null, null, 0.0, false, null);
+			TicketInfo ticket = new TicketInfo();
+			ticket.setUser(new UserInfo("0", "Administrator"));
+			ticket.setActiveCash("cash-1");
+			ticket.addLine(new TicketLineInfo("gift-voucher-10", "Test product", "000", 2.0, 10.0, tax));
+			ticket.getPayments().add(new PaymentInfoCash(20.0, 20.0));
+			sales.saveTicket(ticket, "0");
+
+			sales.deleteTicket(ticket, "0");
+
+			assertThat(sales.loadTicket(TicketInfo.RECEIPT_NORMAL, ticket.getTicketId())).isNull();
+			try (Statement statement = session.getConnection().createStatement();
+					ResultSet result = statement.executeQuery(
+							"SELECT COUNT(*), COALESCE(SUM(UNITS), 0) FROM STOCKDIARY WHERE PRODUCT = 'gift-voucher-10'")) {
+				assertThat(result.next()).isTrue();
+				assertThat(result.getInt(1)).isEqualTo(2);
+				assertThat(result.getDouble(2)).isEqualTo(0.0);
+			}
+		} finally {
+			session.close();
+		}
+	}
 }
