@@ -24,4 +24,6 @@ or requests to commit and push a release-related change.
    checksum-mismatch, failed-replacement, and rollback paths without replacing
    the live installation.
 6. Report the exact artifact, verification commands, CI result, and remaining
-   platform risks. Ask before committing, tagging, pushing, or publishing.
+   platform risks. Publish changes through a pull request, wait for all required
+   checks to be green, and get user approval before merging, tagging, pushing a
+   release, or publishing an artifact.
