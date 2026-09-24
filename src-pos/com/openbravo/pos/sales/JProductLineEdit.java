@@ -24,9 +24,18 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import com.openbravo.beans.JNumberEvent;
+import com.openbravo.beans.JNumberEventListener;
+import com.openbravo.beans.JNumberKeys;
+import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.SupervisorAuthorization;
@@ -42,6 +51,7 @@ public class JProductLineEdit extends javax.swing.JDialog {
 	private TicketLineInfo m_oLine;
 	private boolean m_bunitsok;
 	private boolean m_bpriceok;
+	private boolean m_updatingFields;
 
 	/** Creates new form JProductLineEdit */
 	private JProductLineEdit(java.awt.Frame parent, boolean modal) {
@@ -71,25 +81,100 @@ public class JProductLineEdit extends javax.swing.JDialog {
 				.setEnabled(app.getAppUserView().getUser().hasPermission("com.openbravo.pos.sales.JPanelTicketEdits"));
 
 		m_jName.setText(m_oLine.getProperty("product.name"));
-		m_jUnits.setDoubleValue(oLine.getMultiply());
-		m_jPrice.setDoubleValue(oLine.getPrice());
-		m_jPriceTax.setDoubleValue(oLine.getPriceTax());
+		m_jUnits.setText(Double.toString(oLine.getMultiply()));
+		m_jPrice.setText(Double.toString(oLine.getPrice()));
+		m_jPriceTax.setText(Double.toString(oLine.getPriceTax()));
 		m_jTaxrate.setText(oLine.getTaxInfo().getName());
+		m_jName.setColumns(24);
+		m_jUnits.setColumns(12);
+		m_jPrice.setColumns(12);
+		m_jPriceTax.setColumns(12);
+		m_jUnits.setHorizontalAlignment(JTextField.RIGHT);
+		m_jPrice.setHorizontalAlignment(JTextField.RIGHT);
+		m_jPriceTax.setHorizontalAlignment(JTextField.RIGHT);
 
-		m_jName.addPropertyChangeListener("Edition", new RecalculateName());
-		m_jUnits.addPropertyChangeListener("Edition", new RecalculateUnits());
-		m_jPrice.addPropertyChangeListener("Edition", new RecalculatePrice());
-		m_jPriceTax.addPropertyChangeListener("Edition", new RecalculatePriceTax());
+		((AbstractDocument) m_jUnits.getDocument()).setDocumentFilter(new NumericFilter());
+		((AbstractDocument) m_jPrice.getDocument()).setDocumentFilter(new NumericFilter());
+		((AbstractDocument) m_jPriceTax.getDocument()).setDocumentFilter(new NumericFilter());
+		m_jName.getDocument().addDocumentListener(new FieldListener() {
+			@Override
+			public void update() {
+				m_oLine.setProperty("product.name", m_jName.getText());
+			}
+		});
+		m_jUnits.getDocument().addDocumentListener(new FieldListener() {
+			@Override
+			public void update() {
+				Double value = parse(m_jUnits, Formats.DOUBLE);
+				m_bunitsok = value != null && value != 0.0;
+				if (m_bunitsok) {
+					m_oLine.setMultiply(value);
+				}
+				printTotals();
+			}
+		});
+		m_jPrice.getDocument().addDocumentListener(new FieldListener() {
+			@Override
+			public void update() {
+				if (m_updatingFields) {
+					return;
+				}
+				Double value = parse(m_jPrice, Formats.CURRENCY);
+				m_bpriceok = value != null && value != 0.0;
+				if (m_bpriceok) {
+					m_oLine.setPrice(value);
+					m_updatingFields = true;
+					try {
+						m_jPriceTax.setText(Formats.CURRENCY.formatValue(m_oLine.getPriceTax()));
+					} finally {
+						m_updatingFields = false;
+					}
+				}
+				printTotals();
+			}
+		});
+		m_jPriceTax.getDocument().addDocumentListener(new FieldListener() {
+			@Override
+			public void update() {
+				if (m_updatingFields) {
+					return;
+				}
+				Double value = parse(m_jPriceTax, Formats.CURRENCY);
+				m_bpriceok = value != null && value != 0.0;
+				if (m_bpriceok) {
+					m_oLine.setPriceTax(value);
+					m_updatingFields = true;
+					try {
+						m_jPrice.setText(Formats.CURRENCY.formatValue(m_oLine.getPrice()));
+					} finally {
+						m_updatingFields = false;
+					}
+				}
+				printTotals();
+			}
+		});
 
-		m_jName.addEditorKeys(m_jKeys);
-		m_jUnits.addEditorKeys(m_jKeys);
-		m_jPrice.addEditorKeys(m_jKeys);
-		m_jPriceTax.addEditorKeys(m_jKeys);
+		m_jKeys.addJNumberEventListener(new JNumberEventListener() {
+			@Override
+			public void keyPerformed(JNumberEvent event) {
+				JTextField field = getFocusedNumericField();
+				if (field == null) {
+					return;
+				}
+				if (event.getKey() == '\u007f') {
+					field.setText(null);
+				} else {
+					field.replaceSelection(Character.toString(event.getKey()));
+				}
+			}
+		});
+		m_jKeys.setNumbersOnly(true);
+		m_jKeys.setDotVisible(true);
 
 		if (m_jName.isEnabled()) {
-			m_jName.activate();
+			m_jName.requestFocusInWindow();
 		} else {
-			m_jUnits.activate();
+			m_jUnits.requestFocusInWindow();
 		}
 
 		printTotals();
@@ -114,56 +199,70 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		}
 	}
 
-	private class RecalculateUnits implements PropertyChangeListener {
-		public void propertyChange(PropertyChangeEvent evt) {
-			Double value = m_jUnits.getDoubleValue();
-			if (value == null || value == 0.0) {
-				m_bunitsok = false;
-			} else {
-				m_oLine.setMultiply(value);
-				m_bunitsok = true;
-			}
-
-			printTotals();
+	private Double parse(JTextField field, Formats format) {
+		try {
+			return (Double) format.parseValue(field.getText());
+		} catch (BasicException exception) {
+			return null;
 		}
 	}
 
-	private class RecalculatePrice implements PropertyChangeListener {
-		public void propertyChange(PropertyChangeEvent evt) {
-
-			Double value = m_jPrice.getDoubleValue();
-			if (value == null || value == 0.0) {
-				m_bpriceok = false;
-			} else {
-				m_oLine.setPrice(value);
-				m_jPriceTax.setDoubleValue(m_oLine.getPriceTax());
-				m_bpriceok = true;
-			}
-
-			printTotals();
+	private JTextField getFocusedNumericField() {
+		if (m_jUnits.hasFocus()) {
+			return m_jUnits;
 		}
+		if (m_jPrice.hasFocus()) {
+			return m_jPrice;
+		}
+		if (m_jPriceTax.hasFocus()) {
+			return m_jPriceTax;
+		}
+		return null;
 	}
 
-	private class RecalculatePriceTax implements PropertyChangeListener {
-		public void propertyChange(PropertyChangeEvent evt) {
-
-			Double value = m_jPriceTax.getDoubleValue();
-			if (value == null || value == 0.0) {
-				// m_jPriceTax.setValue(m_oLine.getPriceTax());
-				m_bpriceok = false;
-			} else {
-				m_oLine.setPriceTax(value);
-				m_jPrice.setDoubleValue(m_oLine.getPrice());
-				m_bpriceok = true;
-			}
-
-			printTotals();
+	private abstract static class FieldListener implements DocumentListener {
+		@Override
+		public void insertUpdate(DocumentEvent event) {
+			update();
 		}
+
+		@Override
+		public void removeUpdate(DocumentEvent event) {
+			update();
+		}
+
+		@Override
+		public void changedUpdate(DocumentEvent event) {
+			update();
+		}
+
+		abstract void update();
 	}
 
-	private class RecalculateName implements PropertyChangeListener {
-		public void propertyChange(PropertyChangeEvent evt) {
-			m_oLine.setProperty("product.name", m_jName.getText());
+	private static class NumericFilter extends DocumentFilter {
+		@Override
+		public void insertString(FilterBypass bypass, int offset, String text, AttributeSet attributes)
+				throws BadLocationException {
+			if (text != null) {
+				bypass.insertString(offset, numericCharacters(text), attributes);
+			}
+		}
+
+		@Override
+		public void replace(FilterBypass bypass, int offset, int length, String text, AttributeSet attributes)
+				throws BadLocationException {
+			bypass.replace(offset, length, text == null ? null : numericCharacters(text), attributes);
+		}
+
+		private String numericCharacters(String text) {
+			StringBuilder value = new StringBuilder(text.length());
+			for (int i = 0; i < text.length(); i++) {
+				char character = text.charAt(i);
+				if (Character.isDigit(character) || character == '.' || character == ',' || character == '-') {
+					value.append(character);
+				}
+			}
+			return value.toString();
 		}
 	}
 
@@ -212,10 +311,10 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		jLabel2 = new javax.swing.JLabel();
 		jLabel3 = new javax.swing.JLabel();
 		jLabel4 = new javax.swing.JLabel();
-		m_jName = new com.openbravo.editor.JEditorString();
-		m_jUnits = new com.openbravo.editor.JEditorDouble();
-		m_jPrice = new com.openbravo.editor.JEditorCurrency();
-		m_jPriceTax = new com.openbravo.editor.JEditorCurrency();
+		m_jName = new javax.swing.JTextField();
+		m_jUnits = new javax.swing.JTextField();
+		m_jPrice = new javax.swing.JTextField();
+		m_jPriceTax = new javax.swing.JTextField();
 		m_jTaxrate = new javax.swing.JLabel();
 		jLabel5 = new javax.swing.JLabel();
 		jLabel6 = new javax.swing.JLabel();
@@ -227,88 +326,36 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		m_jButtonCancel = new javax.swing.JButton();
 		jPanel3 = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
-		m_jKeys = new com.openbravo.editor.JEditorKeys();
+		m_jKeys = new com.openbravo.beans.JNumberKeys();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		setTitle(AppLocal.getIntString("label.editline")); // NOI18N
 
 		jPanel5.setLayout(new java.awt.BorderLayout());
 
-		jPanel2.setLayout(null);
-
 		jLabel1.setText(AppLocal.getIntString("label.price")); // NOI18N
-		jPanel2.add(jLabel1);
-		jLabel1.setBounds(10, 80, 90, 15);
-
 		jLabel2.setText(AppLocal.getIntString("label.units")); // NOI18N
-		jPanel2.add(jLabel2);
-		jLabel2.setBounds(10, 50, 90, 15);
-
 		jLabel3.setText(AppLocal.getIntString("label.pricetax")); // NOI18N
-		jPanel2.add(jLabel3);
-		jLabel3.setBounds(10, 110, 90, 15);
-
 		jLabel4.setText(AppLocal.getIntString("label.item")); // NOI18N
-		jPanel2.add(jLabel4);
-		jLabel4.setBounds(10, 20, 90, 15);
-		jPanel2.add(m_jName);
-		m_jName.setBounds(100, 20, 270, 25);
-		jPanel2.add(m_jUnits);
-		m_jUnits.setBounds(100, 50, 240, 25);
-		jPanel2.add(m_jPrice);
-		m_jPrice.setBounds(100, 80, 240, 25);
-		jPanel2.add(m_jPriceTax);
-		m_jPriceTax.setBounds(100, 110, 240, 25);
+		jLabel5.setText(AppLocal.getIntString("label.tax")); // NOI18N
+		jLabel6.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
+		jLabel7.setText(AppLocal.getIntString("label.subtotalcash")); // NOI18N
 
-		m_jTaxrate.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.disabledBackground"));
 		m_jTaxrate.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
 		m_jTaxrate.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory
 						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
 				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
 		m_jTaxrate.setOpaque(true);
-		m_jTaxrate.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jTaxrate.setRequestFocusEnabled(false);
-		jPanel2.add(m_jTaxrate);
-		m_jTaxrate.setBounds(100, 140, 210, 25);
-
-		jLabel5.setText(AppLocal.getIntString("label.tax")); // NOI18N
-		jPanel2.add(jLabel5);
-		jLabel5.setBounds(10, 140, 90, 15);
-
-		jLabel6.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
-		jPanel2.add(jLabel6);
-		jLabel6.setBounds(10, 200, 90, 15);
-
-		m_jTotal.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.disabledBackground"));
+		m_jTaxrate.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.disabledBackground"));
 		m_jTotal.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-		m_jTotal.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory
-						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
-				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
-		m_jTotal.setOpaque(true);
-		m_jTotal.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jTotal.setRequestFocusEnabled(false);
-		jPanel2.add(m_jTotal);
-		m_jTotal.setBounds(100, 200, 210, 25);
-
-		jLabel7.setText(AppLocal.getIntString("label.subtotalcash")); // NOI18N
-		jPanel2.add(jLabel7);
-		jLabel7.setBounds(10, 170, 90, 15);
-
-		m_jSubtotal.setBackground(javax.swing.UIManager.getDefaults().getColor("TextField.disabledBackground"));
 		m_jSubtotal.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-		m_jSubtotal.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory
-						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
-				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
+		m_jTotal.setBorder(m_jTaxrate.getBorder());
+		m_jSubtotal.setBorder(m_jTaxrate.getBorder());
+		m_jTotal.setOpaque(true);
 		m_jSubtotal.setOpaque(true);
-		m_jSubtotal.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jSubtotal.setRequestFocusEnabled(false);
-		jPanel2.add(m_jSubtotal);
-		m_jSubtotal.setBounds(100, 170, 210, 25);
-
-		jPanel5.add(jPanel2, java.awt.BorderLayout.CENTER);
+		m_jTotal.setBackground(m_jTaxrate.getBackground());
+		m_jSubtotal.setBackground(m_jTaxrate.getBackground());
 
 		jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
@@ -338,8 +385,6 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		jPanel1.add(m_jButtonCancel);
 		jPanel1.add(m_jButtonOK);
 
-		jPanel5.add(jPanel1, java.awt.BorderLayout.SOUTH);
-
 		getContentPane().add(jPanel5, java.awt.BorderLayout.CENTER);
 
 		jPanel3.setLayout(new java.awt.BorderLayout());
@@ -347,13 +392,55 @@ public class JProductLineEdit extends javax.swing.JDialog {
 		jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.Y_AXIS));
 		jPanel4.add(m_jKeys);
 
-		jPanel3.add(jPanel4, java.awt.BorderLayout.NORTH);
-
 		getContentPane().add(jPanel3, java.awt.BorderLayout.EAST);
 
-		java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds((screenSize.width - 580) / 2, (screenSize.height - 362) / 2, 580, 362);
+		configureLayout();
+		pack();
+		setLocationRelativeTo(getOwner());
 	}// </editor-fold>//GEN-END:initComponents
+
+	private void configureLayout() {
+		jPanel2.removeAll();
+		jPanel2.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 20, 16, 20));
+		jPanel2.setLayout(new java.awt.GridBagLayout());
+
+		addFieldRow(jLabel4, m_jName, 0);
+		addFieldRow(jLabel2, m_jUnits, 1);
+		addFieldRow(jLabel1, m_jPrice, 2);
+		addFieldRow(jLabel3, m_jPriceTax, 3);
+		addFieldRow(jLabel5, m_jTaxrate, 4);
+		addFieldRow(jLabel7, m_jSubtotal, 5);
+		addFieldRow(jLabel6, m_jTotal, 6);
+
+		jPanel5.removeAll();
+		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 12, 0));
+		jPanel5.add(jPanel2, java.awt.BorderLayout.CENTER);
+		jPanel5.add(jPanel1, java.awt.BorderLayout.SOUTH);
+
+		jPanel3.setBorder(javax.swing.BorderFactory.createEmptyBorder(16, 0, 16, 20));
+		jPanel4.removeAll();
+		jPanel4.setBorder(null);
+		jPanel4.add(m_jKeys);
+		jPanel3.removeAll();
+		jPanel3.add(jPanel4, java.awt.BorderLayout.CENTER);
+	}
+
+	private void addFieldRow(javax.swing.JLabel label, java.awt.Component field, int row) {
+		java.awt.GridBagConstraints labelConstraints = new java.awt.GridBagConstraints();
+		labelConstraints.gridx = 0;
+		labelConstraints.gridy = row;
+		labelConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
+		labelConstraints.insets = new java.awt.Insets(5, 0, 5, 12);
+		jPanel2.add(label, labelConstraints);
+
+		java.awt.GridBagConstraints fieldConstraints = new java.awt.GridBagConstraints();
+		fieldConstraints.gridx = 1;
+		fieldConstraints.gridy = row;
+		fieldConstraints.weightx = 1.0;
+		fieldConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		fieldConstraints.insets = new java.awt.Insets(5, 0, 5, 0);
+		jPanel2.add(field, fieldConstraints);
+	}
 
 	private void m_jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jButtonCancelActionPerformed
 
@@ -384,14 +471,14 @@ public class JProductLineEdit extends javax.swing.JDialog {
 	private javax.swing.JPanel jPanel5;
 	private javax.swing.JButton m_jButtonCancel;
 	private javax.swing.JButton m_jButtonOK;
-	private com.openbravo.editor.JEditorKeys m_jKeys;
-	private com.openbravo.editor.JEditorString m_jName;
-	private com.openbravo.editor.JEditorCurrency m_jPrice;
-	private com.openbravo.editor.JEditorCurrency m_jPriceTax;
+	private com.openbravo.beans.JNumberKeys m_jKeys;
+	private javax.swing.JTextField m_jName;
+	private javax.swing.JTextField m_jPrice;
+	private javax.swing.JTextField m_jPriceTax;
 	private javax.swing.JLabel m_jSubtotal;
 	private javax.swing.JLabel m_jTaxrate;
 	private javax.swing.JLabel m_jTotal;
-	private com.openbravo.editor.JEditorDouble m_jUnits;
+	private javax.swing.JTextField m_jUnits;
 	// End of variables declaration//GEN-END:variables
 
 }
