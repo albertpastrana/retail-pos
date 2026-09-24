@@ -169,10 +169,16 @@ public class DatabaseMigratorIT {
 			assertTrue(roleContains(connection, "0", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "0", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "0", "JPanelLowStock"));
+			assertTrue(roleContains(connection, "0", "JPanelTaxSummary"));
+			assertTrue(roleContains(connection, "0", "JPanelCashClosing"));
+			assertTrue(roleContains(connection, "0", "JPanelCustomerDebt"));
 			assertTrue(roleContains(connection, "1", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "1", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "1", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "1", "JPanelLowStock"));
+			assertTrue(roleContains(connection, "1", "JPanelTaxSummary"));
+			assertTrue(roleContains(connection, "1", "JPanelCashClosing"));
+			assertTrue(roleContains(connection, "1", "JPanelCustomerDebt"));
 			assertTrue(roleContains(connection, "0", "button.print"));
 			assertTrue(roleContains(connection, "1", "button.print"));
 			assertTrue(roleContains(connection, "2", "button.print"));

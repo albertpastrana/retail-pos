@@ -43,6 +43,9 @@
          submenu.addPanel("/com/openbravo/images/menu-product-sales.png", "Menu.ProductSalesSummary", "com.openbravo.pos.reports.JPanelProductSales");
          submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.PaymentSalesSummary", "com.openbravo.pos.reports.JPanelPaymentSales");
          submenu.addPanel("/com/openbravo/images/menu-inventory-current.png", "Menu.LowStockSummary", "com.openbravo.pos.reports.JPanelLowStock");
+         submenu.addPanel("/com/openbravo/images/menu-taxes-report.png", "Menu.TaxSummary", "com.openbravo.pos.reports.JPanelTaxSummary");
+         submenu.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.CashClosingSummary", "com.openbravo.pos.reports.JPanelCashClosing");
+         submenu.addPanel("/com/openbravo/images/menu-customers-report.png", "Menu.CustomerDebtSummary", "com.openbravo.pos.reports.JPanelCustomerDebt");
     submenu = group.addSubmenu("/com/openbravo/images/menu-maintenance.png", "Menu.Maintenance", "com.openbravo.pos.forms.MenuMaintenance");
         submenu.addTitle("Menu.Maintenance.POS");
         submenu.addPanel("/com/openbravo/images/menu-users.png", "Menu.Users", "com.openbravo.pos.admin.PeoplePanel");
