@@ -157,8 +157,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	public void delete(String id) throws BasicException {
 		if (id == null)
 			return;
-		try (PreparedStatement ps = connection()
-				.prepareStatement("DELETE FROM REPLENISHMENT_ENTRIES WHERE ID=?")) {
+		try (PreparedStatement ps = connection().prepareStatement("DELETE FROM REPLENISHMENT_ENTRIES WHERE ID=?")) {
 			ps.setString(1, id);
 			ps.executeUpdate();
 		} catch (SQLException ex) {

@@ -13,6 +13,24 @@ instead of exposing four separate maintenance views.
 The existing functionality must remain available for installations that use
 product attributes and variants.
 
+## Direction change
+
+No supported installation currently uses the legacy attribute/variant model.
+Replace it with product-level characteristics instead of integrating the old
+maintenance screens. Each sellable size/colour combination is a normal
+product with its own barcode. Characteristics are optional `key = value`
+metadata, or a key-only label, edited directly from the product screen.
+
+The migration is intentionally destructive: remove the legacy attribute,
+attribute-value, attribute-set, attribute-use, and attribute-instance model
+and its runtime code. Do not attempt to infer old variants or barcodes.
+
+Characteristics are stored in `PRODUCT_ATTRIBUTES`. Keys and values are
+normalized case-insensitively for comparison while preserving the original
+display text. A product may contain a key only once. Existing keys and values
+are suggested while entering a new characteristic, but arbitrary new ones
+remain valid.
+
 ## Context
 
 The current workflow is split across these views:

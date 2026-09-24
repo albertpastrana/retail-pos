@@ -175,15 +175,6 @@ public class AppUser {
 			}
 		}
 
-		// Keep the integrated attribute workflow available to roles created before
-		// the four attribute maintenance permissions were consolidated.
-		if (m_apermissions.contains("com.openbravo.pos.inventory.AttributesPanel")
-				|| m_apermissions.contains("com.openbravo.pos.inventory.AttributeValuesPanel")
-				|| m_apermissions.contains("com.openbravo.pos.inventory.AttributeSetsPanel")
-				|| m_apermissions.contains("com.openbravo.pos.inventory.AttributeUsePanel")) {
-			m_apermissions.add("com.openbravo.pos.inventory.AttributeManagementPanel");
-		}
-
 	}
 
 	public boolean hasPermission(String classname) {

@@ -45,7 +45,6 @@ public class ProductInfoExt {
 	protected boolean m_bVoucher;
 	protected String categoryid;
 	protected String taxcategoryid;
-	protected String attributesetid;
 	protected double m_dPriceBuy;
 	protected double m_dPriceSell;
 	protected double salePercent;
@@ -65,7 +64,6 @@ public class ProductInfoExt {
 		m_bVoucher = false;
 		categoryid = null;
 		taxcategoryid = null;
-		attributesetid = null;
 		m_dPriceBuy = 0.0;
 		m_dPriceSell = 0.0;
 		salePercent = 0.0;
@@ -148,13 +146,6 @@ public class ProductInfoExt {
 		taxcategoryid = value;
 	}
 
-	public final String getAttributeSetID() {
-		return attributesetid;
-	}
-	public final void setAttributeSetID(String value) {
-		attributesetid = value;
-	}
-
 	public final double getPriceBuy() {
 		return m_dPriceBuy;
 	}
@@ -195,8 +186,8 @@ public class ProductInfoExt {
 		String prefix = alias == null || alias.length() == 0 ? "" : alias + ".";
 		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
 				+ prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, " + prefix + "TAXCAT, " + prefix
-				+ "CATEGORY, " + prefix + "ATTRIBUTESET_ID, " + prefix + "IMAGE, " + prefix + "ATTRIBUTES, " + prefix
-				+ "SALE_PERCENT, " + prefix + "FAMILY, " + prefix + "CREATED_AT, " + prefix + "UPDATED_AT";
+				+ "CATEGORY, " + prefix + "IMAGE, " + prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix
+				+ "FAMILY, " + prefix + "CREATED_AT, " + prefix + "UPDATED_AT";
 	}
 
 	public final double getPriceSellTax(TaxInfo tax) {
@@ -245,14 +236,13 @@ public class ProductInfoExt {
 				product.m_dPriceSell = dr.getDouble(8).doubleValue();
 				product.taxcategoryid = dr.getString(9);
 				product.categoryid = dr.getString(10);
-				product.attributesetid = dr.getString(11);
-				product.m_Image = ImageUtils.readImage(dr.getBytes(12));
-				product.attributes = ImageUtils.readProperties(dr.getBytes(13));
-				Double marked = dr.getDouble(14);
+				product.m_Image = ImageUtils.readImage(dr.getBytes(11));
+				product.attributes = ImageUtils.readProperties(dr.getBytes(12));
+				Double marked = dr.getDouble(13);
 				product.salePercent = marked == null ? 0.0 : marked.doubleValue();
-				product.family = dr.getString(15);
-				product.createdAt = dr.getTimestamp(16);
-				product.updatedAt = dr.getTimestamp(17);
+				product.family = dr.getString(14);
+				product.createdAt = dr.getTimestamp(15);
+				product.updatedAt = dr.getTimestamp(16);
 				return product;
 			}
 		};

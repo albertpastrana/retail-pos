@@ -242,8 +242,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			return;
 		ReplenishmentEntry entry = entries.get(row);
 		int answer = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("Replenishment.ConfirmDelete"),
-				AppLocal.getIntString("Replenishment.Delete"), JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE);
+				AppLocal.getIntString("Replenishment.Delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (answer != JOptionPane.YES_OPTION)
 			return;
 		try {

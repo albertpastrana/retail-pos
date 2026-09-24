@@ -41,7 +41,6 @@ import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.catalog.JCatalog;
 import com.openbravo.pos.panels.JProductFinder;
-import com.openbravo.pos.sales.JProductAttEdit;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -325,7 +324,7 @@ public class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord
 				productref = prod.getReference();
 				productcode = prod.getCode();
 				productname = prod.toString();
-				attsetid = prod.getAttributeSetID();
+				attsetid = null;
 				attsetinstid = null;
 				attsetinstdesc = null;
 				jproduct.setText(productname);
@@ -616,30 +615,7 @@ public class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord
 	}// GEN-LAST:event_m_jEnterActionPerformed
 
 	private void jEditAttributesActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jEditAttributesActionPerformed
-
-		if (productid == null) {
-			// first select the product.
-			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
-					AppLocal.getIntString("message.productnotselected"));
-			msg.show(this);
-		} else {
-			try {
-				JProductAttEdit attedit = JProductAttEdit.getAttributesEditor(this, m_App.getSession());
-				attedit.editAttributes(attsetid, attsetinstid);
-				attedit.setVisible(true);
-
-				if (attedit.isOK()) {
-					// The user pressed OK
-					attsetinstid = attedit.getAttributeSetInst();
-					attsetinstdesc = attedit.getAttributeSetInstDescription();
-					jattributes.setText(attsetinstdesc);
-				}
-			} catch (BasicException ex) {
-				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
-						AppLocal.getIntString("message.cannotfindattributes"), ex);
-				msg.show(this);
-			}
-		}
+		new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.productattributesineditor")).show(this);
 	}// GEN-LAST:event_jEditAttributesActionPerformed
 
 	private void m_jbtndateActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jbtndateActionPerformed
