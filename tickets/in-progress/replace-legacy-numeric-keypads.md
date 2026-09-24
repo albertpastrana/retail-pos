@@ -22,10 +22,9 @@ The remaining `JEditorKeys` usages are:
 
 - `PaymentPanelType`, reached through card payment, where the card number and
   expiration date are numeric but the cardholder name is free-form text.
-- `JNumberDialog`, which is numeric-only but currently has no statically found
-  caller in the application.
-- `JPasswordDialog`, used for passwords and supervisor authorization; this is
-  intentionally retained as a text-entry keypad.
+- `JPasswordDialog`, used for passwords and supervisor authorization. It now
+  uses `JNumberKeys` for touch-entered digits and a masked `JPasswordField`
+  for physical-keyboard text input.
 
 There is no `JProductAttEdit.java` in the current source tree.
 
