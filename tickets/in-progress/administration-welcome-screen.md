@@ -41,10 +41,8 @@ should be easy to adjust as real usage is learned.
 
 ### How navigation works today
 
-- Before this ticket, `JPrincipalApp` reads `Menu.Root.txt` from the classpath
-  (not from the database) and evaluates it with BeanShell —
-  `JPrincipalApp.java:115`.
-- The script builds `MenuPanelAction` / `MenuExecAction` instances whose
+- The active menu is built by `JPrincipalApp.buildMenu()` from Java code. It
+  creates `MenuPanelAction` / `MenuExecAction` instances whose
   `ACTION_TASKNAME` is the destination class name. The side menu and the
   compact rail share those same `Action` objects.
 - `ScriptGroup.addAction()` filters by `m_appuser.hasPermission(...)` —
@@ -142,9 +140,9 @@ down. Adding it must be one line in the catalogue plus its translation keys.
 
 ### Define the menu and reuse its actions
 
-Move the active menu definition out of `Menu.Root.txt` and BeanShell into a
-Java menu builder. Define groups, submenus, panels, executions, icons and
-translation keys in code, preserving the current order and destinations.
+The active menu definition now lives in a Java menu builder. Define groups,
+submenus, panels, executions, icons and translation keys in code, preserving
+the current order and destinations.
 
 The old `Menu.Root.txt` remains only as a legacy migration fixture because
 released migrations replay it while building a fresh database. It is not read

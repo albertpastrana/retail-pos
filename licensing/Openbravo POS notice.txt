@@ -61,8 +61,6 @@ Other third party libraries in /lib/
 
 - barcode4j-light.jar - available at http://barcode4j.sourceforge.net/. Copyright 2002-2007 Jeremias M�rki and Copyright 2005-2006 Dietmar B�rkle. Distributed under the Apache License Version 2.0, January 2004
 
-- bsh-core-2.0b4.jar - available at http://www.beanshell.org/ - Copyright Pat Niemeyer. Distributed under the Sun Public License or the GNU Lesser Public License
-
 - iText-2.1.0.jar (a dependency of jasperreports) - available from http://www.lowagie.com/iText/.  Copyright � 1999-2007 by Bruno Lowagie. Distributed under the MPL and LGPL.
 
 - jasperreports-3.1.14.jar - available from http://www.jasperforge.org/jaspersoft/opensource/business_intelligence/jasperreports/. Copyright � 2007 JasperSoft Corporation. Distributed under the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
