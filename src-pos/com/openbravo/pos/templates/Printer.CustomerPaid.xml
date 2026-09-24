@@ -93,14 +93,6 @@
             <text align ="right" length="42">${paymentline.printTotal()}</text>
         </line>    
         <line>
-            <text align ="left" length="22">Número:</text>
-            <text>${paymentline.printCardNumber()}</text>
-        </line>
-        <line>
-            <text align ="left" length="22">Data de caducitat:</text>
-            <text>${paymentline.printExpirationDate()}</text>
-        </line>
-        <line>
             <text align ="left" length="22">Operació:</text>
             <text>${paymentline.printTransactionID()}</text>
         </line>

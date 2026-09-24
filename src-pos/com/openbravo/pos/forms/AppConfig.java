@@ -133,9 +133,6 @@ public class AppConfig implements AppProperties {
 		m_propsconfig.setProperty("machine.ticketsbag", "standard");
 		m_propsconfig.setProperty("machine.scanner", "Not defined");
 
-		m_propsconfig.setProperty("payment.gateway", "external");
-		m_propsconfig.setProperty("payment.magcardreader", "Not defined");
-		m_propsconfig.setProperty("payment.testmode", "false");
 		m_propsconfig.setProperty("payment.commerceid", "");
 		m_propsconfig.setProperty("payment.commercepassword", "password");
 

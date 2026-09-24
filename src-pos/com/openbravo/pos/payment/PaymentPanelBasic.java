@@ -80,9 +80,7 @@ public class PaymentPanelBasic extends javax.swing.JPanel implements PaymentPane
 		String amount = Formats.CURRENCY.formatValue(new Double(Math.abs(m_dTotal)));
 
 		m_jAmount.setText(amount);
-		jLabel1.setText(m_dTotal > 0.0
-				? AppLocal.getIntString("message.paymentgatewayext", amount)
-				: AppLocal.getIntString("message.paymentgatewayextrefund", amount));
+		jLabel1.setText(AppLocal.getIntString("message.paymentmanualterminal"));
 
 		m_notifier.setStatus(true, true);
 	}
@@ -90,9 +88,9 @@ public class PaymentPanelBasic extends javax.swing.JPanel implements PaymentPane
 	public PaymentInfoMagcard getPaymentInfoMagcard() {
 
 		if (m_dTotal > 0.0) {
-			return new PaymentInfoMagcard("", "", "", null, null, null, m_sTransactionID, m_dTotal);
+			return new PaymentInfoMagcard(m_sTransactionID, m_dTotal);
 		} else {
-			return new PaymentInfoMagcardRefund("", "", "", null, null, null, m_sTransactionID, m_dTotal);
+			return new PaymentInfoMagcardRefund(m_sTransactionID, m_dTotal);
 		}
 	}
 

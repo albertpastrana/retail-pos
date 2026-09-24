@@ -19,58 +19,32 @@
 
 package com.openbravo.pos.payment;
 
+/** A card tender recorded after payment on an external terminal. */
 public class PaymentInfoMagcard extends PaymentInfo {
 
 	protected double m_dTotal;
-
-	protected String m_sHolderName;
-	protected String m_sCardNumber;
-	protected String m_sExpirationDate;
-	protected String track1;
-	protected String track2;
-	protected String track3;
-
 	protected String m_sTransactionID;
-
 	protected String m_sAuthorization;
 	protected String m_sErrorMessage;
 	protected String m_sReturnMessage;
 
-	/** Creates a new instance of PaymentInfoMagcard */
-	public PaymentInfoMagcard(String sHolderName, String sCardNumber, String sExpirationDate, String track1,
-			String track2, String track3, String sTransactionID, double dTotal) {
-		m_sHolderName = sHolderName;
-		m_sCardNumber = sCardNumber;
-		m_sExpirationDate = sExpirationDate;
-		this.track1 = track1;
-		this.track2 = track2;
-		this.track3 = track3;
-
+	public PaymentInfoMagcard(String sTransactionID, double dTotal) {
 		m_sTransactionID = sTransactionID;
 		m_dTotal = dTotal;
-
-		m_sAuthorization = null;
-		m_sErrorMessage = null;
-		m_sReturnMessage = null;
-	}
-
-	/** Creates a new instance of PaymentInfoMagcard */
-	public PaymentInfoMagcard(String sHolderName, String sCardNumber, String sExpirationDate, String sTransactionID,
-			double dTotal) {
-		this(sHolderName, sCardNumber, sExpirationDate, null, null, null, sTransactionID, dTotal);
 	}
 
 	public PaymentInfo copyPayment() {
-		PaymentInfoMagcard p = new PaymentInfoMagcard(m_sHolderName, m_sCardNumber, m_sExpirationDate, track1, track2,
-				track3, m_sTransactionID, m_dTotal);
+		PaymentInfoMagcard p = new PaymentInfoMagcard(m_sTransactionID, m_dTotal);
 		p.m_sAuthorization = m_sAuthorization;
 		p.m_sErrorMessage = m_sErrorMessage;
+		p.m_sReturnMessage = m_sReturnMessage;
 		return p;
 	}
 
 	public String getName() {
 		return "magcard";
 	}
+
 	public double getTotal() {
 		return m_dTotal;
 	}
@@ -78,36 +52,9 @@ public class PaymentInfoMagcard extends PaymentInfo {
 	public boolean isPaymentOK() {
 		return m_sAuthorization != null;
 	}
-	public String getHolderName() {
-		return m_sHolderName;
-	}
-	public String getCardNumber() {
-		return m_sCardNumber;
-	}
-	public String getExpirationDate() {
-		return m_sExpirationDate;
-	}
+
 	public String getTransactionID() {
 		return m_sTransactionID;
-	}
-
-	/**
-	 * Get tracks of magnetic card. Framing characters: - start sentinel (SS) - end
-	 * sentinel (ES) - LRC
-	 * 
-	 * @param framingChar
-	 *            true: including framing characters false: exluding framing
-	 *            characters
-	 * @return tracks of the magnetic card
-	 */
-	public String getTrack1(boolean framingChar) {
-		return (framingChar) ? track1 : track1.substring(1, track1.length() - 2);
-	}
-	public String getTrack2(boolean framingChar) {
-		return (framingChar) ? track2 : track2.substring(1, track2.length() - 2);
-	}
-	public String getTrack3(boolean framingChar) {
-		return (framingChar) ? track3 : track3.substring(1, track3.length() - 2);
 	}
 
 	public String getAuthorization() {
@@ -138,21 +85,10 @@ public class PaymentInfoMagcard extends PaymentInfo {
 		m_sErrorMessage = null;
 	}
 
-	public String printCardNumber() {
-		// hide start numbers
-		if (m_sCardNumber.length() > 4) {
-			return m_sCardNumber.substring(0, m_sCardNumber.length() - 4).replaceAll(".", "*")
-					+ m_sCardNumber.substring(m_sCardNumber.length() - 4);
-		} else {
-			return "****";
-		}
-	}
-	public String printExpirationDate() {
-		return m_sExpirationDate;
-	}
 	public String printAuthorization() {
 		return m_sAuthorization;
 	}
+
 	public String printTransactionID() {
 		return m_sTransactionID;
 	}
