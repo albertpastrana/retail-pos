@@ -59,4 +59,40 @@ public class DataLogicSalesPersistenceIT {
 			session.close();
 		}
 	}
+
+	@Test
+	public void savesRefundWithInboundStockMovement() throws Exception {
+		String url = "jdbc:derby:memory:refundPersistenceIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CLOSEDCASH VALUES ('cash-1', 'test-host', 1, "
+						+ "TIMESTAMP('2026-09-24 10:00:00'), NULL)");
+			}
+
+			TaxInfo tax = new TaxInfo("000", "Tax Exempt", "000", new Date(0L), null, null, 0.0, false, null);
+			TicketInfo ticket = new TicketInfo();
+			ticket.setTicketType(TicketInfo.RECEIPT_REFUND);
+			ticket.setUser(new UserInfo("0", "Administrator"));
+			ticket.setActiveCash("cash-1");
+			ticket.addLine(new TicketLineInfo("gift-voucher-10", "Test product", "000", -1.0, 10.0, tax));
+			ticket.getPayments().add(new PaymentInfoCash(-10.0, -10.0));
+
+			sales.saveTicket(ticket, "0");
+
+			try (Statement statement = session.getConnection().createStatement();
+					ResultSet result = statement
+							.executeQuery("SELECT REASON, UNITS FROM STOCKDIARY WHERE PRODUCT = 'gift-voucher-10'")) {
+				assertThat(result.next()).isTrue();
+				assertThat(result.getInt("REASON")).isEqualTo(2);
+				assertThat(result.getDouble("UNITS")).isEqualTo(1.0);
+				assertThat(result.next()).isFalse();
+			}
+		} finally {
+			session.close();
+		}
+	}
 }
