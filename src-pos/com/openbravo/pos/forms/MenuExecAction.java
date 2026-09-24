@@ -41,6 +41,7 @@ public class MenuExecAction extends AbstractAction {
 		m_App = app;
 		m_sMyView = sMyView;
 	}
+
 	public void actionPerformed(ActionEvent evt) {
 
 		m_App.getAppUserView().executeTask(m_sMyView);

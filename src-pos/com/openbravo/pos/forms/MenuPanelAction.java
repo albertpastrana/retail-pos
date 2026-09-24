@@ -41,6 +41,7 @@ public class MenuPanelAction extends AbstractAction {
 		m_App = app;
 		m_sMyView = sMyView;
 	}
+
 	public void actionPerformed(ActionEvent evt) {
 
 		m_App.getAppUserView().showTask(m_sMyView);

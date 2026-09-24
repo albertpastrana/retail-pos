@@ -19,6 +19,8 @@
 
 package com.openbravo.pos.forms;
 
+import javax.swing.Action;
+
 /**
  *
  * @author adrianromero
@@ -31,4 +33,5 @@ public interface AppUserView {
 	public AppUser getUser(); // Usuario logado
 	public void showTask(String sTaskClass);
 	public void executeTask(String sTaskClass);
+	public Action getTaskAction(String sTaskClass);
 }

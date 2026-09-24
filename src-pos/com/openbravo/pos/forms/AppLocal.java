@@ -22,6 +22,7 @@ package com.openbravo.pos.forms;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,6 +66,12 @@ public class AppLocal {
 
 	public static String getIntString(String sKey, Object... sValues) {
 		return m_resources.getString(sKey, sValues);
+	}
+
+	public static void setLocale(Locale locale) {
+		Locale.setDefault(locale);
+		m_resources = new LocaleResources();
+		m_resources.addBundleName("pos_messages");
 	}
 
 	public static String getBaseTitle() {

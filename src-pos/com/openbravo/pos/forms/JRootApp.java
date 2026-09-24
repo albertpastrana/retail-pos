@@ -507,7 +507,7 @@ public class JRootApp extends JPanel implements AppView {
 		openAppView(user, true);
 	}
 
-	private void openSalesView() {
+	void openSalesView() {
 		AppUser till = new AppUser("till", AppLocal.getIntString("Button.SalesMode"), null, null, AppUser.ROLE_SELLER,
 				null);
 		till.setSellerSession(true);

@@ -128,7 +128,7 @@ public class StartPOS {
 				String scountry = config.getProperty("user.country");
 				String svariant = config.getProperty("user.variant");
 				if (slang != null && !slang.equals("") && scountry != null && svariant != null) {
-					Locale.setDefault(new Locale(slang, scountry, svariant));
+					AppLocal.setLocale(new Locale(slang, scountry, svariant));
 				}
 
 				logger.info(
