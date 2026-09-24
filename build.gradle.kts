@@ -102,8 +102,9 @@ dependencies {
     "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")
     "dataHelpersImplementation"("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("com.mysql:mysql-connector-j:8.4.0")
-    "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:5.12.2")
-    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher:1.12.2")
+    "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:6.1.3")
+    "integrationTestImplementation"("org.assertj:assertj-core:3.27.7")
+    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher:6.1.3")
 }
 
 val runtimeLibs by tasks.registering(Sync::class) {
