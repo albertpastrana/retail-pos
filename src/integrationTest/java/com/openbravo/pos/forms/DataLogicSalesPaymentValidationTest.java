@@ -63,4 +63,18 @@ public class DataLogicSalesPaymentValidationTest {
 
 		assertThatCode(() -> DataLogicSales.validatePaymentTotals(ticket)).doesNotThrowAnyException();
 	}
+
+	@Test
+	public void acceptsRefundWithNegativePaymentTotal() {
+		TicketInfo ticket = new TicketInfo() {
+			@Override
+			public double getTotal() {
+				return -20.00;
+			}
+		};
+		ticket.setTicketType(TicketInfo.RECEIPT_REFUND);
+		ticket.getPayments().add(new PaymentInfoCash(-20.00, -20.00));
+
+		assertThatCode(() -> DataLogicSales.validatePaymentTotals(ticket)).doesNotThrowAnyException();
+	}
 }
