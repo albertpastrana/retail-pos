@@ -8,15 +8,26 @@ Use the sales-screen `JNumberKeys` component consistently wherever a cashier ent
 
 ## Context
 
-Payment cash and customer-debt screens now use `JNumberKeys`. Remaining legacy keypad usages need to be reviewed and migrated where the interaction is numeric:
+The following screens already use `JNumberKeys`:
 
-- `PaymentPanelType` for card payment fields.
+- `JPaymentCashPos` for cash payment.
+- `JPaymentDebt` for customer-debt payment.
 - `JPanelPayments` for cash-drawer movements.
 - `JTicketsBagTicket`.
-- `JProductLineEdit`.
-- `JProductAttEdit`.
-- `JNumberDialog`.
-- `JPasswordDialog`.
+- `JProductLineEdit`, reached through Sales > Edit line, now uses regular
+  `JTextField` controls with `JNumberKeys` for its numeric fields. Its dialog
+  uses content-driven Swing layouts and `pack()` rather than fixed bounds.
+
+The remaining `JEditorKeys` usages are:
+
+- `PaymentPanelType`, reached through card payment, where the card number and
+  expiration date are numeric but the cardholder name is free-form text.
+- `JNumberDialog`, which is numeric-only but currently has no statically found
+  caller in the application.
+- `JPasswordDialog`, used for passwords and supervisor authorization; this is
+  intentionally retained as a text-entry keypad.
+
+There is no `JProductAttEdit.java` in the current source tree.
 
 Keep a legacy text-entry keypad only where the field genuinely needs free-form text or password input. Preserve decimal, negative, clear, focus, and keyboard-input behaviour for every migrated field.
 
