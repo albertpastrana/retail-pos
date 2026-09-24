@@ -20,7 +20,6 @@
 package com.openbravo.pos.payment;
 
 import com.openbravo.pos.customers.CustomerInfoExt;
-import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -32,7 +31,6 @@ import java.awt.Component;
 public class JPaymentMagcard extends javax.swing.JPanel implements JPaymentInterface {
 
 	private PaymentPanel m_cardpanel;
-	private PaymentGateway m_paymentgateway;
 	private JPaymentNotifier m_notifier;
 	private String transaction;
 
@@ -43,31 +41,17 @@ public class JPaymentMagcard extends javax.swing.JPanel implements JPaymentInter
 
 		m_notifier = notifier;
 
-		m_paymentgateway = PaymentGatewayFac.getPaymentGateway(app.getProperties());
-
-		if (m_paymentgateway == null) {
-			jlblMessage.setText(AppLocal.getIntString("message.nopaymentgateway"));
-		} else {
-			// Se van a poder efectuar pagos con tarjeta
-			m_cardpanel = PaymentPanelFac.getPaymentPanel(app.getProperties().getProperty("payment.magcardreader"),
-					notifier);
-			add(m_cardpanel.getComponent(), BorderLayout.CENTER);
-			jlblMessage.setText(null);
-			// jlblMessage.setText(AppLocal.getIntString("message.nocardreader"));
-		}
+		// The card is charged on the shop's external terminal and recorded here.
+		m_cardpanel = new PaymentPanelBasic(notifier);
+		add(m_cardpanel.getComponent(), BorderLayout.CENTER);
+		jlblMessage.setText(null);
 	}
 
 	public void activate(CustomerInfoExt customerext, double dTotal, String transID) {
 		this.transaction = transID;
-
-		if (m_cardpanel == null) {
-			jlblMessage.setText(AppLocal.getIntString("message.nopaymentgateway"));
-			m_notifier.setStatus(false, false);
-		} else {
-			jlblMessage.setText(null);
-			m_cardpanel.activate(transaction, dTotal);
-			// The cardpanel sets the status
-		}
+		jlblMessage.setText(null);
+		m_cardpanel.activate(transaction, dTotal);
+		// The card panel sets the status.
 	}
 	public PaymentInfo executePayment() {
 
@@ -75,7 +59,7 @@ public class JPaymentMagcard extends javax.swing.JPanel implements JPaymentInter
 
 		PaymentInfoMagcard payinfo = m_cardpanel.getPaymentInfoMagcard();
 
-		m_paymentgateway.execute(payinfo);
+		payinfo.paymentOK("OK", payinfo.getTransactionID(), "");
 		if (payinfo.isPaymentOK()) {
 			return payinfo;
 		} else {
