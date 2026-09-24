@@ -51,8 +51,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
 
 		initComponents();
 
-		// dlSystem.getResourceAsXML("Ticket.Line")
-		ticketlines = new JTicketLines(ticketline);
+		ticketlines = new JTicketLines();
 		this.dlCustomers = dlCustomers;
 		this.dlSales = dlSales;
 		this.taxeslogic = taxeslogic;

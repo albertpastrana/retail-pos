@@ -159,7 +159,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPanelBag.add(m_ticketsbag.getBagComponent(), BorderLayout.LINE_START);
 		add(m_ticketsbag.getNullComponent(), "null");
 
-		m_ticketlines = new JTicketLines(dlSystem.getResourceAsXML("Ticket.Line"));
+		m_ticketlines = new JTicketLines();
 		LOGGER.log(Level.INFO, "event=sales_panel_init_ticket_lines panel={0} duration_ms={1}",
 				new Object[]{getClass().getName(), elapsedMillis(started)});
 		m_jPanelCentral.add(m_ticketlines, java.awt.BorderLayout.CENTER);
@@ -443,7 +443,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				? AppLocal.getIntString("label.loyalty.totaldiscount", loyaltyName)
 				: AppLocal.getIntString("label.loyalty.thispurchase",
 						Integer.valueOf(LoyaltyStamps.stampsEarned(m_oTicket)), loyaltyName);
-		m_jLoyalty.setText("<html><div align=\"center\">" + notice + "</div></html>");
+		m_jLoyalty.setText("<html><div align=\"center\" style='width: 170px'>" + notice + "</div></html>");
 	}
 
 	private void paintTicketLine(int index, TicketLineInfo oLine) {
@@ -1815,7 +1815,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		// count at the end of the sentence is never the part that gets cut off.
 		m_jPanLoyalty.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 5, 0, 5));
 		m_jPanLoyalty.setLayout(new java.awt.BorderLayout());
-		m_jPanLoyalty.setPreferredSize(new java.awt.Dimension(100, 76));
+		m_jPanLoyalty.setPreferredSize(new java.awt.Dimension(180, 76));
 		m_jPanLoyalty.setMaximumSize(new java.awt.Dimension(32767, 76));
 
 		m_jLoyalty.setFont(new java.awt.Font("Dialog", 1, 13));
