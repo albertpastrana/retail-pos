@@ -19,12 +19,10 @@
 
 package com.openbravo.pos.sales;
 
-import com.openbravo.data.loader.LocalRes;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Rectangle;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -33,70 +31,48 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import com.openbravo.pos.scripting.ScriptEngine;
-import com.openbravo.pos.scripting.ScriptException;
-import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.ticket.TicketLineInfo;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import com.openbravo.pos.theme.RetailPOSColors;
+import com.openbravo.pos.theme.RetailPOSTheme;
+import com.openbravo.pos.util.StringUtils;
 
 public class JTicketLines extends javax.swing.JPanel {
 
-	private static Logger logger = Logger.getLogger("com.openbravo.pos.sales.JTicketLines");
-
-	private static SAXParser m_sp = null;
-
+	private static final ColumnTicket[] COLUMNS = {new ColumnTicket("label.item", 470, javax.swing.SwingConstants.LEFT),
+			new ColumnTicket("label.ticketline.price", 45, javax.swing.SwingConstants.RIGHT),
+			new ColumnTicket("label.ticketline.units", 10, javax.swing.SwingConstants.RIGHT),
+			new ColumnTicket("label.ticketline.tax", 10, javax.swing.SwingConstants.RIGHT),
+			new ColumnTicket("label.ticketline.value", 45, javax.swing.SwingConstants.RIGHT)};
 	private TicketTableModel m_jTableModel;
 
 	/** Creates new form JLinesTicket */
-	public JTicketLines(String ticketline) {
+	public JTicketLines() {
 
 		initComponents();
 
-		ColumnTicket[] acolumns = new ColumnTicket[0];
-
-		if (ticketline != null) {
-			try {
-				if (m_sp == null) {
-					SAXParserFactory spf = SAXParserFactory.newInstance();
-					m_sp = spf.newSAXParser();
-				}
-				ColumnsHandler columnshandler = new ColumnsHandler();
-				m_sp.parse(new InputSource(new StringReader(ticketline)), columnshandler);
-				acolumns = columnshandler.getColumns();
-
-			} catch (ParserConfigurationException ePC) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.parserconfig"), ePC);
-			} catch (SAXException eSAX) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.xmlfile"), eSAX);
-			} catch (IOException eIO) {
-				logger.log(Level.WARNING, LocalRes.getIntString("exception.iofile"), eIO);
-			}
-		}
-
-		m_jTableModel = new TicketTableModel(acolumns);
+		m_jTableModel = new TicketTableModel(COLUMNS);
 		m_jTicketTable.setModel(m_jTableModel);
 
 		// m_jTicketTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		TableColumnModel jColumns = m_jTicketTable.getColumnModel();
-		for (int i = 0; i < acolumns.length; i++) {
-			jColumns.getColumn(i).setPreferredWidth(acolumns[i].width);
+		for (int i = 0; i < COLUMNS.length; i++) {
+			jColumns.getColumn(i).setPreferredWidth(COLUMNS[i].width);
 			jColumns.getColumn(i).setResizable(false);
+			jColumns.getColumn(i).setHeaderRenderer(headerRenderer(COLUMNS[i].align));
+			jColumns.getColumn(i)
+					.setCellRenderer(i == 0 ? new TicketItemRenderer() : alignedRenderer(COLUMNS[i].align));
 		}
 
 		m_jScrollTableTicket.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
 
 		m_jTicketTable.getTableHeader().setReorderingAllowed(false);
-		m_jTicketTable.setDefaultRenderer(Object.class, new TicketCellRenderer(acolumns));
-		m_jTicketTable.setRowHeight(40);
+		m_jTicketTable.getTableHeader().setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
+		m_jTicketTable.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(16f));
+		m_jTicketTable.setSelectionBackground(RetailPOSColors.brandSubtle());
+		m_jTicketTable.setSelectionForeground(RetailPOSColors.ink());
+		m_jTicketTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		m_jTicketTable.setRowHeight(35);
 		m_jTicketTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		// reseteo la tabla...
@@ -200,22 +176,75 @@ public class JTicketLines extends javax.swing.JPanel {
 		}
 	}
 
-	private static class TicketCellRenderer extends DefaultTableCellRenderer {
+	private static DefaultTableCellRenderer alignedRenderer(int alignment) {
+		DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+		renderer.setHorizontalAlignment(alignment);
+		return renderer;
+	}
 
-		private ColumnTicket[] m_acolumns;
+	private static DefaultTableCellRenderer headerRenderer(int alignment) {
+		return new TicketHeaderRenderer(alignment);
+	}
 
-		public TicketCellRenderer(ColumnTicket[] acolumns) {
-			m_acolumns = acolumns;
-		}
+	private static class TicketItemRenderer extends DefaultTableCellRenderer {
 
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
 
 			JLabel aux = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			aux.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-			aux.setHorizontalAlignment(m_acolumns[column].align);
+			aux.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
+			aux.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+			if (column == 0 && table.getModel() instanceof TicketTableModel) {
+				TicketLineInfo line = ((TicketTableModel) table.getModel()).getLine(row);
+				aux.setText(itemText(line, aux.getFontMetrics(aux.getFont()),
+						table.getColumnModel().getColumn(column).getWidth()));
+				aux.setToolTipText(line.getProductName());
+			} else {
+				aux.setToolTipText(null);
+			}
 			return aux;
+		}
+
+		private String itemText(TicketLineInfo line, FontMetrics metrics, int columnWidth) {
+			String name = line.getProductName() == null ? "" : line.getProductName();
+			String prefix = line.isProductCom() ? "*  " : "";
+			int availableWidth = Math.max(0, columnWidth - 8);
+			if (metrics.stringWidth(prefix + name) <= availableWidth) {
+				return itemHtml(name, line.isProductCom());
+			}
+
+			String suffix = "...";
+			int end = name.length();
+			while (end > 0 && metrics.stringWidth(prefix + name.substring(0, end) + suffix) > availableWidth) {
+				end--;
+			}
+			return itemHtml(name.substring(0, end) + suffix, line.isProductCom());
+		}
+
+		private String itemHtml(String name, boolean composite) {
+			String text = StringUtils.encodeXML(name);
+			return composite ? "<html><i>*&nbsp;&nbsp;" + text + "</i>" : "<html>" + text;
+		}
+	}
+
+	private static class TicketHeaderRenderer extends DefaultTableCellRenderer {
+
+		private int alignment;
+
+		private TicketHeaderRenderer(int alignment) {
+			this.alignment = alignment;
+		}
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+				int row, int column) {
+
+			JLabel header = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
+					column);
+			header.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(16f));
+			header.setHorizontalAlignment(alignment);
+			return header;
 		}
 	}
 
@@ -223,7 +252,7 @@ public class JTicketLines extends javax.swing.JPanel {
 
 		// private AppView m_App;
 		private ColumnTicket[] m_acolumns;
-		private ArrayList m_rows = new ArrayList();
+		private ArrayList<TicketLineInfo> m_rows = new ArrayList<TicketLineInfo>();
 
 		public TicketTableModel(ColumnTicket[] acolumns) {
 			m_acolumns = acolumns;
@@ -240,7 +269,7 @@ public class JTicketLines extends javax.swing.JPanel {
 			// return m_acolumns[column].name;
 		}
 		public Object getValueAt(int row, int column) {
-			return ((String[]) m_rows.get(row))[column];
+			return valueForLine(m_rows.get(row), column);
 		}
 
 		@Override
@@ -258,15 +287,8 @@ public class JTicketLines extends javax.swing.JPanel {
 
 		public void setRow(int index, TicketLineInfo oLine) {
 
-			String[] row = (String[]) m_rows.get(index);
+			m_rows.set(index, oLine);
 			for (int i = 0; i < m_acolumns.length; i++) {
-				try {
-					ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
-					script.put("ticketline", oLine);
-					row[i] = script.eval(m_acolumns[i].value).toString();
-				} catch (ScriptException e) {
-					row[i] = null;
-				}
 				fireTableCellUpdated(index, i);
 			}
 		}
@@ -278,18 +300,7 @@ public class JTicketLines extends javax.swing.JPanel {
 
 		public void insertRow(int index, TicketLineInfo oLine) {
 
-			String[] row = new String[m_acolumns.length];
-			for (int i = 0; i < m_acolumns.length; i++) {
-				try {
-					ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
-					script.put("ticketline", oLine);
-					row[i] = script.eval(m_acolumns[i].value).toString();
-				} catch (ScriptException e) {
-					row[i] = null;
-				}
-			}
-
-			m_rows.add(index, row);
+			m_rows.add(index, oLine);
 			fireTableRowsInserted(index, index);
 		}
 
@@ -297,54 +308,39 @@ public class JTicketLines extends javax.swing.JPanel {
 			m_rows.remove(row);
 			fireTableRowsDeleted(row, row);
 		}
-	}
 
-	private static class ColumnsHandler extends DefaultHandler {
+		private TicketLineInfo getLine(int row) {
+			return m_rows.get(row);
+		}
 
-		private ArrayList m_columns = null;
-
-		public ColumnTicket[] getColumns() {
-			return (ColumnTicket[]) m_columns.toArray(new ColumnTicket[m_columns.size()]);
-		}
-		@Override
-		public void startDocument() throws SAXException {
-			m_columns = new ArrayList();
-		}
-		@Override
-		public void endDocument() throws SAXException {
-		}
-		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
-			if ("column".equals(qName)) {
-				ColumnTicket c = new ColumnTicket();
-				c.name = attributes.getValue("name");
-				c.width = Integer.parseInt(attributes.getValue("width"));
-				String sAlign = attributes.getValue("align");
-				if ("right".equals(sAlign)) {
-					c.align = javax.swing.SwingConstants.RIGHT;
-				} else if ("center".equals(sAlign)) {
-					c.align = javax.swing.SwingConstants.CENTER;
-				} else {
-					c.align = javax.swing.SwingConstants.LEFT;
-				}
-				c.value = attributes.getValue("value");
-				m_columns.add(c);
+		private String valueForLine(TicketLineInfo line, int column) {
+			switch (column) {
+				case 0 :
+					return line.getProductName();
+				case 1 :
+					return line.printPriceTax();
+				case 2 :
+					return "x" + line.printMultiply();
+				case 3 :
+					return line.printTaxRate();
+				case 4 :
+					return line.printValue();
+				default :
+					return "";
 			}
-		}
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-		}
-		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {
 		}
 	}
 
 	private static class ColumnTicket {
-		public String name;
-		public int width;
-		public int align;
-		public String value;
+		private String name;
+		private int width;
+		private int align;
+
+		private ColumnTicket(String name, int width, int align) {
+			this.name = name;
+			this.width = width;
+			this.align = align;
+		}
 	}
 
 	/**

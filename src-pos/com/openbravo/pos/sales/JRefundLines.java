@@ -39,7 +39,7 @@ public class JRefundLines extends javax.swing.JPanel {
 
 		initComponents();
 
-		ticketlines = new JTicketLines(dlSystem.getResourceAsXML("Ticket.Line"));
+		ticketlines = new JTicketLines();
 
 		jPanel3.add(ticketlines, BorderLayout.CENTER);
 	}
