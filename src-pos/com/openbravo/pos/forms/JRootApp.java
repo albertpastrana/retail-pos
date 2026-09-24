@@ -307,29 +307,24 @@ public class JRootApp extends JPanel implements AppView {
 		BeanFactory bf = m_aBeanFactories.get(beanfactory);
 		if (bf == null) {
 
-			// testing sripts
-			if (beanfactory.startsWith("/")) {
-				bf = new BeanFactoryScript(beanfactory);
-			} else {
-				// Class BeanFactory
-				try {
-					Class bfclass = Class.forName(beanfactory);
+			// Class BeanFactory
+			try {
+				Class bfclass = Class.forName(beanfactory);
 
-					if (BeanFactory.class.isAssignableFrom(bfclass)) {
-						bf = (BeanFactory) bfclass.newInstance();
-					} else {
-						// the old construction for beans...
-						Constructor constMyView = bfclass.getConstructor(new Class[]{AppView.class});
-						Object bean = constMyView.newInstance(new Object[]{this});
+				if (BeanFactory.class.isAssignableFrom(bfclass)) {
+					bf = (BeanFactory) bfclass.newInstance();
+				} else {
+					// the old construction for beans...
+					Constructor constMyView = bfclass.getConstructor(new Class[]{AppView.class});
+					Object bean = constMyView.newInstance(new Object[]{this});
 
-						bf = new BeanFactoryObj(bean);
-					}
-
-				} catch (Exception e) {
-					// ClassNotFoundException, InstantiationException, IllegalAccessException,
-					// NoSuchMethodException, InvocationTargetException
-					throw new BeanFactoryException(e);
+					bf = new BeanFactoryObj(bean);
 				}
+
+			} catch (Exception e) {
+				// ClassNotFoundException, InstantiationException, IllegalAccessException,
+				// NoSuchMethodException, InvocationTargetException
+				throw new BeanFactoryException(e);
 			}
 
 			// cache the factory

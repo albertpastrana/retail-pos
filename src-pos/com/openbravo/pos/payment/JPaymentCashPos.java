@@ -27,9 +27,6 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.forms.DataLogicSystem;
-import com.openbravo.pos.scripting.ScriptEngine;
-import com.openbravo.pos.scripting.ScriptException;
-import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.util.RoundUtils;
 import com.openbravo.pos.util.ThumbNailBuilder;
 import com.openbravo.beans.JNumberEvent;
@@ -74,19 +71,24 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
 			}
 		});
 
-		String code = dlSystem.getResourceAsXML("payment.cash");
-		if (code != null) {
-			try {
-				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.BEANSHELL);
-				script.put("payment", new ScriptPaymentCash(dlSystem));
-				script.eval(code);
-			} catch (ScriptException e) {
-				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotexecute"),
-						e);
-				msg.show(this);
-			}
-		}
+		addCashAmountButtons(dlSystem);
 
+	}
+
+	private void addCashAmountButtons(DataLogicSystem dlSystem) {
+		ScriptPaymentCash payment = new ScriptPaymentCash(dlSystem);
+		payment.addButton("banknote.50euro", 50.0);
+		payment.addButton("banknote.20euro", 20.0);
+		payment.addButton("banknote.10euro", 10.0);
+		payment.addButton("banknote.5euro", 5.0);
+		payment.addButton("coin.2euro", 2.0);
+		payment.addButton("coin.1euro", 1.0);
+		payment.addButton("coin.50cent", 0.50);
+		payment.addButton("coin.20cent", 0.20);
+		payment.addButton("coin.10cent", 0.10);
+		payment.addButton("coin.5cent", 0.05);
+		payment.addButton("coin.2cent", 0.02);
+		payment.addButton("coin.1cent", 0.01);
 	}
 
 	public void activate(CustomerInfoExt customerext, double dTotal, String transID) {
