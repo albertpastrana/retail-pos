@@ -299,7 +299,7 @@ public class JRootApp extends JPanel implements AppView {
 		return m_props;
 	}
 
-	public Object getBean(String beanfactory) throws BeanFactoryException {
+	private Object resolveBean(String beanfactory) throws BeanFactoryException {
 
 		// For backwards compatibility
 		beanfactory = mapNewClass(beanfactory);
@@ -338,23 +338,30 @@ public class JRootApp extends JPanel implements AppView {
 		return bf.getBean();
 	}
 
-	public <T> T getBean(Class<T> beanClass) throws BeanFactoryException {
+	<T> T getBean(String beanfactory, Class<T> beanClass) throws BeanFactoryException {
 		if (beanClass == null) {
 			throw new BeanFactoryException("Bean class cannot be null");
 		}
 
-		Object bean = getBean(beanClass.getName());
+		Object bean = resolveBean(beanfactory);
 		if (bean == null) {
-			throw new BeanFactoryException("Bean " + beanClass.getName() + " resolved to null");
+			throw new BeanFactoryException("Bean " + beanfactory + " resolved to null");
 		}
 		try {
 			return beanClass.cast(bean);
 		} catch (ClassCastException e) {
 			BeanFactoryException exception = new BeanFactoryException(
-					"Bean " + beanClass.getName() + " resolved to " + bean.getClass().getName());
+					"Bean " + beanfactory + " resolved to " + bean.getClass().getName());
 			exception.initCause(e);
 			throw exception;
 		}
+	}
+
+	public <T> T getBean(Class<T> beanClass) throws BeanFactoryException {
+		if (beanClass == null) {
+			throw new BeanFactoryException("Bean class cannot be null");
+		}
+		return getBean(beanClass.getName(), beanClass);
 	}
 
 	private static String mapNewClass(String classname) {
