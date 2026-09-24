@@ -1173,6 +1173,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					paymentdialog.setTransactionID(ticket.getTransactionID());
 
 					boolean paymentAccepted = paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer());
+					LOGGER.info("event=ticket_payment_result ticket=" + ticket.getId() + " type="
+							+ ticketTypeName(ticket) + " accepted=" + paymentAccepted + " total=" + ticket.getTotal());
 					if (refund) {
 						LOGGER.info("event=refund_payment_dialog_result ticket=" + ticket.getId() + " accepted="
 								+ paymentAccepted + " total=" + ticket.getTotal());
@@ -1228,6 +1230,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 							}
 
 							if (saved) {
+								LOGGER.info("event=ticket_persistence_success ticket=" + ticket.getId() + " type="
+										+ ticketTypeName(ticket) + " ticketNumber=" + ticket.getTicketId() + " total="
+										+ ticket.getTotal());
 								if (refund) {
 									LOGGER.info("event=refund_flow_success ticket=" + ticket.getId() + " total="
 											+ ticket.getTotal());
@@ -1261,6 +1266,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			// reset the payment info
 			m_oTicket.resetTaxes();
 			m_oTicket.resetPayments();
+		} else {
+			LOGGER.warning("event=ticket_close_denied ticket=" + ticket.getId() + " reason=missing_permission");
 		}
 
 		// cancelled the ticket.total script
@@ -1288,11 +1295,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				script.put("ticket", ticket);
 				script.put("place", ticketext);
 				m_TTP.printTicket(script.eval(sresource).toString());
+				LOGGER.info("event=ticket_print_success ticket=" + ticket.getId() + " resource=" + sresourcename);
 			} catch (ScriptException e) {
+				LOGGER.log(Level.WARNING, "event=ticket_print_failed ticket=" + ticket.getId() + " resource="
+						+ sresourcename + " reason=template", e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 						AppLocal.getIntString("message.cannotprintticket"), e);
 				msg.show(JPanelTicket.this);
 			} catch (TicketPrinterException e) {
+				LOGGER.log(Level.WARNING, "event=ticket_print_failed ticket=" + ticket.getId() + " resource="
+						+ sresourcename + " reason=device", e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 						AppLocal.getIntString("message.cannotprintticket"), e);
 				msg.show(JPanelTicket.this);

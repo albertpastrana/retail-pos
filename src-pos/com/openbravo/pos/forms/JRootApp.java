@@ -155,7 +155,7 @@ public class JRootApp extends JPanel implements AppView {
 	public boolean initApp(AppProperties props) {
 
 		m_props = props;
-		LOGGER.info("event=pos_initialization_start host=" + props.getHost());
+		LOGGER.info("event=pos_initialization_start host=" + props.getHost() + " " + LogSanitizer.configuration(props));
 		// setPreferredSize(new java.awt.Dimension(800, 600));
 
 		// support for different component orientation languages.
@@ -459,6 +459,8 @@ public class JRootApp extends JPanel implements AppView {
 			try (LogContext.Scope ignored = LogContext.beginOperation()) {
 				// String sPassword = m_actionuser.getPassword();
 				if (m_actionuser.authenticate()) {
+					LOGGER.info("event=login_success userId=" + m_actionuser.getId() + " role=" + m_actionuser.getRole()
+							+ " authentication=implicit");
 					// p'adentro directo, no tiene password
 					openAdministrationView(m_actionuser);
 				} else {
@@ -467,8 +469,12 @@ public class JRootApp extends JPanel implements AppView {
 							AppLocal.getIntString("Label.Password"), m_actionuser.getName(), m_actionuser.getIcon());
 					if (sPassword != null) {
 						if (m_actionuser.authenticate(sPassword)) {
+							LOGGER.info("event=login_success userId=" + m_actionuser.getId() + " role="
+									+ m_actionuser.getRole() + " authentication=password");
 							openAdministrationView(m_actionuser);
 						} else {
+							LOGGER.warning("event=login_failed userId=" + m_actionuser.getId() + " role="
+									+ m_actionuser.getRole() + " reason=invalid_password");
 							MessageInf msg = new MessageInf(MessageInf.SGN_WARNING,
 									AppLocal.getIntString("message.BadPassword"));
 							msg.show(JRootApp.this);
@@ -497,6 +503,8 @@ public class JRootApp extends JPanel implements AppView {
 			updateHeaderStatus();
 
 			m_principalapp.activate();
+			LOGGER.info("event=mode_open mode=" + (administrationMode ? "administration" : "sales") + " userId="
+					+ user.getId() + " role=" + user.getRole());
 		}
 	}
 
@@ -518,6 +526,8 @@ public class JRootApp extends JPanel implements AppView {
 		} else if (!m_principalapp.deactivate()) {
 			return false;
 		} else {
+			LOGGER.info("event=mode_close userId=" + m_principalapp.getUser().getId() + " role="
+					+ m_principalapp.getUser().getRole());
 			// remove the card
 			m_jPanelContainer.remove(m_principalapp);
 			m_principalapp = null;
@@ -570,13 +580,18 @@ public class JRootApp extends JPanel implements AppView {
 			}
 
 			if (user == null) {
+				LOGGER.warning("event=login_failed authentication=card reason=unknown_card");
 				// user not found
 				MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.nocard"));
 				msg.show(this);
 			} else {
 				if (AppUser.ROLE_ADMINISTRATOR.equals(user.getRole()) || AppUser.ROLE_MANAGER.equals(user.getRole())) {
+					LOGGER.info("event=login_success userId=" + user.getId() + " role=" + user.getRole()
+							+ " authentication=card");
 					openAdministrationView(user);
 				} else {
+					LOGGER.warning("event=login_failed userId=" + user.getId() + " role=" + user.getRole()
+							+ " authentication=card reason=admin_only");
 					MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.adminonly"));
 					msg.show(this);
 				}

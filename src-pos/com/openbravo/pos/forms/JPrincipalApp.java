@@ -428,6 +428,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	public void showTask(String sTaskClass) {
 
+		logger.info("event=task_open_start task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+				+ m_appuser.getRole());
 		m_appview.waitCursorBegin();
 
 		if (m_appuser.hasPermission(sTaskClass)) {
@@ -460,6 +462,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				try {
 					m_jMyView.activate();
 				} catch (BasicException e) {
+					logger.log(Level.WARNING, "event=task_activate_failed task=" + sTaskClass, e);
 					JMessageDialog.showMessage(this,
 							new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notactive"), e));
 				}
@@ -472,8 +475,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				String sTitle = m_jMyView.getTitle();
 				m_jPanelTitle.setVisible(sTitle != null);
 				m_jTitle.setText(sTitle);
+				logger.info("event=task_open_success task=" + sTaskClass + " userId=" + m_appuser.getId());
 			}
 		} else {
+			logger.warning("event=task_open_denied task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+					+ m_appuser.getRole());
 			// No hay permisos para ejecutar la accion...
 			JMessageDialog.showMessage(this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notpermissions")));
@@ -483,6 +489,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	public void executeTask(String sTaskClass) {
 
+		logger.info("event=task_execute_start task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+				+ m_appuser.getRole());
 		m_appview.waitCursorBegin();
 
 		if (m_appuser.hasPermission(sTaskClass)) {
@@ -497,14 +505,18 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 						JMessageDialog.showMessage(JPrincipalApp.this, m);
 					}
 				} catch (BasicException eb) {
+					logger.log(Level.WARNING, "event=task_execute_failed task=" + sTaskClass, eb);
 					// Si se produce un error lo muestro.
 					JMessageDialog.showMessage(JPrincipalApp.this, new MessageInf(eb));
 				}
 			} catch (BeanFactoryException e) {
+				logger.log(Level.WARNING, "event=task_execute_load_failed task=" + sTaskClass, e);
 				JMessageDialog.showMessage(JPrincipalApp.this,
 						new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("Label.LoadError"), e));
 			}
 		} else {
+			logger.warning("event=task_execute_denied task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+					+ m_appuser.getRole());
 			// No hay permisos para ejecutar la accion...
 			JMessageDialog.showMessage(JPrincipalApp.this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notpermissions")));
