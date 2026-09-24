@@ -1,0 +1,11 @@
+---
+description: Follow the shared project agent guidance
+alwaysApply: true
+---
+
+# Shared project guidance
+
+Before planning or editing, read `AGENTS.md`, `tickets/README.md`, and the
+ticket being worked on. `AGENTS.md` is the canonical rule set for this project.
+Do not duplicate or override it in this Cursor rule. Use the reusable
+procedures under `.agents/skills/` when their descriptions match the task.
