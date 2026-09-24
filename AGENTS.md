@@ -1,5 +1,57 @@
 # Agent instructions
 
+## Project workflow
+
+- Read `tickets/README.md` and the relevant ticket before changing code.
+- Treat the ticket as the source of truth. Record changed decisions in the
+  ticket instead of leaving them only in chat.
+- Keep one concern per ticket and one ticket in progress unless the user says
+  otherwise. Move the ticket to `in-progress/` before implementation and to
+  `done/` only when its observable checks are true.
+- Do not create, search, update, or mention Linear issues. Work items live
+  under `tickets/`.
+- Inspect `git status` before editing. Do not revert, include, or reformat
+  changes that are not part of the current task.
+- Keep changes minimal and preserve existing behaviour unless the ticket
+  explicitly changes it. Do not perform opportunistic cleanup.
+- Do not commit or push automatically after implementation. First report the
+  changed files, verification state, and any unrelated worktree changes; wait
+  for explicit approval when the user asked for manual validation.
+- Never claim a visual or operational change is complete without the relevant
+  manual or automated verification.
+
+## Safety and diagnosis
+
+- Separate observed facts, hypotheses, and conclusions when diagnosing a bug.
+  Do not keep arguing for a hypothesis after the user has rejected it.
+- Before changing a real or remote database, identify the target, scope, and
+  rollback or backup path. Never expose or request passwords in chat.
+- Treat database-backed resources, reflection, scripts, XML, optional hardware,
+  and packaging files as runtime dependencies even when static references are
+  absent.
+- For manual reproductions, inspect the newest relevant log entries first and
+  add generic flow logging rather than product- or customer-specific logging.
+
+## Retail POS behaviour
+
+- Design for a cashier at a counter: clear action labels, touch-sized controls,
+  keyboard and scanner input, safe defaults, and no unnecessary steps.
+- Validate user-visible changes in English, Spanish, and Catalan. Check that
+  labels remain visible at supported window sizes and display scales.
+- Prefer standard Swing layout managers, `pack()`, and component preferred
+  sizes derived from content. Document any intentional fixed geometry.
+- Keep the shared design-system tokens as the source of truth. Keep light and
+  dark themes in sync and do not introduce screen-local colours casually.
+
+## Verification
+
+- After Java changes, run `./gradlew spotlessApply` and then the narrowest
+  relevant checks before broader verification.
+- For UI changes, name the concrete screens and flows manually verified,
+  including keyboard, focus, resize, and translated-label checks where relevant.
+- For changes involving shared components, inspect and verify all important
+  call sites before declaring the change complete.
+
 ## Database migrations
 
 - Never edit a migration that has been committed or released. Add the next
