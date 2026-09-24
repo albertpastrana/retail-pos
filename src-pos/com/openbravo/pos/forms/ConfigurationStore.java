@@ -85,4 +85,20 @@ public final class ConfigurationStore {
 		}
 		return current;
 	}
+
+	static String source() {
+		String override = System.getenv(CONFIG_ENVIRONMENT_VARIABLE);
+		if (override != null && !override.trim().isEmpty()) {
+			return "environment";
+		}
+
+		File home = new File(System.getProperty("user.home"));
+		if (new File(home, CONFIG_FILE_NAME).isFile()) {
+			return "file";
+		}
+		if (new File(home, LEGACY_CONFIG_FILE_NAME).isFile()) {
+			return "legacy_file";
+		}
+		return "defaults";
+	}
 }

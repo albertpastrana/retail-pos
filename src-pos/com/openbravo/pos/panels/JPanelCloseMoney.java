@@ -27,6 +27,8 @@ import java.text.ParseException;
 import javax.swing.*;
 import java.util.Date;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.table.*;
 import com.openbravo.data.loader.StaticSentence;
 import com.openbravo.data.loader.SerializerWriteBasic;
@@ -52,6 +54,8 @@ import com.openbravo.pos.printer.TicketPrinterException;
  * @author adrianromero
  */
 public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryApp {
+
+	private static final Logger LOGGER = Logger.getLogger(JPanelCloseMoney.class.getName());
 
 	private AppView m_App;
 	private DataLogicSystem m_dlSystem;
@@ -500,8 +504,10 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 	}// </editor-fold>//GEN-END:initComponents
 
 	private void m_jCloseCashActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jCloseCashActionPerformed
-		// TODO add your handling code here:
+		LOGGER.info("event=cash_close_start cashId=" + m_App.getActiveCashIndex() + " sequence="
+				+ m_App.getActiveCashSequence());
 		if (!SupervisorAuthorization.authorize(this, m_App, AppLocal.getIntString("message.authorizedcash"))) {
+			LOGGER.warning("event=cash_close_denied reason=supervisor_authorization");
 			return;
 		}
 		int res = JConfirmationDialog.show(this, AppLocal.getIntString("message.wannaclosecash"),
@@ -520,6 +526,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 							.exec(new Object[]{dNow, m_App.getProperties().getHost(), m_App.getActiveCashIndex()});
 				}
 			} catch (BasicException e) {
+				LOGGER.log(Level.SEVERE, "event=cash_close_failed phase=close_previous_cash", e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"),
 						e);
 				msg.show(this);
@@ -544,7 +551,10 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 						AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
 
 				DatabaseBackup.runDailyBackupIfDue(m_App.getProperties());
+				LOGGER.info("event=cash_close_success cashId=" + m_App.getActiveCashIndex() + " sequence="
+						+ m_App.getActiveCashSequence());
 			} catch (BasicException e) {
+				LOGGER.log(Level.SEVERE, "event=cash_close_failed phase=create_next_cash", e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"),
 						e);
 				msg.show(this);
@@ -557,6 +567,8 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 						e);
 				msg.show(this);
 			}
+		} else {
+			LOGGER.info("event=cash_close_cancelled reason=confirmation");
 		}
 	}// GEN-LAST:event_m_jCloseCashActionPerformed
 
