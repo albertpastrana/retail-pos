@@ -8,6 +8,9 @@
 - Keep one concern per ticket and one ticket in progress unless the user says
   otherwise. Move the ticket to `in-progress/` before implementation and to
   `done/` only when its observable checks are true.
+- Start each ticket from the latest `origin/main`: fetch the remote refs before
+  creating the task branch, and branch from `origin/main` rather than a stale
+  local `main`.
 - Do not create, search, update, or mention Linear issues. Work items live
   under `tickets/`.
 - Inspect `git status` before editing. Do not revert, include, or reformat
@@ -17,8 +20,8 @@
 - Never push task changes directly to `main`. Work on a task branch and open a
   pull request for every change, including documentation and configuration.
 - A change reaches `main` only through its pull request after all required
-  checks are green. Do not merge solely because the checks are green; preserve
-  the user's review and approval step.
+  checks are green. Use GitHub's rebase merge for the approved pull request;
+  do not use a merge commit or squash merge unless the user explicitly asks.
 - Before opening or updating a pull request, report the changed files,
   verification state, and any unrelated worktree changes. Never include those
   unrelated changes in the task branch.
