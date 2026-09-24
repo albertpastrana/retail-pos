@@ -95,8 +95,6 @@ public class DataLogicSalesPersistenceIT {
 			session.close();
 		}
 	}
-<<<<<<< HEAD
-
 	@Test
 	public void deletingSaleRemovesReceiptAndReversesStock() throws Exception {
 		String url = "jdbc:derby:memory:voidPersistenceIT;create=true";
