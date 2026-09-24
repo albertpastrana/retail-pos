@@ -14,9 +14,14 @@
   changes that are not part of the current task.
 - Keep changes minimal and preserve existing behaviour unless the ticket
   explicitly changes it. Do not perform opportunistic cleanup.
-- Do not commit or push automatically after implementation. First report the
-  changed files, verification state, and any unrelated worktree changes; wait
-  for explicit approval when the user asked for manual validation.
+- Never push task changes directly to `main`. Work on a task branch and open a
+  pull request for every change, including documentation and configuration.
+- A change reaches `main` only through its pull request after all required
+  checks are green. Do not merge solely because the checks are green; preserve
+  the user's review and approval step.
+- Before opening or updating a pull request, report the changed files,
+  verification state, and any unrelated worktree changes. Never include those
+  unrelated changes in the task branch.
 - Never claim a visual or operational change is complete without the relevant
   manual or automated verification.
 
