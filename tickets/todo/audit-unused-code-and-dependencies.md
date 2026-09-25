@@ -41,7 +41,7 @@ The following declared dependencies in `build.gradle.kts` have no application im
 - `jfree:jfreechart:1.0.13`
 - `org.apache.poi:poi:3.2-FINAL`
 - `org.eclipse.jdt:core:3.1.1`
-- `org.swinglabs:swingx:0.9.5`
+- `org.swinglabs:swingx:0.9.5` (removed; the main menu now uses plain Swing components)
 
 The following dependencies are used directly or may be required at runtime and must not be removed based only on import searches:
 

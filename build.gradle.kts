@@ -83,7 +83,6 @@ dependencies {
         "org.apache.poi:poi:3.2-FINAL",
         "org.eclipse.jdt:core:3.1.1",
         "oro:oro:2.0.8",
-        "org.swinglabs:swingx:0.9.5",
         "org.apache.velocity:velocity:1.7",
         "wsdl4j:wsdl4j:1.6.3",
         "axis:axis:1.4",

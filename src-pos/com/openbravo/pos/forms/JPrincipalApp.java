@@ -33,11 +33,7 @@ import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.pos.util.Hashcypher;
 import com.openbravo.pos.util.HiDpiIcon;
-
-//import com.l2fprod.common.swing.JTaskPane;
-//import com.l2fprod.common.swing.JTaskPaneGroup;
-import org.jdesktop.swingx.JXTaskPane;
-import org.jdesktop.swingx.JXTaskPaneContainer;
+import com.openbravo.pos.theme.RetailPOSColors;
 
 /**
  *
@@ -63,6 +59,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	private Icon menu_open;
 	private Icon menu_close;
 	private JPanel m_jMenuRail;
+	private JButton m_jRailToggle;
+	private ScriptMenu m_scriptMenu;
 	private Component m_jMenuFull;
 	private boolean m_menuRail;
 	private Map<String, Action> m_menuActions;
@@ -88,16 +86,14 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 		initComponents();
 
-		jPanel2.add(Box.createVerticalStrut(50), 0);
-
 		applyComponentOrientation(appview.getComponentOrientation());
 
 		if (jButton1.getComponentOrientation().isLeftToRight()) {
-			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"));
-			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"));
+			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"), 1);
+			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"), 1);
 		} else {
-			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"));
-			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"));
+			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"), 1);
+			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"), 1);
 		}
 		assignMenuButtonIcon();
 
@@ -114,6 +110,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private Component buildMenu() {
 		ScriptMenu menu = new ScriptMenu();
+		m_scriptMenu = menu;
 		ScriptGroup group = menu.addGroup("Menu.Home");
 		group.addPanel("/com/openbravo/images/menu-catalog.png", "Menu.Home", "com.openbravo.pos.forms.JPanelWelcome",
 				JPanelWelcome.class);
@@ -190,6 +187,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		group.addExitAction();
 
 		m_jMenuRail = menu.getRailMenu();
+		menu.addToggleButton(jButton1);
 		return menu.getTaskPane();
 	}
 
@@ -225,6 +223,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private void setMenuViews(Component fullMenu) {
 		m_jMenuFull = fullMenu;
+		m_jPanelLeft.setBackground(RetailPOSColors.surface0());
+		m_jPanelLeft.setBorder(
+				javax.swing.BorderFactory.createMatteBorder(0, getComponentOrientation().isLeftToRight() ? 0 : 1, 0,
+						getComponentOrientation().isLeftToRight() ? 1 : 0, RetailPOSColors.border()));
+		m_jPanelLeft.getViewport().setBackground(RetailPOSColors.surface0());
 		m_jPanelLeft.setViewportView(fullMenu);
 		setMenuRail(isRailPreference(), false);
 	}
@@ -236,14 +239,16 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private void assignMenuButtonIcon() {
 		jButton1.setIcon(m_menuRail ? menu_open : menu_close);
+		if (m_jRailToggle != null) {
+			m_jRailToggle.setIcon(m_menuRail ? menu_open : menu_close);
+		}
 	}
 
 	public class ScriptMenu {
-		// private JTaskPane taskPane = new JTaskPane();
-		private JXTaskPaneContainer taskPane;
+		private MenuSidebar taskPane;
 
 		private ScriptMenu() {
-			taskPane = new JXTaskPaneContainer();
+			taskPane = new MenuSidebar();
 			taskPane.applyComponentOrientation(getComponentOrientation());
 		}
 
@@ -255,14 +260,35 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		}
 
 		// public JTaskPane getTaskPane() {
-		public JXTaskPaneContainer getTaskPane() {
+		public MenuSidebar getTaskPane() {
 			return taskPane;
 		}
 
 		private JPanel getRailMenu() {
 			JPanel rail = new JPanel();
 			rail.setLayout(new BoxLayout(rail, BoxLayout.Y_AXIS));
+			rail.setOpaque(true);
+			rail.setBackground(RetailPOSColors.surface0());
 			rail.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
+			rail.applyComponentOrientation(getComponentOrientation());
+			m_jRailToggle = new JButton();
+			m_jRailToggle.setIcon(menu_close);
+			m_jRailToggle.setPreferredSize(new Dimension(56, 56));
+			m_jRailToggle.setMinimumSize(new Dimension(56, 56));
+			m_jRailToggle.setMaximumSize(new Dimension(56, 56));
+			m_jRailToggle.setAlignmentX(Component.CENTER_ALIGNMENT);
+			m_jRailToggle.setFocusPainted(false);
+			m_jRailToggle.setFocusable(false);
+			m_jRailToggle.setRequestFocusEnabled(false);
+			m_jRailToggle.setOpaque(true);
+			m_jRailToggle.setBackground(RetailPOSColors.surface0());
+			m_jRailToggle.putClientProperty("FlatLaf.style",
+					"background: " + RetailPOSColors.toHex(RetailPOSColors.surface0()) + "; hoverBackground: "
+							+ RetailPOSColors.toHex(RetailPOSColors.surface200()) + "; pressedBackground: "
+							+ RetailPOSColors.toHex(RetailPOSColors.surface200()));
+			m_jRailToggle.addActionListener(e -> setMenuRail(false, true));
+			rail.add(m_jRailToggle);
+			rail.add(Box.createVerticalStrut(4));
 			for (Action action : m_menuRailActions) {
 				JButton button = new JButton(action);
 				button.setText(null);
@@ -272,6 +298,12 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				button.setFocusPainted(false);
 				button.setFocusable(false);
 				button.setRequestFocusEnabled(false);
+				button.putClientProperty("menu.task", action.getValue(AppUserView.ACTION_TASKNAME));
+				button.setOpaque(true);
+				button.setBackground(RetailPOSColors.surface0());
+				button.setForeground(RetailPOSColors.ink());
+				button.putClientProperty("FlatLaf.style",
+						"hoverBackground: " + RetailPOSColors.toHex(RetailPOSColors.surface200()));
 				button.setPreferredSize(new Dimension(56, 56));
 				button.setMinimumSize(new Dimension(56, 56));
 				button.setMaximumSize(new Dimension(56, 56));
@@ -280,15 +312,33 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			}
 			return rail;
 		}
+
+		private void addToggleButton(JButton toggle) {
+			taskPane.addToggleButton(toggle, e -> setMenuRail(true, true));
+		}
+
+		private void setSelectedTask(String taskName) {
+			taskPane.setSelectedTask(taskName);
+			for (Component component : m_jMenuRail.getComponents()) {
+				if (component instanceof JButton) {
+					JButton button = (JButton) component;
+					boolean selected = taskName != null && taskName.equals(button.getClientProperty("menu.task"));
+					button.setBackground(selected ? RetailPOSColors.brandSubtle() : RetailPOSColors.surface0());
+					button.putClientProperty("FlatLaf.style",
+							"background: "
+									+ RetailPOSColors.toHex(
+											selected ? RetailPOSColors.brandSubtle() : RetailPOSColors.surface0())
+									+ "; hoverBackground: " + RetailPOSColors.toHex(RetailPOSColors.surface200()));
+				}
+			}
+		}
 	}
 
 	public class ScriptGroup {
-		// private JTaskPaneGroup taskGroup;
-		private JXTaskPane taskGroup;
+		private MenuSidebarGroup taskGroup;
 
 		private ScriptGroup(String key) {
-			// taskGroup = new JTaskPaneGroup();
-			taskGroup = new JXTaskPane();
+			taskGroup = new MenuSidebarGroup();
 			taskGroup.applyComponentOrientation(getComponentOrientation());
 			taskGroup.setFocusable(false);
 			taskGroup.setRequestFocusEnabled(false);
@@ -338,8 +388,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			}
 		}
 
-		// public JTaskPaneGroup getTaskGroup() {
-		public JXTaskPane getTaskGroup() {
+		public MenuSidebarGroup getTaskGroup() {
 			return taskGroup;
 		}
 	}
@@ -395,8 +444,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		m_jPanelLeft.setPreferredSize(value ? new Dimension(MENU_RAIL_WIDTH, 0) : null);
 		m_jPanelLeft.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		m_jPanelLeft.setViewportView(value ? m_jMenuRail : m_jMenuFull);
-		jButton1.setPreferredSize(value ? new Dimension(56, 56) : null);
-		jButton1.setMinimumSize(value ? new Dimension(56, 56) : null);
 		assignMenuButtonIcon();
 		if (persist && m_appview.getProperties() instanceof AppConfig) {
 			AppConfig config = (AppConfig) m_appview.getProperties();
@@ -532,6 +579,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				String sTitle = m_jMyView.getTitle();
 				m_jPanelTitle.setVisible(sTitle != null);
 				m_jTitle.setText(sTitle);
+				m_scriptMenu.setSelectedTask(sTaskClass);
 				logger.info("event=task_open_success task=" + sTaskClass + " userId=" + m_appuser.getId());
 			}
 		} else {
@@ -600,7 +648,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	private void initComponents() {
 
 		jPanel1 = new javax.swing.JPanel();
-		jPanel2 = new javax.swing.JPanel();
 		jButton1 = new javax.swing.JButton();
 		m_jPanelLeft = new javax.swing.JScrollPane();
 		m_jPanelRight = new javax.swing.JPanel();
@@ -612,25 +659,16 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 		jPanel1.setLayout(new java.awt.BorderLayout());
 
-		jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.Y_AXIS));
-
 		jButton1.setFocusPainted(false);
 		jButton1.setFocusable(false);
 		jButton1.setMargin(new java.awt.Insets(14, 2, 14, 2));
 		jButton1.setRequestFocusEnabled(false);
-		jButton1.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton1ActionPerformed(evt);
-			}
-		});
-		jPanel2.add(jButton1);
-
-		jPanel1.add(jPanel2, java.awt.BorderLayout.LINE_END);
 		jPanel1.add(m_jPanelLeft, java.awt.BorderLayout.CENTER);
 
 		add(jPanel1, java.awt.BorderLayout.LINE_START);
 
 		m_jPanelRight.setLayout(new java.awt.BorderLayout());
+		m_jPanelRight.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 16, 0, 0));
 
 		m_jPanelTitle.setLayout(new java.awt.BorderLayout());
 
@@ -648,16 +686,9 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		add(m_jPanelRight, java.awt.BorderLayout.CENTER);
 	}// </editor-fold>//GEN-END:initComponents
 
-	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
-
-		setMenuRail(!m_menuRail, true);
-
-	}// GEN-LAST:event_jButton1ActionPerformed
-
 	// Variables declaration - do not modify//GEN-BEGIN:variables
 	private javax.swing.JButton jButton1;
 	private javax.swing.JPanel jPanel1;
-	private javax.swing.JPanel jPanel2;
 	private javax.swing.JPanel m_jPanelContainer;
 	private javax.swing.JScrollPane m_jPanelLeft;
 	private javax.swing.JPanel m_jPanelRight;
