@@ -81,7 +81,7 @@ dependencies {
         "jfree:jcommon:1.0.16",
         "jfree:jfreechart:1.0.13",
         "org.apache.poi:poi:3.2-FINAL",
-        "org.eclipse.jdt:core:3.1.1",
+        "org.eclipse.jdt:core:3.2.0.658",
         "oro:oro:2.0.8",
         "org.apache.velocity:velocity:1.7",
         "wsdl4j:wsdl4j:1.6.3",
