@@ -35,4 +35,4 @@ CP=$CP:$DIRNAME/reports
 # checkouts continue to use java from PATH.
 JAVA=$DIRNAME/runtime/bin/java
 if [ ! -x "$JAVA" ]; then JAVA=java; fi
-"$JAVA" -cp "$CP" -Djava.util.logging.config.file="$DIRNAME/logging.properties" -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Ddirname.path="$DIRNAME/" com.openbravo.pos.forms.StartPOS
+"$JAVA" -cp "$CP" -Djava.util.logging.config.file="$DIRNAME/logging.properties" -Ddirname.path="$DIRNAME/" com.openbravo.pos.forms.StartPOS

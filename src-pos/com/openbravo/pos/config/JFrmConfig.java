@@ -27,6 +27,7 @@ import com.openbravo.pos.theme.RetailPOSTheme;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.UIManager;
+import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  *
@@ -99,11 +100,10 @@ public class JFrmConfig extends javax.swing.JFrame {
 
 				AppConfig config = ConfigurationStore.load();
 
-				// Set the look and feel, with the Retail POS design system's tokens
-				// layered on top (design-system/swing-development.md).
+				// Set the fixed FlatLaf theme with the Retail POS design system's tokens.
 				RetailPOSTheme.registerDefaultsSource();
 				try {
-					UIManager.setLookAndFeel(config.getProperty("swing.defaultlaf"));
+					UIManager.setLookAndFeel(new FlatLightLaf());
 				} catch (Exception e) {
 				}
 				RetailPOSTheme.applyFonts();

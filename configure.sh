@@ -30,4 +30,4 @@ CP=$CP:$DIRNAME/runtime-libs/*
 CP=$CP:$DIRNAME/lib.jar
 
 
-java -cp $CP -Djava.util.logging.config.file=$DIRNAME/logging.properties -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Ddirname.path=$DIRNAME/ com.openbravo.pos.config.JFrmConfig
+java -cp $CP -Djava.util.logging.config.file=$DIRNAME/logging.properties -Ddirname.path=$DIRNAME/ com.openbravo.pos.config.JFrmConfig
