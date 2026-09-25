@@ -28,10 +28,13 @@ The first implementation slice should cover:
 - `CategoriesEditor`
 - `JProductLineEdit`
 - `DeviceFiscalPrinterJavaPOS`
-- `JDlgChangePassword`
 - `JPanelNull`
 
 Use standard layout managers and `pack()` where appropriate. Do not change business behaviour.
+
+## Decision
+
+`JDlgChangePassword` was confirmed to have no runtime or configuration references. It was removed instead of being refactored. The active password-change flow uses `com.openbravo.beans.JPasswordDialog` through `Hashcypher`.
 
 ## Done when
 
