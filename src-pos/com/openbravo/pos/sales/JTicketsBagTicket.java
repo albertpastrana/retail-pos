@@ -186,12 +186,12 @@ public class JTicketsBagTicket extends JTicketsBag {
 		m_jRecentTickets.getColumnModel().getColumn(2).setPreferredWidth(110);
 		m_jRecentTickets.getColumnModel().getColumn(3).setPreferredWidth(160);
 		m_jRecentTickets.getColumnModel().getColumn(4).setPreferredWidth(165);
-		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-		m_jRecentTickets.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
-		DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-		rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-		m_jRecentTickets.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
+		int[] alignments = {SwingConstants.CENTER, SwingConstants.CENTER, SwingConstants.RIGHT, SwingConstants.CENTER,
+				SwingConstants.CENTER};
+		for (int column = 0; column < alignments.length; column++) {
+			m_jRecentTickets.getColumnModel().getColumn(column).setCellRenderer(alignedRenderer(alignments[column]));
+			m_jRecentTickets.getColumnModel().getColumn(column).setHeaderRenderer(headerRenderer(alignments[column]));
+		}
 		m_jRecentTickets.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent event) {
@@ -245,6 +245,18 @@ public class JTicketsBagTicket extends JTicketsBag {
 		};
 		jrbSales.addActionListener(reloadRecent);
 		jrbRefunds.addActionListener(reloadRecent);
+	}
+
+	private static DefaultTableCellRenderer alignedRenderer(int alignment) {
+		DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+		renderer.setHorizontalAlignment(alignment);
+		return renderer;
+	}
+
+	private static DefaultTableCellRenderer headerRenderer(int alignment) {
+		DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+		renderer.setHorizontalAlignment(alignment);
+		return renderer;
 	}
 
 	private void loadRecentTickets() {
@@ -311,7 +323,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 			FindTicketsInfo ticket = tickets.get(row);
 			switch (column) {
 				case 0 :
-					return "[" + ticket.getTicketId() + "]";
+					return ticket.getTicketId();
 				case 1 :
 					return dateFormat.format(ticket.getDate());
 				case 2 :
