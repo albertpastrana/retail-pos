@@ -8,7 +8,7 @@ Remove unsupported serial-port printer, display, and scanner configuration from 
 
 ## Context
 
-Supported setups use screen, file-backed ESC/POS output, system printers, or JavaPOS. RXTX native libraries are obsolete and do not cover the supported deployment architectures. Keep file-backed output such as `epson:file,/dev/usb/lp0`.
+Supported setups use screen, file-backed ESC/POS output, or system printers. RXTX native libraries are obsolete and do not cover the supported deployment architectures. Keep file-backed output such as `epson:file,/dev/usb/lp0`.
 
 ## Done when
 
