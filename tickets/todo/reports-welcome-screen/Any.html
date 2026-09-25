@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Com va el negoci — any en curs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:"Manrope","Segoe UI",system-ui,sans-serif;background:#f5f1ea}
+a{color:#241c14}a:hover{color:#8f3216}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.period{box-sizing:border-box;padding:14px 16px;background:#fffdf9;border:1px solid #96896f;border-radius:16px;box-shadow:0 1px 2px rgba(36,28,20,0.08);text-align:left;font-family:inherit;color:#241c14;cursor:pointer;display:block;width:100%}
+.period[aria-pressed="true"]{background:#e7b8a4;border-color:#b8481f;border-left:3px solid #b8481f}
+.kicker{font-size:11px;font-weight:700;letter-spacing:0.05em;color:#6b6154}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;font-size:12px;font-weight:700}
+.up{background:#dcece7;color:#1f6b5c}
+.down{background:#f0e2df;color:#8a2a22}
+</style>
+</head>
+<body>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; display: flex; background: #f5f1ea; color: #241c14; overflow: hidden">
+
+  <!-- Sidebar: unchanged from the main menu redesign -->
+  <div style="width: 236px; flex-shrink: 0; box-sizing: border-box; padding: 14px 10px; background: #fffdf9; border-right: 1px solid #96896f; display: flex; flex-direction: column; gap: 1px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#241c14" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span style="font-size: 15px; font-weight: 800; letter-spacing: -0.01em">Retail POS</span>
+    </div>
+
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Inici</a>
+
+    <div style="padding: 16px 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #6b6154">PRINCIPAL</div>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Vendes</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Editar vendes</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Reposició i encàrrecs</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Clients</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Moviments de caixa</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Tancar caixa</a>
+
+    <div style="padding: 16px 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #6b6154">ADMINISTRACIÓ</div>
+    <a href="#" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none"><span>Estoc</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6154" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+    <a href="Main.html" style="display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 10px; background: #e7b8a4; border-left: 3px solid #b8481f; color: #241c14; font-size: 13px; font-weight: 700; text-decoration: none"><span>Com va el negoci</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#241c14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+    <a href="#" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none"><span>Manteniment</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6154" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+
+    <div style="padding: 16px 10px 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: #6b6154">SISTEMA</div>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Configuració</a>
+    <a href="#" style="padding: 7px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; text-decoration: none">Sortir</a>
+  </div>
+
+  <!-- Content -->
+  <div style="flex-grow: 1; box-sizing: border-box; padding: 24px 36px 0; display: flex; flex-direction: column; overflow: hidden">
+
+    <!-- Header -->
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+      <div>
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #6b6154">COM VA EL NEGOCI</div>
+        <h1 style="margin: 5px 0 0; font-size: 26px; line-height: 32px; font-weight: 700">Divendres 25 de setembre</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px">
+        <div style="text-align: right; font-size: 12px; line-height: 17px; color: #6b6154">
+          Cada període es compara amb el mateix tram de l'any passat,<br>fins al mateix dia. Dades fins avui a les <span class="num">13:42</span>.
+        </div>
+        <button type="button" style="display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 16px; background: #fffdf9; border: 1px solid #96896f; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 600; color: #241c14; cursor: pointer">
+          Informes detallats
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6154" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Four running periods. They are the figures AND the selector. -->
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px">
+
+      <button type="button" class="period" aria-pressed="false">
+        <div class="kicker">AQUESTA SETMANA</div>
+        <div style="font-size: 11px; color: #6b6154; margin-top: 2px">dl 21 – avui</div>
+        <div class="num" style="margin-top: 7px; font-size: 25px; font-weight: 600; line-height: 29px">2.928,80 €</div>
+        <div style="margin-top: 7px"><span class="chip up"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f6b5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg><span class="num">+8,2 %</span></span></div>
+        <div style="margin-top: 6px; font-size: 11px; line-height: 15px; color: #6b6154">Any passat, mateixos dies<br><span class="num" style="font-size: 12px">2.706,10 €</span></div>
+      </button>
+
+      <button type="button" class="period" aria-pressed="false">
+        <div class="kicker">AQUEST MES</div>
+        <div style="font-size: 11px; color: #6b6154; margin-top: 2px">1 – 25 de setembre</div>
+        <div class="num" style="margin-top: 7px; font-size: 25px; font-weight: 600; line-height: 29px">11.420,55 €</div>
+        <div style="margin-top: 7px"><span class="chip up"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f6b5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg><span class="num">+5,1 %</span></span></div>
+        <div style="margin-top: 6px; font-size: 11px; line-height: 15px; color: #6b6154">Any passat, mateixos dies<br><span class="num" style="font-size: 12px">10.866,90 €</span></div>
+      </button>
+
+      <button type="button" class="period" aria-pressed="true">
+        <div class="kicker">AQUEST ANY</div>
+        <div style="font-size: 11px; color: #6b6154; margin-top: 2px">1 de gener – 25 de setembre</div>
+        <div class="num" style="margin-top: 7px; font-size: 25px; font-weight: 600; line-height: 29px">96.480,30 €</div>
+        <div style="margin-top: 7px"><span class="chip down"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a2a22" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m5 12 7 7 7-7"/></svg><span class="num">−1,8 %</span></span></div>
+        <div style="margin-top: 6px; font-size: 11px; line-height: 15px; color: #6b6154">Any passat, mateix tram<br><span class="num" style="font-size: 12px">98.250,00 €</span></div>
+      </button>
+
+      <button type="button" class="period" aria-pressed="false">
+        <div class="kicker">DARRERS 12 MESOS</div>
+        <div style="font-size: 11px; color: #6b6154; margin-top: 2px">26/09/2025 – avui</div>
+        <div class="num" style="margin-top: 7px; font-size: 25px; font-weight: 600; line-height: 29px">129.740,10 €</div>
+        <div style="margin-top: 7px"><span class="chip up"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1f6b5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg><span class="num">+2,4 %</span></span></div>
+        <div style="margin-top: 6px; font-size: 11px; line-height: 15px; color: #6b6154">12 mesos anteriors<br><span class="num" style="font-size: 12px">126.690,45 €</span></div>
+      </button>
+    </div>
+
+    <!-- Detail of the selected period -->
+    <div style="display: flex; align-items: stretch; gap: 0; margin-top: 12px; box-sizing: border-box; padding: 12px 20px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08)">
+      <div style="flex-grow: 1">
+        <div class="kicker">TIQUETS</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px"><span class="num" style="font-size: 20px; font-weight: 600">7.104</span><span class="num" style="font-size: 12px; color: #8a2a22">−5,2 %</span></div>
+      </div>
+      <div style="width: 1px; background: #96896f; opacity: 0.45; margin: 0 18px"></div>
+      <div style="flex-grow: 1">
+        <div class="kicker">TIQUET MITJÀ</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px"><span class="num" style="font-size: 20px; font-weight: 600">13,58 €</span><span class="num" style="font-size: 12px; color: #1f6b5c">+3,6 %</span></div>
+      </div>
+      <div style="width: 1px; background: #96896f; opacity: 0.45; margin: 0 18px"></div>
+      <div style="flex-grow: 1">
+        <div class="kicker">VICTORINES BESCANVIADES</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px"><span class="num" style="font-size: 20px; font-weight: 600">612</span><span style="font-size: 12px; color: #6b6154"><span class="num">3.060,00 €</span> de descompte · any passat <span class="num">418</span></span></div>
+      </div>
+      <div style="width: 1px; background: #96896f; opacity: 0.45; margin: 0 18px"></div>
+      <div style="flex-grow: 1">
+        <div class="kicker">DEVOLUCIONS</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px"><span class="num" style="font-size: 20px; font-weight: 600">1.842,60 €</span><span style="font-size: 12px; color: #6b6154">96 tiquets</span></div>
+      </div>
+    </div>
+
+    <!-- Chart + attention -->
+    <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin-top: 12px">
+
+      <div style="box-sizing: border-box; padding: 16px 18px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <div style="font-size: 16px; font-weight: 700">Vendes per mes</div>
+          <div style="display: flex; align-items: center; gap: 14px; font-size: 12px; color: #6b6154">
+            <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #b8481f"></span>Aquest any</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #fffdf9; border: 1px solid #96896f"></span>Any passat</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 828 210" width="100%" height="196" style="margin-top: 8px; display: block" role="img" aria-label="Vendes per mes d'aquest any comparades amb l'any passat">
+          <g stroke="#96896f" stroke-opacity="0.35" stroke-width="1">
+            <line x1="46" y1="22" x2="828" y2="22"/>
+            <line x1="46" y1="72" x2="828" y2="72"/>
+            <line x1="46" y1="122" x2="828" y2="122"/>
+          </g>
+          <line x1="46" y1="172" x2="828" y2="172" stroke="#96896f" stroke-width="1"/>
+          <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#6b6154" text-anchor="end">
+            <text x="38" y="26">15k</text>
+            <text x="38" y="76">10k</text>
+            <text x="38" y="126">5k</text>
+            <text x="38" y="176">0</text>
+          </g>
+          <rect x="58" y="81" width="26" height="91" rx="5" fill="#b8481f"/>
+          <rect x="87" y="85" width="18" height="87" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="122" y="88" width="26" height="84" rx="5" fill="#b8481f"/>
+          <rect x="151" y="83" width="18" height="89" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="186" y="70" width="26" height="102" rx="5" fill="#b8481f"/>
+          <rect x="215" y="76" width="18" height="96" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="250" y="62" width="26" height="110" rx="5" fill="#b8481f"/>
+          <rect x="279" y="68" width="18" height="104" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="314" y="54" width="26" height="118" rx="5" fill="#b8481f"/>
+          <rect x="343" y="53" width="18" height="119" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="378" y="46" width="26" height="126" rx="5" fill="#b8481f"/>
+          <rect x="407" y="50" width="18" height="122" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="442" y="33" width="26" height="139" rx="5" fill="#b8481f"/>
+          <rect x="471" y="28" width="18" height="144" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="506" y="74" width="26" height="98" rx="5" fill="#b8481f"/>
+          <rect x="535" y="63" width="18" height="109" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="570" y="58" width="26" height="114" rx="5" fill="#b8481f" fill-opacity="0.55"/>
+          <rect x="599" y="33" width="18" height="139" rx="5" fill="#fffdf9" stroke="#96896f"/>
+          <rect x="663" y="51" width="18" height="121" rx="5" fill="#fffdf9" stroke="#96896f" stroke-dasharray="3 3"/>
+          <rect x="727" y="44" width="18" height="128" rx="5" fill="#fffdf9" stroke="#96896f" stroke-dasharray="3 3"/>
+          <rect x="791" y="22" width="18" height="150" rx="5" fill="#fffdf9" stroke="#96896f" stroke-dasharray="3 3"/>
+          <g font-family="Manrope, sans-serif" font-size="11" fill="#6b6154" text-anchor="middle">
+            <text x="80" y="192">gen</text>
+            <text x="144" y="192">feb</text>
+            <text x="208" y="192">mar</text>
+            <text x="272" y="192">abr</text>
+            <text x="336" y="192">mai</text>
+            <text x="400" y="192">jun</text>
+            <text x="464" y="192">jul</text>
+            <text x="528" y="192">ago</text>
+            <text x="592" y="192" fill="#241c14" font-weight="700">set · a mitges</text>
+            <text x="656" y="192">oct</text>
+            <text x="720" y="192">nov</text>
+            <text x="784" y="192">des</text>
+          </g>
+        </svg>
+        <div style="margin-top: 2px; font-size: 12px; color: #6b6154">Setembre encara va per la meitat, per això la barra és mig plena. Els mesos que no han arribat només mostren l'any passat, a ratlles: és el que hauries d'igualar.</div>
+      </div>
+
+      <div style="box-sizing: border-box; padding: 16px 18px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08)">
+        <div style="font-size: 16px; font-weight: 700">Coses a mirar</div>
+
+        <a href="#" style="display: flex; gap: 10px; margin-top: 10px; padding: 8px 8px; border-radius: 10px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a5300" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px" aria-hidden="true"><path d="M12 9v5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 2.4 17.4A1.9 1.9 0 0 0 4 20.3h16a1.9 1.9 0 0 0 1.6-2.9L13.7 3.9a1.9 1.9 0 0 0-3.4 0Z"/></svg>
+          <span>
+            <span style="display: block; font-size: 14px; font-weight: 700; line-height: 18px">La caixa fa 3 dies que no es tanca</span>
+            <span style="display: block; font-size: 12px; color: #6b6154">Oberta des de dimarts 22 · <span class="num">1.980,45 €</span></span>
+          </span>
+        </a>
+
+        <a href="#" style="display: flex; gap: 10px; padding: 8px 8px; border-radius: 10px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a5300" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px" aria-hidden="true"><path d="M12 2 3 6.5v11L12 22l9-4.5v-11L12 2Z"/><path d="M3 6.5 12 11l9-4.5"/><path d="M12 11v11"/></svg>
+          <span>
+            <span style="display: block; font-size: 14px; font-weight: 700; line-height: 18px">4 dels més venuts estan sota mínims</span>
+            <span style="display: block; font-size: 12px; color: #6b6154">Cafè en gra 1 kg, Llet sencera, Oli d'oliva…</span>
+          </span>
+        </a>
+
+        <a href="#" style="display: flex; gap: 10px; padding: 8px 8px; border-radius: 10px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3c6e8f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M17 5.2a3.5 3.5 0 0 1 0 5.6"/></svg>
+          <span>
+            <span style="display: block; font-size: 14px; font-weight: 700; line-height: 18px"><span class="num">382,60 €</span> pendents de 6 clients</span>
+            <span style="display: block; font-size: 12px; color: #6b6154">El més antic fa 41 dies</span>
+          </span>
+        </a>
+
+        <a href="#" style="display: flex; gap: 10px; padding: 8px 8px; border-radius: 10px; text-decoration: none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f6b5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px" aria-hidden="true"><path d="M3 17 9.5 10.5l4 4L21 7"/><path d="M15 7h6v6"/></svg>
+          <span>
+            <span style="display: block; font-size: 14px; font-weight: 700; line-height: 18px">Dimecres va ser el millor dimecres de l'any</span>
+            <span style="display: block; font-size: 12px; color: #6b6154"><span class="num">703,15 €</span> · rècord anterior <span class="num">688,00 €</span></span>
+          </span>
+        </a>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #6b6154">QUÈ ES VEN MÉS</span>
+      <div style="flex-grow: 1; height: 1px; background: #96896f; opacity: 0.45"></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -155,6 +155,7 @@ public class DatabaseMigratorIT {
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
 			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
+			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM TICKETLINES WHERE LOYALTYREDEMPTION = TRUE"));
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
