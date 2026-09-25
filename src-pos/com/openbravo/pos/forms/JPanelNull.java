@@ -22,8 +22,10 @@ package com.openbravo.pos.forms;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import com.openbravo.basic.BasicException;
+import java.awt.BorderLayout;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 
 /**
  *
@@ -39,7 +41,7 @@ public class JPanelNull extends JPanel implements JPanelView {
 		if (o instanceof Exception) {
 			LOGGER.log(Level.WARNING, "event=error_view_opened", (Exception) o);
 		}
-		jtxtException.setText(o.toString());
+		jtxtException.setText(String.valueOf(o));
 	}
 
 	public JComponent getComponent() {
@@ -66,19 +68,20 @@ public class JPanelNull extends JPanel implements JPanelView {
 		jscrException = new javax.swing.JScrollPane();
 		jtxtException = new javax.swing.JTextArea();
 
-		setLayout(null);
+		setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+		setLayout(new BorderLayout(0, 12));
 
 		m_jLabelError.setText(AppLocal.getIntString("Label.LoadError"));
-		add(m_jLabelError);
-		m_jLabelError.setBounds(30, 30, 490, 20);
+		add(m_jLabelError, BorderLayout.NORTH);
 
 		jtxtException.setEditable(false);
 		jtxtException.setLineWrap(true);
 		jtxtException.setWrapStyleWord(true);
+		jtxtException.setRows(8);
+		jtxtException.setColumns(60);
 		jscrException.setViewportView(jtxtException);
 
-		add(jscrException);
-		jscrException.setBounds(30, 70, 550, 180);
+		add(jscrException, BorderLayout.CENTER);
 
 	}// </editor-fold>//GEN-END:initComponents
 
