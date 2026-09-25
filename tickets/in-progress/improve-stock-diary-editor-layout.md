@@ -10,7 +10,9 @@ Make the stock movement editor comfortable and visually consistent across suppor
 
 ## Context
 
-`StockDiaryEditor` now uses an adaptive `GridBagLayout` for its main fields, but the generated layout code with manual `setBounds` calls remains in the class and should be removed. The right-hand editor and the catalog area also need a visual pass for spacing, proportions, and small-window behaviour.
+`StockDiaryEditor` uses an adaptive `GridBagLayout` for its main fields. The right-hand editor and the catalog area still need a visual pass for spacing, proportions, and small-window behaviour.
+
+The generated layout and component additions in `initComponents()` are removed as part of this slice. `layoutForm()` remains the single place that adds the form controls and owns the panel layout.
 
 ## Done when
 
