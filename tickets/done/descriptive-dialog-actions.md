@@ -33,7 +33,7 @@ Review and update the following dialogs:
 | `src-pos/com/openbravo/pos/sales/JProductLineEdit.java` | Saves changes to a ticket line | `Desa canvis` |
 | `src-pos/com/openbravo/pos/sales/JProductAttEdit.java` | Saves product attributes | `Aplica atributs` |
 | `src-pos/com/openbravo/pos/util/SelectPrinter.java` | Confirms the selected printer | `Selecciona impressora` |
-| `src-pos/com/openbravo/pos/forms/JDlgChangePassword.java` | Changes the password | `Canvia contrasenya` |
+| `src-pos/com/openbravo/pos/util/Hashcypher.java` | Changes the password through `JPasswordDialog` | `Canvia contrasenya` |
 | `src-beans/com/openbravo/beans/JNumberDialog.java` | Accepts a numeric value | `Aplica valor` |
 | `src-beans/com/openbravo/beans/JCalendarDialog.java` | Accepts a date/time | `Selecciona data` |
 | `src-data/com/openbravo/data/gui/JSort.java` | Applies the selected sort | `Aplica ordenació` |
