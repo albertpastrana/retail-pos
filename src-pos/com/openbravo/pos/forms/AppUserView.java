@@ -31,7 +31,7 @@ public interface AppUserView {
 
 	// Acciones de la aplicacion
 	public AppUser getUser(); // Usuario logado
-	public void showTask(String sTaskClass);
+	public void showTask(String sTaskClass, Class<? extends JPanelView> viewClass);
 	public void executeTask(String sTaskClass);
 	public Action getTaskAction(String sTaskClass);
 }

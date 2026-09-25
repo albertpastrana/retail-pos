@@ -115,73 +115,69 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	private Component buildMenu() {
 		ScriptMenu menu = new ScriptMenu();
 		ScriptGroup group = menu.addGroup("Menu.Home");
-		group.addPanel("/com/openbravo/images/menu-catalog.png", "Menu.Home", "com.openbravo.pos.forms.JPanelWelcome");
+		group.addPanel("/com/openbravo/images/menu-catalog.png", "Menu.Home", "com.openbravo.pos.forms.JPanelWelcome",
+				JPanelWelcome.class);
 
 		group = menu.addGroup("Menu.Main");
 		group.addPanel("/com/openbravo/images/menu-sales.png", "Menu.Ticket",
-				"com.openbravo.pos.sales.JPanelTicketSales");
+				"com.openbravo.pos.sales.JPanelTicketSales", com.openbravo.pos.sales.JPanelTicketSales.class);
 		group.addPanel("/com/openbravo/images/menu-edit-sales.png", "Menu.TicketEdit",
-				"com.openbravo.pos.sales.JPanelTicketEdits");
+				"com.openbravo.pos.sales.JPanelTicketEdits", com.openbravo.pos.sales.JPanelTicketEdits.class);
 		group.addPanel("/com/openbravo/images/menu-package-plus.png", "Menu.Replenishment",
-				"com.openbravo.pos.inventory.ReplenishmentPanel");
+				"com.openbravo.pos.inventory.ReplenishmentPanel", com.openbravo.pos.inventory.ReplenishmentPanel.class);
 		group.addPanel("/com/openbravo/images/menu-customers-payment.png", "Menu.CustomersPayment",
-				"com.openbravo.pos.customers.CustomersPanel");
+				"com.openbravo.pos.customers.CustomersPanel", com.openbravo.pos.customers.CustomersPanel.class);
 		group.addPanel("/com/openbravo/images/menu-payments.png", "Menu.Payments",
-				"com.openbravo.pos.panels.JPanelPayments");
+				"com.openbravo.pos.panels.JPanelPayments", com.openbravo.pos.panels.JPanelPayments.class);
 		group.addPanel("/com/openbravo/images/menu-close-cash.png", "Menu.CloseTPV",
-				"com.openbravo.pos.panels.JPanelCloseMoney");
+				"com.openbravo.pos.panels.JPanelCloseMoney", com.openbravo.pos.panels.JPanelCloseMoney.class);
 		group.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.Closing",
-				"com.openbravo.pos.panels.JPanelClosedCash");
+				"com.openbravo.pos.panels.JPanelClosedCash", com.openbravo.pos.panels.JPanelClosedCash.class);
 
 		group = menu.addGroup("Menu.Backoffice");
 		ScriptSubmenu submenu = group.addSubmenu("/com/openbravo/images/menu-stock.png", "Menu.StockManagement",
 				"com.openbravo.pos.forms.MenuStockManagement");
 		submenu.addTitle("Menu.StockManagement.Edit");
 		submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.Products",
-				"com.openbravo.pos.inventory.ProductsPanel");
+				"com.openbravo.pos.inventory.ProductsPanel", com.openbravo.pos.inventory.ProductsPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.PriceRules",
-				"com.openbravo.pos.inventory.PriceRulesPanel");
+				"com.openbravo.pos.inventory.PriceRulesPanel", com.openbravo.pos.inventory.PriceRulesPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-products.png", "Menu.SaleMark",
-				"com.openbravo.pos.inventory.SaleMarkPanel");
-		submenu.addPanel("/com/openbravo/images/menu-products-warehouse.png", "Menu.ProductsWarehouse",
-				"com.openbravo.pos.inventory.ProductsWarehousePanel");
+				"com.openbravo.pos.inventory.SaleMarkPanel", com.openbravo.pos.inventory.SaleMarkPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-categories.png", "Menu.Categories",
-				"com.openbravo.pos.inventory.CategoriesPanel");
-		submenu.addPanel("/com/openbravo/images/menu-taxes.png", "Menu.Taxes", "com.openbravo.pos.inventory.TaxPanel");
+				"com.openbravo.pos.inventory.CategoriesPanel", com.openbravo.pos.inventory.CategoriesPanel.class);
+		submenu.addPanel("/com/openbravo/images/menu-taxes.png", "Menu.Taxes", "com.openbravo.pos.inventory.TaxPanel",
+				com.openbravo.pos.inventory.TaxPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-stock-diary.png", "Menu.StockDiary",
-				"com.openbravo.pos.inventory.StockDiaryPanel");
-		submenu.addPanel("/com/openbravo/images/menu-stock-movement.png", "Menu.StockMovement",
-				"com.openbravo.pos.inventory.StockManagement");
+				"com.openbravo.pos.inventory.StockDiaryPanel", com.openbravo.pos.inventory.StockDiaryPanel.class);
 
 		submenu = group.addSubmenu("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesManagement",
 				"com.openbravo.pos.forms.MenuSalesManagement");
 		submenu.addTitle("Menu.SalesManagement.Reports");
 		submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesSummary",
-				"com.openbravo.pos.reports.JPanelSalesSummary");
+				"com.openbravo.pos.reports.JPanelSalesSummary", com.openbravo.pos.reports.JPanelSalesSummary.class);
 		submenu.addPanel("/com/openbravo/images/menu-product-sales.png", "Menu.ProductSalesSummary",
-				"com.openbravo.pos.reports.JPanelProductSales");
+				"com.openbravo.pos.reports.JPanelProductSales", com.openbravo.pos.reports.JPanelProductSales.class);
 		submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.PaymentSalesSummary",
-				"com.openbravo.pos.reports.JPanelPaymentSales");
+				"com.openbravo.pos.reports.JPanelPaymentSales", com.openbravo.pos.reports.JPanelPaymentSales.class);
 		submenu.addPanel("/com/openbravo/images/menu-inventory-current.png", "Menu.LowStockSummary",
-				"com.openbravo.pos.reports.JPanelLowStock");
+				"com.openbravo.pos.reports.JPanelLowStock", com.openbravo.pos.reports.JPanelLowStock.class);
 		submenu.addPanel("/com/openbravo/images/menu-taxes-report.png", "Menu.TaxSummary",
-				"com.openbravo.pos.reports.JPanelTaxSummary");
+				"com.openbravo.pos.reports.JPanelTaxSummary", com.openbravo.pos.reports.JPanelTaxSummary.class);
 		submenu.addPanel("/com/openbravo/images/menu-cash-closed.png", "Menu.CashClosingSummary",
-				"com.openbravo.pos.reports.JPanelCashClosing");
+				"com.openbravo.pos.reports.JPanelCashClosing", com.openbravo.pos.reports.JPanelCashClosing.class);
 		submenu.addPanel("/com/openbravo/images/menu-customers-report.png", "Menu.CustomerDebtSummary",
-				"com.openbravo.pos.reports.JPanelCustomerDebt");
+				"com.openbravo.pos.reports.JPanelCustomerDebt", com.openbravo.pos.reports.JPanelCustomerDebt.class);
 
 		submenu = group.addSubmenu("/com/openbravo/images/menu-maintenance.png", "Menu.Maintenance",
 				"com.openbravo.pos.forms.MenuMaintenance");
 		submenu.addTitle("Menu.Maintenance.POS");
-		submenu.addPanel("/com/openbravo/images/menu-users.png", "Menu.Users", "com.openbravo.pos.admin.PeoplePanel");
-		submenu.addPanel("/com/openbravo/images/menu-roles.png", "Menu.Roles", "com.openbravo.pos.admin.RolesPanel");
+		submenu.addPanel("/com/openbravo/images/menu-users.png", "Menu.Users", "com.openbravo.pos.admin.PeoplePanel",
+				com.openbravo.pos.admin.PeoplePanel.class);
+		submenu.addPanel("/com/openbravo/images/menu-roles.png", "Menu.Roles", "com.openbravo.pos.admin.RolesPanel",
+				com.openbravo.pos.admin.RolesPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-resources.png", "Menu.Resources",
-				"com.openbravo.pos.admin.ResourcesPanel");
-		submenu.addPanel("/com/openbravo/images/menu-locations.png", "Menu.Locations",
-				"com.openbravo.pos.inventory.LocationsPanel");
-		submenu.addPanel("/com/openbravo/images/menu-floors.png", "Menu.Floors", "com.openbravo.pos.mant.JPanelFloors");
-		submenu.addPanel("/com/openbravo/images/menu-tables.png", "Menu.Tables", "com.openbravo.pos.mant.JPanelPlaces");
+				"com.openbravo.pos.admin.ResourcesPanel", com.openbravo.pos.admin.ResourcesPanel.class);
 		submenu.addExecution("/com/openbravo/images/ark2.png", "Menu.DatabaseBackup",
 				"com.openbravo.pos.admin.BackupDatabaseAction");
 		submenu.addExecution("/com/openbravo/images/ark2.png", "Menu.DemoMode",
@@ -195,9 +191,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		group = menu.addGroup("Menu.System");
 		group.addChangePasswordAction();
 		group.addPanel("/com/openbravo/images/menu-configuration.png", "Menu.Configuration",
-				"com.openbravo.pos.config.JPanelConfiguration");
-		group.addPanel("/com/openbravo/images/menu-printer.png", "Menu.Printer",
-				"com.openbravo.pos.panels.JPanelPrinter");
+				"com.openbravo.pos.config.JPanelConfiguration", com.openbravo.pos.config.JPanelConfiguration.class);
 		group.addExitAction();
 
 		m_jMenuRail = menu.getRailMenu();
@@ -319,11 +313,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			taskGroup.setVisible(false); // Only groups with sons are visible.
 		}
 
-		public void addPanel(String icon, String key, String classname) {
-			if (!isAvailableTask(classname)) {
-				return;
-			}
-			addAction(new MenuPanelAction(m_appview, icon, key, classname));
+		public void addPanel(String icon, String key, String classname, Class<? extends JPanelView> viewClass) {
+			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
 		}
 
 		public void addExecution(String icon, String key, String classname) {
@@ -336,7 +327,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		public ScriptSubmenu addSubmenu(String icon, String key, String classname) {
 			ScriptSubmenu submenu = new ScriptSubmenu(key);
 			m_aPreparedViews.put(classname, new JPanelMenu(submenu.getMenuDefinition()));
-			addAction(new MenuPanelAction(m_appview, icon, key, classname));
+			addAction(new MenuPanelAction(m_appview, icon, key, classname, null));
 			return submenu;
 		}
 
@@ -384,11 +375,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			menudef.addMenuTitle(key);
 		}
 
-		public void addPanel(String icon, String key, String classname) {
-			if (!isAvailableTask(classname)) {
-				return;
-			}
-			addAction(new MenuPanelAction(m_appview, icon, key, classname));
+		public void addPanel(String icon, String key, String classname, Class<? extends JPanelView> viewClass) {
+			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
 		}
 
 		public void addExecution(String icon, String key, String classname) {
@@ -401,7 +389,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		public ScriptSubmenu addSubmenu(String icon, String key, String classname) {
 			ScriptSubmenu submenu = new ScriptSubmenu(key);
 			m_aPreparedViews.put(classname, new JPanelMenu(submenu.getMenuDefinition()));
-			addAction(new MenuPanelAction(m_appview, icon, key, classname));
+			addAction(new MenuPanelAction(m_appview, icon, key, classname, null));
 			return submenu;
 		}
 
@@ -518,7 +506,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		return m_appuser.hasPermission(sTaskClass) ? m_menuActions.get(sTaskClass) : null;
 	}
 
-	public void showTask(String sTaskClass) {
+	public void showTask(String sTaskClass, Class<? extends JPanelView> viewClass) {
 
 		logger.info("event=task_open_start task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
 				+ m_appuser.getRole());
@@ -539,7 +527,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 					if (m_jMyView == null) {
 						// The view is not prepared. Try to get as a Bean...
 						try {
-							m_jMyView = m_appview.getBean(sTaskClass, JPanelView.class);
+							m_jMyView = m_appview.getBean(viewClass);
 						} catch (BeanFactoryException e) {
 							m_jMyView = new JPanelNull(m_appview, e);
 						}
