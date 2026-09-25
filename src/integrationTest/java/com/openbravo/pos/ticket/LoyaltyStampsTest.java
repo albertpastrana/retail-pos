@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
+import com.openbravo.format.Formats;
+
 public class LoyaltyStampsTest {
 
 	@Test
@@ -15,6 +17,14 @@ public class LoyaltyStampsTest {
 		TicketInfo ticket = ticket(line("Pijama", 27.0));
 		assertEquals(27.0, LoyaltyStamps.eligibleEuros(ticket), 0.0001);
 		assertEquals(2, LoyaltyStamps.stampsEarned(ticket));
+	}
+
+	@Test
+	public void usesConfiguredCurrencyNeutralLoyaltyValues() {
+		TicketInfo ticket = ticket(line("Pijama", 27.0));
+		LoyaltyStamps.applyToTicket(ticket, "true", "Segells", "9.00", "4.00");
+		assertEquals(3, LoyaltyStamps.stampsEarned(ticket));
+		assertEquals(4.0, LoyaltyStamps.redemptionValue(ticket), 0.0001);
 	}
 
 	@Test
@@ -155,7 +165,7 @@ public class LoyaltyStampsTest {
 		TicketInfo ticket = ticket(line("Normal", 40.0), first, second);
 		assertEquals(3, LoyaltyStamps.stampsEarned(ticket));
 		assertEquals(10.0, LoyaltyStamps.savingsEuros(ticket), 0.0001);
-		assertEquals("10€", ticket.printLoyaltySavings());
+		assertEquals(Formats.CURRENCY.formatValue(new Double(10.0)), ticket.printLoyaltySavings());
 	}
 
 	@Test
@@ -165,7 +175,7 @@ public class LoyaltyStampsTest {
 		TicketInfo ticket = ticket(line("Normal", 12.0), redemption);
 		LoyaltyStamps.applyToTicket(ticket, "true", "victorines");
 		assertEquals(5, ticket.getLoyaltySavingsEuros());
-		assertEquals("5€", ticket.printLoyaltySavings());
+		assertEquals(Formats.CURRENCY.formatValue(new Double(5.0)), ticket.printLoyaltySavings());
 	}
 
 	@Test

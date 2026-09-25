@@ -8,10 +8,16 @@ public final class LoyaltyConfiguration {
 	private LoyaltyConfiguration() {
 	}
 
-	/** Applies only database values; missing values disable loyalty. */
+	public static void apply(Properties runtimeConfig, LoyaltySettings settings) {
+		runtimeConfig.setProperty(LoyaltySettings.ENABLED_KEY, Boolean.toString(settings.isEnabled()));
+		runtimeConfig.setProperty(LoyaltySettings.NAME_KEY, settings.getName());
+		runtimeConfig.setProperty(LoyaltySettings.ELIGIBLE_SPEND_PER_STAMP_KEY,
+				Double.toString(settings.getEligibleSpendPerStamp()));
+		runtimeConfig.setProperty(LoyaltySettings.REDEMPTION_VALUE_KEY, Double.toString(settings.getRedemptionValue()));
+	}
+
+	/** Applies legacy resource properties while databases are being upgraded. */
 	public static void apply(Properties runtimeConfig, Properties databaseConfig) {
-		runtimeConfig.setProperty(LoyaltyStamps.ENABLED_KEY,
-				databaseConfig.getProperty(LoyaltyStamps.ENABLED_KEY, "false"));
-		runtimeConfig.setProperty(LoyaltyStamps.NAME_KEY, databaseConfig.getProperty(LoyaltyStamps.NAME_KEY, ""));
+		apply(runtimeConfig, LoyaltySettings.fromProperties(databaseConfig));
 	}
 }

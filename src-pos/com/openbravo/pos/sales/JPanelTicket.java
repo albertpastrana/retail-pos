@@ -789,9 +789,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private void applyLoyaltyRedemption() {
 		// A full card can be redeemed as many times as the receipt can absorb: what
 		// is left to pay has to cover this redemption.
-		if (m_oTicket.getTotal() < LoyaltyStamps.REDEMPTION_EUROS) {
+		double redemptionValue = LoyaltyStamps
+				.redemptionValue(m_App.getProperties().getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY));
+		if (m_oTicket.getTotal() < redemptionValue) {
 			Toolkit.getDefaultToolkit().beep();
-			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.loyalty.minimumtotal")).show(this);
+			new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.loyalty.minimumtotal",
+					Formats.CURRENCY.formatValue(redemptionValue))).show(this);
 			return;
 		}
 
@@ -804,7 +807,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		TaxInfo tax = taxeslogic.getTaxInfo(taxCategory.getID(), m_oTicket.getDate(), m_oTicket.getCustomer());
 		String loyaltyName = LoyaltyStamps.name(m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
 		TicketLineInfo redemption = new TicketLineInfo(AppLocal.getIntString("button.loyaltyredemption", loyaltyName),
-				taxCategory.getID(), 1.0, includeTaxes(taxCategory.getID(), -LoyaltyStamps.REDEMPTION_EUROS), tax);
+				taxCategory.getID(), 1.0, includeTaxes(taxCategory.getID(), -redemptionValue), tax);
 		LoyaltyStamps.markRedemption(redemption);
 		addTicketLine(redemption);
 	}
@@ -1304,7 +1307,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private void applyLoyaltyConfig(TicketInfo ticket) {
 		LoyaltyStamps.applyToTicket(ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
-				m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+				m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY),
+				m_App.getProperties().getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
+				m_App.getProperties().getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY));
 	}
 
 	public String getResourceAsXML(String sresourcename) {

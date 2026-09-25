@@ -37,6 +37,7 @@ import com.openbravo.format.Formats;
 import com.openbravo.pos.util.HiDpiIcon;
 import com.openbravo.pos.util.ThumbNailBuilder;
 import com.openbravo.pos.util.TillButtons;
+import com.openbravo.pos.ticket.LoyaltySettings;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.Icon;
@@ -69,6 +70,8 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 	private SentenceFind m_resourcebytes;
 	private SentenceExec m_resourcebytesinsert;
 	private SentenceExec m_resourcebytesupdate;
+	private SentenceFind m_loyaltysettings;
+	private SentenceExec m_loyaltysettingsupdate;
 
 	protected SentenceFind m_sequencecash;
 	protected SentenceFind m_activecash;
@@ -112,6 +115,15 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 		m_resourcebytesupdate = new PreparedSentence(s,
 				"UPDATE RESOURCES SET NAME = ?, RESTYPE = ?, CONTENT = ? WHERE NAME = ?",
 				new SerializerWriteBasicExt(resourcedata, new int[]{1, 2, 3, 1}));
+
+		m_loyaltysettings = new StaticSentence(s,
+				"SELECT ENABLED, NAME, ELIGIBLE_SPEND_PER_STAMP, REDEMPTION_VALUE "
+						+ "FROM LOYALTY_SETTINGS WHERE ID = '0'",
+				null, new SerializerReadBasic(new Datas[]{Datas.BOOLEAN, Datas.STRING, Datas.DOUBLE, Datas.DOUBLE}));
+		m_loyaltysettingsupdate = new StaticSentence(s,
+				"UPDATE LOYALTY_SETTINGS SET ENABLED = ?, NAME = ?, ELIGIBLE_SPEND_PER_STAMP = ?, "
+						+ "REDEMPTION_VALUE = ? WHERE ID = '0'",
+				new SerializerWriteBasic(new Datas[]{Datas.BOOLEAN, Datas.STRING, Datas.DOUBLE, Datas.DOUBLE}));
 
 		m_rolepermissions = new PreparedSentence(s, "SELECT PERMISSIONS FROM ROLES WHERE ID = ?",
 				SerializerWriteString.INSTANCE, SerializerReadBytes.INSTANCE);
@@ -281,6 +293,24 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 			} catch (IOException e) { // no deberia pasar nunca
 			}
 		}
+	}
+
+	public final LoyaltySettings getLoyaltySettings() {
+		try {
+			Object[] values = (Object[]) m_loyaltysettings.find();
+			if (values == null) {
+				return LoyaltySettings.defaults();
+			}
+			return new LoyaltySettings((Boolean) values[0], (String) values[1], ((Number) values[2]).doubleValue(),
+					((Number) values[3]).doubleValue());
+		} catch (BasicException e) {
+			return LoyaltySettings.defaults();
+		}
+	}
+
+	public final void setLoyaltySettings(LoyaltySettings settings) throws BasicException {
+		m_loyaltysettingsupdate.exec(new Object[]{settings.isEnabled(), settings.getName(),
+				settings.getEligibleSpendPerStamp(), settings.getRedemptionValue()});
 	}
 
 	public final Properties getResourceAsProperties(String sName) {

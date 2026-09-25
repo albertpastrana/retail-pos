@@ -176,9 +176,13 @@ public class JRootApp extends JPanel implements AppView {
 		m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
 		if (m_props instanceof AppConfig) {
 			Properties localLoyalty = new Properties();
-			LoyaltyConfiguration.apply(localLoyalty, m_propsdb);
+			LoyaltyConfiguration.apply(localLoyalty, m_dlSystem.getLoyaltySettings());
 			((AppConfig) m_props).setProperty("loyalty.enabled", localLoyalty.getProperty("loyalty.enabled"));
 			((AppConfig) m_props).setProperty("loyalty.name", localLoyalty.getProperty("loyalty.name"));
+			((AppConfig) m_props).setProperty("loyalty.eligible_spend_per_stamp",
+					localLoyalty.getProperty("loyalty.eligible_spend_per_stamp"));
+			((AppConfig) m_props).setProperty("loyalty.redemption_value",
+					localLoyalty.getProperty("loyalty.redemption_value"));
 		}
 
 		// creamos la caja activa si esta no existe

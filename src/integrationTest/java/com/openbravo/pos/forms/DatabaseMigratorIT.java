@@ -191,6 +191,10 @@ public class DatabaseMigratorIT {
 			assertEquals(1, count(connection, "PRICE_RULES"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRICES"));
+			assertEquals(1, count(connection, "LOYALTY_SETTINGS"));
+			assertEquals(1,
+					queryInt(connection, "SELECT COUNT(*) FROM LOYALTY_SETTINGS WHERE ID = '0' AND ENABLED = FALSE "
+							+ "AND NAME = '' AND ELIGIBLE_SPEND_PER_STAMP = 10.0 AND REDEMPTION_VALUE = 5.0"));
 			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();

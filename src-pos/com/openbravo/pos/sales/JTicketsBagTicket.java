@@ -396,7 +396,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 			try {
 				LoyaltyStamps.applyToTicket(m_ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
-						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);
 				m_TTP.printTicket(script.eval(m_dlSystem.getResourceAsXML("Printer.TicketPreview")).toString());
@@ -642,7 +644,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 		if (m_ticket != null) {
 			try {
 				LoyaltyStamps.applyToTicket(m_ticket, m_App.getProperties().getProperty(LoyaltyStamps.ENABLED_KEY),
-						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY));
+						m_App.getProperties().getProperty(LoyaltyStamps.NAME_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
+						m_App.getProperties().getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY));
 				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
 				script.put("ticket", m_ticket);
 				m_TTP2.printTicket(script.eval(m_dlSystem.getResourceAsXML("Printer.TicketPreview")).toString());
