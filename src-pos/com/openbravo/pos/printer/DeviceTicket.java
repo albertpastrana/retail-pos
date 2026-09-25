@@ -21,9 +21,6 @@ package com.openbravo.pos.printer;
 import java.util.*;
 import com.openbravo.pos.forms.AppProperties;
 import com.openbravo.pos.printer.escpos.*;
-import com.openbravo.pos.printer.javapos.DeviceDisplayJavaPOS;
-import com.openbravo.pos.printer.javapos.DeviceFiscalPrinterJavaPOS;
-import com.openbravo.pos.printer.javapos.DevicePrinterJavaPOS;
 import com.openbravo.pos.printer.printer.DevicePrinterPrinter;
 import com.openbravo.pos.printer.screen.*;
 
@@ -64,18 +61,7 @@ public class DeviceTicket {
 		PrinterWritterPool pws = new PrinterWritterPool();
 
 		// La impresora fiscal
-		StringParser sf = new StringParser(props.getProperty("machine.fiscalprinter"));
-		String sFiscalType = sf.nextToken(':');
-		String sFiscalParam1 = sf.nextToken(',');
-		try {
-			if ("javapos".equals(sFiscalType)) {
-				m_deviceFiscal = new DeviceFiscalPrinterJavaPOS(sFiscalParam1);
-			} else {
-				m_deviceFiscal = new DeviceFiscalPrinterNull();
-			}
-		} catch (TicketPrinterException e) {
-			m_deviceFiscal = new DeviceFiscalPrinterNull(e.getMessage());
-		}
+		m_deviceFiscal = new DeviceFiscalPrinterNull();
 
 		// El visor
 		StringParser sd = new StringParser(props.getProperty("machine.display"));
@@ -102,8 +88,6 @@ public class DeviceTicket {
 			} else if ("ld200".equals(sDisplayType)) {
 				m_devicedisplay = new DeviceDisplayESCPOS(pws.getPrinterWritter(sDisplayParam1, sDisplayParam2),
 						new UnicodeTranslatorEur());
-			} else if ("javapos".equals(sDisplayType)) {
-				m_devicedisplay = new DeviceDisplayJavaPOS(sDisplayParam1);
 			} else {
 				m_devicedisplay = new DeviceDisplayNull();
 			}
@@ -176,8 +160,6 @@ public class DeviceTicket {
 				} else if ("plain".equals(sPrinterType)) {
 					addPrinter(sPrinterIndex,
 							new DevicePrinterPlain(pws.getPrinterWritter(sPrinterParam1, sPrinterParam2)));
-				} else if ("javapos".equals(sPrinterType)) {
-					addPrinter(sPrinterIndex, new DevicePrinterJavaPOS(sPrinterParam1, sPrinterParam2));
 				}
 			} catch (TicketPrinterException e) {
 				logger.log(Level.WARNING, e.getMessage(), e);

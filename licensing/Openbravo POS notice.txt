@@ -75,6 +75,5 @@ Other third party libraries in /lib/
 
 - jdt-compiler-3.1.1.jar (a dependency of jasperreports) - Copyright � 2008 The Eclipse Foundation. Distributed under the Common Public License - v 1.0
 
-- jpos1121.jar - available from http://www.javapos.com/. Distributed under the Common Public License
 
 If you have questions about the licensing terms for the Openbravo POS Software, please contact us at: legal@openbravo.com
