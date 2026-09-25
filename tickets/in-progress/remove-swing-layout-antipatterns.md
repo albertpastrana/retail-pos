@@ -38,6 +38,8 @@ Use standard layout managers and `pack()` where appropriate. Do not change busin
 
 Menu panel actions now carry both their stable task identifier and the typed `JPanelView` class. Prepared submenu views keep the identifier but do not resolve a class reflectively.
 
+`JPanelNull` now uses an adaptive `BorderLayout` with content-derived text area sizing; its error fallback remains available when a view cannot be loaded.
+
 ## Done when
 
 - No regular user-facing form uses `setLayout(null)` or manual child `setBounds` positioning.
