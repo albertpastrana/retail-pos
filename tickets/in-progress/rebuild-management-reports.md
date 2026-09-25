@@ -21,7 +21,7 @@ The new module should initially provide:
 
 ## Context
 
-The current management reports were spread across BeanShell scripts, embedded SQL, JRXML templates, JasperReports 3.7.6, Swing panels, positional field arrays, and the custom `JRViewer300` fork. Those management resources and their SQL-extraction test have now been removed. The invoice JRXML templates remain temporarily because an installed database may contain a custom event script that references them.
+The current management reports were spread across BeanShell scripts, embedded SQL, JRXML templates, JasperReports 3.7.6, Swing panels, positional field arrays, and the custom `JRViewer300` fork. Those management resources and their SQL-extraction test have now been removed, including the remaining invoice JRXML templates and the `reports.jar` packaging path.
 
 - `src/integrationTest/java/com/openbravo/pos/forms/ReportStatementsIT.java` (removed with the legacy scripts)
 - `reports/com/openbravo/reports/soldproducts.bs` (removed)
@@ -35,7 +35,7 @@ This code is not used by the normal daily receipt flow. Closing a sale uses the 
 - `src-pos/com/openbravo/pos/templates/Printer.Ticket2.xml`
 - `src-pos/com/openbravo/pos/templates/Printer.TicketTotal.xml`
 
-The Jasper path in `JPanelTicket.printReport()` is only exposed through the optional script bridge at `JPanelTicket.java:1505-1506`. No invocation of that bridge exists in the versioned scripts or templates. A deployed database could still contain a custom event script, so this must be checked before deleting the bridge and invoice templates.
+The old Jasper path is no longer present in the application source, and no invocation exists in the versioned scripts, templates, SQL, or TSV data. Deployed databases should still be audited independently for stale custom event scripts.
 
 Do not remove the operational receipt-printer path, `Printer.*.xml` resources, `DeviceTicket`, or drawer/printer behaviour as part of this ticket.
 
@@ -43,7 +43,7 @@ The replacement should not reproduce the old generic BeanShell/JRXML architectur
 
 ## Slices
 
-1. Confirm that no installed database event script calls `ScriptObject.printReport(...)` and record any required exception. The repository contains no such call in versioned scripts, templates, SQL, or TSV data; an installation-level resource audit is still required before deleting the retained invoice JRXML templates.
+1. Confirm that no installed database event script calls the removed Jasper/report bridge and record any required exception.
 2. Remove the unused management report resources and legacy report UI/runtime code, while keeping receipt and invoice behaviour that is confirmed operational.
 3. Add the new report model, query boundary, typed parameters, and table presentation.
 4. Implement the initial small-shop report set, starting with sales summary, cash closing, product sales, taxes, and low stock.
@@ -54,7 +54,7 @@ The replacement should not reproduce the old generic BeanShell/JRXML architectur
 
 - The normal sale, receipt preview, receipt reprint, cash closing, and drawer/printer flows still work.
 - No active installation path depends on the removed Jasper/BeanShell management-report subsystem.
-- The old `.bs` management reports, `JRViewer300`, and unused report-only dependencies are removed or explicitly retained with a documented reason. The invoice JRXML templates are the documented temporary exception pending the installation-level event-script audit.
+- The old `.bs` management reports, `JRViewer300`, unused report-only dependencies, invoice JRXML templates, and `reports.jar` packaging path are removed or explicitly retained with a documented reason.
 - The initial reports answer the agreed small-shop questions and do not block the Swing event thread.
 - Report queries and representative results are covered on Derby, MySQL, and PostgreSQL.
 - Empty results, null customer data, refunds, tax differences, and date filters are tested.

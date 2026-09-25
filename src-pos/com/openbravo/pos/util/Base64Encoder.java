@@ -33,14 +33,6 @@ public class Base64Encoder {
 		}
 	}
 
-	public static String encode(byte[] raw) {
-		try {
-			return new String(Base64.encodeBase64(raw), "ASCII");
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
-	}
-
 	public static String encodeChunked(byte[] raw) {
 		try {
 			return new String(Base64.encodeBase64Chunked(raw), "ASCII");

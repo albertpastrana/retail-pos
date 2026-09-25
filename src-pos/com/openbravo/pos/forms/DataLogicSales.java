@@ -321,7 +321,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			try (ResultSet result = statement.executeQuery()) {
 				if (result.next()) {
 					return new FallbackPrice(result.getString("REFERENCE"), nullableDouble(result, "PRICE_BUY"),
-							nullableDouble(result, "PRICE_SELL"), result.getString("BRAND"));
+							result.getString("BRAND"));
 				}
 			}
 		}
@@ -344,14 +344,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	private static final class FallbackPrice {
 		private final String reference;
 		private final Double priceBuy;
-		@SuppressWarnings("unused")
-		private final Double priceSell;
 		private final String brand;
 
-		private FallbackPrice(String reference, Double priceBuy, Double priceSell, String brand) {
+		private FallbackPrice(String reference, Double priceBuy, String brand) {
 			this.reference = reference;
 			this.priceBuy = priceBuy;
-			this.priceSell = priceSell;
 			this.brand = brand;
 		}
 	}

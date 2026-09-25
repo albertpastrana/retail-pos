@@ -28,8 +28,6 @@ set CP=%CP%;"%DIRNAME%runtime-libs/*"
 set CP=%CP%;"%DIRNAME%lib.jar"
 set CP=%CP%;"%DIRNAME%locales.jar"
 set CP=%CP%;"%DIRNAME%locales"
-set CP=%CP%;"%DIRNAME%reports.jar"
-set CP=%CP%;"%DIRNAME%reports"
 
 if exist "%DIRNAME%runtime\bin\javaw.exe" (
     set JAVA="%DIRNAME%runtime\bin\javaw.exe"

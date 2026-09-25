@@ -50,21 +50,6 @@ public class ListQBFModelNumber extends AbstractListModel implements ComboBoxMod
 				QBFCompareEnum.COMP_GREATEROREQUALS, QBFCompareEnum.COMP_LESSOREQUALS);
 	}
 
-	public static ListQBFModelNumber getNonMandatoryString() {
-		return new ListQBFModelNumber(QBFCompareEnum.COMP_CONTAINS, QBFCompareEnum.COMP_STARTSWITH,
-				QBFCompareEnum.COMP_NONE, QBFCompareEnum.COMP_EQUALS, QBFCompareEnum.COMP_RE,
-				QBFCompareEnum.COMP_DISTINCT, QBFCompareEnum.COMP_GREATER, QBFCompareEnum.COMP_LESS,
-				QBFCompareEnum.COMP_GREATEROREQUALS, QBFCompareEnum.COMP_LESSOREQUALS, QBFCompareEnum.COMP_ISNULL,
-				QBFCompareEnum.COMP_ISNOTNULL);
-	}
-
-	public static ListQBFModelNumber getNonMandatoryNumber() {
-		return new ListQBFModelNumber(QBFCompareEnum.COMP_NONE, QBFCompareEnum.COMP_EQUALS,
-				QBFCompareEnum.COMP_DISTINCT, QBFCompareEnum.COMP_GREATER, QBFCompareEnum.COMP_LESS,
-				QBFCompareEnum.COMP_GREATEROREQUALS, QBFCompareEnum.COMP_LESSOREQUALS, QBFCompareEnum.COMP_ISNULL,
-				QBFCompareEnum.COMP_ISNOTNULL);
-	}
-
 	public Object getElementAt(int index) {
 		return m_items[index];
 	}

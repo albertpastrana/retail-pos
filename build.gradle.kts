@@ -131,17 +131,11 @@ val localesJar by tasks.registering(Jar::class) {
     from("locales")
 }
 
-val reportsJar by tasks.registering(Jar::class) {
-    archiveFileName.set("reports.jar")
-    destinationDirectory.set(layout.buildDirectory.dir("jar"))
-    from("reports")
-}
-
 val syncRunJars by tasks.registering(Copy::class) {
     doNotTrackState("Copies the runnable jars into the project directory for local launchers")
-    dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs)
+    dependsOn(tasks.jar, localesJar, runtimeLibs)
     from(layout.buildDirectory.dir("jar")) {
-        include("retail-pos.jar", "locales.jar", "reports.jar")
+        include("retail-pos.jar", "locales.jar")
     }
     into(layout.projectDirectory)
 }
@@ -151,11 +145,11 @@ tasks.jar {
 }
 
 tasks.assemble {
-    dependsOn(localesJar, reportsJar, syncRunJars)
+    dependsOn(localesJar, syncRunJars)
 }
 
 tasks.check {
-    dependsOn(tasks.jar, localesJar, reportsJar, runtimeLibs, syncRunJars, "compileDataHelpersJava")
+    dependsOn(tasks.jar, localesJar, runtimeLibs, syncRunJars, "compileDataHelpersJava")
     dependsOn("checkMigrationChecksums")
 }
 

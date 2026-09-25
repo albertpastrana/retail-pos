@@ -20,7 +20,7 @@ staging="$dist/RetailPOS-${platform}-x86_64"
 rm -rf "$staging"
 mkdir -p "$staging/runtime-libs" "$dist"
 
-for file in retail-pos.jar locales.jar reports.jar; do
+for file in retail-pos.jar locales.jar; do
   cp "$root/build/jar/$file" "$staging/$file"
 done
 cp -R "$root/build/runtime-libs/." "$staging/runtime-libs/"
