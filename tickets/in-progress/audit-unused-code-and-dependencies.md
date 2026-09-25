@@ -119,3 +119,12 @@ Also verify:
 - The runtime classpath contains only required dependencies for supported features.
 - The HSQLDB requirement for `ImportLegacyTransactions.java` is either declared and tested or the helper is explicitly retired.
 - Database and application integration checks pass on Derby, MySQL, and PostgreSQL.
+
+## Progress
+
+On 2026-09-25, removed the seven high-confidence unused Gradle dependencies from
+`build.gradle.kts`. SwingX was already removed by the main-menu change. The
+remaining legacy support dependencies are retained because they may be required
+by configuration-driven or indirect runtime integrations. Compilation and
+`check` pass; database integration is pending because the Docker daemon is not
+running in the current environment.
