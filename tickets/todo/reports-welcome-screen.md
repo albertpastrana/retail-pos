@@ -207,6 +207,8 @@ The landing view is being implemented on the task branch:
   the title without repeating it in the application's title bar.
 - The header now follows the mockup's eyebrow/date/context layout; each period
   card shows its date range, change with an arrow, and actual matched baseline.
+  Card ranges use the locale's compact start date followed by "today"; the full
+  date remains in the header so labels fit at the smallest tested width on CI.
   The indicators share one rounded strip. The paired-bar chart and cash, top-
   seller stock and customer-debt notices sit below that strip and before the
   seven report links, using real data rather than mockup values. The week
