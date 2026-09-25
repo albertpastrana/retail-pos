@@ -927,19 +927,6 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		}
 	}
 
-	public void setBarcodeAndRef(String code) {
-		m_jCode.setText(code);
-		m_jRef.setText(code);
-	}
-
-	public String getCode() {
-		return m_jCode.getText();
-	}
-
-	private final void showBarcodeGen() {
-		new BFrame(this);
-	}
-
 	/**
 	 * The fields read as one label per row, the same order and wording the sales
 	 * screen uses when it asks for a product it has just scanned. Each tab holds
@@ -1050,7 +1037,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 				ProductFormLayout.inline(m_jRef, new JLabel(AppLocal.getIntString("label.prodfamily")), m_jFamily));
 		ProductFormLayout.addRow(header, 2, AppLocal.getIntString("label.prodname"), m_jName);
 		ProductFormLayout.addRow(header, 3, AppLocal.getIntString("label.prodbarcode"),
-				ProductFormLayout.inline(m_jCode, buildOtherCodesButton(), buildLabelButton()));
+				ProductFormLayout.inline(m_jCode, buildOtherCodesButton()));
 		return header;
 	}
 
@@ -1118,17 +1105,6 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		actions.add(m_jDelete);
 		actions.add(m_jSave);
 		return actions;
-	}
-
-	private JButton buildLabelButton() {
-		JButton label = new JButton(AppLocal.getIntString("button.productlabel"));
-		label.setToolTipText(AppLocal.getIntString("tooltip.productlabel"));
-		label.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent ae) {
-				showBarcodeGen();
-			}
-		});
-		return label;
 	}
 
 	private JButton buildOtherCodesButton() {
