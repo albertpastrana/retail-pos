@@ -147,7 +147,7 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, list, editor);
 		split.setBorder(null);
 		split.setContinuousLayout(true);
-		split.setOneTouchExpandable(true);
+		split.setOneTouchExpandable(getSplitOneTouchExpandable());
 		split.setResizeWeight(getSplitResizeWeight(editorkeepssize));
 		final double dividerLocation = getSplitDividerLocation();
 		if (dividerLocation >= 0.0) {
@@ -170,6 +170,10 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 
 	protected double getSplitDividerLocation() {
 		return -1.0;
+	}
+
+	protected boolean getSplitOneTouchExpandable() {
+		return true;
 	}
 
 	public Component getToolbarExtras() {

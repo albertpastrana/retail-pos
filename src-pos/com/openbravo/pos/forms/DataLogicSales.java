@@ -1516,6 +1516,25 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				SerializerWriteString.INSTANCE);
 	}
 
+	public final int getCategoryProductCount(String category) throws BasicException {
+		Integer count = (Integer) new PreparedSentence(s, "SELECT COUNT(*) FROM PRODUCTS WHERE CATEGORY = ?",
+				SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE).find(category);
+		return count == null ? 0 : count.intValue();
+	}
+
+	public final int getCategoryCatalogCount(String category) throws BasicException {
+		Integer count = (Integer) new PreparedSentence(s,
+				"SELECT COUNT(*) FROM PRODUCTS_CAT C JOIN PRODUCTS P ON P.ID = C.PRODUCT WHERE P.CATEGORY = ?",
+				SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE).find(category);
+		return count == null ? 0 : count.intValue();
+	}
+
+	public final int getCategorySubcategoryCount(String category) throws BasicException {
+		Integer count = (Integer) new PreparedSentence(s, "SELECT COUNT(*) FROM CATEGORIES WHERE PARENTID = ?",
+				SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE).find(category);
+		return count == null ? 0 : count.intValue();
+	}
+
 	public final TableDefinition getTableCategories() {
 		return new TableDefinition(s, "CATEGORIES", new String[]{"ID", "NAME", "PARENTID", "IMAGE"},
 				new String[]{"ID", AppLocal.getIntString("Label.Name"), "", AppLocal.getIntString("label.image")},

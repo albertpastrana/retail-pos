@@ -1,81 +1,122 @@
-//    Openbravo POS is a point of sales application designed for touch screens.
-//    Copyright (C) 2007-2009 Openbravo, S.L.
-//    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.openbravo.pos.inventory;
 
-import javax.swing.ListCellRenderer;
-import com.openbravo.data.gui.ListCellRendererBasic;
-import com.openbravo.data.loader.ComparatorCreator;
-import com.openbravo.pos.forms.AppLocal;
-import com.openbravo.pos.panels.*;
+import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.loader.TableDefinition;
-import com.openbravo.data.loader.Vectorer;
+import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.EditorRecord;
-import com.openbravo.data.user.SaveProvider;
 import com.openbravo.data.user.ListProvider;
 import com.openbravo.data.user.ListProviderCreator;
+import com.openbravo.data.user.SaveProvider;
+import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.panels.JPanelTable;
+import com.openbravo.pos.theme.RetailPOSColors;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
-/**
- *
- * @author adrianromero
- */
 public class CategoriesPanel extends JPanelTable {
-
-	private TableDefinition tcategories;
-	private CategoriesEditor jeditor;
-
-	/** Creates a new instance of JPanelCategories */
-	public CategoriesPanel() {
-	}
+	private TableDefinition categories;
+	private CategoriesEditor editor;
+	private DataLogicSales sales;
+	private CategoryNavigator navigator;
 
 	protected void init() {
-		DataLogicSales dlSales = app.getBean(DataLogicSales.class);
-		tcategories = dlSales.getTableCategories();
-		jeditor = new CategoriesEditor(app, dirty);
+		sales = app.getBean(DataLogicSales.class);
+		categories = sales.getTableCategories();
+		editor = new CategoriesEditor(app, dirty);
+		editor.setDeleteAction(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				confirmDelete();
+			}
+		});
 	}
 
 	public ListProvider getListProvider() {
-		return new ListProviderCreator(tcategories);
+		return new ListProviderCreator(categories);
 	}
-
 	public SaveProvider getSaveProvider() {
-		return new SaveProvider(tcategories);
+		return new SaveProvider(categories);
 	}
-
-	public Vectorer getVectorer() {
-		return tcategories.getVectorerBasic(new int[]{1});
-	}
-
-	public ComparatorCreator getComparatorCreator() {
-		return tcategories.getComparatorCreator(new int[]{1});
-	}
-
-	public ListCellRenderer getListCellRenderer() {
-		return new ListCellRendererBasic(tcategories.getRenderStringBasic(new int[]{1}));
-	}
-
 	public EditorRecord getEditor() {
-		return jeditor;
+		return editor;
 	}
-
 	public String getTitle() {
 		return AppLocal.getIntString("Menu.Categories");
+	}
+
+	protected boolean showToolbar() {
+		return false;
+	}
+
+	protected boolean getSplitOneTouchExpandable() {
+		return false;
+	}
+
+	protected double getSplitResizeWeight(boolean editorKeepsSize) {
+		return 0.32;
+	}
+
+	protected double getSplitDividerLocation() {
+		return 0.32;
+	}
+
+	public java.awt.Component getFilter() {
+		JPanel header = new JPanel(new BorderLayout(0, 6));
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+		JButton newCategory = new JButton(AppLocal.getIntString("button.categorynew"));
+		RetailPOSColors.primaryButton(newCategory);
+		newCategory.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				try {
+					bd.actionInsert();
+				} catch (BasicException e) {
+					new MessageInf(e).show(CategoriesPanel.this);
+				}
+			}
+		});
+		actions.add(newCategory);
+		header.add(actions, BorderLayout.NORTH);
+		return header;
+	}
+
+	protected java.awt.Component getListComponent(BrowsableEditableData data) {
+		CategoryTreeNavigator categoryNavigator = new CategoryTreeNavigator(data, sales);
+		navigator = categoryNavigator;
+		return categoryNavigator;
+	}
+
+	public void activate() throws BasicException {
+		super.activate();
+		editor.setBrowsableData(bd);
+	}
+
+	private void confirmDelete() {
+		String id = editor.getCategoryId();
+		if (id == null)
+			return;
+		try {
+			int children = sales.getCategorySubcategoryCount(id);
+			int products = sales.getCategoryProductCount(id);
+			if (children > 0 || products > 0) {
+				String message = AppLocal.getIntString("category.deleteblocked");
+				message = message.replace("{0}", Integer.toString(children)).replace("{1}", Integer.toString(products));
+				JOptionPane.showMessageDialog(this, message, AppLocal.getIntString("category.delete"),
+						JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			int answer = JOptionPane.showConfirmDialog(this,
+					AppLocal.getIntString("category.deleteconfirm").replace("{0}", editor.getCategoryName()),
+					AppLocal.getIntString("category.delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			if (answer == JOptionPane.YES_OPTION)
+				bd.actionDelete();
+		} catch (BasicException e) {
+			new MessageInf(e).show(this);
+		}
 	}
 }

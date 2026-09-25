@@ -1,267 +1,329 @@
-//    Openbravo POS is a point of sales application designed for touch screens.
-//    Copyright (C) 2007-2009 Openbravo, S.L.
-//    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.openbravo.pos.inventory;
 
-import java.awt.Component;
-import javax.swing.*;
-
-import com.openbravo.pos.forms.AppLocal;
-import java.awt.image.BufferedImage;
-import java.util.List;
-import java.util.UUID;
-import com.openbravo.format.Formats;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ComboBoxValModel;
+import com.openbravo.data.gui.JImageEditor;
 import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.loader.SentenceExec;
 import com.openbravo.data.loader.SentenceList;
-import com.openbravo.data.user.EditorRecord;
+import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.DirtyManager;
+import com.openbravo.data.user.EditorRecord;
+import com.openbravo.format.Formats;
+import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.ticket.CategoryInfo;
+import com.openbravo.pos.theme.RetailPOSColors;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
-/**
- *
- * @author adrianromero
- */
 public class CategoriesEditor extends JPanel implements EditorRecord {
+	private final DataLogicSales sales;
+	private final DirtyManager dirty;
+	private SentenceList categorySentence;
+	private ComboBoxValModel categoryModel;
+	private SentenceExec catalogAdd;
+	private SentenceExec catalogDelete;
+	private BrowsableEditableData data;
+	private ActionListener deleteAction;
+	private String id;
+	private final JLabel path = new JLabel();
+	private final JLabel categoryTitle = new JLabel();
+	private final JTextField name = new JTextField();
+	private final JComboBox category = new JComboBox();
+	private final JImageEditor image = new JImageEditor();
+	private final JLabel catalogState = new JLabel();
+	private final JButton catalogAddButton = new JButton();
+	private final JButton catalogDeleteButton = new JButton();
+	private final JButton deleteButton = new JButton();
+	private final JButton saveButton = new JButton();
 
-	private DataLogicSales m_dlSales;
-	private SentenceList m_sentcat;
-	private ComboBoxValModel m_CategoryModel;
-
-	private SentenceExec m_sentadd;
-	private SentenceExec m_sentdel;
-
-	private Object m_id;
-
-	/** Creates new form JPanelCategories */
 	public CategoriesEditor(AppView app, DirtyManager dirty) {
-
-		DataLogicSales dlSales = app.getBean(DataLogicSales.class);
-		m_dlSales = dlSales;
-
-		initComponents();
-
-		// El modelo de categorias
-		m_sentcat = dlSales.getCategoriesList();
-		m_CategoryModel = new ComboBoxValModel();
-
-		m_sentadd = dlSales.getCatalogCategoryAdd();
-		m_sentdel = dlSales.getCatalogCategoryDel();
-
-		m_jName.getDocument().addDocumentListener(dirty);
-		m_jCategory.addActionListener(dirty);
-		m_jImage.addPropertyChangeListener("image", dirty);
-
+		this.dirty = dirty;
+		sales = app.getBean(DataLogicSales.class);
+		categorySentence = sales.getCategoriesList();
+		categoryModel = new ComboBoxValModel();
+		catalogAdd = sales.getCatalogCategoryAdd();
+		catalogDelete = sales.getCatalogCategoryDel();
+		buildUi();
+		name.getDocument().addDocumentListener(dirty);
+		category.addActionListener(dirty);
+		image.addPropertyChangeListener("image", dirty);
 		writeValueEOF();
 	}
 
+	private void buildUi() {
+		setLayout(new BorderLayout(0, 8));
+		JPanel heading = new JPanel(new BorderLayout(0, 2));
+		path.setForeground(RetailPOSColors.inkMuted());
+		categoryTitle.setFont(categoryTitle.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		heading.add(path, BorderLayout.NORTH);
+		heading.add(categoryTitle, BorderLayout.CENTER);
+		add(heading, BorderLayout.NORTH);
+		JPanel fields = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(4, 4, 4, 4);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 0;
+		fields.add(new JLabel(AppLocal.getIntString("Label.Name")), c);
+		c.gridx = 1;
+		c.weightx = 1;
+		fields.add(name, c);
+		c.gridx = 0;
+		c.gridy++;
+		c.weightx = 0;
+		fields.add(new JLabel(AppLocal.getIntString("label.prodcategory")), c);
+		c.gridx = 1;
+		c.weightx = 1;
+		fields.add(category, c);
+		c.gridx = 0;
+		c.gridy++;
+		c.weightx = 0;
+		fields.add(new JLabel(AppLocal.getIntString("label.image")), c);
+		c.gridx = 1;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.BOTH;
+		c.weighty = 1;
+		image.setPreferredSize(new java.awt.Dimension(220, 150));
+		fields.add(image, c);
+		add(fields, BorderLayout.CENTER);
+
+		JPanel catalog = new JPanel(new GridBagLayout());
+		catalog.setBorder(BorderFactory.createTitledBorder(AppLocal.getIntString("category.catalog")));
+		GridBagConstraints cc = new GridBagConstraints();
+		cc.gridx = 0;
+		cc.gridy = 0;
+		cc.gridwidth = 2;
+		cc.anchor = GridBagConstraints.WEST;
+		cc.fill = GridBagConstraints.HORIZONTAL;
+		cc.weightx = 1;
+		JTextArea explanation = new JTextArea(AppLocal.getIntString("category.catalog.explanation"));
+		explanation.setLineWrap(true);
+		explanation.setWrapStyleWord(true);
+		explanation.setEditable(false);
+		explanation.setOpaque(false);
+		catalog.add(explanation, cc);
+		cc.gridy++;
+		catalog.add(catalogState, cc);
+		catalogAddButton.setText(AppLocal.getIntString("button.catalogadd"));
+		catalogDeleteButton.setText(AppLocal.getIntString("button.catalogdel"));
+		cc.gridy++;
+		cc.gridwidth = 1;
+		cc.weightx = 0.5;
+		catalog.add(catalogAddButton, cc);
+		cc.gridx = 1;
+		catalog.add(catalogDeleteButton, cc);
+		catalogAddButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				changeCatalog(true);
+			}
+		});
+		catalogDeleteButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				changeCatalog(false);
+			}
+		});
+		JPanel bottom = new JPanel(new BorderLayout(8, 0));
+		bottom.add(catalog, BorderLayout.CENTER);
+		JPanel footer = new JPanel(new BorderLayout(8, 0));
+		deleteButton.setText(AppLocal.getIntString("button.categorydelete"));
+		deleteButton.setForeground(RetailPOSColors.danger());
+		saveButton.setText(AppLocal.getIntString("button.categorysave"));
+		RetailPOSColors.primaryButton(saveButton);
+		footer.add(deleteButton, BorderLayout.WEST);
+		footer.add(saveButton, BorderLayout.EAST);
+		bottom.add(footer, BorderLayout.SOUTH);
+		add(bottom, BorderLayout.SOUTH);
+		deleteButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				if (deleteAction != null)
+					deleteAction.actionPerformed(event);
+			}
+		});
+		saveButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				try {
+					if (data != null)
+						data.saveData();
+				} catch (BasicException e) {
+					new MessageInf(e).show(CategoriesEditor.this);
+				}
+			}
+		});
+	}
+
+	public void setBrowsableData(BrowsableEditableData data) {
+		this.data = data;
+	}
+	public void setDeleteAction(ActionListener action) {
+		deleteAction = action;
+	}
+	public String getCategoryId() {
+		return id;
+	}
+	public String getCategoryName() {
+		return name.getText();
+	}
+
 	public void refresh() {
-
-		List a;
-
 		try {
-			a = m_sentcat.list();
-		} catch (BasicException eD) {
-			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotloadlists"),
-					eD);
-			msg.show(this);
-			a = new ArrayList();
+			List list = categorySentence.list();
+			categoryModel = new ComboBoxValModel(filteredCategories(list, id));
+			category.setModel(categoryModel);
+		} catch (BasicException e) {
+			new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotloadlists"), e).show(this);
 		}
+	}
 
-		a.add(0, null); // The null item
-		m_CategoryModel = new ComboBoxValModel(a);
-		m_jCategory.setModel(m_CategoryModel);
+	private List filteredCategories(List all, String current) {
+		Set<String> blocked = new HashSet<String>();
+		blocked.add(current);
+		boolean changed = true;
+		while (changed) {
+			changed = false;
+			for (Object value : all) {
+				CategoryInfo item = (CategoryInfo) value;
+				if (blocked.contains(item.getParentID()) && blocked.add(item.getID()))
+					changed = true;
+			}
+		}
+		List allowed = new ArrayList();
+		allowed.add(null);
+		for (Object value : all)
+			if (!blocked.contains(((CategoryInfo) value).getID()))
+				allowed.add(value);
+		return allowed;
 	}
 
 	public void writeValueEOF() {
-		m_id = null;
-		m_jName.setText(null);
-		m_CategoryModel.setSelectedKey(null);
-		m_jImage.setImage(null);
-		m_jName.setEnabled(false);
-		m_jCategory.setEnabled(false);
-		m_jImage.setEnabled(false);
-		m_jCatalogDelete.setEnabled(false);
-		m_jCatalogAdd.setEnabled(false);
+		setValue(null, null, null, null, false);
 	}
 	public void writeValueInsert() {
-		m_id = UUID.randomUUID().toString();
-		m_jName.setText(null);
-		m_CategoryModel.setSelectedKey(null);
-		m_jImage.setImage(null);
-		m_jName.setEnabled(true);
-		m_jCategory.setEnabled(true);
-		m_jImage.setEnabled(true);
-		m_jCatalogDelete.setEnabled(false);
-		m_jCatalogAdd.setEnabled(false);
+		setValue(UUID.randomUUID().toString(), null, null, null, true);
 	}
 	public void writeValueDelete(Object value) {
-		Object[] cat = (Object[]) value;
-		m_id = cat[0];
-		m_jName.setText(Formats.STRING.formatValue(cat[1]));
-		m_CategoryModel.setSelectedKey(cat[2]);
-		m_jImage.setImage((BufferedImage) cat[3]);
-		m_jName.setEnabled(false);
-		m_jCategory.setEnabled(false);
-		m_jImage.setEnabled(false);
-		m_jCatalogDelete.setEnabled(false);
-		m_jCatalogAdd.setEnabled(false);
+		setValue((Object[]) value, false);
 	}
 	public void writeValueEdit(Object value) {
-		Object[] cat = (Object[]) value;
-		m_id = cat[0];
-		m_jName.setText(Formats.STRING.formatValue(cat[1]));
-		m_CategoryModel.setSelectedKey(cat[2]);
-		m_jImage.setImage((BufferedImage) cat[3]);
-		m_jName.setEnabled(true);
-		m_jCategory.setEnabled(true);
-		m_jImage.setEnabled(true);
-		m_jCatalogDelete.setEnabled(true);
-		m_jCatalogAdd.setEnabled(true);
+		setValue((Object[]) value, true);
+	}
+
+	private void setValue(Object[] value, boolean enabled) {
+		setValue((String) value[0], Formats.STRING.formatValue(value[1]), (String) value[2], (BufferedImage) value[3],
+				enabled);
+	}
+
+	private void setValue(String valueId, String valueName, String parent, BufferedImage valueImage, boolean enabled) {
+		id = valueId;
+		name.setText(valueName);
+		categoryTitle.setText(valueName == null ? "" : valueName);
+		image.setImage(valueImage);
+		refresh();
+		categoryModel.setSelectedKey(parent);
+		name.setEnabled(enabled);
+		category.setEnabled(enabled);
+		image.setEnabled(enabled);
+		deleteButton.setEnabled(valueId != null && enabled);
+		catalogAddButton.setEnabled(valueId != null && enabled);
+		catalogDeleteButton.setEnabled(valueId != null && enabled);
+		updatePath();
+		updateCatalog();
+	}
+
+	private void updatePath() {
+		try {
+			List list = categorySentence.list();
+			Map<String, CategoryInfo> byId = new HashMap<String, CategoryInfo>();
+			for (Object value : list)
+				byId.put(((CategoryInfo) value).getID(), (CategoryInfo) value);
+			StringBuilder result = new StringBuilder();
+			Set<String> visited = new HashSet<String>();
+			CategoryInfo current = byId.get(id);
+			while (current != null && visited.add(current.getID())) {
+				if (result.length() > 0)
+					result.insert(0, " / ");
+				result.insert(0, current.getName());
+				current = byId.get(current.getParentID());
+			}
+			path.setText(result.toString());
+		} catch (BasicException e) {
+			path.setText("");
+		}
+	}
+
+	private void updateCatalog() {
+		if (id == null) {
+			catalogState.setText("");
+			return;
+		}
+		try {
+			catalogState.setText(AppLocal.getIntString("category.catalog.state")
+					.replace("{0}", Integer.toString(sales.getCategoryCatalogCount(id)))
+					.replace("{1}", Integer.toString(sales.getCategoryProductCount(id))));
+		} catch (BasicException e) {
+			catalogState.setText("");
+		}
+	}
+
+	private void changeCatalog(boolean add) {
+		if (id == null)
+			return;
+		try {
+			if (!add && JOptionPane.showConfirmDialog(this, AppLocal.getIntString("category.catalog.remove.confirm"),
+					AppLocal.getIntString("category.catalog"), JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION)
+				return;
+			catalogDelete.exec(id);
+			if (add)
+				catalogAdd.exec(id);
+			updateCatalog();
+			new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("category.catalog.updated")).show(this);
+		} catch (BasicException e) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotexecute"), e));
+		}
 	}
 
 	public Object createValue() throws BasicException {
-
-		Object[] cat = new Object[4];
-
-		cat[0] = m_id;
-		cat[1] = m_jName.getText();
-		cat[2] = m_CategoryModel.getSelectedKey();
-		cat[3] = m_jImage.getImage();
-
-		checkNameFreeAmongSiblings((String) cat[1], (String) cat[2]);
-		return cat;
+		Object[] value = new Object[]{id, name.getText(), categoryModel.getSelectedKey(), image.getImage()};
+		checkNameFreeAmongSiblings((String) value[1], (String) value[2]);
+		return value;
 	}
 
-	/**
-	 * A name only has to be unique among the children of the same parent, so
-	 * "Clàssics" can sit under both "Batins Dona" and "Batins Home".
-	 */
-	private void checkNameFreeAmongSiblings(String name, String parentId) throws BasicException {
-
-		for (CategoryInfo sibling : m_dlSales.getCategorySiblings(parentId)) {
-			if (!sibling.getID().equals(m_id) && sibling.getName().equalsIgnoreCase(name)) {
+	private void checkNameFreeAmongSiblings(String valueName, String parent) throws BasicException {
+		for (CategoryInfo sibling : sales.getCategorySiblings(parent)) {
+			if (!sibling.getID().equals(id) && sibling.getName().equalsIgnoreCase(valueName)) {
 				throw new BasicException(AppLocal.getIntString("message.categorynamerepeated"));
 			}
 		}
 	}
 
-	public Component getComponent() {
+	public java.awt.Component getComponent() {
 		return this;
 	}
-
-	/**
-	 * This method is called from within the constructor to initialize the form.
-	 * WARNING: Do NOT modify this code. The content of this method is always
-	 * regenerated by the Form Editor.
-	 */
-	// <editor-fold defaultstate="collapsed" desc="Generated
-	// Code">//GEN-BEGIN:initComponents
-	private void initComponents() {
-
-		jLabel2 = new javax.swing.JLabel();
-		m_jName = new javax.swing.JTextField();
-		jLabel3 = new javax.swing.JLabel();
-		m_jImage = new com.openbravo.data.gui.JImageEditor();
-		m_jCatalogAdd = new javax.swing.JButton();
-		m_jCatalogDelete = new javax.swing.JButton();
-		jLabel5 = new javax.swing.JLabel();
-		m_jCategory = new javax.swing.JComboBox();
-
-		setLayout(null);
-
-		jLabel2.setText(AppLocal.getIntString("Label.Name")); // NOI18N
-		add(jLabel2);
-		jLabel2.setBounds(20, 20, 80, 14);
-		add(m_jName);
-		m_jName.setBounds(100, 20, 180, 18);
-
-		jLabel3.setText(AppLocal.getIntString("label.image")); // NOI18N
-		add(jLabel3);
-		jLabel3.setBounds(20, 80, 80, 14);
-		add(m_jImage);
-		m_jImage.setBounds(100, 80, 240, 180);
-
-		m_jCatalogAdd.setText(AppLocal.getIntString("button.catalogadd")); // NOI18N
-		m_jCatalogAdd.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				m_jCatalogAddActionPerformed(evt);
-			}
-		});
-		add(m_jCatalogAdd);
-		m_jCatalogAdd.setBounds(370, 20, 170, 24);
-
-		m_jCatalogDelete.setText(AppLocal.getIntString("button.catalogdel")); // NOI18N
-		m_jCatalogDelete.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				m_jCatalogDeleteActionPerformed(evt);
-			}
-		});
-		add(m_jCatalogDelete);
-		m_jCatalogDelete.setBounds(370, 50, 170, 24);
-
-		jLabel5.setText(AppLocal.getIntString("label.prodcategory")); // NOI18N
-		add(jLabel5);
-		jLabel5.setBounds(20, 50, 90, 14);
-		add(m_jCategory);
-		m_jCategory.setBounds(100, 50, 180, 20);
-	}// </editor-fold>//GEN-END:initComponents
-
-	private void m_jCatalogDeleteActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jCatalogDeleteActionPerformed
-
-		try {
-			m_sentdel.exec(m_id);
-		} catch (BasicException e) {
-			JMessageDialog.showMessage(this,
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotexecute"), e));
-		}
-
-	}// GEN-LAST:event_m_jCatalogDeleteActionPerformed
-
-	private void m_jCatalogAddActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jCatalogAddActionPerformed
-
-		try {
-			Object param = m_id;
-			m_sentdel.exec(param); // primero borramos
-			m_sentadd.exec(param); // y luego insertamos lo que queda
-		} catch (BasicException e) {
-			JMessageDialog.showMessage(this,
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotexecute"), e));
-		}
-
-	}// GEN-LAST:event_m_jCatalogAddActionPerformed
-
-	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JLabel jLabel2;
-	private javax.swing.JLabel jLabel3;
-	private javax.swing.JLabel jLabel5;
-	private javax.swing.JButton m_jCatalogAdd;
-	private javax.swing.JButton m_jCatalogDelete;
-	private javax.swing.JComboBox m_jCategory;
-	private com.openbravo.data.gui.JImageEditor m_jImage;
-	private javax.swing.JTextField m_jName;
-	// End of variables declaration//GEN-END:variables
-
 }
