@@ -531,7 +531,11 @@ public class TicketInfo implements SerializableRead, Externalizable {
 		return (int) Math.round(LoyaltyStamps.savingsEuros(this));
 	}
 
+	public double getLoyaltySavingsAmount() {
+		return LoyaltyStamps.savingsEuros(this);
+	}
+
 	public String printLoyaltySavings() {
-		return getLoyaltySavingsEuros() + "€";
+		return Formats.CURRENCY.formatValue(new Double(getLoyaltySavingsAmount()));
 	}
 }

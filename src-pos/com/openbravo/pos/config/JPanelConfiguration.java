@@ -33,6 +33,7 @@ import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import com.openbravo.pos.ticket.LoyaltyStamps;
+import com.openbravo.pos.ticket.LoyaltySettings;
 
 /**
  *
@@ -45,7 +46,6 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	private AppConfig config;
 	private DataLogicSystem loyaltyDataLogic;
 	private Session loyaltySession;
-	private String loyaltyResourceName;
 
 	/** Creates new form JPanelConfiguration */
 	public JPanelConfiguration(AppView app) {
@@ -103,6 +103,8 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		saveLoyaltyDatabaseProperties();
 		config.setProperty(LoyaltyStamps.ENABLED_KEY, null);
 		config.setProperty(LoyaltyStamps.NAME_KEY, null);
+		config.setProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY, null);
+		config.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, null);
 
 		try {
 			ConfigurationStore.save(config);
@@ -121,12 +123,12 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 				loyaltyDataLogic = new DataLogicSystem();
 				loyaltyDataLogic.init(loyaltySession);
 			}
-			loyaltyResourceName = config.getHost() + "/properties";
-			Properties databaseConfig = loyaltyDataLogic.getResourceAsProperties(loyaltyResourceName);
 			Properties runtimeConfig = new Properties();
-			LoyaltyConfiguration.apply(runtimeConfig, databaseConfig);
+			LoyaltyConfiguration.apply(runtimeConfig, loyaltyDataLogic.getLoyaltySettings());
 			copyIfPresent(runtimeConfig, config, LoyaltyStamps.ENABLED_KEY);
 			copyIfPresent(runtimeConfig, config, LoyaltyStamps.NAME_KEY);
+			copyIfPresent(runtimeConfig, config, LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY);
+			copyIfPresent(runtimeConfig, config, LoyaltyStamps.REDEMPTION_VALUE_KEY);
 		} catch (BasicException e) {
 			// Loyalty stays disabled when the database is unavailable.
 			loyaltyDataLogic = null;
@@ -137,13 +139,30 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	}
 
 	private void saveLoyaltyDatabaseProperties() {
-		if (loyaltyDataLogic == null || loyaltyResourceName == null) {
+		if (loyaltyDataLogic == null) {
 			return;
 		}
-		Properties databaseConfig = loyaltyDataLogic.getResourceAsProperties(loyaltyResourceName);
-		copyIfPresent(config, databaseConfig, LoyaltyStamps.ENABLED_KEY);
-		copyIfPresent(config, databaseConfig, LoyaltyStamps.NAME_KEY);
-		loyaltyDataLogic.setResourceAsProperties(loyaltyResourceName, databaseConfig);
+		try {
+			loyaltyDataLogic.setLoyaltySettings(
+					new LoyaltySettings(LoyaltyStamps.isEnabled(config.getProperty(LoyaltyStamps.ENABLED_KEY)),
+							LoyaltyStamps.name(config.getProperty(LoyaltyStamps.NAME_KEY)),
+							parse(config.getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
+									LoyaltySettings.DEFAULT_ELIGIBLE_SPEND_PER_STAMP),
+							parse(config.getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY),
+									LoyaltySettings.DEFAULT_REDEMPTION_VALUE)));
+		} catch (BasicException e) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
+		}
+	}
+
+	private static double parse(String value, double defaultValue) {
+		try {
+			double parsed = Double.parseDouble(value);
+			return Double.isFinite(parsed) && parsed > 0.0 ? parsed : defaultValue;
+		} catch (RuntimeException e) {
+			return defaultValue;
+		}
 	}
 
 	private static void copyIfPresent(AppProperties source, Properties target, String key) {

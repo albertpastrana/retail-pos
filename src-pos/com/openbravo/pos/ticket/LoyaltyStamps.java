@@ -2,18 +2,18 @@ package com.openbravo.pos.ticket;
 
 /**
  * Paper loyalty stamps. The till only counts how many to stamp; the card stays
- * on paper. One stamp per 10 € of eligible spend. A total discount on the
- * receipt makes the whole receipt ineligible. Sale or line discounted lines and
- * gift vouchers do not count; redemptions and any other negative line come off
- * the eligible spend. A receipt can carry several redemptions, one per full
- * card.
+ * on paper. One stamp per 10 currency units of eligible spend. A total discount
+ * on the receipt makes the whole receipt ineligible. Sale or line discounted
+ * lines and gift vouchers do not count; redemptions and any other negative line
+ * come off the eligible spend. A receipt can carry several redemptions, one per
+ * full card.
  */
 public final class LoyaltyStamps {
 
-	public static final double EUROS_PER_STAMP = 10.0;
-	public static final double REDEMPTION_EUROS = 5.0;
-	public static final String ENABLED_KEY = "loyalty.enabled";
-	public static final String NAME_KEY = "loyalty.name";
+	public static final String ENABLED_KEY = LoyaltySettings.ENABLED_KEY;
+	public static final String NAME_KEY = LoyaltySettings.NAME_KEY;
+	public static final String ELIGIBLE_SPEND_PER_STAMP_KEY = LoyaltySettings.ELIGIBLE_SPEND_PER_STAMP_KEY;
+	public static final String REDEMPTION_VALUE_KEY = LoyaltySettings.REDEMPTION_VALUE_KEY;
 	public static final String REDEMPTION_PROPERTY = "loyalty.redemption";
 	public static final String DEFAULT_NAME = "victorines";
 
@@ -28,17 +28,48 @@ public final class LoyaltyStamps {
 		return configured == null ? "" : configured.trim();
 	}
 
-	public static void applyToTicket(TicketInfo ticket, String enabledValue, String nameValue) {
+	public static void applyToTicket(TicketInfo ticket, String enabledValue, String nameValue, String spendPerStamp,
+			String redemptionValue) {
 		if (ticket.getProperty(ENABLED_KEY) == null) {
 			ticket.setProperty(ENABLED_KEY, Boolean.toString(isEnabled(enabledValue)));
 		}
 		if (ticket.getProperty(NAME_KEY) == null) {
 			ticket.setProperty(NAME_KEY, name(nameValue));
 		}
+		if (ticket.getProperty(ELIGIBLE_SPEND_PER_STAMP_KEY) == null) {
+			ticket.setProperty(ELIGIBLE_SPEND_PER_STAMP_KEY,
+					Double.toString(positiveValue(spendPerStamp, LoyaltySettings.DEFAULT_ELIGIBLE_SPEND_PER_STAMP)));
+		}
+		if (ticket.getProperty(REDEMPTION_VALUE_KEY) == null) {
+			ticket.setProperty(REDEMPTION_VALUE_KEY,
+					Double.toString(positiveValue(redemptionValue, LoyaltySettings.DEFAULT_REDEMPTION_VALUE)));
+		}
+	}
+
+	public static void applyToTicket(TicketInfo ticket, String enabledValue, String nameValue) {
+		applyToTicket(ticket, enabledValue, nameValue, null, null);
 	}
 
 	public static int stampsEarned(TicketInfo ticket) {
-		return (int) Math.floor(eligibleEuros(ticket) / EUROS_PER_STAMP);
+		return (int) Math.floor(eligibleEuros(ticket) / positiveValue(ticket.getProperty(ELIGIBLE_SPEND_PER_STAMP_KEY),
+				LoyaltySettings.DEFAULT_ELIGIBLE_SPEND_PER_STAMP));
+	}
+
+	public static double redemptionValue(TicketInfo ticket) {
+		return positiveValue(ticket.getProperty(REDEMPTION_VALUE_KEY), LoyaltySettings.DEFAULT_REDEMPTION_VALUE);
+	}
+
+	public static double redemptionValue(String value) {
+		return positiveValue(value, LoyaltySettings.DEFAULT_REDEMPTION_VALUE);
+	}
+
+	private static double positiveValue(String value, double defaultValue) {
+		try {
+			double parsed = Double.parseDouble(value);
+			return Double.isFinite(parsed) && parsed > 0.0 ? parsed : defaultValue;
+		} catch (RuntimeException e) {
+			return defaultValue;
+		}
 	}
 
 	public static double eligibleEuros(TicketInfo ticket) {
