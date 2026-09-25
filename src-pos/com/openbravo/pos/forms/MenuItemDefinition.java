@@ -36,6 +36,10 @@ public class MenuItemDefinition implements MenuElement {
 		this.act = act;
 	}
 
+	public Action getAction() {
+		return act;
+	}
+
 	public void addComponent(JPanelMenu menu) {
 
 		JButton btn = new JButton(act);

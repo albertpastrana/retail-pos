@@ -136,6 +136,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		} catch (IOException e) {
 			dp.setBytes(7, null);
 		}
+		dp.setBoolean(8, LoyaltyStamps.isRedemption(this));
 	}
 
 	public void readValues(DataRead dr) throws BasicException {

@@ -986,7 +986,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						});
 
 				SentenceExec ticketlineinsert = new PreparedSentence(s,
-						"INSERT INTO TICKETLINES (TICKET, LINE, PRODUCT, UNITS, PRICE, TAXID, ATTRIBUTES) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						"INSERT INTO TICKETLINES (TICKET, LINE, PRODUCT, UNITS, PRICE, TAXID, ATTRIBUTES, LOYALTYREDEMPTION) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 						SerializerWriteBuilder.INSTANCE);
 
 				for (TicketLineInfo l : ticket.getLines()) {
