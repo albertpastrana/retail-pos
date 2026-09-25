@@ -159,10 +159,10 @@ public class JNumberKeys extends javax.swing.JPanel {
 	}
 
 	public void setNumbersOnly(boolean value) {
-		m_jEquals.setVisible(value);
-		m_jMinus.setVisible(value);
-		m_jPlus.setVisible(value);
-		m_jMultiply.setVisible(value);
+		m_jEquals.setVisible(!value);
+		m_jMinus.setVisible(!value);
+		m_jPlus.setVisible(!value);
+		m_jMultiply.setVisible(!value);
 		updateSize();
 	}
 
