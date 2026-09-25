@@ -23,11 +23,10 @@ public class TypeSafeBeanLookupTest {
 	}
 
 	@Test
-	public void typedNameLookupRemainsAvailableForDynamicTasks() {
-		CountingBean.reset();
+	public void typedLookupConstructsBeansWithAnAppViewConstructor() {
 		JRootApp app = new JRootApp();
 
-		assertSame(app.getBean(CountingBean.class.getName(), CountingBean.class), app.getBean(CountingBean.class));
+		assertTrue(app.getBean(AppViewBean.class).app == app);
 	}
 
 	@Test
@@ -73,6 +72,14 @@ public class TypeSafeBeanLookupTest {
 				bean = this;
 			}
 			return bean;
+		}
+	}
+
+	public static class AppViewBean {
+		private final AppView app;
+
+		public AppViewBean(AppView app) {
+			this.app = app;
 		}
 	}
 

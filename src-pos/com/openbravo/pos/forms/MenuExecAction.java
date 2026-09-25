@@ -31,19 +31,18 @@ import javax.swing.Action;
 public class MenuExecAction extends AbstractAction {
 
 	private AppView m_App;
-	private String m_sMyView;
+	private Class<? extends ProcessAction> m_actionClass;
 
 	/** Creates a new instance of MenuExecAction */
-	public MenuExecAction(AppView app, String icon, String keytext, String sMyView) {
+	public MenuExecAction(AppView app, String icon, String keytext, Class<? extends ProcessAction> actionClass) {
 		putValue(Action.SMALL_ICON, new HiDpiIcon(JPrincipalApp.class.getResource(icon)));
 		putValue(Action.NAME, AppLocal.getIntString(keytext));
-		putValue(AppUserView.ACTION_TASKNAME, sMyView);
+		putValue(AppUserView.ACTION_TASKNAME, actionClass.getName());
 		m_App = app;
-		m_sMyView = sMyView;
+		m_actionClass = actionClass;
 	}
 
 	public void actionPerformed(ActionEvent evt) {
-
-		m_App.getAppUserView().executeTask(m_sMyView);
+		m_App.getAppUserView().executeTask(m_actionClass);
 	}
 }

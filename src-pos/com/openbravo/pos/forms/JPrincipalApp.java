@@ -179,14 +179,9 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		submenu.addPanel("/com/openbravo/images/menu-resources.png", "Menu.Resources",
 				"com.openbravo.pos.admin.ResourcesPanel", com.openbravo.pos.admin.ResourcesPanel.class);
 		submenu.addExecution("/com/openbravo/images/ark2.png", "Menu.DatabaseBackup",
-				"com.openbravo.pos.admin.BackupDatabaseAction");
+				com.openbravo.pos.admin.BackupDatabaseAction.class);
 		submenu.addExecution("/com/openbravo/images/ark2.png", "Menu.DemoMode",
-				"com.openbravo.pos.admin.DemoModeAction");
-		submenu.addTitle("Menu.Maintenance.ERP");
-		submenu.addExecution("/com/openbravo/images/menu-erp-products.png", "Menu.ERPProducts",
-				"com.openbravo.possync.ProductsSyncCreate");
-		submenu.addExecution("/com/openbravo/images/menu-erp-orders.png", "Menu.ERPOrders",
-				"com.openbravo.possync.OrdersSyncCreate");
+				com.openbravo.pos.admin.DemoModeAction.class);
 
 		group = menu.addGroup("Menu.System");
 		group.addChangePasswordAction();
@@ -237,18 +232,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 	private boolean isRailPreference() {
 		String state = m_appview.getProperties().getProperty(MENU_STATE_KEY);
 		return state == null ? getBounds().width <= 800 : "rail".equals(state);
-	}
-
-	private boolean isAvailableTask(String classname) {
-		if (classname == null || classname.startsWith("/")) {
-			return true;
-		}
-		try {
-			Class.forName(classname);
-			return true;
-		} catch (ClassNotFoundException e) {
-			return false;
-		}
 	}
 
 	private void assignMenuButtonIcon() {
@@ -317,11 +300,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
 		}
 
-		public void addExecution(String icon, String key, String classname) {
-			if (!isAvailableTask(classname)) {
-				return;
-			}
-			addAction(new MenuExecAction(m_appview, icon, key, classname));
+		public void addExecution(String icon, String key, Class<? extends ProcessAction> actionClass) {
+			addAction(new MenuExecAction(m_appview, icon, key, actionClass));
 		}
 
 		public ScriptSubmenu addSubmenu(String icon, String key, String classname) {
@@ -379,11 +359,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
 		}
 
-		public void addExecution(String icon, String key, String classname) {
-			if (!isAvailableTask(classname)) {
-				return;
-			}
-			addAction(new MenuExecAction(m_appview, icon, key, classname));
+		public void addExecution(String icon, String key, Class<? extends ProcessAction> actionClass) {
+			addAction(new MenuExecAction(m_appview, icon, key, actionClass));
 		}
 
 		public ScriptSubmenu addSubmenu(String icon, String key, String classname) {
@@ -567,15 +544,19 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		m_appview.waitCursorEnd();
 	}
 
-	public void executeTask(String sTaskClass) {
+	public void executeTask(Class<? extends ProcessAction> actionClass) {
+		executeProcess(actionClass.getName(), () -> m_appview.getBean(actionClass));
+	}
 
-		logger.info("event=task_execute_start task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+	private void executeProcess(String taskName, ProcessSupplier supplier) {
+
+		logger.info("event=task_execute_start task=" + taskName + " userId=" + m_appuser.getId() + " role="
 				+ m_appuser.getRole());
 		m_appview.waitCursorBegin();
 
-		if (m_appuser.hasPermission(sTaskClass)) {
+		if (m_appuser.hasPermission(taskName)) {
 			try {
-				ProcessAction myProcess = m_appview.getBean(sTaskClass, ProcessAction.class);
+				ProcessAction myProcess = supplier.get();
 
 				// execute the proces
 				try {
@@ -585,23 +566,28 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 						JMessageDialog.showMessage(JPrincipalApp.this, m);
 					}
 				} catch (BasicException eb) {
-					logger.log(Level.WARNING, "event=task_execute_failed task=" + sTaskClass, eb);
+					logger.log(Level.WARNING, "event=task_execute_failed task=" + taskName, eb);
 					// Si se produce un error lo muestro.
 					JMessageDialog.showMessage(JPrincipalApp.this, new MessageInf(eb));
 				}
 			} catch (BeanFactoryException e) {
-				logger.log(Level.WARNING, "event=task_execute_load_failed task=" + sTaskClass, e);
+				logger.log(Level.WARNING, "event=task_execute_load_failed task=" + taskName, e);
 				JMessageDialog.showMessage(JPrincipalApp.this,
 						new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("Label.LoadError"), e));
 			}
 		} else {
-			logger.warning("event=task_execute_denied task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
+			logger.warning("event=task_execute_denied task=" + taskName + " userId=" + m_appuser.getId() + " role="
 					+ m_appuser.getRole());
 			// No hay permisos para ejecutar la accion...
 			JMessageDialog.showMessage(JPrincipalApp.this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notpermissions")));
 		}
 		m_appview.waitCursorEnd();
+	}
+
+	@FunctionalInterface
+	private interface ProcessSupplier {
+		ProcessAction get() throws BeanFactoryException;
 	}
 
 	/**
