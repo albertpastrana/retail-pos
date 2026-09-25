@@ -36,6 +36,8 @@ Use standard layout managers and `pack()` where appropriate. Do not change busin
 
 `JDlgChangePassword` was confirmed to have no runtime or configuration references. It was removed instead of being refactored. The active password-change flow uses `com.openbravo.beans.JPasswordDialog` through `Hashcypher`.
 
+Menu panel actions now carry both their stable task identifier and the typed `JPanelView` class. Prepared submenu views keep the identifier but do not resolve a class reflectively.
+
 ## Done when
 
 - No regular user-facing form uses `setLayout(null)` or manual child `setBounds` positioning.
