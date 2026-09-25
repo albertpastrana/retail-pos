@@ -72,7 +72,7 @@ Loaded once, at startup, before `UIManager.setLookAndFeel(...)` — see `com.ope
 
 ```java
 FlatLaf.registerCustomDefaultsSource("com.openbravo.pos.theme");
-UIManager.setLookAndFeel(config.getProperty("swing.defaultlaf")); // FlatLaf Light or FlatLaf Dark,
+UIManager.setLookAndFeel(new FlatLightLaf());
                                                                     // same place Configuration → General
                                                                     // already switches Light/Dark
 ```

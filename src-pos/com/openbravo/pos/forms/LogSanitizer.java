@@ -29,7 +29,7 @@ public final class LogSanitizer {
 				+ " databaseUserConfigured=" + configured(properties.getProperty("db.user")) + " hostname="
 				+ field(properties.getProperty("machine.hostname")) + " locale="
 				+ field(properties.getProperty("user.language")) + "_" + field(properties.getProperty("user.country"))
-				+ " lookAndFeel=" + field(properties.getProperty("swing.defaultlaf")) + " printer="
+				+ " lookAndFeel=com.formdev.flatlaf.FlatLightLaf printer="
 				+ field(properties.getProperty("machine.printer")) + " screenMode="
 				+ field(properties.getProperty("machine.screenmode")) + " scannerConfigured="
 				+ configured(properties.getProperty("machine.scanner")) + " demoMode="

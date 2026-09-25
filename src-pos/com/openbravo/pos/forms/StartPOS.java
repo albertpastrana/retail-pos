@@ -33,7 +33,7 @@ import com.openbravo.format.Formats;
 import com.openbravo.pos.instance.InstanceQuery;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.LookAndFeel;
+import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  *
@@ -143,16 +143,10 @@ public class StartPOS {
 				Formats.setTimePattern(config.getProperty("format.time"));
 				Formats.setDateTimePattern(config.getProperty("format.datetime"));
 
-				// Set the look and feel, with the Retail POS design system's tokens
-				// layered on top (design-system/swing-development.md).
+				// Set the fixed FlatLaf theme with the Retail POS design system's tokens.
 				RetailPOSTheme.registerDefaultsSource();
 				try {
-
-					Object laf = Class.forName(config.getProperty("swing.defaultlaf")).newInstance();
-
-					if (laf instanceof LookAndFeel) {
-						UIManager.setLookAndFeel((LookAndFeel) laf);
-					}
+					UIManager.setLookAndFeel(new FlatLightLaf());
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Cannot set look and feel", e);
 				}

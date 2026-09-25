@@ -21,14 +21,10 @@ package com.openbravo.pos.config;
 import com.openbravo.data.user.DirtyManager;
 import java.awt.CardLayout;
 import java.awt.Component;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.util.ReportUtils;
 import com.openbravo.pos.util.StringParser;
-import javax.swing.LookAndFeel;
-import javax.swing.SwingUtilities;
 
 /**
  *
@@ -52,7 +48,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		String[] printernames = ReportUtils.getPrintNames();
 
 		jtxtMachineHostname.getDocument().addDocumentListener(dirty);
-		jcboLAF.addActionListener(dirty);
 		jcboMachineScreenmode.addActionListener(dirty);
 		jcboTicketsBag.addActionListener(dirty);
 
@@ -88,28 +83,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jcboSerialScanner.addActionListener(dirty);
 
 		cboPrinters.addActionListener(dirty);
-
-		// // Openbravo Skin
-		// jcboLAF.addItem(new UIManager.LookAndFeelInfo("Openbravo",
-		// "com.openbravo.pos.skin.OpenbravoLookAndFeel"));
-
-		// FlatLaf skins — Light for the sales floor, Dark for the evening shift
-		// and unlit back rooms (design-system/README.md "Colour")
-		jcboLAF.addItem(new LAFInfo("FlatLaf Light", "com.formdev.flatlaf.FlatLightLaf"));
-		jcboLAF.addItem(new LAFInfo("FlatLaf Dark", "com.formdev.flatlaf.FlatDarkLaf"));
-
-		// Installed skins
-		LookAndFeelInfo[] lafs = UIManager.getInstalledLookAndFeels();
-		for (int i = 0; i < lafs.length; i++) {
-			jcboLAF.addItem(new LAFInfo(lafs[i].getName(), lafs[i].getClassName()));
-		}
-
-		jcboLAF.addActionListener(new java.awt.event.ActionListener() {
-
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				changeLAF();
-			}
-		});
 
 		jcboMachineScreenmode.addItem("window");
 		jcboMachineScreenmode.addItem("fullscreen");
@@ -189,17 +162,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		jtxtMachineHostname.setText(config.getProperty("machine.hostname"));
 
-		String lafclass = config.getProperty("swing.defaultlaf");
-		jcboLAF.setSelectedItem(null);
-		for (int i = 0; i < jcboLAF.getItemCount(); i++) {
-			LAFInfo lafinfo = (LAFInfo) jcboLAF.getItemAt(i);
-			if (lafinfo.getClassName().equals(lafclass)) {
-				jcboLAF.setSelectedIndex(i);
-				break;
-			}
-		}
-		// jcboLAF.setSelectedItem(new LookAndFeelInfo());
-
 		jcboMachineScreenmode.setSelectedItem(config.getProperty("machine.screenmode"));
 		jcboTicketsBag.setSelectedItem(config.getProperty("machine.ticketsbag"));
 
@@ -273,12 +235,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		config.setProperty("machine.hostname", jtxtMachineHostname.getText());
 
-		LAFInfo laf = (LAFInfo) jcboLAF.getSelectedItem();
-		config.setProperty("swing.defaultlaf",
-				laf == null
-						? System.getProperty("swing.defaultlaf", "javax.swing.plaf.metal.MetalLookAndFeel")
-						: laf.getClassName());
-
 		config.setProperty("machine.screenmode", comboValue(jcboMachineScreenmode.getSelectedItem()));
 		config.setProperty("machine.ticketsbag", comboValue(jcboTicketsBag.getSelectedItem()));
 
@@ -337,55 +293,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		return value == null ? "" : value.toString();
 	}
 
-	private void changeLAF() {
-
-		final LAFInfo laf = (LAFInfo) jcboLAF.getSelectedItem();
-		if (laf != null && !laf.getClassName().equals(UIManager.getLookAndFeel().getClass().getName())) {
-			// The selected look and feel is different from the current look and feel.
-			SwingUtilities.invokeLater(new Runnable() {
-
-				public void run() {
-					try {
-						String lafname = laf.getClassName();
-						Object laf = Class.forName(lafname).newInstance();
-
-						if (laf instanceof LookAndFeel) {
-							UIManager.setLookAndFeel((LookAndFeel) laf);
-						}
-						com.openbravo.pos.theme.RetailPOSTheme.applyFonts();
-
-						SwingUtilities.updateComponentTreeUI(JPanelConfigGeneral.this.getTopLevelAncestor());
-					} catch (Exception e) {
-					}
-				}
-			});
-		}
-	}
-
-	private static class LAFInfo {
-
-		private String name;
-		private String classname;
-
-		public LAFInfo(String name, String classname) {
-			this.name = name;
-			this.classname = classname;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getClassName() {
-			return classname;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
 	/**
 	 * This method is called from within the constructor to initialize the form.
 	 * WARNING: Do NOT modify this code. The content of this method is always
@@ -398,8 +305,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jPanel13 = new javax.swing.JPanel();
 		jLabel5 = new javax.swing.JLabel();
 		jtxtMachineHostname = new javax.swing.JTextField();
-		jLabel2 = new javax.swing.JLabel();
-		jcboLAF = new javax.swing.JComboBox();
 		jLabel6 = new javax.swing.JLabel();
 		jcboMachineScreenmode = new javax.swing.JComboBox();
 		jLabel16 = new javax.swing.JLabel();
@@ -453,8 +358,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jPanel13.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("Label.CashMachine"))); // NOI18N
 
 		jLabel5.setText(AppLocal.getIntString("Label.MachineName")); // NOI18N
-
-		jLabel2.setText(AppLocal.getIntString("label.looknfeel")); // NOI18N
 
 		jLabel6.setText(AppLocal.getIntString("Label.MachineScreen")); // NOI18N
 
@@ -751,12 +654,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 								.addComponent(jtxtMachineHostname, javax.swing.GroupLayout.PREFERRED_SIZE, 165,
 										javax.swing.GroupLayout.PREFERRED_SIZE))
 						.addGroup(jPanel13Layout.createSequentialGroup()
-								.addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 130,
-										javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-								.addComponent(jcboLAF, javax.swing.GroupLayout.PREFERRED_SIZE, 165,
-										javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addGroup(jPanel13Layout.createSequentialGroup()
 								.addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 130,
 										javax.swing.GroupLayout.PREFERRED_SIZE)
 								.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -772,14 +669,10 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		jPanel13Layout.setVerticalGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 				.addGroup(jPanel13Layout.createSequentialGroup().addContainerGap()
 						.addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-								.addComponent(jLabel5).addComponent(jtxtMachineHostname,
-										javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
-										javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addGap(6, 6, 6)
-						.addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-								.addComponent(jLabel2).addComponent(jcboLAF, javax.swing.GroupLayout.PREFERRED_SIZE,
+								.addComponent(jLabel5)
+								.addComponent(jtxtMachineHostname, javax.swing.GroupLayout.PREFERRED_SIZE,
 										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addGap(6, 6, 6)
 						.addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
 								.addComponent(jLabel6).addComponent(jcboMachineScreenmode,
 										javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE,
@@ -934,7 +827,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 	private javax.swing.JLabel jLabel16;
 	private javax.swing.JLabel jLabel18;
 	private javax.swing.JLabel jLabel19;
-	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel26;
 	private javax.swing.JLabel jLabel5;
 	private javax.swing.JLabel jLabel6;
@@ -954,7 +846,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 	private javax.swing.JComboBox jcboConnPrinter;
 	private javax.swing.JComboBox jcboConnPrinter2;
 	private javax.swing.JComboBox jcboConnPrinter3;
-	private javax.swing.JComboBox jcboLAF;
 	private javax.swing.JComboBox jcboMachineDisplay;
 	private javax.swing.JComboBox jcboMachinePrinter;
 	private javax.swing.JComboBox jcboMachinePrinter2;

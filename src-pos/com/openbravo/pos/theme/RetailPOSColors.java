@@ -27,8 +27,7 @@ import javax.swing.UIManager;
  * The Retail POS design system's colour tokens (design-system/tokens.json), one
  * constant per token. Read live from the active FlatLaf theme's
  * FlatLightLaf.properties / FlatDarkLaf.properties (retailpos.* keys), so a
- * value here always tracks Configuration → General's Light/Dark choice — a
- * screen never has to know which one is active.
+ * value here always tracks the active application theme.
  *
  * A hardcoded java.awt.Color bypasses this: it never sees a theme switch, and
  * that's exactly what left buttons in Retail POS painted in a stray blue that
@@ -37,8 +36,7 @@ import javax.swing.UIManager;
  * {@link #primaryButton(AbstractButton)} for a screen's one primary action.
  *
  * Falls back to the light theme's own values if a token is ever missing from
- * the active look and feel (e.g. a non-FlatLaf skin from "Installed skins" in
- * Configuration → General), so a screen never ends up with a null colour.
+ * the active look and feel, so a screen never ends up with a null colour.
  *
  * @author Retail POS design system
  */
@@ -151,7 +149,7 @@ public final class RetailPOSColors {
 						+ toHex(brandStrong()) + "; pressedForeground: " + toHex(onBrand()));
 	}
 
-	private static String toHex(Color color) {
+	public static String toHex(Color color) {
 		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 	}
 

@@ -182,7 +182,7 @@ Example with a different Derby directory:
 - Scan-to-import: unknown barcodes can be pulled from the catalogue TSV at the till
 - Sales keypad: line discount and total discount (Administrator and Manager need `button.discount` and `button.discount.total`; run `./gradlew applyStoreResources` to patch an existing database)
 - Management reports are being rebuilt; the former BeanShell/Jasper report menu is no longer installed by the default roles.
-- FlatLaf Light look and feel in Configuration → General
+- FlatLaf Light look and feel is fixed for the application
 
 Receipt content, shop name, logos, and other operator-customizable templates are database-backed resources. The stable sales actions Print and Open Drawer are code-owned in `JPanelButtons`; their role permissions (for example `button.print`) remain database-backed. Edit `src-pos/com/openbravo/pos/templates/` for receipt and branding resources and apply those resources to the database.
 

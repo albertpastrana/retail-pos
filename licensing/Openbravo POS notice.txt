@@ -67,11 +67,6 @@ Other third party libraries in /lib/
 
 - jcommon-1.0.15.jar (a dependency of jfreechart) and jfreechart-1.0.12.jar - available from http://www.jfree.org/jfreechart/. � 2005-2008 Object Refinery Limited. Distributed under the GNU LESSER GENERAL PUBLIC LICENSE
 
-- swingx-0.9.5.jar - available from https://swingx.dev.java.net/. Copyright (c) 2005-2006 Sun Microsystems, Inc. Distributed under the Lesser General Public License (LGPL).
-
-- substance.jar - available from https://substance.dev.java.net/. Copyright (c) 2005-2008 Kirill Grouchnikov. Distributed under the Berkeley Software Distribution (BSD) License
-
-- substance-swingx.jar - available from https://substance-swingx.dev.java.net/. Copyright (c) 2005-2008 Kirill Grouchnikov. Distributed under the Lesser General Public License (LGPL).
 
 - jdt-compiler-3.1.1.jar (a dependency of jasperreports) - Copyright � 2008 The Eclipse Foundation. Distributed under the Common Public License - v 1.0
 
