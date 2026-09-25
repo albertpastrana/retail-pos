@@ -167,3 +167,6 @@ reimplementing.
   the split gives the tree 32% of the available width.
 - Manual verification of the Swing screen at `1024x768` in English, Spanish,
   and Catalan is still required before moving this ticket to `done/`.
+- Search terms are matched independently against the normalized full path, so
+  `soste aro` matches `Sostenidors / Aro + relleno` even though the terms are
+  in different path segments and accents differ.

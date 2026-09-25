@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,6 +43,7 @@ final class CategoryTreeNavigator extends JPanel implements CategoryNavigator, B
 	private final DataLogicSales sales;
 	private final JTree tree;
 	private String filter = "";
+	private String[] filterTerms = new String[0];
 	private boolean updating;
 	private int matchCount;
 	private int totalCount;
@@ -118,7 +120,8 @@ final class CategoryTreeNavigator extends JPanel implements CategoryNavigator, B
 	}
 
 	public void setFilter(String value) {
-		filter = value == null ? "" : value.trim().toLowerCase();
+		filter = normalize(value);
+		filterTerms = filter.isEmpty() ? new String[0] : filter.split("\\s+");
 		rebuild();
 	}
 
@@ -152,7 +155,7 @@ final class CategoryTreeNavigator extends JPanel implements CategoryNavigator, B
 		totalCount = categories.size();
 		matchCount = 0;
 		for (CategoryNode node : categories) {
-			if (filter.isEmpty() || node.fullPath().toLowerCase().contains(filter))
+			if (matches(node))
 				matchCount++;
 			CategoryNode parent = byId.get(node.parentId());
 			if (parent != null) {
@@ -173,7 +176,7 @@ final class CategoryTreeNavigator extends JPanel implements CategoryNavigator, B
 	}
 
 	private void addNode(DefaultMutableTreeNode parent, CategoryNode node) {
-		if (filter.isEmpty() || node.fullPath().toLowerCase().contains(filter) || hasMatchingChild(node)) {
+		if (filter.isEmpty() || matches(node) || hasMatchingChild(node)) {
 			DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(node);
 			parent.add(treeNode);
 			Collections.sort(node.children, new Comparator<CategoryNode>() {
@@ -187,12 +190,27 @@ final class CategoryTreeNavigator extends JPanel implements CategoryNavigator, B
 	}
 
 	private boolean hasMatchingChild(CategoryNode node) {
-		if (node.fullPath().toLowerCase().contains(filter))
+		if (matches(node))
 			return true;
 		for (CategoryNode child : node.children)
 			if (hasMatchingChild(child))
 				return true;
 		return false;
+	}
+
+	private boolean matches(CategoryNode node) {
+		String path = normalize(node.fullPath());
+		for (String term : filterTerms)
+			if (!path.contains(term))
+				return false;
+		return true;
+	}
+
+	private static String normalize(String value) {
+		if (value == null)
+			return "";
+		return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
+				.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 	}
 
 	private void expandAll() {
