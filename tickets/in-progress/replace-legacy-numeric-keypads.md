@@ -17,6 +17,10 @@ The following screens already use `JNumberKeys`:
 - `JProductLineEdit`, reached through Sales > Edit line, now uses regular
   `JTextField` controls with `JNumberKeys` for its numeric fields. Its dialog
   uses content-driven Swing layouts and `pack()` rather than fixed bounds.
+- `JPaymentCashPos` now uses one editable `JTextField` for tendered cash,
+  numbers-only `JNumberKeys`, and no denomination shortcut buttons. Its cash
+  status is top-aligned with natural field sizing so the partial-payment action
+  does not move the entry controls.
 
 The remaining `JEditorKeys` usages are:
 

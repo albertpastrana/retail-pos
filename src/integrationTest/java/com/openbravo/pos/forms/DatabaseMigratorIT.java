@@ -159,6 +159,12 @@ public class DatabaseMigratorIT {
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '1' AND NAME = 'Manager'"));
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM RESOURCES WHERE NAME = 'Menu.Root'"));
+			assertEquals(0,
+					queryInt(connection,
+							"SELECT COUNT(*) FROM RESOURCES WHERE NAME IN "
+									+ "('payment.cash', 'banknote.50euro', 'banknote.20euro', 'banknote.10euro', "
+									+ "'banknote.5euro', 'coin.2euro', 'coin.1euro', 'coin.50cent', 'coin.20cent', "
+									+ "'coin.10cent', 'coin.5cent', 'coin.2cent', 'coin.1cent')"));
 			assertTrue(roleContains(connection, "0", "com.openbravo.pos.forms.JPanelWelcome"));
 			assertTrue(roleContains(connection, "1", "com.openbravo.pos.forms.JPanelWelcome"));
 			assertTrue(resourceContains(connection, "Printer.Ticket", "Entregat:"));
