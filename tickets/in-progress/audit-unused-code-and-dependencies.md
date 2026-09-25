@@ -128,3 +128,24 @@ remaining legacy support dependencies are retained because they may be required
 by configuration-driven or indirect runtime integrations. Compilation and
 `check` pass; database integration is pending because the Docker daemon is not
 running in the current environment.
+
+## Dependency inventory
+
+The remaining declared dependencies have been classified as follows:
+
+| Dependency group | Evidence | Decision |
+| --- | --- | --- |
+| Derby, Flyway Core, Flyway MySQL, MySQL JDBC, PostgreSQL JDBC | Database migration, embedded database, data helpers, and configured JDBC drivers | Retain |
+| Barbecue and Barcode4J | Product and receipt barcode generation | Retain |
+| Commons Codec | `Base64Encoder` uses the Base64 API | Retain; consider `java.util.Base64` replacement separately |
+| FlatLaf | Look-and-feel configuration and theme code | Retain |
+| Velocity | `ScriptEngineVelocity` renders configured ticket scripts | Retain |
+| JUnit Jupiter, AssertJ, JUnit Platform Launcher | Integration test source and Gradle test execution | Retain |
+| Spotless and Foojay toolchain resolver | Gradle formatting and JDK toolchain setup | Retain |
+| Commons Collections, Commons Discovery, Commons Lang, Commons Logging, ORO | No direct application imports; possible legacy Axis/Velocity runtime support | Retain pending runtime validation |
+| Axis, Axis JAX-RPC, Axis SAAJ, WSDL4J | No direct application imports; possible configured PayPoint or SOAP integration | Retain pending runtime validation |
+
+The pending groups must be exercised through the supported legacy integrations
+before removal. The next validation should cover Velocity ticket rendering,
+Axis/PayPoint or SOAP flows, barcode generation, all configured database
+drivers, application packaging, and the normal sale and receipt flows.
