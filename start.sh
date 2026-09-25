@@ -28,8 +28,6 @@ CP=$CP:$DIRNAME/runtime-libs/*
 CP=$CP:$DIRNAME/lib.jar
 CP=$CP:$DIRNAME/locales.jar
 CP=$CP:$DIRNAME/locales
-CP=$CP:$DIRNAME/reports.jar
-CP=$CP:$DIRNAME/reports
 
 # start Retail POS. Portable packages use the bundled runtime; source
 # checkouts continue to use java from PATH.

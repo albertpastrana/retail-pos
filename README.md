@@ -22,7 +22,7 @@ Useful tasks:
 
 | Task                        | Result                                                      |
 | --------------------------- | ----------------------------------------------------------- |
-| `./gradlew jar`             | App jar plus locales/reports jars next to `start.sh`        |
+| `./gradlew jar`             | App jar plus locales jar next to `start.sh`                 |
 | `./gradlew check`           | That, plus data helpers, plus `spotlessCheck`               |
 | `./gradlew spotlessApply`   | Format Java in the source sets (do not format Java by hand) |
 | `./gradlew spotlessCheck`   | Fail if Java is not formatted                               |
@@ -30,7 +30,7 @@ Useful tasks:
 
 CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrationTest` on every push and pull request.
 
-`./gradlew jar` copies `retail-pos.jar`, `locales.jar`, and `reports.jar` next to `start.sh`. The `locales/` and `reports/` directories are also on the classpath, so a source checkout still runs after only the app jar is present:
+`./gradlew jar` copies `retail-pos.jar` and `locales.jar` next to `start.sh`. The `locales/` directory is also on the classpath, so a source checkout still runs after only the app jar is present:
 
 ```sh
 ./start.sh
@@ -193,7 +193,6 @@ Receipt content, shop name, logos, and other operator-customizable templates are
 | `src-pos/`   | Till UI, sales, inventory, config                    |
 | `src-data/`  | Persistence / session layer                          |
 | `src-beans/` | Shared beans                                         |
-| `reports/`   | Retained invoice JRXML templates pending installation audit |
 | `locales/`   | UI translations                                      |
 | `data/`      | Local database, TSV catalogue, resource dump tools   |
 

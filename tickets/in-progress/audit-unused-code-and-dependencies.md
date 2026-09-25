@@ -10,7 +10,7 @@ Identify and safely remove code, resources, and declared dependencies that are n
 
 The repository contains legacy Swing utilities, remnants of the old management-reporting stack, optional hardware/payment integrations, database-seeded resources, and a manually curated dependency list with transitive resolution disabled. A static call-graph audit therefore produces both real orphan candidates and false positives.
 
-The audit found the following high-confidence code candidates with no normal callers or usages:
+The audit found the following high-confidence code candidates with no normal callers or usages. They were removed on 2026-09-25:
 
 - `src-pos/com/openbravo/pos/forms/BeanFactoryCache.java`
 - `src-data/com/openbravo/data/gui/CompoundIcon.java`
@@ -20,7 +20,7 @@ The audit found the following high-confidence code candidates with no normal cal
 - `src-pos/com/openbravo/pos/util/BarcodeImage.java`
 - `DataLogicSales.FallbackPrice.priceSell`
 
-The following methods also appear unused:
+The following unused methods were also removed on 2026-09-25:
 
 - `ListQBFModelNumber.getNonMandatoryString()`
 - `ListQBFModelNumber.getNonMandatoryNumber()`
@@ -52,17 +52,21 @@ The following dependencies are used directly or may be required at runtime and m
 
 The project disables transitive dependency resolution for most implementation dependencies, so apparently indirect libraries may be required by Velocity or Axis. `ImportLegacyTransactions.java` also references HSQLDB without a declared HSQLDB dependency; this is a possible missing feature-specific runtime dependency, not an unused dependency.
 
-## Code and resource candidates
+## Code and resource removals
 
-Review these items after confirming all dynamic and external uses:
+The following items were removed on 2026-09-25 after repository-wide reference
+and packaging checks:
 
-- `reports/com/openbravo/reports/*.jrxml`, especially the invoice and custom invoice templates.
+- `reports/com/openbravo/reports/*.jrxml`, including the invoice and custom invoice templates.
 - `src-pos/com/openbravo/pos/templates/printerfiscalticket.xml`.
-- `src-pos/com/openbravo/pos/templates/ticketline_taxesincluded.xml`.
-- `src-pos/com/openbravo/pos/templates/printerproduct.xml`.
+- `src-pos/com/openbravo/pos/templates/printerproduct.xml` (already absent from the tree).
 - `data/ImportLegacyTransactions.java`.
 
-The JRXML files are still packaged in `reports.jar`. `JPanelTicket.printReport()` can be exposed through an optional script bridge, and deployed databases may contain custom event scripts that reference it. The invoice templates must therefore remain until installed database resources have been audited.
+The JRXML files were not referenced by current Java code or runtime
+dependencies. The `reports.jar` packaging path was removed together with the
+templates. Fiscal receipt support remains in `TicketParser`, but the unused
+repository template was removed; existing database-backed resources must be
+audited separately before changing installed databases.
 
 ## False-positive risks
 
@@ -74,7 +78,7 @@ Do not classify these as unused without targeted verification:
 - ESC/POS, scale, drawer, and display implementations selected by configuration.
 - The Velocity engine selected by `ScriptFactory`.
 - `Printer.*`, `Role.*`, `Menu.Root`, and other resources loaded from or inserted into the `RESOURCES` database table.
-- Native libraries under `lib/`, launch scripts, `locales.jar`, and `reports.jar`.
+- Native libraries under `lib/`, launch scripts, and `locales.jar`.
 - Public or extension-facing methods with no in-repository callers.
 
 ## Investigation slices
@@ -83,7 +87,7 @@ Do not classify these as unused without targeted verification:
 2. For each dependency candidate, remove it temporarily in an isolated change and run compilation plus the relevant runtime tests.
 3. Inspect the resolved runtime classpath and use `dependencyInsight` to distinguish direct requirements from manually declared support jars.
 4. Exercise or test Velocity ticket rendering, barcode generation, FlatLaf, Axis/PayPoint, and all supported database drivers.
-5. Audit deployed database `RESOURCES` rows and event scripts before deleting JRXML or database-configured templates.
+5. Audit deployed database `RESOURCES` rows and event scripts before changing database-configured templates.
 6. Remove confirmed dead classes, methods, resources, and dependencies in small reviewable commits.
 7. Document retained legacy or optional dependencies with the runtime feature that requires them.
 
