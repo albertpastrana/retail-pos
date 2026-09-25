@@ -80,7 +80,7 @@ dependencies {
         "com.formdev:flatlaf:3.7.2",
         "jfree:jcommon:1.0.16",
         "jfree:jfreechart:1.0.13",
-        "org.apache.poi:poi:3.2-FINAL",
+        "org.apache.poi:poi:5.5.1",
         "org.eclipse.jdt:core:3.1.1",
         "oro:oro:2.0.8",
         "org.apache.velocity:velocity:1.7",
