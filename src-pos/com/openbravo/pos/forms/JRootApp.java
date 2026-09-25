@@ -22,7 +22,6 @@ package com.openbravo.pos.forms;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
-import java.lang.reflect.Constructor;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -91,12 +90,6 @@ public class JRootApp extends JPanel implements AppView {
 	private Map<String, BeanFactory> m_aBeanFactories;
 
 	private JPrincipalApp m_principalapp = null;
-
-	private static HashMap<String, String> m_oldclasses; // This is for backwards compatibility purposes
-
-	static {
-		initOldClasses();
-	}
 
 	/** Creates new form JRootApp */
 	public JRootApp() {
@@ -303,61 +296,27 @@ public class JRootApp extends JPanel implements AppView {
 		return m_props;
 	}
 
-	private Object resolveBean(String beanfactory) throws BeanFactoryException {
-
-		// For backwards compatibility
-		beanfactory = mapNewClass(beanfactory);
-
-		BeanFactory bf = m_aBeanFactories.get(beanfactory);
-		if (bf == null) {
-
-			// Class BeanFactory
-			try {
-				Class bfclass = Class.forName(beanfactory);
-
-				if (BeanFactory.class.isAssignableFrom(bfclass)) {
-					bf = (BeanFactory) bfclass.newInstance();
-				} else {
-					// the old construction for beans...
-					Constructor constMyView = bfclass.getConstructor(new Class[]{AppView.class});
-					Object bean = constMyView.newInstance(new Object[]{this});
-
-					bf = new BeanFactoryObj(bean);
-				}
-
-			} catch (Exception e) {
-				// ClassNotFoundException, InstantiationException, IllegalAccessException,
-				// NoSuchMethodException, InvocationTargetException
-				throw new BeanFactoryException(e);
-			}
-
-			// cache the factory
-			m_aBeanFactories.put(beanfactory, bf);
-
-			// Initialize if it is a BeanFactoryApp
-			if (bf instanceof BeanFactoryApp) {
-				((BeanFactoryApp) bf).init(this);
+	private BeanFactory getBeanFactory(Class<?> beanFactoryClass) throws BeanFactoryException {
+		String beanFactoryName = beanFactoryClass.getName();
+		BeanFactory beanFactory = m_aBeanFactories.get(beanFactoryName);
+		if (beanFactory == null) {
+			beanFactory = createBeanFactory(beanFactoryClass);
+			m_aBeanFactories.put(beanFactoryName, beanFactory);
+			if (beanFactory instanceof BeanFactoryApp) {
+				((BeanFactoryApp) beanFactory).init(this);
 			}
 		}
-		return bf.getBean();
+		return beanFactory;
 	}
 
-	<T> T getBean(String beanfactory, Class<T> beanClass) throws BeanFactoryException {
-		if (beanClass == null) {
-			throw new BeanFactoryException("Bean class cannot be null");
-		}
-
-		Object bean = resolveBean(beanfactory);
-		if (bean == null) {
-			throw new BeanFactoryException("Bean " + beanfactory + " resolved to null");
-		}
+	private BeanFactory createBeanFactory(Class<?> beanFactoryClass) throws BeanFactoryException {
 		try {
-			return beanClass.cast(bean);
-		} catch (ClassCastException e) {
-			BeanFactoryException exception = new BeanFactoryException(
-					"Bean " + beanfactory + " resolved to " + bean.getClass().getName());
-			exception.initCause(e);
-			throw exception;
+			if (BeanFactory.class.isAssignableFrom(beanFactoryClass)) {
+				return (BeanFactory) beanFactoryClass.getDeclaredConstructor().newInstance();
+			}
+			return new BeanFactoryObj(beanFactoryClass.getConstructor(AppView.class).newInstance(this));
+		} catch (ReflectiveOperationException e) {
+			throw new BeanFactoryException(e);
 		}
 	}
 
@@ -365,20 +324,19 @@ public class JRootApp extends JPanel implements AppView {
 		if (beanClass == null) {
 			throw new BeanFactoryException("Bean class cannot be null");
 		}
-		return getBean(beanClass.getName(), beanClass);
-	}
 
-	private static String mapNewClass(String classname) {
-		String newclass = m_oldclasses.get(classname);
-		return newclass == null ? classname : newclass;
-	}
-
-	private static void initOldClasses() {
-		m_oldclasses = new HashMap<String, String>();
-
-		// update bean names from 2.10 to 2.20
-		m_oldclasses.put("com.openbravo.pos.panels.JPanelTax", "com.openbravo.pos.inventory.TaxPanel");
-
+		Object bean = getBeanFactory(beanClass).getBean();
+		if (bean == null) {
+			throw new BeanFactoryException("Bean " + beanClass.getName() + " resolved to null");
+		}
+		try {
+			return beanClass.cast(bean);
+		} catch (ClassCastException e) {
+			BeanFactoryException exception = new BeanFactoryException(
+					"Bean " + beanClass.getName() + " resolved to " + bean.getClass().getName());
+			exception.initCause(e);
+			throw exception;
+		}
 	}
 
 	public void waitCursorBegin() {
