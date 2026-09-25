@@ -43,14 +43,22 @@ public class HiDpiIcon implements Icon {
 	private int iconheight;
 
 	public HiDpiIcon(URL resource) {
-		this(new ImageIcon(resource).getImage());
+		this(new ImageIcon(resource).getImage(), SOURCE_SCALE);
 	}
 
 	public HiDpiIcon(Image image) {
+		this(image, SOURCE_SCALE);
+	}
+
+	public HiDpiIcon(URL resource, int sourceScale) {
+		this(new ImageIcon(resource).getImage(), sourceScale);
+	}
+
+	public HiDpiIcon(Image image, int sourceScale) {
 
 		this.image = image;
-		iconwidth = image.getWidth(null) / SOURCE_SCALE;
-		iconheight = image.getHeight(null) / SOURCE_SCALE;
+		iconwidth = image.getWidth(null) / sourceScale;
+		iconheight = image.getHeight(null) / sourceScale;
 	}
 
 	public void paintIcon(Component c, Graphics g, int x, int y) {
