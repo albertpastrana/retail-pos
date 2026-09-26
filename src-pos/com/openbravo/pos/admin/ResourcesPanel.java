@@ -27,6 +27,14 @@ import com.openbravo.pos.panels.*;
 import com.openbravo.data.loader.TableDefinition;
 import com.openbravo.data.loader.Vectorer;
 import com.openbravo.data.user.*;
+import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.MessageInf;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.ButtonGroup;
 
 /**
  *
@@ -36,6 +44,7 @@ public class ResourcesPanel extends JPanelTable {
 
 	private TableDefinition tresources;
 	private ResourcesView jeditor;
+	private AdminListNavigator navigator;
 
 	/** Creates a new instance of JPanelResources */
 	public ResourcesPanel() {
@@ -87,5 +96,79 @@ public class ResourcesPanel extends JPanelTable {
 
 	public String getTitle() {
 		return AppLocal.getIntString("Menu.Resources");
+	}
+
+	@Override
+	protected boolean showToolbar() {
+		return false;
+	}
+	@Override
+	protected double getSplitDividerLocation() {
+		return 0.33;
+	}
+	@Override
+	protected double getSplitResizeWeight(boolean keepsSize) {
+		return 0.33;
+	}
+
+	@Override
+	public Component getFilter() {
+		JPanel bar = new JPanel(new java.awt.BorderLayout());
+		JPanel filters = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		ButtonGroup group = new ButtonGroup();
+		for (int type = -1; type < 3; type++) {
+			final int selectedType = type;
+			JToggleButton filter = new JToggleButton(AppLocal.getIntString(type == -1
+					? "Admin.All"
+					: type == 0 ? "resource.text" : type == 1 ? "resource.image" : "resource.binary"));
+			filter.setSelected(type == -1);
+			filter.addActionListener(e -> {
+				if (navigator != null)
+					navigator.setFilter(
+							row -> selectedType < 0 || ((Number) ((Object[]) row)[2]).intValue() == selectedType);
+			});
+			group.add(filter);
+			filters.add(filter);
+		}
+		bar.add(filters, java.awt.BorderLayout.WEST);
+		JButton add = new JButton(AppLocal.getIntString("Admin.NewResource"));
+		add.addActionListener(e -> {
+			try {
+				bd.actionInsert();
+			} catch (BasicException ex) {
+				new MessageInf(ex).show(this);
+			}
+		});
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actions.add(add);
+		bar.add(actions, java.awt.BorderLayout.EAST);
+		return bar;
+	}
+
+	@Override
+	protected Component getListComponent(BrowsableEditableData data) {
+		navigator = new AdminListNavigator(data, AppLocal.getIntString("Admin.SearchResources"),
+				row -> String.valueOf(((Object[]) row)[1]), new AdminRowRenderer(row -> {
+					Object[] resource = (Object[]) row;
+					int type = ((Number) resource[2]).intValue();
+					return AppLocal.getIntString(
+							type == 0 ? "resource.text" : type == 1 ? "resource.image" : "resource.binary")
+							+ " · "
+							+ AppLocal.getIntString(((String) resource[1]).startsWith("Printer.")
+									? "Admin.Resource.Printer"
+									: ((String) resource[1]).startsWith("Role.")
+											? "Admin.Resource.Role"
+											: type == 1 ? "Admin.Resource.Image" : "Admin.Resource.Other")
+							+ (ResourceOriginal.differs(resource)
+									? " · " + AppLocal.getIntString("Admin.Modified")
+									: "");
+				}));
+		return navigator;
+	}
+
+	@Override
+	public void activate() throws BasicException {
+		super.activate();
+		jeditor.setBrowsableData(bd);
 	}
 }

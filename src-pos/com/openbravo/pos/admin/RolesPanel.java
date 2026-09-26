@@ -30,23 +30,36 @@ import com.openbravo.data.user.ListProviderCreator;
 import com.openbravo.data.user.SaveProvider;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.panels.JPanelTable;
+import com.openbravo.data.user.BrowsableEditableData;
+import com.openbravo.data.user.EditorListener;
+import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.MessageInf;
+import java.util.HashMap;
+import java.util.Map;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 /**
  *
  * @author adrianromero
  */
-public class RolesPanel extends JPanelTable {
+public class RolesPanel extends JPanelTable implements EditorListener {
 
 	private TableDefinition troles;
 	private RolesView jeditor;
+	private DataLogicAdmin admin;
+	private boolean listening;
+	private final Map<String, Integer> userCounts = new HashMap<>();
 
 	/** Creates a new instance of RolesPanel */
 	public RolesPanel() {
 	}
 
 	protected void init() {
-		DataLogicAdmin dlAdmin = app.getBean(DataLogicAdmin.class);
-		troles = dlAdmin.getTableRoles();
+		admin = app.getBean(DataLogicAdmin.class);
+		troles = admin.getTableRoles();
 		jeditor = new RolesView(dirty);
 	}
 
@@ -76,5 +89,73 @@ public class RolesPanel extends JPanelTable {
 
 	public String getTitle() {
 		return AppLocal.getIntString("Menu.Roles");
+	}
+
+	@Override
+	protected boolean showToolbar() {
+		return false;
+	}
+	@Override
+	protected double getSplitDividerLocation() {
+		return 0.33;
+	}
+	@Override
+	protected double getSplitResizeWeight(boolean keepsSize) {
+		return 0.33;
+	}
+
+	@Override
+	public Component getFilter() {
+		JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JButton add = new JButton(AppLocal.getIntString("Admin.NewRole"));
+		add.addActionListener(e -> {
+			try {
+				bd.actionInsert();
+			} catch (BasicException ex) {
+				new MessageInf(ex).show(this);
+			}
+		});
+		bar.add(add);
+		return bar;
+	}
+
+	@Override
+	protected Component getListComponent(BrowsableEditableData data) {
+		return new AdminListNavigator(data, AppLocal.getIntString("Admin.SearchRoles"),
+				row -> String.valueOf(((Object[]) row)[1]), new AdminRowRenderer(row -> {
+					Object[] role = (Object[]) row;
+					int users = userCounts.getOrDefault((String) role[0], 0);
+					int permissions = 0;
+					try {
+						permissions = RolePermissions.keys(RolePermissions.text(role[2])).size();
+					} catch (Exception ex) {
+						/* XML can be repaired from the editor */ }
+					return String.format(AppLocal.getIntString("Admin.RoleRow"), users, permissions,
+							RolePermissions.catalogue().size());
+				}));
+	}
+
+	@Override
+	public void activate() throws BasicException {
+		startNavigation();
+		jeditor.setBrowsableData(bd);
+		if (!listening) {
+			bd.addEditorListener(this);
+			listening = true;
+		}
+		bd.actionLoad();
+		userCounts.clear();
+		for (int i = 0; i < bd.getListModel().getSize(); i++) {
+			Object[] role = (Object[]) bd.getListModel().getElementAt(i);
+			userCounts.put((String) role[0], admin.getRoleUserCount((String) role[0]));
+		}
+		updateValue(bd.getIndex() < 0 ? null : bd.getListModel().getElementAt(bd.getIndex()));
+		repaint();
+	}
+
+	@Override
+	public void updateValue(Object value) {
+		int users = value == null ? 0 : userCounts.getOrDefault((String) ((Object[]) value)[0], 0);
+		jeditor.setUserCount(users);
 	}
 }
