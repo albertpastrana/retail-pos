@@ -23,6 +23,7 @@ import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.SentenceFind;
 import com.openbravo.data.loader.SentenceList;
 import com.openbravo.data.loader.SerializerReadInteger;
+import com.openbravo.data.loader.SerializerWriteString;
 import com.openbravo.data.loader.SerializerReadClass;
 import com.openbravo.data.loader.Session;
 import com.openbravo.data.loader.StaticSentence;
@@ -79,6 +80,10 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 		return new StaticSentence(s, "SELECT ID, NAME FROM ROLES WHERE ID IN ('0', '1', '2') ORDER BY ID", null,
 				new SerializerReadClass(RoleInfo.class));
 	}
+	public final SentenceList getAllRolesList() {
+		return new StaticSentence(s, "SELECT ID, NAME FROM ROLES ORDER BY ID", null,
+				new SerializerReadClass(RoleInfo.class));
+	}
 	public final TableDefinition getTablePeople() {
 		return m_tpeople;
 	}
@@ -91,5 +96,11 @@ public class DataLogicAdmin extends BeanFactoryDataSingle {
 	}
 	public final TableDefinition getTableResources() {
 		return m_tresources;
+	}
+
+	public int getRoleUserCount(String roleId) throws BasicException {
+		Integer count = (Integer) new StaticSentence(s, "SELECT COUNT(*) FROM PEOPLE WHERE ROLE = ?",
+				SerializerWriteString.INSTANCE, SerializerReadInteger.INSTANCE).find(roleId);
+		return count == null ? 0 : count;
 	}
 }

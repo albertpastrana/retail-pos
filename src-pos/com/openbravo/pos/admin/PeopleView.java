@@ -1,358 +1,208 @@
-//    Openbravo POS is a point of sales application designed for touch screens.
-//    Copyright (C) 2007-2009 Openbravo, S.L.
-//    http://www.openbravo.com/product/pos
-//
-//    This file is part of Openbravo POS.
-//
-//    Openbravo POS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
-//
-//    Openbravo POS is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with Openbravo POS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.openbravo.pos.admin;
 
-import java.awt.Component;
-import javax.swing.*;
-import com.openbravo.pos.forms.AppLocal;
-import com.openbravo.pos.util.Hashcypher;
-import java.awt.image.BufferedImage;
-import java.util.UUID;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ComboBoxValModel;
 import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.loader.SentenceList;
-import com.openbravo.data.user.*;
+import com.openbravo.data.user.BrowsableEditableData;
+import com.openbravo.data.user.DirtyManager;
+import com.openbravo.data.user.EditorRecord;
 import com.openbravo.format.Formats;
+import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.theme.RetailPOSColors;
+import com.openbravo.pos.util.Hashcypher;
 import com.openbravo.pos.util.StringUtils;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.image.BufferedImage;
+import java.util.UUID;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-/**
- *
- * @author adrianromero
- */
 public class PeopleView extends JPanel implements EditorRecord {
+	private final DataLogicAdmin admin;
+	private final DirtyManager dirty;
+	private final SentenceList roles;
+	private ComboBoxValModel roleModel = new ComboBoxValModel();
+	private final JTextField name = new JTextField(20);
+	private final JTextField card = new JTextField(20);
+	private final JComboBox role = new JComboBox();
+	private final JCheckBox visible = new JCheckBox(AppLocal.getIntString("label.peoplevisible"));
+	private final com.openbravo.data.gui.JImageEditor image = new com.openbravo.data.gui.JImageEditor();
+	private final JButton passwordButton = new JButton(AppLocal.getIntString("button.peoplepassword"));
+	private final JButton newCard = new JButton(AppLocal.getIntString("Admin.GenerateCard"));
+	private final JButton removeCard = new JButton(AppLocal.getIntString("Admin.RemoveCard"));
+	private final JButton save = new JButton(AppLocal.getIntString("Admin.SaveUser"));
+	private final JButton discard = new JButton(AppLocal.getIntString("Admin.Discard"));
+	private final JButton delete = new JButton(AppLocal.getIntString("Admin.Delete"));
+	private final JLabel status = new JLabel();
+	private Object id;
+	private Object sortOrder;
+	private String password;
+	private BrowsableEditableData data;
 
-	private Object m_oId;
-	private Object m_oSortOrder;
-	private String m_sPassword;
-	private final DataLogicAdmin m_dlAdmin;
-
-	private DirtyManager m_Dirty;
-
-	private SentenceList m_sentrole;
-	private ComboBoxValModel m_RoleModel;
-
-	/** Creates new form PeopleEditor */
-	public PeopleView(DataLogicAdmin dlAdmin, DirtyManager dirty) {
-		m_dlAdmin = dlAdmin;
-		initComponents();
-
-		// El modelo de roles
-		m_sentrole = dlAdmin.getRolesList();
-		m_RoleModel = new ComboBoxValModel();
-
-		m_Dirty = dirty;
-		m_jName.getDocument().addDocumentListener(dirty);
-		m_jRole.addActionListener(dirty);
-		m_jVisible.addActionListener(dirty);
-		m_jImage.addPropertyChangeListener("image", dirty);
-
+	public PeopleView(DataLogicAdmin admin, DirtyManager dirty) {
+		super(new BorderLayout(8, 8));
+		this.admin = admin;
+		this.dirty = dirty;
+		roles = admin.getRolesList();
+		setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12));
+		JPanel fields = new JPanel(new GridBagLayout());
+		int y = 0;
+		row(fields, y++, AppLocal.getIntString("label.peoplename"), name);
+		row(fields, y++, AppLocal.getIntString("label.role"), role);
+		row(fields, y++, "", new JLabel(AppLocal.getIntString("Admin.RoleHint")));
+		row(fields, y++, AppLocal.getIntString("Admin.AccessCard"), card);
+		row(fields, y++, "", new JLabel(AppLocal.getIntString("Admin.CardHint")));
+		JPanel cardActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+		cardActions.add(newCard);
+		cardActions.add(removeCard);
+		row(fields, y++, "", cardActions);
+		row(fields, y++, AppLocal.getIntString("Label.Password"), passwordButton);
+		row(fields, y++, AppLocal.getIntString("label.peopleimage"), image);
+		row(fields, y++, "", visible);
+		add(fields, BorderLayout.NORTH);
+		JPanel footer = new JPanel(new BorderLayout(8, 0));
+		footer.add(status, BorderLayout.WEST);
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actions.add(delete);
+		actions.add(discard);
+		RetailPOSColors.primaryButton(save);
+		actions.add(save);
+		footer.add(actions, BorderLayout.EAST);
+		add(footer, BorderLayout.SOUTH);
+		card.setEditable(false);
+		image.setMaxDimensions(new java.awt.Dimension(32, 32));
+		image.setActionLabels(AppLocal.getIntString("Admin.ImageOpen"), AppLocal.getIntString("Admin.ImageRemove"),
+				AppLocal.getIntString("Admin.ZoomIn"), AppLocal.getIntString("Admin.ZoomOut"));
+		name.getDocument().addDocumentListener(dirty);
+		role.addActionListener(dirty);
+		visible.addActionListener(dirty);
+		image.addPropertyChangeListener("image", dirty);
+		dirty.addDirtyListener(value -> status.setText(AppLocal.getIntString(value ? "Admin.Unsaved" : "Admin.Saved")));
+		passwordButton.addActionListener(e -> {
+			String changed = Hashcypher.changePassword(this);
+			if (changed != null) {
+				password = changed;
+				dirty.setDirty(true);
+			}
+		});
+		newCard.addActionListener(e -> {
+			if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardnew"),
+					AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+					AppLocal.getIntString("confirm.newcard"), false) == JOptionPane.YES_OPTION) {
+				card.setText("c" + StringUtils.getCardNumber());
+				dirty.setDirty(true);
+			}
+		});
+		removeCard.addActionListener(e -> {
+			if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardremove"),
+					AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
+					AppLocal.getIntString("confirm.remove"), true) == JOptionPane.YES_OPTION) {
+				card.setText("");
+				dirty.setDirty(true);
+			}
+		});
+		discard.addActionListener(e -> {
+			if (data != null)
+				data.actionReloadCurrent(this);
+		});
+		delete.addActionListener(e -> AdminDelete.confirm(this, data, dirty, name.getText()));
+		save.addActionListener(e -> {
+			if (data != null)
+				try {
+					data.saveData();
+				} catch (BasicException ex) {
+					new com.openbravo.data.gui.MessageInf(ex).show(this);
+				}
+		});
 		writeValueEOF();
 	}
 
+	private static void row(JPanel panel, int y, String label, Component input) {
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridy = y;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.insets = new Insets(6, 2, 6, 12);
+		panel.add(new JLabel(label), c);
+		c.gridx = 1;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(6, 0, 6, 2);
+		panel.add(input, c);
+	}
+
+	void setBrowsableData(BrowsableEditableData data) {
+		this.data = data;
+	}
+	private void editable(boolean enabled) {
+		name.setEnabled(enabled);
+		role.setEnabled(enabled);
+		visible.setEnabled(enabled);
+		card.setEnabled(enabled);
+		image.setEnabled(enabled);
+		passwordButton.setEnabled(enabled);
+		newCard.setEnabled(enabled);
+		removeCard.setEnabled(enabled);
+		save.setEnabled(enabled);
+		discard.setEnabled(enabled);
+		delete.setEnabled(enabled && id != null);
+	}
 	public void writeValueEOF() {
-		m_oId = null;
-		m_oSortOrder = null;
-		m_jName.setText(null);
-		m_sPassword = null;
-		m_RoleModel.setSelectedKey(null);
-		m_jVisible.setSelected(false);
-		jcard.setText(null);
-		m_jImage.setImage(null);
-		m_jName.setEnabled(false);
-		m_jRole.setEnabled(false);
-		m_jVisible.setEnabled(false);
-		jcard.setEnabled(false);
-		m_jImage.setEnabled(false);
-		jButton1.setEnabled(false);
-		jButton2.setEnabled(false);
-		jButton3.setEnabled(false);
+		id = null;
+		sortOrder = null;
+		password = null;
+		name.setText("");
+		roleModel.setSelectedKey(null);
+		visible.setSelected(false);
+		card.setText("");
+		image.setImage(null);
+		editable(false);
 	}
-
 	public void writeValueInsert() {
-		m_oId = null;
-		m_oSortOrder = null;
-		m_jName.setText(null);
-		m_sPassword = null;
-		m_RoleModel.setSelectedKey(null);
-		m_jVisible.setSelected(true);
-		jcard.setText(null);
-		m_jImage.setImage(null);
-		m_jName.setEnabled(true);
-		m_jRole.setEnabled(true);
-		m_jVisible.setEnabled(true);
-		jcard.setEnabled(true);
-		m_jImage.setEnabled(true);
-		jButton1.setEnabled(true);
-		jButton2.setEnabled(true);
-		jButton3.setEnabled(true);
+		writeValueEOF();
+		visible.setSelected(true);
+		editable(true);
 	}
-
 	public void writeValueDelete(Object value) {
-		Object[] people = (Object[]) value;
-		m_oId = people[0];
-		m_oSortOrder = people[7];
-		m_jName.setText(Formats.STRING.formatValue(people[1]));
-		m_sPassword = Formats.STRING.formatValue(people[2]);
-		m_RoleModel.setSelectedKey(people[3]);
-		m_jVisible.setSelected(((Boolean) people[4]).booleanValue());
-		jcard.setText(Formats.STRING.formatValue(people[5]));
-		m_jImage.setImage((BufferedImage) people[6]);
-		m_jName.setEnabled(false);
-		m_jRole.setEnabled(false);
-		m_jVisible.setEnabled(false);
-		jcard.setEnabled(false);
-		m_jImage.setEnabled(false);
-		jButton1.setEnabled(false);
-		jButton2.setEnabled(false);
-		jButton3.setEnabled(false);
+		writeValueEdit(value);
+		editable(false);
 	}
-
 	public void writeValueEdit(Object value) {
-		Object[] people = (Object[]) value;
-		m_oId = people[0];
-		m_oSortOrder = people[7];
-		m_jName.setText(Formats.STRING.formatValue(people[1]));
-		m_sPassword = Formats.STRING.formatValue(people[2]);
-		m_RoleModel.setSelectedKey(people[3]);
-		m_jVisible.setSelected(((Boolean) people[4]).booleanValue());
-		jcard.setText(Formats.STRING.formatValue(people[5]));
-		m_jImage.setImage((BufferedImage) people[6]);
-		m_jName.setEnabled(true);
-		m_jRole.setEnabled(true);
-		m_jVisible.setEnabled(true);
-		jcard.setEnabled(true);
-		m_jImage.setEnabled(true);
-		jButton1.setEnabled(true);
-		jButton2.setEnabled(true);
-		jButton3.setEnabled(true);
+		Object[] person = (Object[]) value;
+		id = person[0];
+		sortOrder = person[7];
+		password = Formats.STRING.formatValue(person[2]);
+		name.setText(Formats.STRING.formatValue(person[1]));
+		roleModel.setSelectedKey(person[3]);
+		visible.setSelected(Boolean.TRUE.equals(person[4]));
+		card.setText(Formats.STRING.formatValue(person[5]));
+		image.setImage((BufferedImage) person[6]);
+		editable(true);
 	}
-
 	public Object createValue() throws BasicException {
-		Object[] people = new Object[8];
-		people[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
-		people[7] = m_oSortOrder == null ? Integer.valueOf(m_dlAdmin.getNextPeopleSortOrder()) : m_oSortOrder;
-		people[1] = Formats.STRING.parseValue(m_jName.getText());
-		people[2] = Formats.STRING.parseValue(m_sPassword);
-		people[3] = m_RoleModel.getSelectedKey();
-		people[4] = Boolean.valueOf(m_jVisible.isSelected());
-		people[5] = Formats.STRING.parseValue(jcard.getText());
-		people[6] = m_jImage.getImage();
-		return people;
+		return new Object[]{id == null ? UUID.randomUUID().toString() : id, Formats.STRING.parseValue(name.getText()),
+				Formats.STRING.parseValue(password), roleModel.getSelectedKey(), visible.isSelected(),
+				Formats.STRING.parseValue(card.getText()), image.getImage(),
+				sortOrder == null ? admin.getNextPeopleSortOrder() : sortOrder};
 	}
-
+	public void activate() throws BasicException {
+		roleModel = new ComboBoxValModel(roles.list());
+		role.setModel(roleModel);
+	}
 	public Component getComponent() {
 		return this;
 	}
-
-	public void activate() throws BasicException {
-
-		m_RoleModel = new ComboBoxValModel(m_sentrole.list());
-		m_jRole.setModel(m_RoleModel);
-	}
-
 	public void refresh() {
 	}
-
-	/**
-	 * This method is called from within the constructor to initialize the form.
-	 * WARNING: Do NOT modify this code. The content of this method is always
-	 * regenerated by the Form Editor.
-	 */
-	// <editor-fold defaultstate="collapsed" desc="Generated
-	// Code">//GEN-BEGIN:initComponents
-	private void initComponents() {
-
-		jButton3 = new javax.swing.JButton();
-		jLabel1 = new javax.swing.JLabel();
-		m_jName = new javax.swing.JTextField();
-		m_jVisible = new javax.swing.JCheckBox();
-		jLabel3 = new javax.swing.JLabel();
-		jLabel4 = new javax.swing.JLabel();
-		m_jImage = new com.openbravo.data.gui.JImageEditor();
-		jButton1 = new javax.swing.JButton();
-		m_jRole = new javax.swing.JComboBox();
-		jLabel2 = new javax.swing.JLabel();
-		jcard = new javax.swing.JTextField();
-		jButton2 = new javax.swing.JButton();
-		jLabel5 = new javax.swing.JLabel();
-
-		jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/fileclose.png"))); // NOI18N
-		jButton3.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton3ActionPerformed(evt);
-			}
-		});
-
-		jLabel1.setText(AppLocal.getIntString("label.peoplename")); // NOI18N
-
-		jLabel3.setText(AppLocal.getIntString("label.peoplevisible")); // NOI18N
-
-		jLabel4.setText(AppLocal.getIntString("label.peopleimage")); // NOI18N
-
-		m_jImage.setMaxDimensions(new java.awt.Dimension(32, 32));
-
-		jButton1.setText(AppLocal.getIntString("button.peoplepassword")); // NOI18N
-		jButton1.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton1ActionPerformed(evt);
-			}
-		});
-
-		jLabel2.setText(AppLocal.getIntString("label.role")); // NOI18N
-
-		jcard.setEditable(false);
-
-		jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/openbravo/images/color_line16.png"))); // NOI18N
-		jButton2.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton2ActionPerformed(evt);
-			}
-		});
-
-		jLabel5.setText(AppLocal.getIntString("label.card")); // NOI18N
-
-		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-		this.setLayout(layout);
-		layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(layout.createSequentialGroup().addContainerGap()
-						.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addGroup(layout.createSequentialGroup()
-										.addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 90,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(m_jName, javax.swing.GroupLayout.PREFERRED_SIZE, 180,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(jButton1))
-								.addGroup(layout.createSequentialGroup().addGroup(layout
-										.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-										.addGroup(layout.createSequentialGroup()
-												.addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 90,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(jcard, javax.swing.GroupLayout.PREFERRED_SIZE, 180,
-														javax.swing.GroupLayout.PREFERRED_SIZE))
-										.addGroup(layout.createSequentialGroup()
-												.addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 90,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(m_jRole, javax.swing.GroupLayout.PREFERRED_SIZE, 180,
-														javax.swing.GroupLayout.PREFERRED_SIZE)))
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(jButton2)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addComponent(jButton3))
-								.addGroup(layout.createSequentialGroup()
-										.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-												.addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 90,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 90,
-														javax.swing.GroupLayout.PREFERRED_SIZE))
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-										.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-												.addComponent(m_jImage, javax.swing.GroupLayout.PREFERRED_SIZE, 250,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addComponent(m_jVisible))))
-						.addContainerGap(129, Short.MAX_VALUE)));
-		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-				.addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-						layout.createSequentialGroup().addContainerGap().addGroup(layout
-								.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE).addComponent(jLabel1)
-								.addComponent(m_jName, javax.swing.GroupLayout.PREFERRED_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-								.addComponent(jButton1))
-								.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-								.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-										.addComponent(jButton3)
-										.addGroup(layout.createSequentialGroup()
-												.addGroup(layout
-														.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-														.addComponent(jLabel5).addComponent(
-																jcard, javax.swing.GroupLayout.PREFERRED_SIZE,
-																javax.swing.GroupLayout.DEFAULT_SIZE,
-																javax.swing.GroupLayout.PREFERRED_SIZE))
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addGroup(layout
-														.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-														.addComponent(jLabel2).addComponent(m_jRole,
-																javax.swing.GroupLayout.PREFERRED_SIZE, 20,
-																javax.swing.GroupLayout.PREFERRED_SIZE)))
-										.addComponent(jButton2))
-								.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-								.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-										.addComponent(jLabel3).addComponent(m_jVisible))
-								.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-								.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-										.addComponent(m_jImage, javax.swing.GroupLayout.PREFERRED_SIZE, 180,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
-										.addComponent(jLabel4))
-								.addGap(246, 246, 246)));
-	}// </editor-fold>//GEN-END:initComponents
-
-	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
-
-		String sNewPassword = Hashcypher.changePassword(this);
-		if (sNewPassword != null) {
-			m_sPassword = sNewPassword;
-			m_Dirty.setDirty(true);
-		}
-
-	}// GEN-LAST:event_jButton1ActionPerformed
-
-	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton2ActionPerformed
-
-		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardnew"),
-				AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
-				AppLocal.getIntString("confirm.newcard"), false) == JOptionPane.YES_OPTION) {
-			jcard.setText("c" + StringUtils.getCardNumber());
-			m_Dirty.setDirty(true);
-		}
-
-	}// GEN-LAST:event_jButton2ActionPerformed
-
-	private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton3ActionPerformed
-
-		if (JConfirmationDialog.show(this, AppLocal.getIntString("message.cardremove"),
-				AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
-				AppLocal.getIntString("confirm.remove"), true) == JOptionPane.YES_OPTION) {
-			jcard.setText(null);
-			m_Dirty.setDirty(true);
-		}
-
-	}// GEN-LAST:event_jButton3ActionPerformed
-
-	// Variables declaration - do not modify//GEN-BEGIN:variables
-	private javax.swing.JButton jButton1;
-	private javax.swing.JButton jButton2;
-	private javax.swing.JButton jButton3;
-	private javax.swing.JLabel jLabel1;
-	private javax.swing.JLabel jLabel2;
-	private javax.swing.JLabel jLabel3;
-	private javax.swing.JLabel jLabel4;
-	private javax.swing.JLabel jLabel5;
-	private javax.swing.JTextField jcard;
-	private com.openbravo.data.gui.JImageEditor m_jImage;
-	private javax.swing.JTextField m_jName;
-	private javax.swing.JComboBox m_jRole;
-	private javax.swing.JCheckBox m_jVisible;
-	// End of variables declaration//GEN-END:variables
-
 }

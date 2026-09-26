@@ -67,6 +67,16 @@ public class JImageEditor extends javax.swing.JPanel {
 		return m_maxsize;
 	}
 
+	/**
+	 * Optional visible captions for contexts where icon-only actions are ambiguous.
+	 */
+	public void setActionLabels(String open, String remove, String zoomIn, String zoomOut) {
+		m_jbtnopen.setText(open);
+		m_jbtnclose.setText(remove);
+		m_jbtnzoomin.setText(zoomIn);
+		m_jbtnzoomout.setText(zoomOut);
+	}
+
 	public void setEnabled(boolean value) {
 
 		privateSetEnabled(value);

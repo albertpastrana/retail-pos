@@ -31,6 +31,14 @@ import com.openbravo.data.user.EditorRecord;
 import com.openbravo.data.user.SaveProvider;
 import com.openbravo.data.user.ListProvider;
 import com.openbravo.data.user.ListProviderCreator;
+import com.openbravo.data.user.BrowsableEditableData;
+import com.openbravo.data.gui.MessageInf;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 /**
  *
@@ -40,15 +48,17 @@ public class PeoplePanel extends JPanelTable {
 
 	private TableDefinition tpeople;
 	private PeopleView jeditor;
+	private DataLogicAdmin admin;
+	private final Map<String, String> roleNames = new HashMap<>();
 
 	/** Creates a new instance of JPanelPeople */
 	public PeoplePanel() {
 	}
 
 	protected void init() {
-		DataLogicAdmin dlAdmin = app.getBean(DataLogicAdmin.class);
-		tpeople = dlAdmin.getTablePeople();
-		jeditor = new PeopleView(dlAdmin, dirty);
+		admin = app.getBean(DataLogicAdmin.class);
+		tpeople = admin.getTablePeople();
+		jeditor = new PeopleView(admin, dirty);
 	}
 
 	public ListProvider getListProvider() {
@@ -78,7 +88,58 @@ public class PeoplePanel extends JPanelTable {
 	public void activate() throws BasicException {
 
 		jeditor.activate(); // primero el editor
+		roleNames.clear();
+		for (Object value : admin.getAllRolesList().list()) {
+			RoleInfo role = (RoleInfo) value;
+			roleNames.put(role.getID(), role.getName());
+		}
 		super.activate(); // y luego cargamos los datos
+		jeditor.setBrowsableData(bd);
+	}
+
+	@Override
+	protected boolean showToolbar() {
+		return false;
+	}
+	@Override
+	protected double getSplitDividerLocation() {
+		return 0.33;
+	}
+	@Override
+	protected double getSplitResizeWeight(boolean keepsSize) {
+		return 0.33;
+	}
+
+	@Override
+	public Component getFilter() {
+		JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JButton add = new JButton(AppLocal.getIntString("Admin.NewUser"));
+		add.addActionListener(e -> {
+			try {
+				bd.actionInsert();
+			} catch (BasicException ex) {
+				new MessageInf(ex).show(this);
+			}
+		});
+		bar.add(add);
+		return bar;
+	}
+
+	@Override
+	protected Component getListComponent(BrowsableEditableData data) {
+		return new AdminListNavigator(data, AppLocal.getIntString("Admin.SearchUsers"), row -> {
+			Object[] person = (Object[]) row;
+			return person[1] + " " + person[5];
+		}, new AdminRowRenderer(row -> {
+			Object[] person = (Object[]) row;
+			return roleNames.getOrDefault(String.valueOf(person[3]), "") + " · "
+					+ AppLocal.getIntString(Boolean.TRUE.equals(person[4]) ? "Admin.Visible" : "Admin.Hidden");
+		}, row -> {
+			java.awt.image.BufferedImage photo = (java.awt.image.BufferedImage) ((Object[]) row)[6];
+			return photo == null
+					? null
+					: new javax.swing.ImageIcon(photo.getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH));
+		}));
 	}
 	public String getTitle() {
 		return AppLocal.getIntString("Menu.Users");
