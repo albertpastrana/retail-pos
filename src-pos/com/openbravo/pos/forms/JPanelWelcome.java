@@ -359,7 +359,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		String[] commonTasks = {"com.openbravo.pos.sales.JPanelTicketSales",
 				"com.openbravo.pos.inventory.ReplenishmentPanel", "com.openbravo.pos.inventory.ProductsPanel",
 				"com.openbravo.pos.reports.JPanelCashClosing", "com.openbravo.pos.customers.CustomersPanel",
-				"com.openbravo.pos.reports.JPanelSalesSummary"};
+				"com.openbravo.pos.forms.MenuSalesManagement"};
 		for (String task : commonTasks) {
 			for (WorkflowCategory category : catalogue()) {
 				for (WorkflowEntry entry : category.entries) {
@@ -412,8 +412,10 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 						"/com/openbravo/images/menu-customers-report.png", false, "customer", "debt", "clients",
 						"deute")));
 		result.add(category("Workflow.Category.Reports",
+				entry("Workflow.ReportsWelcome", "com.openbravo.pos.forms.MenuSalesManagement",
+						"/com/openbravo/images/menu-sales-reports.png", true, "reports", "sales", "informes", "vendes"),
 				entry("Workflow.SalesSummary", "com.openbravo.pos.reports.JPanelSalesSummary",
-						"/com/openbravo/images/menu-sales-reports.png", true, "sales", "summary", "vendes"),
+						"/com/openbravo/images/menu-sales-reports.png", false, "sales", "summary", "vendes"),
 				entry("Workflow.ProductSales", "com.openbravo.pos.reports.JPanelProductSales",
 						"/com/openbravo/images/menu-product-sales.png", false, "sales", "product"),
 				entry("Workflow.PaymentSales", "com.openbravo.pos.reports.JPanelPaymentSales",

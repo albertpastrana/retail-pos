@@ -4,7 +4,8 @@ Captured: 2026-09-24
 
 Related: `tickets/in-progress/rebuild-management-reports.md`,
 `tickets/todo/batch-stock-receiving.md`,
-`tickets/todo/audit-unused-code-and-dependencies.md`
+`tickets/todo/audit-unused-code-and-dependencies.md`,
+`tickets/todo/reports-welcome-screen.md`
 
 Design reference (wireframes, not binding on implementation details):
 `tickets/todo/administration-welcome-screen/` — each wireframe is there both as
@@ -79,7 +80,7 @@ Two further inconsistencies, both out of scope here:
 - `TaxCustCategoriesPanel` and `TaxCategoriesPanel` are granted by the
   Administrator and Manager roles but have no menu entry.
 
-### Live destinations (Administrator: 27)
+### Live destinations (Administrator: 28)
 
 | Destination | Current label | Category |
 | --- | --- | --- |
@@ -98,6 +99,7 @@ Two further inconsistencies, both out of scope here:
 | `inventory.StockDiaryPanel` | Stock diary | Stock |
 | `customers.CustomersPanel` | Customers | Customers |
 | `reports.JPanelCustomerDebt` | Customer debt | Customers *and* Reports |
+| `forms.MenuSalesManagement` | How the business is doing | Reports |
 | `reports.JPanelSalesSummary` | Sales summary | Reports |
 | `reports.JPanelProductSales` | Sales by product | Reports |
 | `reports.JPanelPaymentSales` | Sales by payment method | Reports |
@@ -111,7 +113,7 @@ Two further inconsistencies, both out of scope here:
 | `panels.JPanelPrinter` | Printer | System |
 | `admin.BackupDatabaseAction` | Database backup | System |
 
-Manager has the same set minus the four System entries (25). A catalogue entry
+Manager has the same set minus the four System entries (26). A catalogue entry
 may appear in more than one category; the catalogue is many-to-one onto
 destinations. `Menu.Exit` stays out of the catalogue — a large "Exit" tile in a
 grid is a misclick hazard. It remains in the side menu.
@@ -127,7 +129,11 @@ grid is a misclick hazard. It remains in the side menu.
 3. **Add or change a product** → `ProductsPanel`.
 4. **Latest cash closings** → `JPanelCashClosing`.
 5. **Customers and debts** → `CustomersPanel`.
-6. **How sales are going** → `JPanelSalesSummary`.
+6. **How the business is doing** → `MenuSalesManagement`, the reports welcome
+   view. The existing `JPanelSalesSummary` remains in the Reports catalogue for
+   direct access to the detailed sales summary.
+   The navigation item uses a theme-aware 24px house icon rather than the
+   catalogue icon or the legacy `gohome.png` exit arrow.
 
 Low stock is deliberately *not* prominent: proper stock handling does not exist
 yet, and replenishment is what people actually use. It stays in the catalogue.
@@ -269,6 +275,9 @@ at 1024×768 before closing the ticket.
 - 2026-09-24: The welcome screen scroll bar now belongs to the full page,
   including the header, and is positioned at the outer panel edge instead of
   beside the inner content area.
+- The Home navigation item uses a 24px house icon. The sixth
+  common workflow and its Reports catalogue link open the reports landing
+  view; the detailed sales summary remains a separate catalogue destination.
 
 ## Slices
 
