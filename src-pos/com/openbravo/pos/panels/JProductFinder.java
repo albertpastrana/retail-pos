@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.JDialog;
@@ -20,14 +21,21 @@ import com.openbravo.data.user.ListProviderCreator;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.sales.TaxesLogic;
+import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.ticket.ProductFilterSales;
 import com.openbravo.pos.ticket.ProductInfoExt;
+import com.openbravo.pos.ticket.TaxInfo;
 
 public class JProductFinder extends JDialog {
 	private static final java.util.logging.Logger LOGGER = java.util.logging.Logger
 			.getLogger(JProductFinder.class.getName());
 	private ProductInfoExt m_ReturnProduct;
 	private ListProvider lpr;
+	private TaxesLogic taxesLogic;
+	private Date ticketDate;
+	private CustomerInfoExt customer;
+	private boolean showTaxInclusivePrice;
 
 	public static final int PRODUCT_ALL = 0;
 	public static final int PRODUCT_NORMAL = 1;
@@ -41,6 +49,15 @@ public class JProductFinder extends JDialog {
 	}
 
 	private ProductInfoExt init(DataLogicSales dlSales, int productsType, String actionKey) {
+		return init(dlSales, productsType, actionKey, null, null, null);
+	}
+
+	private ProductInfoExt init(DataLogicSales dlSales, int productsType, String actionKey, TaxesLogic taxesLogic,
+			Date ticketDate, CustomerInfoExt customer) {
+		this.taxesLogic = taxesLogic;
+		this.ticketDate = ticketDate;
+		this.customer = customer;
+		this.showTaxInclusivePrice = taxesLogic != null;
 		initComponents();
 		jcmdOK.setText(AppLocal.getIntString(actionKey));
 		ProductFilterSales filter = new ProductFilterSales();
@@ -83,6 +100,15 @@ public class JProductFinder extends JDialog {
 		return showMessage(parent, dlSales, PRODUCT_ALL, actionKey);
 	}
 
+	public static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, String actionKey,
+			TaxesLogic taxesLogic, Date ticketDate, CustomerInfoExt customer) {
+		Window window = getWindow(parent);
+		JProductFinder finder = window instanceof Frame
+				? new JProductFinder((Frame) window, true)
+				: new JProductFinder((Dialog) window, true);
+		return finder.init(dlSales, PRODUCT_ALL, actionKey, taxesLogic, ticketDate, customer);
+	}
+
 	public static ProductInfoExt showMessage(Component parent, DataLogicSales dlSales, int productsType) {
 		return showMessage(parent, dlSales, productsType, "button.selectproduct");
 	}
@@ -98,11 +124,21 @@ public class JProductFinder extends JDialog {
 
 	private static class ProductTableModel extends AbstractTableModel {
 		private final List<ProductInfoExt> products;
-		private final String[] columns = {AppLocal.getIntString("label.prodref"),
-				AppLocal.getIntString("label.prodname"), AppLocal.getIntString("label.price")};
+		private final TaxesLogic taxesLogic;
+		private final Date ticketDate;
+		private final CustomerInfoExt customer;
+		private final boolean showTaxInclusivePrice;
+		private final String[] columns;
 
-		ProductTableModel(List<ProductInfoExt> products) {
+		ProductTableModel(List<ProductInfoExt> products, TaxesLogic taxesLogic, Date ticketDate,
+				CustomerInfoExt customer, boolean showTaxInclusivePrice) {
 			this.products = products;
+			this.taxesLogic = taxesLogic;
+			this.ticketDate = ticketDate;
+			this.customer = customer;
+			this.showTaxInclusivePrice = showTaxInclusivePrice;
+			columns = new String[]{AppLocal.getIntString("label.prodref"), AppLocal.getIntString("label.prodname"),
+					AppLocal.getIntString(showTaxInclusivePrice ? "label.pricetax" : "label.price")};
 		}
 
 		@Override
@@ -126,11 +162,20 @@ public class JProductFinder extends JDialog {
 				case 1 :
 					return product.getName();
 				case 2 :
-					return Formats.CURRENCY.formatValue(new Double(product.getPriceSell()));
+					return formatPrice(product, showTaxInclusivePrice ? taxesLogic : null, ticketDate, customer);
 				default :
 					return "";
 			}
 		}
+	}
+
+	static String formatPrice(ProductInfoExt product, TaxesLogic taxesLogic, Date ticketDate,
+			CustomerInfoExt customer) {
+		if (taxesLogic == null) {
+			return Formats.CURRENCY.formatValue(Double.valueOf(product.getPriceSell()));
+		}
+		TaxInfo tax = taxesLogic.getTaxInfo(product.getTaxCategoryID(), ticketDate, customer);
+		return tax == null ? product.printPriceSell() : product.printPriceSellTax(tax);
 	}
 
 	private void initComponents() {
@@ -150,7 +195,8 @@ public class JProductFinder extends JDialog {
 		jTableProducts.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		jTableProducts.setFillsViewportHeight(true);
 		jTableProducts.setRowHeight(32);
-		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList()));
+		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList(), taxesLogic, ticketDate,
+				customer, showTaxInclusivePrice));
 		jTableProducts
 				.setPreferredScrollableViewportSize(new java.awt.Dimension(800, jTableProducts.getRowHeight() * 8));
 		jTableProducts.getSelectionModel().addListSelectionListener(event -> jcmdOK.setEnabled(hasSelectableProduct()));
@@ -204,7 +250,8 @@ public class JProductFinder extends JDialog {
 	private void executeSearch() {
 		try {
 			List<ProductInfoExt> products = lpr.loadData();
-			jTableProducts.setModel(new ProductTableModel(products));
+			jTableProducts
+					.setModel(new ProductTableModel(products, taxesLogic, ticketDate, customer, showTaxInclusivePrice));
 			if (products.isEmpty()) {
 				showProductMessage("message.productfilter.empty");
 				jcmdOK.setEnabled(false);
@@ -226,9 +273,12 @@ public class JProductFinder extends JDialog {
 
 	private void setColumnWidths() {
 		int width = jTableProducts.getPreferredScrollableViewportSize().width;
-		jTableProducts.getColumnModel().getColumn(0).setPreferredWidth(width / 5);
-		jTableProducts.getColumnModel().getColumn(1).setPreferredWidth(width * 7 / 10);
-		jTableProducts.getColumnModel().getColumn(2).setPreferredWidth(width / 10);
+		int referenceWidth = width / 5;
+		int priceWidth = Math.max(150, width / 5);
+		jTableProducts.getColumnModel().getColumn(0).setPreferredWidth(referenceWidth);
+		jTableProducts.getColumnModel().getColumn(1)
+				.setPreferredWidth(Math.max(100, width - referenceWidth - priceWidth));
+		jTableProducts.getColumnModel().getColumn(2).setPreferredWidth(priceWidth);
 	}
 
 	private javax.swing.JTable jTableProducts;
