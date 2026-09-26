@@ -21,10 +21,16 @@ El preu manual està disponible quan ja hi ha una línia de producte que es pot 
 5. Prem **Desa els canvis**.
 6. Si la venedora està en una sessió de venedora, una supervisora pot haver d'autoritzar el canvi de preu manual.
 
-## 3. Gestionar un codi de barres realment desconegut
+## 3. Crear un producte des del catàleg de fallback
 
-Si el codi no és al catàleg i tampoc no està disponible pel circuit d'importació, el caixer fa un avís acústic i mostra un missatge sota el teclat. Registra l'escaneig localment, però no obre cap diàleg de creació de producte ni crea encara una entrada compartida de codis pendents.
+Si l'EAN no és a **Productes** però sí al catàleg compartit, s'obre el diàleg d'importació amb les dades disponibles. Revisa i completa el nom, la referència, la categoria, el preu de compra, el preu de venda, l'impost i, si cal, l'estoc inicial. Prem **Afegeix al rebut** per crear el producte i afegir-lo al tiquet.
+
+Si l'EAN forma part d'una família, el diàleg mostra les variants. La variant escanejada és la que s'afegeix al rebut; pots marcar altres variants perquè també es creïn per a properes vendes.
+
+## 4. Gestionar un codi de barres realment desconegut
+
+Si el codi no és al catàleg compartit ni a **Productes**, el caixer fa un avís acústic i mostra un missatge sota el teclat. Registra l'escaneig localment, però no obre cap diàleg de creació de producte.
 
 Conserva el producte i el codi per a la persona d'estoc. No inventis un producte ni un preu a partir de l'avís d'EAN desconegut, i no assumeixis que un altre caixer pugui veure aquest escaneig.
 
-**Recorda:** Cerca primer. Utilitza el preu manual només en una línia de producte existent i quan estigui autoritzat. Un EAN desconegut ha de seguir el circuit d'estoc.
+**Recorda:** Cerca primer. Utilitza el preu manual només en una línia de producte existent i quan estigui autoritzat. Un EAN desconegut ha de seguir el circuit de reposició o d'estoc.

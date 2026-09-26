@@ -21,10 +21,16 @@ Manual price is available when there is already a product line to edit. It is no
 5. Press **Save changes**.
 6. If the saleswoman is in a seller session, a supervisor may need to authorise the manual price change.
 
-## 3. Handle a genuinely unknown barcode
+## 3. Create a product from the fallback catalogue
 
-If the code is not in the catalogue and is not available through the import path, the till beeps and shows a notice under the keypad. It records the scan locally, but it does not open a product-creation dialog and it does not create a shared pending-barcode entry yet.
+If the EAN is not in **Products** but is in the shared catalogue, the import dialog opens with the available data. Review and complete the name, reference, category, purchase price, sale price, tax, and, if needed, opening stock. Press **Add to receipt** to create the product and add it to the receipt.
+
+If the EAN belongs to a family, the dialog shows its variants. The scanned variant is the one added to the receipt; you can select other variants so they are also created for future sales.
+
+## 4. Handle a genuinely unknown barcode
+
+If the code is not in the shared catalogue or **Products**, the till beeps and shows a notice under the keypad. It records the scan locally, but it does not open a product-creation dialog.
 
 Keep the product and barcode for the stock person. Do not invent a product or price from the unknown-barcode notice, and do not assume that another till can see this scan.
 
-**Remember:** Search first. Use manual price only on an existing product line and only when authorised. An unknown EAN must follow the stock procedure.
+**Remember:** Search first. Use manual price only on an existing product line and only when authorised. An unknown EAN must follow the replenishment or stock procedure.
