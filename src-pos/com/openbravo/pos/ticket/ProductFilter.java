@@ -172,6 +172,13 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		return barcode == null ? "" : barcode.trim();
 	}
 
+	/** Carry a scan into the product editor's existing barcode filter. */
+	public void searchBarcode(String barcode) {
+		m_jBarcode.setText(barcode);
+		filterTimer.stop();
+		fireFilterApplied();
+	}
+
 	public Object createValue() throws BasicException {
 
 		if (getBarcode().equals("")) {
