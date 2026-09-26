@@ -357,7 +357,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 	private List<WorkflowEntry> commonEntries() {
 		List<WorkflowEntry> result = new ArrayList<WorkflowEntry>();
 		String[] commonTasks = {"com.openbravo.pos.sales.JPanelTicketSales",
-				"com.openbravo.pos.inventory.ReplenishmentPanel", "com.openbravo.pos.inventory.ProductsPanel",
+				"com.openbravo.pos.inventory.ReplenishmentPanel", "com.openbravo.pos.forms.MenuStockManagement",
 				"com.openbravo.pos.reports.JPanelCashClosing", "com.openbravo.pos.customers.CustomersPanel",
 				"com.openbravo.pos.forms.MenuSalesManagement"};
 		for (String task : commonTasks) {
@@ -386,8 +386,11 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 				entry("Workflow.ClosedCash", "com.openbravo.pos.panels.JPanelClosedCash",
 						"/com/openbravo/images/menu-cash-closed.png", false, "closed", "cash", "caixa")));
 		result.add(category("Workflow.Category.Catalogue",
+				entry("Workflow.CataloguePrices", "com.openbravo.pos.forms.MenuStockManagement",
+						"/com/openbravo/images/menu-stock.png", true, "catalogue", "catalog", "stock", "inventory",
+						"cataleg", "preus", "prices", "productes"),
 				entry("Workflow.Products", "com.openbravo.pos.inventory.ProductsPanel",
-						"/com/openbravo/images/menu-products.png", true, "product", "products", "article", "producte"),
+						"/com/openbravo/images/menu-products.png", false, "product", "products", "article", "producte"),
 				entry("Workflow.Categories", "com.openbravo.pos.inventory.CategoriesPanel",
 						"/com/openbravo/images/menu-categories.png", false, "category", "categories"),
 				entry("Workflow.PriceRules", "com.openbravo.pos.inventory.PriceRulesPanel",

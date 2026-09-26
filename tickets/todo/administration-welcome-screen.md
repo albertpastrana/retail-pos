@@ -5,7 +5,8 @@ Captured: 2026-09-24
 Related: `tickets/in-progress/rebuild-management-reports.md`,
 `tickets/todo/batch-stock-receiving.md`,
 `tickets/todo/audit-unused-code-and-dependencies.md`,
-`tickets/todo/reports-welcome-screen.md`
+`tickets/todo/reports-welcome-screen.md`,
+`tickets/todo/stock-welcome-screen.md`
 
 Design reference (wireframes, not binding on implementation details):
 `tickets/todo/administration-welcome-screen/` — each wireframe is there both as
@@ -126,7 +127,9 @@ grid is a misclick hazard. It remains in the side menu.
 2. **Replenishment and customer orders** → `ReplenishmentPanel`. The most
    important administration job the product has today: the panel already holds
    both restock requests and customer orders, with Ordered → Received states.
-3. **Add or change a product** → `ProductsPanel`.
+3. **Catalogue and prices** → `MenuStockManagement`, the product-first
+   catalogue welcome screen. It covers product lookup and the common catalogue
+   jobs; direct `ProductsPanel` access remains in the Catalogue category.
 4. **Latest cash closings** → `JPanelCashClosing`.
 5. **Customers and debts** → `CustomersPanel`.
 6. **How the business is doing** → `MenuSalesManagement`, the reports welcome
@@ -139,8 +142,19 @@ Low stock is deliberately *not* prominent: proper stock handling does not exist
 yet, and replenishment is what people actually use. It stays in the catalogue.
 
 When `tickets/todo/batch-stock-receiving.md` lands, "I received a delivery"
-becomes a new workflow entry and most likely takes slot 3, pushing products
-down. Adding it must be one line in the catalogue plus its translation keys.
+is also reachable from the product-first catalogue screen and may be added as a
+separate workflow if usage warrants it.
+
+Decision (2026-09-27): the common "Add or change a product" card is replaced by
+"Catalogue and prices" and opens `MenuStockManagement`. Keep `ProductsPanel` as
+a direct catalogue entry. `JPanelWelcome` resolves the new destination through
+the existing task-action registry, so the card is omitted when the user lacks
+permission for `MenuStockManagement`.
+
+Verification (2026-09-27): `AdministrationWelcomeCatalogueEntryTest` confirms
+the common card opens the registered `MenuStockManagement` action, the direct
+Products entry remains available, and the common card is omitted without the
+submenu permission. Labels/routes are checked in English, Spanish and Catalan.
 
 ## Design
 
