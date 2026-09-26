@@ -191,6 +191,22 @@ Follows `design-system/README.md`; every value is a token, nothing screen-local.
 
 ## Implementation status
 
+### Follow-up UI decisions
+
+- Show the loyalty discount alongside the redeemed-stamp count, with last year's
+  count below; use concise wording that fits at the smallest supported width.
+- The detailed-report buttons need real left padding inside their rounded border
+  so icons and text do not touch the outline. Raise small supporting text only
+  where labels still fit in English, Spanish, and Catalan.
+- Administration's common reports shortcut opens the reports welcome screen;
+  its existing sales-summary report remains available in the catalogue. Use a
+  full-sized house icon on the administration welcome navigation item;
+  `gohome.png` is a small legacy exit arrow, not a home icon.
+- The inline loyalty count/discount and report-button inset pass the layout
+  checks at 1000 px in English, Spanish, and Catalan. `WorkflowCatalogueTest`
+  confirms that the reports landing view and detailed sales summary are both
+  reachable. Manual visual verification in both themes remains open.
+
 The landing view is being implemented on the task branch:
 
 - `Menu.SalesManagement` opens a non-blocking welcome view with week, month,

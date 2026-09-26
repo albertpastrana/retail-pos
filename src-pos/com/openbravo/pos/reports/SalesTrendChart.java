@@ -40,7 +40,7 @@ final class SalesTrendChart extends JComponent {
 		for (int i = 0; i < trend.labels.length; i++) {
 			maximum = Math.max(maximum, Math.max(trend.current[i], trend.previous[i]));
 		}
-		g.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(10f));
+		g.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(11f));
 		g.setColor(RetailPOSColors.inkMuted());
 		for (int line = 0; line <= 3; line++) {
 			int y = bottom - line * height / 3;
@@ -52,7 +52,7 @@ final class SalesTrendChart extends JComponent {
 		int cell = Math.max(1, (right - left) / trend.labels.length);
 		int bar = Math.max(2, Math.min(18, cell / 3));
 		int labelEvery = trend.labels.length > 16 ? 5 : 1;
-		g.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(11f));
+		g.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 		for (int i = 0; i < trend.labels.length; i++) {
 			int x = left + cell * i + cell / 2;
 			int previousHeight = (int) Math.round(height * Math.max(0, trend.previous[i]) / maximum);

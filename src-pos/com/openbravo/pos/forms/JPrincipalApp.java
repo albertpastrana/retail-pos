@@ -112,8 +112,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		ScriptMenu menu = new ScriptMenu();
 		m_scriptMenu = menu;
 		ScriptGroup group = menu.addGroup("Menu.Home");
-		group.addPanel("/com/openbravo/images/menu-catalog.png", "Menu.Home", "com.openbravo.pos.forms.JPanelWelcome",
-				JPanelWelcome.class);
+		group.addPanel(new HomeMenuIcon(), "Menu.Home", "com.openbravo.pos.forms.JPanelWelcome", JPanelWelcome.class);
 
 		group = menu.addGroup("Menu.Main");
 		group.addPanel("/com/openbravo/images/menu-sales.png", "Menu.Ticket",
@@ -349,6 +348,10 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		}
 
 		public void addPanel(String icon, String key, String classname, Class<? extends JPanelView> viewClass) {
+			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
+		}
+
+		public void addPanel(Icon icon, String key, String classname, Class<? extends JPanelView> viewClass) {
 			addAction(new MenuPanelAction(m_appview, icon, key, classname, viewClass));
 		}
 

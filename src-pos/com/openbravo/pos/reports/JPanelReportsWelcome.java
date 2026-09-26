@@ -264,8 +264,19 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		averageDelta = detailHint(averageCell);
 		panel.add(averageCell);
 		JPanel loyaltyCell = detailCell("reports.welcome.loyalty", true);
-		loyaltyCount = detailNumber(loyaltyCell);
-		loyaltyValue = detailHint(loyaltyCell);
+		JPanel loyaltyAmount = new JPanel();
+		loyaltyAmount.setOpaque(false);
+		loyaltyAmount.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 12, 0));
+		loyaltyCount = new JLabel("-");
+		loyaltyCount.setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD.deriveFont(20f));
+		loyaltyValue = new JLabel(" ");
+		loyaltyValue.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
+		loyaltyValue.setForeground(RetailPOSColors.inkMuted());
+		loyaltyAmount.add(loyaltyCount);
+		loyaltyAmount.add(loyaltyValue);
+		loyaltyAmount.setAlignmentX(LEFT_ALIGNMENT);
+		loyaltyAmount.setMaximumSize(new Dimension(Integer.MAX_VALUE, loyaltyAmount.getPreferredSize().height));
+		loyaltyCell.add(loyaltyAmount);
 		loyaltyDelta = detailHint(loyaltyCell);
 		panel.add(loyaltyCell);
 		JPanel refundsCell = detailCell("label.reportrefunds", true);
@@ -299,7 +310,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 
 	private JLabel detailHint(JPanel cell) {
 		JLabel hint = new JLabel(" ");
-		hint.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+		hint.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		hint.setForeground(RetailPOSColors.inkMuted());
 		cell.add(hint);
 		return hint;
@@ -321,8 +332,11 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 				button.setPreferredSize(new Dimension(260, 64));
 				button.setMinimumSize(new Dimension(220, 64));
 				button.setHorizontalAlignment(SwingConstants.LEADING);
-				button.setMargin(new Insets(20, 24, 20, 24));
 				styleButton(button, 12);
+				button.setBorder(BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.border(), 12),
+						BorderFactory.createEmptyBorder(8, 16, 8, 16)));
+				button.setIconTextGap(10);
+				button.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(16f));
 				entries.add(button);
 			}
 		}
@@ -346,13 +360,13 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		chartTitle.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(16f));
 		chart = new SalesTrendChart();
 		JLabel legend = new JLabel(AppLocal.getIntString("reports.welcome.chartLegend"));
-		legend.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+		legend.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		legend.setForeground(RetailPOSColors.inkMuted());
 		chartComparisonNote = new JLabel(AppLocal.getIntString("reports.welcome.elapsedNote"));
-		chartComparisonNote.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+		chartComparisonNote.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		chartComparisonNote.setForeground(RetailPOSColors.inkMuted());
 		chartTargetNote = new JLabel(AppLocal.getIntString("reports.welcome.futureNote"));
-		chartTargetNote.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+		chartTargetNote.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		chartTargetNote.setForeground(RetailPOSColors.inkMuted());
 		JPanel caption = new JPanel();
 		caption.setOpaque(false);
@@ -472,8 +486,8 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		refunds.setText(Formats.CURRENCY.formatValue(Math.abs(current.getRefunds())));
 		refundCount.setText(AppLocal.getIntString("reports.welcome.refundCount", current.getRefundCount()));
 		loyaltyCount.setText(Integer.toString(value.getLoyaltyCurrent().getCount()));
-		loyaltyValue.setText(AppLocal.getIntString("reports.welcome.loyaltyValue") + ": "
-				+ Formats.CURRENCY.formatValue(value.getLoyaltyCurrent().getValue()));
+		loyaltyValue.setText(Formats.CURRENCY.formatValue(value.getLoyaltyCurrent().getValue()) + " "
+				+ AppLocal.getIntString("reports.welcome.loyaltyValue"));
 		loyaltyDelta.setText(AppLocal.getIntString("reports.welcome.loyaltyLastYear") + ": "
 				+ value.getLoyaltyPrevious().getCount());
 	}

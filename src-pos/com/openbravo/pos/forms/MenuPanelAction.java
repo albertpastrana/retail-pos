@@ -23,6 +23,7 @@ import com.openbravo.pos.util.HiDpiIcon;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Icon;
 
 /**
  *
@@ -37,7 +38,12 @@ public class MenuPanelAction extends AbstractAction {
 	/** Creates a new instance of MenuPanelAction */
 	public MenuPanelAction(AppView app, String icon, String keytext, String sMyView,
 			Class<? extends JPanelView> viewClass) {
-		putValue(Action.SMALL_ICON, new HiDpiIcon(JPrincipalApp.class.getResource(icon)));
+		this(app, new HiDpiIcon(JPrincipalApp.class.getResource(icon)), keytext, sMyView, viewClass);
+	}
+
+	public MenuPanelAction(AppView app, Icon icon, String keytext, String sMyView,
+			Class<? extends JPanelView> viewClass) {
+		putValue(Action.SMALL_ICON, icon);
 		putValue(Action.NAME, AppLocal.getIntString(keytext));
 		putValue(AppUserView.ACTION_TASKNAME, sMyView);
 		m_App = app;

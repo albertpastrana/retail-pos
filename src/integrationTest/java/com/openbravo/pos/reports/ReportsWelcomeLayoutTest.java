@@ -2,16 +2,21 @@ package com.openbravo.pos.reports;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.openbravo.pos.forms.MenuDefinition;
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.format.Formats;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.Locale;
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -123,6 +128,55 @@ public class ReportsWelcomeLayoutTest {
 			for (Component child : ((Container) component).getComponents()) {
 				layoutTree(child);
 			}
+		}
+	}
+
+	@Test
+	public void loyaltyDiscountStaysBesideCountAndReportIconsHaveRealPadding() throws Exception {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es", "ES"), new Locale("ca", "ES")}) {
+				AppLocal.setLocale(locale);
+				SwingUtilities.invokeAndWait(() -> {
+					MenuDefinition menu = new MenuDefinition("Menu.SalesManagement");
+					menu.addMenuItem(new AbstractAction("Report") {
+						{
+							putValue(Action.SMALL_ICON, new ImageIcon(JPanelReportsWelcome.class
+									.getResource("/com/openbravo/images/menu-sales-reports.png")));
+						}
+
+						@Override
+						public void actionPerformed(ActionEvent event) {
+						}
+					});
+					JPanelReportsWelcome view = new JPanelReportsWelcome(null, menu);
+					view.setSize(1000, 700);
+					layoutTree(view);
+					JPanel body = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
+					JPanel detail = (JPanel) body.getComponent(1);
+					JPanel loyalty = (JPanel) detail.getComponent(2);
+					JPanel amount = (JPanel) loyalty.getComponent(2);
+					JLabel count = (JLabel) amount.getComponent(0);
+					JLabel description = (JLabel) amount.getComponent(1);
+					count.setText("9");
+					description.setText(Formats.CURRENCY.formatValue(37.19) + " "
+							+ AppLocal.getIntString("reports.welcome.loyaltyValue"));
+					layoutTree(detail);
+					assertTrue(count.getX() + count.getWidth() <= description.getX(), locale.toString());
+					assertTrue(description.getPreferredSize().width <= description.getWidth(),
+							() -> locale + ": " + description.getText() + " preferred="
+									+ description.getPreferredSize().width + " actual=" + description.getWidth()
+									+ " row=" + amount.getWidth());
+					JPanel reports = (JPanel) body.getComponent(3);
+					JPanel entries = (JPanel) reports.getComponent(1);
+					JButton button = (JButton) entries.getComponent(0);
+					assertNotNull(button.getIcon());
+					assertTrue(button.getInsets().left >= 16);
+					assertTrue(button.getIconTextGap() >= 8);
+				});
+			}
+		} finally {
+			AppLocal.setLocale(original);
 		}
 	}
 }
