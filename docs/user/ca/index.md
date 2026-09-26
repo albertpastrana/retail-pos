@@ -17,9 +17,10 @@ Aquesta guia està organitzada per situacions habituals al taulell. Obre el cas 
 11. [Cal continuar una venda més tard](use-cases/aparcar-tiquet.md)
 12. [Cal corregir o retornar una venda acabada](use-cases/devolucio-o-edicio.md)
 13. [Dos caixers i la LAN de la botiga](use-cases/dos-caixers-i-lan.md)
-14. [Estoc i catàleg](use-cases/estoc-i-cataleg.md)
-15. [Tancar i consultar la caixa](use-cases/tancament-de-caixa.md)
-16. [Informes de gestió](use-cases/informes.md)
+14. [Editar un producte](use-cases/edicio-producte.md)
+15. [Estoc, catàleg, reposició i encàrrecs](use-cases/estoc-i-cataleg.md)
+16. [Tancar i consultar la caixa](use-cases/tancament-de-caixa.md)
+17. [Informes de gestió](use-cases/informes.md)
 
 Les pàgines d'operacions descriuen el flux validat de la botiga. Les captures de pantalla s'afegiran durant una propera revisió a peu de caixa.
 
