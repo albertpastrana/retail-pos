@@ -26,8 +26,6 @@ import com.openbravo.basic.BasicException;
 
 public abstract class JEditorAbstract extends javax.swing.JPanel implements EditorComponent {
 
-	private EditorKeys editorkeys;
-
 	private boolean m_bActive;
 	private final Border m_borderactive = new javax.swing.border.CompoundBorder(
 			new javax.swing.border.LineBorder(
@@ -42,12 +40,10 @@ public abstract class JEditorAbstract extends javax.swing.JPanel implements Edit
 
 		initComponents();
 
-		editorkeys = null;
 		m_bActive = false;
 		m_jText.setBorder(m_borderinactive);
 	}
 
-	protected abstract int getMode();
 	protected abstract int getAlignment();
 	protected abstract String getEditMode();
 	protected abstract String getTextEdit();
@@ -67,9 +63,6 @@ public abstract class JEditorAbstract extends javax.swing.JPanel implements Edit
 		firePropertyChange("Edition", null, null);
 	}
 
-	public void addEditorKeys(EditorKeys ed) {
-		editorkeys = ed;
-	}
 	public void deactivate() {
 		setActive(false);
 	}
@@ -78,9 +71,6 @@ public abstract class JEditorAbstract extends javax.swing.JPanel implements Edit
 	}
 	public void activate() {
 		if (isEnabled()) {
-			if (editorkeys != null) {
-				editorkeys.setActive(this, getMode());
-			}
 			setActive(true);
 		}
 	}
@@ -112,9 +102,6 @@ public abstract class JEditorAbstract extends javax.swing.JPanel implements Edit
 
 	public void setEnabled(boolean b) {
 
-		if (editorkeys != null) {
-			editorkeys.setInactive(this);
-		}
 		panBackground.setBackground(b
 				? javax.swing.UIManager.getDefaults().getColor("TextField.background")
 				: javax.swing.UIManager.getDefaults().getColor("TextField.disabledBackground"));

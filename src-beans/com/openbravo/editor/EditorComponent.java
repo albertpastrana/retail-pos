@@ -23,7 +23,6 @@ import java.awt.Component;
 
 public interface EditorComponent {
 
-	public void addEditorKeys(EditorKeys ed);
 	public Component getComponent();
 
 	public void deactivate();
