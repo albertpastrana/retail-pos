@@ -28,6 +28,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import javax.swing.JFileChooser;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.ButtonGroup;
@@ -82,6 +84,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private ReplenishmentEntry editingEntry;
 	private String formStatus = "PENDING";
 	private String selectedStatus = "ALL";
+	private String selectedType = "ALL";
+	private final Map<String, JToggleButton> statusButtons = new HashMap<>();
+	private JLabel queueFilterLabel;
 
 	@Override
 	public void init(AppView app) throws BeanFactoryException {
@@ -95,9 +100,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		setLayout(new BorderLayout(6, 6));
 		setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		JPanel header = new JPanel(new BorderLayout(8, 4));
-		JLabel summary = new JLabel(" ");
-		summary.setForeground(java.awt.Color.GRAY);
-		header.add(summary, BorderLayout.CENTER);
+		queueFilterLabel = new JLabel(" ");
+		queueFilterLabel.setForeground(java.awt.Color.GRAY);
+		header.add(queueFilterLabel, BorderLayout.CENTER);
 		JButton newRequest = new JButton("+ " + AppLocal.getIntString("Replenishment.NewRequest"));
 		newRequest.setFont(newRequest.getFont().deriveFont(java.awt.Font.BOLD));
 		newRequest.setMargin(new Insets(6, 12, 6, 12));
@@ -114,10 +119,13 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			button.setSelected(i == 0);
 			if (i == 0)
 				allStatus = button;
+			statusButtons.put(status, button);
 			group.add(button);
 			statusToggles.add(button);
 			button.addActionListener(e -> {
 				selectedStatus = status;
+				selectedType = "ALL";
+				queueFilterLabel.setText(" ");
 				load("", false);
 			});
 		}
@@ -576,7 +584,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private void load(String search, boolean received) {
 		try {
-			entries = data.list(search, "ALL", selectedStatus);
+			entries = data.list(search, selectedType, selectedStatus);
 			model.setRowCount(0);
 			DateFormat f = new SimpleDateFormat("dd/MM/yy - HH:mm");
 			for (ReplenishmentEntry e : entries)
@@ -616,10 +624,34 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	public void activate() throws BasicException {
 		search.setText("");
 		selectedStatus = "ALL";
+		selectedType = "ALL";
+		queueFilterLabel.setText(" ");
 		allStatus.setSelected(true);
 		if (!hasDraftContent())
 			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSeller().getName());
 		load("", false);
+	}
+
+	/** Open the list for one of the landing screen's waiting-work figures. */
+	public void showQueue(String filter) {
+		selectedType = "ENCARGO".equals(filter) ? "ENCARGO" : "ALL";
+		selectedStatus = "ENCARGO".equals(filter) ? "OPEN" : filter;
+		statusButtons.get("ENCARGO".equals(filter) ? "ALL" : filter).setSelected(true);
+		queueFilterLabel.setText("ENCARGO".equals(filter) ? AppLocal.getIntString("stock.welcome.customers") : " ");
+		load("", false);
+	}
+
+	/** Start a manual request from a code with no matching product. */
+	public void startManualEntry(String code) {
+		clearForm();
+		formCode.setText(code);
+		formDescription.requestFocusInWindow();
+	}
+
+	/** Locate an already-open replenishment entry without adding a duplicate. */
+	public void showProductOnList(String code) {
+		search.setText(code);
+		load(code, false);
 	}
 	private boolean hasDraftContent() {
 		return formProduct != null || !formCode.getText().trim().isEmpty()

@@ -147,6 +147,16 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 		jeditor.setBrowsableData(bd);
 	}
 
+	/** Open the existing product editor on a fresh record after navigating here. */
+	public void createNewProduct() throws BasicException {
+		bd.actionInsert();
+	}
+
+	/** Reuse the same filter and list reload as a barcode typed in this screen. */
+	public void showProduct(String barcode) {
+		jproductfilter.searchBarcode(barcode);
+	}
+
 	public void updateValue(Object value) {
 	}
 

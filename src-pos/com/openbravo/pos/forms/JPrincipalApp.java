@@ -146,6 +146,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 				com.openbravo.pos.inventory.TaxPanel.class);
 		submenu.addPanel("/com/openbravo/images/menu-stock-diary.png", "Menu.StockDiary",
 				"com.openbravo.pos.inventory.StockDiaryPanel", com.openbravo.pos.inventory.StockDiaryPanel.class);
+		m_aPreparedViews.put("com.openbravo.pos.forms.MenuStockManagement",
+				new com.openbravo.pos.inventory.JPanelStockWelcome(m_appview, submenu.getMenuDefinition()));
 
 		submenu = group.addSubmenu("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesManagement",
 				"com.openbravo.pos.forms.MenuSalesManagement");
