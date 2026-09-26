@@ -14,7 +14,7 @@ class StockWelcomeRepositoryTest {
 	void scanCombinesCatalogueTaxStockAndOpenOrderWithoutDuplicatingAProduct() throws Exception {
 		try (Connection connection = DriverManager.getConnection("jdbc:derby:memory:stockWelcomeIT;create=true");
 				Statement sql = connection.createStatement()) {
-			sql.executeUpdate("CREATE TABLE CATEGORIES (ID VARCHAR(40), NAME VARCHAR(80))");
+			sql.executeUpdate("CREATE TABLE CATEGORIES (ID VARCHAR(40), NAME VARCHAR(80), PARENTID VARCHAR(40))");
 			sql.executeUpdate("CREATE TABLE TAXCATEGORIES (ID VARCHAR(40), NAME VARCHAR(80))");
 			sql.executeUpdate(
 					"CREATE TABLE TAXES (CATEGORY VARCHAR(40), CUSTCATEGORY VARCHAR(40), VALIDFROM TIMESTAMP, RATE DOUBLE)");
@@ -26,7 +26,8 @@ class StockWelcomeRepositoryTest {
 			sql.executeUpdate("CREATE TABLE STOCKDIARY (PRODUCT VARCHAR(40), DATENEW TIMESTAMP)");
 			sql.executeUpdate(
 					"CREATE TABLE REPLENISHMENT_ENTRIES (OPEN_PRODUCT_ID VARCHAR(40), STATUS VARCHAR(20), CUSTOMER_ID VARCHAR(40), CUSTOMER_NAME VARCHAR(80), CREATED_AT TIMESTAMP)");
-			sql.executeUpdate("INSERT INTO CATEGORIES VALUES ('c', 'Dairy'), ('gift-vouchers', 'Vouchers')");
+			sql.executeUpdate(
+					"INSERT INTO CATEGORIES VALUES ('food', 'Food', NULL), ('c', 'Dairy', 'food'), ('gift-vouchers', 'Vouchers', NULL)");
 			sql.executeUpdate("INSERT INTO TAXCATEGORIES VALUES ('t', 'Reduced')");
 			sql.executeUpdate(
 					"INSERT INTO TAXES VALUES ('t', NULL, '2020-01-01 00:00:00', 0.08), ('t', NULL, '2025-01-01 00:00:00', 0.10)");
@@ -46,9 +47,14 @@ class StockWelcomeRepositoryTest {
 				assertEquals(15, product.salePercent);
 				assertEquals(-2, product.units);
 				assertEquals("Dairy", product.category);
-				assertTrue(product.tax.startsWith("Reduced · 10"));
+				assertEquals("Food", product.categoryParent);
+				assertEquals("Reduced", product.tax);
+				assertEquals(0.10, product.taxRate);
+				assertEquals(25.0, product.ruleMarkup);
+				assertEquals("CENT", product.ruleRounding);
 				assertEquals("PENDING", product.status);
 				assertEquals("Ana", product.customer);
+				assertEquals("2026-09-18 12:00:00.0", product.replenishmentCreated.toString());
 			}
 			assertTrue(repository.search("not found").isEmpty());
 			StockWelcomeRepository.Queue queue = repository.queue();

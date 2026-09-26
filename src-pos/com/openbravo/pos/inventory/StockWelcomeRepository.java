@@ -6,16 +6,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Read-only catalogue and replenishment facts for the stock landing screen. */
 final class StockWelcomeRepository {
 	static final class Product {
-		String id, name, reference, code, category, tax, brand, rule, status, customer;
+		String id, name, reference, code, category, categoryParent, tax, brand, ruleRounding, status, customer;
 		double price, salePercent, units;
-		Timestamp lastMovement;
+		Double taxRate, ruleMarkup;
+		Timestamp lastMovement, replenishmentCreated;
 	}
 
 	static final class Queue {
@@ -44,7 +44,7 @@ final class StockWelcomeRepository {
 
 	List<Product> search(String text) throws SQLException {
 		String sql = "SELECT P.ID, P.NAME, P.REFERENCE, P.CODE, P.PRICESELL, P.SALE_PERCENT, "
-				+ "C.NAME AS CATEGORY_NAME, TC.NAME AS TAX_NAME, "
+				+ "C.NAME AS CATEGORY_NAME, CP.NAME AS CATEGORY_PARENT, TC.NAME AS TAX_NAME, "
 				+ "(SELECT MAX(T.RATE) FROM TAXES T WHERE T.CATEGORY=P.TAXCAT "
 				+ "AND T.CUSTCATEGORY IS NULL AND T.VALIDFROM <= CURRENT_TIMESTAMP "
 				+ "AND T.VALIDFROM=(SELECT MAX(T2.VALIDFROM) FROM TAXES T2 "
@@ -52,9 +52,9 @@ final class StockWelcomeRepository {
 				+ "AND T2.VALIDFROM <= CURRENT_TIMESTAMP)) AS TAX_RATE, " + "P.BRAND, R.MARKUP_PERCENT, R.ROUNDING, "
 				+ "(SELECT SUM(S.UNITS) FROM STOCKCURRENT S WHERE S.PRODUCT=P.ID) AS UNITS, "
 				+ "(SELECT MAX(D.DATENEW) FROM STOCKDIARY D WHERE D.PRODUCT=P.ID) AS LAST_MOVEMENT, "
-				+ "E.STATUS, E.CUSTOMER_NAME FROM PRODUCTS P "
-				+ "JOIN CATEGORIES C ON C.ID=P.CATEGORY JOIN TAXCATEGORIES TC ON TC.ID=P.TAXCAT "
-				+ "LEFT JOIN PRICE_RULES R ON R.BRAND=P.BRAND "
+				+ "E.STATUS, E.CUSTOMER_NAME, E.CREATED_AT AS REPLENISHMENT_CREATED FROM PRODUCTS P "
+				+ "JOIN CATEGORIES C ON C.ID=P.CATEGORY LEFT JOIN CATEGORIES CP ON CP.ID=C.PARENTID "
+				+ "JOIN TAXCATEGORIES TC ON TC.ID=P.TAXCAT " + "LEFT JOIN PRICE_RULES R ON R.BRAND=P.BRAND "
 				+ "LEFT JOIN REPLENISHMENT_ENTRIES E ON E.OPEN_PRODUCT_ID=P.ID "
 				+ "WHERE UPPER(P.CODE)=UPPER(?) OR UPPER(P.REFERENCE) LIKE UPPER(?) "
 				+ "OR UPPER(P.NAME) LIKE UPPER(?) "
@@ -76,18 +76,19 @@ final class StockWelcomeRepository {
 					product.price = rows.getDouble("PRICESELL");
 					product.salePercent = rows.getDouble("SALE_PERCENT");
 					product.category = rows.getString("CATEGORY_NAME");
+					product.categoryParent = rows.getString("CATEGORY_PARENT");
 					product.tax = rows.getString("TAX_NAME");
-					String rate = rows.getString("TAX_RATE");
-					if (rate != null) {
-						product.tax += " · " + NumberFormat.getPercentInstance().format(rows.getDouble("TAX_RATE"));
-					}
+					product.taxRate = rows.getObject("TAX_RATE") == null ? null : rows.getDouble("TAX_RATE");
 					product.brand = rows.getString("BRAND");
-					String markup = rows.getString("MARKUP_PERCENT");
-					product.rule = markup == null ? null : markup + "% · " + rows.getString("ROUNDING");
+					product.ruleMarkup = rows.getObject("MARKUP_PERCENT") == null
+							? null
+							: rows.getDouble("MARKUP_PERCENT");
+					product.ruleRounding = rows.getString("ROUNDING");
 					product.units = rows.getDouble("UNITS");
 					product.lastMovement = rows.getTimestamp("LAST_MOVEMENT");
 					product.status = rows.getString("STATUS");
 					product.customer = rows.getString("CUSTOMER_NAME");
+					product.replenishmentCreated = rows.getTimestamp("REPLENISHMENT_CREATED");
 					products.add(product);
 				}
 			}

@@ -12,7 +12,7 @@ grouped checklist), `tickets/todo/redesign-admin-screens/Resources.html`
 
 Related: `tickets/in-progress/redesign-categories-screen.md`,
 `tickets/in-progress/remove-swing-layout-antipatterns.md`,
-`tickets/in-progress/administration-welcome-screen.md`,
+`tickets/todo/administration-welcome-screen.md`,
 `tickets/todo/review-table-search-actions.md`,
 `tickets/done/redesign-products-screen.md`
 
