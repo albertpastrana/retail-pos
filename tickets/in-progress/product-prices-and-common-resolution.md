@@ -47,9 +47,12 @@ Mono and 13 pt Manrope headers.
   leaves it clean.
 - The loyalty notice reserves enough width for its wrapped text and remains
   readable at 1440x900.
+- The product search dialog opened from sales shows the PVP including the
+  applicable tax for the current ticket date and customer.
 - Existing product editing and till behaviour remain unchanged.
 
 ## Verification
 
-`./gradlew spotlessApply compileJava` and `./gradlew test` pass. A manual
+For the sales product finder slice, `./gradlew spotlessApply compileJava`,
+`./gradlew test`, and the focused `JProductFinderPriceTest` pass. A manual
 1440x900 Swing check is still required before moving this ticket to `done/`.
