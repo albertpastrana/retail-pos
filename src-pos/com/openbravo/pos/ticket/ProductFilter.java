@@ -24,6 +24,10 @@ import com.openbravo.pos.forms.AppLocal;
 
 import com.openbravo.pos.forms.AppView;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,6 +49,7 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 
 	private SentenceList m_sentcat;
 	private ComboBoxValModel m_CategoryModel;
+	private List<CategoryInfo> categories;
 	private SentenceList m_sentbrand;
 	private ComboBoxValModel m_BrandModel;
 	private javax.swing.Timer filterTimer;
@@ -129,6 +134,7 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 	public void activate() throws BasicException {
 
 		List catlist = m_sentcat.list();
+		categories = new ArrayList<CategoryInfo>(catlist);
 		catlist.add(0, null);
 		m_CategoryModel = new ComboBoxValModel(catlist);
 		m_jCategory.setModel(m_CategoryModel);
@@ -187,9 +193,10 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 					? QBFCompareEnum.COMP_NONE
 					: QBFCompareEnum.COMP_CONTAINS;
 			// Filtro por formulario
+			String category = categoryFilterValue();
 			return new Object[]{nameCompare, sName, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
-					m_CategoryModel.getSelectedKey() == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS,
-					m_CategoryModel.getSelectedKey(), QBFCompareEnum.COMP_NONE, null,
+					category == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_IN, category,
+					QBFCompareEnum.COMP_NONE, null,
 					m_BrandModel.getSelectedItem() == null ? QBFCompareEnum.COMP_NONE : QBFCompareEnum.COMP_EQUALS,
 					m_BrandModel.getSelectedItem(), referenceCompare, sReference, familyCompare, sFamily};
 		} else {
@@ -199,6 +206,32 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 					getBarcode(), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 					QBFCompareEnum.COMP_NONE, null};
 		}
+	}
+
+	static String categoryIdsIncludingDescendants(List<CategoryInfo> categories, String root) {
+		Set<String> included = new HashSet<String>();
+		List<String> pending = new ArrayList<String>();
+		pending.add(root);
+		while (!pending.isEmpty()) {
+			String parent = pending.remove(pending.size() - 1);
+			if (!included.add(parent)) {
+				continue;
+			}
+			for (CategoryInfo category : categories) {
+				if (parent.equals(category.getParentID())) {
+					pending.add(category.getID());
+				}
+			}
+		}
+
+		return String.join(",", included);
+	}
+
+	private String categoryFilterValue() {
+		Object selected = m_CategoryModel.getSelectedKey();
+		return selected == null || categories == null
+				? null
+				: categoryIdsIncludingDescendants(categories, selected.toString());
 	}
 
 	/**
