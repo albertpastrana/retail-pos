@@ -270,3 +270,8 @@ Current screen structure:
 - Importing or exporting products as a spreadsheet.
 - Applying a batch edit to a filter result larger than the loaded page without
   an explicit "select all N results" affordance — this ticket is selection-based.
+
+## Shipped
+
+Batch selection, price and category preview, apply/retry, per-product failures,
+and undo are implemented on the updated `main` branch.

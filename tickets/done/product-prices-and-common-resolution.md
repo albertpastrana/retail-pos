@@ -55,4 +55,9 @@ Mono and 13 pt Manrope headers.
 
 For the sales product finder slice, `./gradlew spotlessApply compileJava`,
 `./gradlew test`, and the focused `JProductFinderPriceTest` pass. A manual
-1440x900 Swing check is still required before moving this ticket to `done/`.
+ 1440x900 Swing check is still required before moving this ticket to `done/`.
+
+## Shipped
+
+The product price display, editor layout, discard flow, sales product finder,
+and common-resolution sales layout are present on the updated `main` branch.

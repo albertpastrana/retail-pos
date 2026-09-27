@@ -170,3 +170,8 @@ reimplementing.
 - Search terms are matched independently against the normalized full path, so
   `soste aro` matches `Sostenidors / Aro + relleno` even though the terms are
   in different path segments and accents differ.
+
+## Shipped
+
+The searchable category tree, responsive editor, catalog actions, and guarded
+deletion flow are present on the updated `main` branch.
