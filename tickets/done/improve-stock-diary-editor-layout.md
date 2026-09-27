@@ -21,3 +21,8 @@ The generated layout and component additions in `initComponents()` are removed a
 - The editor and catalog use space proportionally at supported window sizes and display scales.
 - The stock movement screen remains usable below `1024x768`.
 - Relevant automated checks and a manual visual check pass.
+
+## Shipped
+
+The stock diary editor now uses adaptive layout management and is closed on the
+updated `main` branch.

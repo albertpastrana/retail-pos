@@ -200,3 +200,9 @@ originals for the resources that have one.
 - Per-user permission overrides (permissions stay a property of the role).
 - Password policy, expiry, or authentication changes.
 - A resource upload/import flow beyond the current image and binary editors.
+
+## Shipped
+
+The users, roles, and resources screens now have searchable lists, modernized
+editors, permission checklists, resource comparison, restore actions, and
+responsive translated layouts on updated `main`.

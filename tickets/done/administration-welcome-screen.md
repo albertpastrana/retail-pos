@@ -324,5 +324,11 @@ at 1024×768 before closing the ticket.
 - A test fails when a task name in the Java menu definition is missing from the
   catalogue without an explicit exclusion, and when a catalogue entry names a
   task that does not exist.
-- The existing administration destinations continue to open and behave as
-  before when reached from the new screen.
+ - The existing administration destinations continue to open and behave as
+   before when reached from the new screen.
+
+## Shipped
+
+The workflow-oriented administration welcome screen, permission-aware catalog,
+search, navigation registry, and translated labels are present on updated
+`main`.

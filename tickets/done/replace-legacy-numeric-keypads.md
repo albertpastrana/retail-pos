@@ -41,3 +41,8 @@ Keep a legacy text-entry keypad only where the field genuinely needs free-form t
 - Decimal, negative, clear, focus, and physical-keyboard input are verified for each migrated screen.
 - No remaining `JEditorKeys` usage is numeric-only without a documented reason.
 - The relevant screen flows and automated checks pass.
+
+## Shipped
+
+Numeric entry flows now use the sales keypad consistently, while text and
+password fields retain their required input behaviour on the updated `main`.

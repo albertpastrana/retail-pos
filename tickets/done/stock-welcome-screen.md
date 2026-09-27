@@ -446,6 +446,12 @@ Implementation is on the `stock-welcome-screen` branch; the ticket is back in
 `todo/` until the live till walk-through and user visual review confirm the
 observable UI checks.
 
+## Shipped
+
+The product-focused catalog welcome screen, product search summary, replenishment
+links, permission filtering, responsive layout, and translated states are on
+the updated `main` branch.
+
 ## Open questions
 
 - **The submenu label (resolved 2026-09-26).** Use "Catàleg i preus" / "Catálogo y precios" / "Catalogue and prices" for the submenu and screen title.
