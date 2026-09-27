@@ -27,6 +27,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.SwingUtilities;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.user.EditorListener;
@@ -37,7 +39,6 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.panels.JPanelTable2;
 import com.openbravo.pos.sales.TaxesLogic;
-import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.ticket.ProductFilter;
 import com.openbravo.data.user.BrowsableEditableData;
 
@@ -53,6 +54,8 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	private DataLogicSales m_dlSales = null;
 	private TaxesLogic taxesLogic;
+	private ProductTableNavigator batchNavigator;
+	private boolean showingBatchEditor;
 
 	/** Creates a new instance of ProductsPanel2 */
 	public ProductsPanel() {
@@ -94,12 +97,17 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 	public Component getFilter() {
 		JPanel header = new JPanel(new BorderLayout(0, 6));
 		JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-		JButton newProduct = new JButton("+ Nou producte");
-		RetailPOSColors.primaryButton(newProduct);
+		JButton newProduct = new JButton(AppLocal.getIntString("batch.newProduct"));
 		newProduct.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (batchNavigator != null && batchNavigator.hasPending()) {
+					JOptionPane.showMessageDialog(ProductsPanel.this, AppLocal.getIntString("batch.saveBeforeFilter"));
+					return;
+				}
 				try {
 					bd.actionInsert();
+					if (batchNavigator != null)
+						batchNavigator.clearSelection();
 				} catch (BasicException ex) {
 					new MessageInf(ex).show(ProductsPanel.this);
 				}
@@ -120,17 +128,91 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	@Override
 	protected double getSplitResizeWeight(boolean editorKeepsSize) {
-		return 1.0 / 3.0;
+		return 0.5;
 	}
 
 	@Override
 	protected double getSplitDividerLocation() {
-		return 1.0 / 3.0;
+		return 0.5;
 	}
 
 	@Override
 	protected Component getListComponent(BrowsableEditableData data) {
-		return new ProductTableNavigator(data, taxesLogic);
+		try {
+			batchNavigator = new ProductTableNavigator(data, taxesLogic, m_dlSales, this);
+			return batchNavigator;
+		} catch (BasicException e) {
+			throw new IllegalStateException("Cannot load batch categories", e);
+		}
+	}
+
+	com.openbravo.data.loader.Session getSession() {
+		return app.getSession();
+	}
+
+	boolean prepareBatchEdit() throws BasicException {
+		if (!dirty.isDirty())
+			return true;
+		if (bd.getState() != BrowsableEditableData.ST_UPDATE || bd.getIndex() < 0) {
+			return bd.actionClosingForm(this);
+		}
+		Object[] original = (Object[]) bd.getListModel().getElementAt(bd.getIndex());
+		ProductBatchDraft draft = jeditor.captureBatchDraft(original);
+		ProductBatchDraft.OtherFields decision = ProductBatchDraft.OtherFields.DISCARD;
+		if (draft.otherChanged) {
+			Object[] options = {AppLocal.getIntString("batch.saveOther"), AppLocal.getIntString("batch.discardOther"),
+					AppLocal.getIntString("batch.cancelTransition")};
+			int choice = JOptionPane.showOptionDialog(this, AppLocal.getIntString("batch.otherChanges"),
+					AppLocal.getIntString("batch.pendingTitle"), JOptionPane.DEFAULT_OPTION,
+					JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+			decision = choice == 0
+					? ProductBatchDraft.OtherFields.SAVE
+					: choice == 1 ? ProductBatchDraft.OtherFields.DISCARD : ProductBatchDraft.OtherFields.CANCEL;
+		}
+		return draft.enter(decision, () -> {
+			jeditor.restoreBatchFields(original);
+			try {
+				jeditor.saveOtherBatchFields(bd);
+			} catch (BasicException ex) {
+				jeditor.restoreDraftFields(draft);
+				throw ex;
+			}
+		}, () -> bd.refreshCurrent(), batchNavigator::stageEditorDraft);
+	}
+
+	boolean hasDirtyIndividualEditor() {
+		return dirty.isDirty();
+	}
+
+	void refreshBatchEditor() {
+		if (bd != null)
+			bd.refreshCurrent();
+	}
+
+	void batchStateChanged(boolean expanded) {
+		SwingUtilities.invokeLater(() -> {
+			if (batchNavigator == null || !(batchNavigator.getParent() instanceof JSplitPane))
+				return;
+			JSplitPane split = (JSplitPane) batchNavigator.getParent();
+			if (expanded == showingBatchEditor)
+				return;
+			int divider = split.getDividerLocation();
+			split.setRightComponent(expanded ? batchNavigator.getBatchEditor() : jeditor);
+			split.setDividerLocation(divider);
+			showingBatchEditor = expanded;
+		});
+	}
+
+	@Override
+	public boolean deactivate() {
+		if (batchNavigator != null && batchNavigator.hasPending()) {
+			int answer = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("batch.leave"),
+					AppLocal.getIntString("batch.pendingTitle"), JOptionPane.YES_NO_OPTION);
+			if (answer != JOptionPane.YES_OPTION)
+				return false;
+			batchNavigator.discardPending();
+		}
+		return super.deactivate();
 	}
 
 	public String getTitle() {
@@ -144,12 +226,19 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 		jproductfilter.activate();
 
 		super.activate();
+		batchNavigator.reloadChoices();
 		jeditor.setBrowsableData(bd);
 	}
 
 	/** Open the existing product editor on a fresh record after navigating here. */
 	public void createNewProduct() throws BasicException {
+		if (batchNavigator != null && batchNavigator.hasPending()) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("batch.saveBeforeFilter"));
+			return;
+		}
 		bd.actionInsert();
+		if (batchNavigator != null)
+			batchNavigator.clearSelection();
 	}
 
 	/** Reuse the same filter and list reload as a barcode typed in this screen. */
@@ -163,6 +252,10 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 	private class ReloadActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			if (bd == null) {
+				return;
+			}
+			if (batchNavigator != null && batchNavigator.hasPending()) {
+				JOptionPane.showMessageDialog(ProductsPanel.this, AppLocal.getIntString("batch.saveBeforeFilter"));
 				return;
 			}
 			try {

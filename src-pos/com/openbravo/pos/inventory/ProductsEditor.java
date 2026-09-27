@@ -89,6 +89,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private double m_pendingFactory = 0.0;
 	private double m_pendingWholesale = 0.0;
 	private Object[] m_purchaseCost;
+	private java.util.List<Object> batchOtherBaseline;
 
 	public Session session = null;
 
@@ -262,6 +263,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	}
 
 	public void writeValueEOF() {
+		batchOtherBaseline = null;
 
 		reportlock = true;
 		// Los valores
@@ -326,6 +328,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	}
 
 	public void writeValueInsert() {
+		batchOtherBaseline = null;
 
 		reportlock = true;
 		// Los valores
@@ -389,6 +392,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	}
 
 	public void writeValueDelete(Object value) {
+		batchOtherBaseline = null;
 
 		reportlock = true;
 		Object[] myprod = (Object[]) value;
@@ -451,6 +455,46 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		calculatePriceSellTax();
 		calculateMarginTax();
 		calculateMixCost();
+	}
+
+	ProductBatchDraft captureBatchDraft(Object[] original) throws BasicException {
+		Double editedNet = (Double) pricesell;
+		String editedCategory = (String) m_CategoryModel.getSelectedKey();
+		boolean priceChanged = !java.util.Objects.equals(original[6], editedNet);
+		Double gross = priceChanged ? ProductPriceMath.parsePositiveCurrency(m_jPriceSellTax.getText(), false) : null;
+		if (priceChanged && (gross == null || editedNet == null)) {
+			throw new BasicException(AppLocal.getIntString("batch.invalidPrice"));
+		}
+		return ProductBatchDraft.classify((String) original[0], (Double) original[6], (String) original[7], editedNet,
+				editedCategory, gross, batchOtherBaseline == null || !batchOtherBaseline.equals(batchOtherSnapshot()));
+	}
+
+	void restoreBatchFields(Object[] original) {
+		m_CategoryModel.setSelectedKey(original[7]);
+		setPriceSell(original[6]);
+		calculatePriceSellTax();
+	}
+
+	void restoreDraftFields(ProductBatchDraft draft) {
+		if (draft.categoryChanged)
+			m_CategoryModel.setSelectedKey(draft.category);
+		if (draft.priceChanged) {
+			setPriceSell(ProductPriceMath.netFromGross(draft.gross, taxRate()));
+			calculatePriceSellTax();
+		}
+	}
+
+	void saveOtherBatchFields(BrowsableEditableData data) throws BasicException {
+		productAttributes.save((String) m_id);
+		data.saveData();
+	}
+
+	private java.util.List<Object> batchOtherSnapshot() {
+		return java.util.Arrays.asList(m_jRef.getText(), m_jCode.getText(), m_jName.getText(), m_jFamily.getText(),
+				m_jComment.isSelected(), m_jVoucher.isSelected(), taxcatmodel.getSelectedKey(), m_jPriceBuy.getText(),
+				m_jPriceBuyWholesale.getText(), m_jImage.getImage(), m_jstockcost.getText(), m_jstockvolume.getText(),
+				m_jInCatalog.isSelected(), m_jCatalogOrder.getText(), txtAttributes.getText(), m_jStock.getText(),
+				m_jStockAdd.getText(), m_pendingFactory, m_pendingWholesale, productAttributes.batchSnapshot());
 	}
 
 	public void writeValueEdit(Object value) {
@@ -517,6 +561,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		calculatePriceSellTax();
 		calculateMarginTax();
 		calculateMixCost();
+		batchOtherBaseline = batchOtherSnapshot();
 	}
 
 	public Object createValue() throws BasicException {

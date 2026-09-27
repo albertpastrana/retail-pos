@@ -209,6 +209,19 @@ public class ProductAttributesPanel extends JPanel {
 		return result;
 	}
 
+	/**
+	 * Raw editor values for detecting other-field drafts; never validates or writes
+	 * them.
+	 */
+	List<String> batchSnapshot() {
+		List<String> snapshot = new ArrayList<String>();
+		for (AttributeRow row : attributeRows) {
+			snapshot.add(text(row.key));
+			snapshot.add(text(row.value));
+		}
+		return snapshot;
+	}
+
 	private String text(JComboBox<String> combo) {
 		Object value = combo.isEditable() ? combo.getEditor().getItem() : combo.getSelectedItem();
 		return value == null ? "" : value.toString().trim();
