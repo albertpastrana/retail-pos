@@ -20,8 +20,9 @@
 package com.openbravo.pos.ticket;
 
 import java.awt.event.ActionListener;
+import java.util.List;
+import javax.swing.DefaultComboBoxModel;
 import com.openbravo.basic.BasicException;
-import com.openbravo.data.gui.ListQBFModelNumber;
 import com.openbravo.data.loader.QBFCompareEnum;
 import com.openbravo.data.user.EditorCreator;
 import com.openbravo.pos.forms.AppLocal;
@@ -31,17 +32,12 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	/** Creates new form ProductFilterSales */
 	public ProductFilterSales() {
 		initComponents();
-
-		m_jCboName.setModel(ListQBFModelNumber.getMandatoryString());
-		m_jCboCategory.setModel(ListQBFModelNumber.getMandatoryString());
-		m_jCboBrand.setModel(ListQBFModelNumber.getMandatoryString());
-		m_jCboFamily.setModel(ListQBFModelNumber.getMandatoryString());
 	}
 
 	public void activate() {
 
 		m_jtxtName.setText(null);
-		m_jtxtCategory.setText(null);
+		m_jCategory.setSelectedIndex(0);
 		m_jtxtBrand.setText(null);
 		m_jtxtFamily.setText(null);
 
@@ -60,13 +56,18 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		final javax.swing.Timer timer = new javax.swing.Timer(300, listener);
 		timer.setRepeats(false);
 		addDebouncedSearchListener(m_jtxtName, timer);
-		addDebouncedSearchListener(m_jtxtCategory, timer);
 		addDebouncedSearchListener(m_jtxtBrand, timer);
 		addDebouncedSearchListener(m_jtxtFamily, timer);
-		m_jCboName.addActionListener(e -> timer.restart());
-		m_jCboCategory.addActionListener(e -> timer.restart());
-		m_jCboBrand.addActionListener(e -> timer.restart());
-		m_jCboFamily.addActionListener(e -> timer.restart());
+		m_jCategory.addActionListener(event -> timer.restart());
+	}
+
+	public void setCategories(List<CategoryInfo> categories) {
+		DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<>();
+		model.addElement(AppLocal.getIntString("product.search.allCategories"));
+		for (CategoryInfo category : categories) {
+			model.addElement(category);
+		}
+		m_jCategory.setModel(model);
 	}
 
 	private void addDebouncedSearchListener(javax.swing.JTextField field, javax.swing.Timer timer) {
@@ -91,22 +92,28 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	public Object createValue() throws BasicException {
 
 		Object[] afilter = new Object[8];
-		putStringFilter(afilter, 0, m_jCboName, m_jtxtName);
-		putStringFilter(afilter, 2, m_jCboCategory, m_jtxtCategory);
-		putStringFilter(afilter, 4, m_jCboBrand, m_jtxtBrand);
-		putStringFilter(afilter, 6, m_jCboFamily, m_jtxtFamily);
+		putStringFilter(afilter, 0, m_jtxtName);
+		Object category = m_jCategory.getSelectedItem();
+		if (category instanceof CategoryInfo) {
+			afilter[2] = QBFCompareEnum.COMP_EQUALS;
+			afilter[3] = ((CategoryInfo) category).getID();
+		} else {
+			afilter[2] = QBFCompareEnum.COMP_NONE;
+			afilter[3] = null;
+		}
+		putStringFilter(afilter, 4, m_jtxtBrand);
+		putStringFilter(afilter, 6, m_jtxtFamily);
 
 		return afilter;
 	}
 
-	private void putStringFilter(Object[] afilter, int index, javax.swing.JComboBox compare,
-			javax.swing.JTextField value) {
+	private void putStringFilter(Object[] afilter, int index, javax.swing.JTextField value) {
 		String text = value.getText();
 		if (text == null || text.equals("")) {
 			afilter[index] = QBFCompareEnum.COMP_NONE;
 			afilter[index + 1] = null;
 		} else {
-			afilter[index] = compare.getSelectedItem();
+			afilter[index] = QBFCompareEnum.COMP_CONTAINS;
 			afilter[index + 1] = text;
 		}
 	}
@@ -121,17 +128,16 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	private void initComponents() {
 
 		jLabel5 = new javax.swing.JLabel();
-		m_jCboName = new javax.swing.JComboBox();
 		m_jtxtName = new javax.swing.JTextField();
 		jLabel2 = new javax.swing.JLabel();
-		m_jCboCategory = new javax.swing.JComboBox();
-		m_jtxtCategory = new javax.swing.JTextField();
+		m_jCategory = new javax.swing.JComboBox<>();
 		jLabel6 = new javax.swing.JLabel();
-		m_jCboBrand = new javax.swing.JComboBox();
 		m_jtxtBrand = new javax.swing.JTextField();
 		jLabel7 = new javax.swing.JLabel();
-		m_jCboFamily = new javax.swing.JComboBox();
 		m_jtxtFamily = new javax.swing.JTextField();
+		setPlaceholder(m_jtxtName, "label.prodname");
+		setPlaceholder(m_jtxtBrand, "label.prodbrand");
+		setPlaceholder(m_jtxtFamily, "label.prodfamily");
 
 		setLayout(new java.awt.GridBagLayout());
 
@@ -143,42 +149,35 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		java.awt.GridBagConstraints labelConstraints = new java.awt.GridBagConstraints();
 		labelConstraints.anchor = java.awt.GridBagConstraints.LINE_START;
 		labelConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-		labelConstraints.weightx = 1.0;
+		labelConstraints.weightx = 0.0;
 		labelConstraints.insets = new java.awt.Insets(5, 20, 5, 12);
-
-		java.awt.GridBagConstraints comboConstraints = new java.awt.GridBagConstraints();
-		comboConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-		comboConstraints.weightx = 1.0;
-		comboConstraints.insets = new java.awt.Insets(5, 0, 5, 12);
 
 		java.awt.GridBagConstraints fieldConstraints = new java.awt.GridBagConstraints();
 		fieldConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
 		fieldConstraints.weightx = 1.0;
 		fieldConstraints.insets = new java.awt.Insets(5, 0, 5, 20);
 
-		addFilterRow(jLabel5, m_jCboName, m_jtxtName, 0, labelConstraints, comboConstraints, fieldConstraints);
-		addFilterRow(jLabel2, m_jCboCategory, m_jtxtCategory, 1, labelConstraints, comboConstraints, fieldConstraints);
-		addFilterRow(jLabel6, m_jCboBrand, m_jtxtBrand, 2, labelConstraints, comboConstraints, fieldConstraints);
-		addFilterRow(jLabel7, m_jCboFamily, m_jtxtFamily, 3, labelConstraints, comboConstraints, fieldConstraints);
+		addFilterRow(jLabel5, m_jtxtName, 0, labelConstraints, fieldConstraints);
+		addFilterRow(jLabel2, m_jCategory, 1, labelConstraints, fieldConstraints);
+		addFilterRow(jLabel6, m_jtxtBrand, 2, labelConstraints, fieldConstraints);
+		addFilterRow(jLabel7, m_jtxtFamily, 3, labelConstraints, fieldConstraints);
 	}// </editor-fold>//GEN-END:initComponents
 
-	private void addFilterRow(javax.swing.JLabel label, javax.swing.JComboBox combo, javax.swing.JTextField field,
-			int row, java.awt.GridBagConstraints labelConstraints, java.awt.GridBagConstraints comboConstraints,
-			java.awt.GridBagConstraints fieldConstraints) {
+	private void addFilterRow(javax.swing.JLabel label, javax.swing.JComponent field, int row,
+			java.awt.GridBagConstraints labelConstraints, java.awt.GridBagConstraints fieldConstraints) {
 		java.awt.GridBagConstraints labelRow = (java.awt.GridBagConstraints) labelConstraints.clone();
 		labelRow.gridx = 0;
 		labelRow.gridy = row;
 		add(label, labelRow);
 
-		java.awt.GridBagConstraints comboRow = (java.awt.GridBagConstraints) comboConstraints.clone();
-		comboRow.gridx = 1;
-		comboRow.gridy = row;
-		add(combo, comboRow);
-
 		java.awt.GridBagConstraints fieldRow = (java.awt.GridBagConstraints) fieldConstraints.clone();
-		fieldRow.gridx = 2;
+		fieldRow.gridx = 1;
 		fieldRow.gridy = row;
 		add(field, fieldRow);
+	}
+
+	private void setPlaceholder(javax.swing.JTextField field, String key) {
+		field.putClientProperty("JTextField.placeholderText", AppLocal.getIntString(key));
 	}
 
 	// Variables declaration - do not modify//GEN-BEGIN:variables
@@ -186,14 +185,10 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	private javax.swing.JLabel jLabel5;
 	private javax.swing.JLabel jLabel6;
 	private javax.swing.JLabel jLabel7;
-	private javax.swing.JComboBox m_jCboBrand;
-	private javax.swing.JComboBox m_jCboCategory;
-	private javax.swing.JComboBox m_jCboFamily;
-	private javax.swing.JComboBox m_jCboName;
 	private javax.swing.JTextField m_jtxtBrand;
-	private javax.swing.JTextField m_jtxtCategory;
 	private javax.swing.JTextField m_jtxtFamily;
 	private javax.swing.JTextField m_jtxtName;
+	private javax.swing.JComboBox<Object> m_jCategory;
 	// End of variables declaration//GEN-END:variables
 
 }
