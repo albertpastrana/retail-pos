@@ -24,6 +24,7 @@ import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.sales.TaxesLogic;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.ticket.ProductFilterSales;
+import com.openbravo.pos.ticket.CategoryInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 
@@ -61,6 +62,12 @@ public class JProductFinder extends JDialog {
 		initComponents();
 		jcmdOK.setText(AppLocal.getIntString(actionKey));
 		ProductFilterSales filter = new ProductFilterSales();
+		try {
+			filter.setCategories(dlSales.getCategoriesList().list());
+		} catch (BasicException exception) {
+			LOGGER.log(java.util.logging.Level.WARNING, "event=product_search_categories_failed", exception);
+			filter.setCategories(java.util.Collections.<CategoryInfo>emptyList());
+		}
 		filter.activate();
 		filter.addActionListener(event -> executeSearch());
 		m_jProductSelect.add(filter, BorderLayout.CENTER);
@@ -138,7 +145,7 @@ public class JProductFinder extends JDialog {
 			this.customer = customer;
 			this.showTaxInclusivePrice = showTaxInclusivePrice;
 			columns = new String[]{AppLocal.getIntString("label.prodref"), AppLocal.getIntString("label.prodname"),
-					AppLocal.getIntString(showTaxInclusivePrice ? "label.pricetax" : "label.price")};
+					AppLocal.getIntString(showTaxInclusivePrice ? "label.productfinder.pvp" : "label.price")};
 		}
 
 		@Override
