@@ -25,7 +25,6 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.EventListener;
@@ -35,7 +34,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import com.openbravo.data.loader.QBFCompareEnum;
 import com.openbravo.basic.BasicException;
-import com.openbravo.data.gui.ListQBFModelNumber;
 import com.openbravo.data.gui.ComboBoxValModel;
 import com.openbravo.data.loader.Datas;
 import com.openbravo.data.loader.SentenceList;
@@ -97,10 +95,6 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		}
 	}
 
-	private QBFCompareEnum qbfComparator(Object value) {
-		return value instanceof QBFCompareEnum ? (QBFCompareEnum) value : QBFCompareEnum.COMP_NONE;
-	}
-
 	public void addActionListener(ActionListener l) {
 		listeners.add(ActionListener.class, l);
 	}
@@ -130,8 +124,6 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		m_sentbrand = dlSales.getBrandsList();
 		m_BrandModel = new ComboBoxValModel();
 
-		m_jCboReference.setModel(ListQBFModelNumber.getMandatoryString());
-		m_jCboName.setModel(ListQBFModelNumber.getMandatoryString());
 	}
 
 	public void activate() throws BasicException {
@@ -185,11 +177,11 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 			String sName = m_jName.getText();
 			Object nameCompare = (sName == null || sName.equals(""))
 					? QBFCompareEnum.COMP_NONE
-					: qbfComparator(m_jCboName.getSelectedItem());
+					: QBFCompareEnum.COMP_CONTAINS;
 			String sReference = m_jReference.getText();
 			Object referenceCompare = (sReference == null || sReference.equals(""))
 					? QBFCompareEnum.COMP_NONE
-					: qbfComparator(m_jCboReference.getSelectedItem());
+					: QBFCompareEnum.COMP_CONTAINS;
 			String sFamily = m_jFamily.getText();
 			Object familyCompare = (sFamily == null || sFamily.equals(""))
 					? QBFCompareEnum.COMP_NONE
@@ -224,21 +216,23 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		jLabel6 = new javax.swing.JLabel(AppLocal.getIntString("label.prodbrand"));
 		jLabel7 = new javax.swing.JLabel(AppLocal.getIntString("label.prodref"));
 		m_jBarcode = new javax.swing.JTextField();
-		m_jCboReference = new javax.swing.JComboBox();
 		m_jReference = new javax.swing.JTextField();
-		m_jCboName = new javax.swing.JComboBox();
 		m_jName = new javax.swing.JTextField();
 		m_jCategory = new javax.swing.JComboBox();
 		m_jBrand = new javax.swing.JComboBox();
 		m_jFamily = new javax.swing.JTextField();
+		setPlaceholder(m_jBarcode, "label.prodbarcode");
+		setPlaceholder(m_jReference, "label.prodref");
+		setPlaceholder(m_jName, "label.prodname");
+		setPlaceholder(m_jFamily, "label.prodfamily");
 
 		jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("label.productfilters")));
-		jPanel1.add(buildComboFieldCell(jLabel2, m_jCboName, m_jName));
+		jPanel1.add(buildCell(jLabel2, m_jName));
 		jPanel1.add(buildCell(jLabel1, m_jCategory));
 		jPanel1.add(buildCell(jLabel6, m_jBrand));
-		jPanel1.add(buildComboFieldCell(jLabel7, m_jCboReference, m_jReference));
+		jPanel1.add(buildCell(jLabel7, m_jReference));
 		jPanel1.add(buildCell(jLabel5, m_jBarcode));
-		jPanel1.add(buildCell(new javax.swing.JLabel("Família"), m_jFamily));
+		jPanel1.add(buildCell(new javax.swing.JLabel(AppLocal.getIntString("label.prodfamily")), m_jFamily));
 
 		setLayout(new BorderLayout(0, 6));
 		add(jPanel1, BorderLayout.CENTER);
@@ -252,13 +246,8 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 		return cellPanel;
 	}
 
-	private javax.swing.JPanel buildComboFieldCell(javax.swing.JLabel label, javax.swing.JComboBox combo,
-			javax.swing.JTextField field) {
-		javax.swing.JPanel row = new javax.swing.JPanel(new BorderLayout(4, 0));
-		row.setOpaque(false);
-		row.add(combo, BorderLayout.WEST);
-		row.add(field, BorderLayout.CENTER);
-		return buildCell(label, row);
+	private void setPlaceholder(javax.swing.JTextField field, String key) {
+		field.putClientProperty("JTextField.placeholderText", AppLocal.getIntString(key));
 	}
 
 	// Variables declaration - do not modify//GEN-BEGIN:variables
@@ -271,9 +260,7 @@ public class ProductFilter extends javax.swing.JPanel implements ReportEditorCre
 	private javax.swing.JTextField m_jBarcode;
 	private javax.swing.JComboBox m_jBrand;
 	private javax.swing.JComboBox m_jCategory;
-	private javax.swing.JComboBox m_jCboName;
 	private javax.swing.JTextField m_jName;
-	private javax.swing.JComboBox m_jCboReference;
 	private javax.swing.JTextField m_jReference;
 	private javax.swing.JTextField m_jFamily;
 	// End of variables declaration//GEN-END:variables
