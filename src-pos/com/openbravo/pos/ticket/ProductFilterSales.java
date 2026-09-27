@@ -20,6 +20,7 @@
 package com.openbravo.pos.ticket;
 
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import com.openbravo.basic.BasicException;
@@ -28,6 +29,7 @@ import com.openbravo.data.user.EditorCreator;
 import com.openbravo.pos.forms.AppLocal;
 
 public class ProductFilterSales extends javax.swing.JPanel implements EditorCreator {
+	private List<CategoryInfo> categories;
 
 	/** Creates new form ProductFilterSales */
 	public ProductFilterSales() {
@@ -35,7 +37,6 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	}
 
 	public void activate() {
-
 		m_jtxtName.setText(null);
 		m_jCategory.setSelectedIndex(0);
 		m_jtxtBrand.setText(null);
@@ -62,6 +63,7 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 	}
 
 	public void setCategories(List<CategoryInfo> categories) {
+		this.categories = new ArrayList<CategoryInfo>(categories);
 		DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<>();
 		model.addElement(AppLocal.getIntString("product.search.allCategories"));
 		for (CategoryInfo category : categories) {
@@ -95,8 +97,8 @@ public class ProductFilterSales extends javax.swing.JPanel implements EditorCrea
 		putStringFilter(afilter, 0, m_jtxtName);
 		Object category = m_jCategory.getSelectedItem();
 		if (category instanceof CategoryInfo) {
-			afilter[2] = QBFCompareEnum.COMP_EQUALS;
-			afilter[3] = ((CategoryInfo) category).getID();
+			afilter[2] = QBFCompareEnum.COMP_IN;
+			afilter[3] = ProductFilter.categoryIdsIncludingDescendants(categories, ((CategoryInfo) category).getID());
 		} else {
 			afilter[2] = QBFCompareEnum.COMP_NONE;
 			afilter[3] = null;

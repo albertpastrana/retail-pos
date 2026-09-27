@@ -58,6 +58,22 @@ public abstract class QBFCompareEnum {
 			return sField + " = " + sSQLValue;
 		}
 	};
+	public final static QBFCompareEnum COMP_IN = new QBFCompareEnum(3, "qbf.in") {
+		public String getExpression(String sField, String sSQLValue) {
+			if (sSQLValue == null || "NULL".equals(sSQLValue) || sSQLValue.length() < 2) {
+				return null;
+			}
+			String[] values = sSQLValue.substring(1, sSQLValue.length() - 1).split(",", -1);
+			StringBuilder sqlValues = new StringBuilder();
+			for (String value : values) {
+				if (sqlValues.length() > 0) {
+					sqlValues.append(", ");
+				}
+				sqlValues.append(DataWriteUtils.getSQLValue(value));
+			}
+			return sField + " IN (" + sqlValues + ")";
+		}
+	};
 	public final static QBFCompareEnum COMP_DISTINCT = new QBFCompareEnum(4, "qbf.distinct") {
 		public String getExpression(String sField, String sSQLValue) {
 			return sField + " <> " + sSQLValue;

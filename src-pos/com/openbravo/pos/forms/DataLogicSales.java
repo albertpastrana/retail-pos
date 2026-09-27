@@ -792,7 +792,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		return new StaticSentence(s,
 				new QBFBuilder("SELECT " + ProductInfoExt.infoColumns("P")
 						+ " FROM PRODUCTS P LEFT JOIN CATEGORIES CAT ON P.CATEGORY = CAT.ID WHERE " + where
-						+ " ORDER BY P.REFERENCE", new String[]{"P.NAME", "CAT.NAME", "P.BRAND", "P.FAMILY"}),
+						+ " ORDER BY P.REFERENCE", new String[]{"P.NAME", "P.CATEGORY", "P.BRAND", "P.FAMILY"}),
 				new SerializerWriteBasic(new Datas[]{Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING,
 						Datas.OBJECT, Datas.STRING, Datas.OBJECT, Datas.STRING}),
 				ProductInfoExt.getSerializerRead());
