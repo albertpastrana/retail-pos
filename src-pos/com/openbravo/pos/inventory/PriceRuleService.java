@@ -66,6 +66,39 @@ public final class PriceRuleService {
 		return rule;
 	}
 
+	/** Round a proposed retail price using the product's brand rule. */
+	public double roundGrossForProduct(String id, double gross) throws SQLException {
+		try (PreparedStatement statement = session.getConnection()
+				.prepareStatement("SELECT BRAND FROM PRODUCTS WHERE ID = ?")) {
+			statement.setString(1, id);
+			try (ResultSet result = statement.executeQuery()) {
+				if (!result.next()) {
+					throw new SQLException("Product not found: " + id);
+				}
+				return roundGross(gross, findForBrand(result.getString(1)).getRounding());
+			}
+		}
+	}
+
+	/**
+	 * A fallback rule exists for every brand; only prices that follow it are
+	 * locked.
+	 */
+	public boolean isRulePricedProduct(String id) throws SQLException {
+		try (PreparedStatement statement = session.getConnection()
+				.prepareStatement("SELECT BRAND, PRICEBUY, PRICESELL, TAXCAT FROM PRODUCTS WHERE ID = ?")) {
+			statement.setString(1, id);
+			try (ResultSet result = statement.executeQuery()) {
+				if (!result.next() || result.getDouble(2) <= 0) {
+					return false;
+				}
+				return matchesRule(result.getDouble(2), result.getDouble(3),
+						taxRate(findCurrentTaxRates(), result.getString(4)), findForBrand(result.getString(1)),
+						getTaxRegime());
+			}
+		}
+	}
+
 	public List<String> findBrands() throws SQLException {
 		List<String> brands = new ArrayList<String>();
 		try (PreparedStatement statement = session.getConnection().prepareStatement(
@@ -193,10 +226,14 @@ public final class PriceRuleService {
 	public static double calculateGross(double factoryPrice, double taxRate, PriceRule rule, TaxRegime regime) {
 		double cost = calculateGrossCostBasis(factoryPrice, taxRate, regime);
 		double raw = cost * (1.0 + rule.getMarkupPercent() / 100.0);
-		if (PriceRule.ROUND_NONE.equals(rule.getRounding())) {
+		return roundGross(raw, rule.getRounding());
+	}
+
+	public static double roundGross(double raw, String rounding) {
+		if (PriceRule.ROUND_NONE.equals(rounding)) {
 			return roundCents(raw);
 		}
-		if (PriceRule.ROUND_95.equals(rule.getRounding())) {
+		if (PriceRule.ROUND_95.equals(rounding)) {
 			return roundTo95(raw);
 		}
 		return roundCharm(raw);

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Previsualització en viu mentre s'escriu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+html,body{margin:0;background:#f5f1ea}
+a{color:#b8481f}a:hover{color:#8f3216}
+</style>
+</head>
+<body>
+<div style="width: 1280px; height: 780px; box-sizing: border-box; background: #f5f1ea; color: #241c14; font-family: 'Manrope', system-ui, sans-serif; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+  <div style="display: flex; align-items: center; gap: 16px">
+    <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; flex-grow: 1">Productes</h1>
+    <button type="button" style="height: 48px; padding: 0 20px; border-radius: 10px; border: 1px solid #96896f; background: #fffdf9; color: #241c14; font-family: inherit; font-size: 17px; line-height: 24px; font-weight: 500">+ Nou producte</button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: #fffdf9; box-shadow: 0 1px 2px rgba(36,28,20,0.08)">
+    <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #6b6154">Filtres actius</span>
+    <span style="padding: 6px 12px; border-radius: 999px; background: #ece5d6; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px">Família: P01BSP1</span>
+    <span style="flex-grow: 1; font-size: 13px; line-height: 18px; color: #6b6154">4 resultats · 4 seleccionats</span>
+    <span style="font-size: 13px; line-height: 18px; color: #6b6154">Doble clic al PVP per a una excepció</span>
+  </div>
+  <div style="flex-grow: 1; display: flex; gap: 32px; min-height: 0">
+    <div style="width: 600px; background: #fffdf9; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08); display: flex; flex-direction: column; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #96896f">
+        <input id="all" type="checkbox" checked style="width: 20px; height: 20px; accent-color: #b8481f; margin: 0">
+        <label for="all" style="width: 125px; font-size: 13px; line-height: 18px; font-weight: 500; color: #6b6154">Referència</label>
+        <span style="flex-grow: 1; font-size: 13px; line-height: 18px; font-weight: 500; color: #6b6154">Nom</span>
+        <span style="width: 120px; font-size: 13px; line-height: 18px; font-weight: 500; color: #6b6154">Categoria</span>
+        <span style="width: 110px; text-align: right; font-size: 13px; line-height: 18px; font-weight: 500; color: #6b6154">PVP</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #ece5d6">
+        <input id="r1" type="checkbox" checked style="width: 20px; height: 20px; accent-color: #b8481f; margin: 0">
+        <label for="r1" style="width: 125px; white-space: nowrap; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px; color: #241c14">P01BSP1-000 L</label>
+        <span style="flex-grow: 1; font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">Camiseta manga corta blanca</span>
+        <span style="width: 120px; white-space: nowrap; font-size: 15px; line-height: 22px; ">Màniga llarga</span>
+        <span style="width: 110px; white-space: nowrap; box-sizing: border-box; padding: 3px 8px; border-radius: 6px; background: transparent; border: 1px dashed #96896f; display: flex; flex-direction: column; align-items: flex-end"><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 17px; line-height: 20px; font-weight: 600; color: #241c14">12,50 €</span><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 16px; color: #6b6154; text-decoration: line-through">11,25 €</span></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: transparent">
+        <input id="r2" type="checkbox" checked style="width: 20px; height: 20px; accent-color: #b8481f; margin: 0">
+        <label for="r2" style="width: 125px; white-space: nowrap; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px; color: #241c14">P01BSP1-000 M</label>
+        <span style="flex-grow: 1; font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">Camiseta manga corta blanca</span>
+        <span style="width: 120px; white-space: nowrap; font-size: 15px; line-height: 22px; ">Màniga curta</span>
+        <span style="width: 110px; white-space: nowrap; box-sizing: border-box; padding: 3px 8px; border-radius: 6px; background: transparent; border: 1px dashed #96896f; display: flex; flex-direction: column; align-items: flex-end"><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 17px; line-height: 20px; font-weight: 600; color: #241c14">12,50 €</span><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 16px; color: #6b6154; text-decoration: line-through">11,25 €</span></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #ece5d6">
+        <input id="r3" type="checkbox" checked style="width: 20px; height: 20px; accent-color: #b8481f; margin: 0">
+        <label for="r3" style="width: 125px; white-space: nowrap; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px; color: #241c14">P01BSP1-000 S</label>
+        <span style="flex-grow: 1; font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">Camiseta manga corta blanca</span>
+        <span style="width: 120px; white-space: nowrap; font-size: 15px; line-height: 22px; ">Màniga curta</span>
+        <span style="width: 110px; white-space: nowrap; box-sizing: border-box; padding: 3px 8px; border-radius: 6px; background: transparent; border: 1px dashed #96896f; display: flex; flex-direction: column; align-items: flex-end"><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 17px; line-height: 20px; font-weight: 600; color: #241c14">12,50 €</span><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 16px; color: #6b6154; text-decoration: line-through">11,25 €</span></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: transparent">
+        <input id="r4" type="checkbox" checked style="width: 20px; height: 20px; accent-color: #b8481f; margin: 0">
+        <label for="r4" style="width: 125px; white-space: nowrap; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px; color: #241c14">P01BSP1-000 XL</label>
+        <span style="flex-grow: 1; font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">Camiseta manga corta blanca</span>
+        <span style="width: 120px; white-space: nowrap; font-size: 15px; line-height: 22px; ">Màniga curta</span>
+        <span style="width: 110px; white-space: nowrap; box-sizing: border-box; padding: 3px 8px; border-radius: 6px; background: transparent; border: 1px dashed #96896f; display: flex; flex-direction: column; align-items: flex-end"><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 17px; line-height: 20px; font-weight: 600; color: #241c14">12,50 €</span><span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 16px; color: #6b6154; text-decoration: line-through">11,25 €</span></span>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #ece5d6; border-top: 1px solid #96896f">
+        <span style="flex-grow: 1; font-size: 13px; line-height: 18px; color: #6b6154">Previsualització · encara no aplicat</span>
+        <button type="button" disabled style="height: 48px; padding: 0 14px; border-radius: 10px; border: 1px solid #96896f; background: #ece5d6; color: #6b6154; font-family: inherit; font-size: 15px; font-weight: 500">Descarta-ho tot</button>
+        <button type="button" disabled style="height: 48px; padding: 0 18px; border-radius: 10px; border: 1px solid #96896f; background: #ece5d6; color: #6b6154; font-family: inherit; font-size: 15px; font-weight: 600">Desa els canvis</button>
+      </div>
+    </div>
+    <div style="flex-grow: 1; background: #fffdf9; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08); padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #6b6154">Edició en lot</span>
+        <h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 700">Editant 4 productes</h2>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        <span style="padding: 5px 10px; border-radius: 999px; background: #ece5d6; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px">…000 L</span>
+        <span style="padding: 5px 10px; border-radius: 999px; background: #ece5d6; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px">…000 M</span>
+        <span style="padding: 5px 10px; border-radius: 999px; background: #ece5d6; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px">…000 S</span>
+        <span style="padding: 5px 10px; border-radius: 999px; background: #ece5d6; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; line-height: 18px">…000 XL</span>
+      </div>
+      <div style="height: 1px; background: #96896f"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-cat" style="font-size: 15px; line-height: 22px; font-weight: 600">Categoria</label>
+        <select id="p-cat" style="height: 48px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid #96896f; background: #ece5d6; color: #241c14; font-family: inherit; font-size: 15px">
+          <option>Sense canviar</option>
+          <option>Samarretes Dona / Màniga curta</option>
+        </select>
+        <span style="font-size: 13px; line-height: 18px; color: #6b6154">2 valors diferents entre els 4</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 15px; line-height: 22px; font-weight: 600">Preu de venda (IVA inclòs)</span>
+        <div style="display: flex; gap: 6px">
+          <button type="button" style="height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid #6b5f47; background: #ece5d6; color: #241c14; font-family: inherit; font-size: 15px; font-weight: 600">Fixa</button>
+          <button type="button" style="height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid #96896f; background: #fffdf9; color: #6b6154; font-family: inherit; font-size: 15px; font-weight: 500">+ %</button>
+          <button type="button" style="height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid #96896f; background: #fffdf9; color: #6b6154; font-family: inherit; font-size: 15px; font-weight: 500">+ €</button>
+        </div>
+        <input id="p-val" type="text" value="12,50 €" placeholder="0,00 €" style="height: 48px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 2px solid #6b5f47; background: #fffdf9; color: #241c14; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 17px; font-weight: 600">
+        <span style="font-size: 13px; line-height: 18px; color: #6b6154">Valor actual: 11,25 € als 4 productes</span>
+      </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 6px; background: #ece5d6">
+          <span style="font-size: 13px; line-height: 18px; color: #6b6154">Els 4 passen de 11,25 € a 12,50 €. La graella ho mostra en gris mentre no ho apliquis.</span>
+        </div>
+      <div style="flex-grow: 1"></div>
+
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button type="button" style="height: 48px; padding: 0 14px; border-radius: 10px; border: 1px solid #96896f; background: #fffdf9; color: #241c14; font-family: inherit; font-size: 15px; font-weight: 500">Neteja la selecció</button>
+        <span style="flex-grow: 1"></span>
+        <button type="button" style="height: 48px; padding: 0 20px; border-radius: 10px; border: none; background: #b8481f; color: #ffffff; font-family: inherit; font-size: 17px; line-height: 24px; font-weight: 600">Aplica als 4</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
