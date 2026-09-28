@@ -16,6 +16,11 @@ In the sales product finder, category is a selection rather than free text: prov
 
 When the sales product finder displays tax-inclusive sale prices, label that column “PVP” instead of “Price + taxes”.
 
+The sales product finder also shows current stock as the sum of STOCKCURRENT
+across locations. Its title is localized as product search, and the reference,
+name, stock, and price columns are aligned left, centre, right, and right. The
+stock column is kept narrow and the dialog viewport is 900 px wide.
+
 ## Done when
 
 - Product search in sales and stock screens filters as the operator types, matching text contained in the product fields currently searched.
@@ -23,6 +28,9 @@ When the sales product finder displays tax-inclusive sale prices, label that col
 - Every text field in both filters has a useful localized placeholder.
 - The sales category filter is a localized dropdown populated from product categories and can be cleared to show all categories.
 - The tax-inclusive price column in the sales product finder is labeled “PVP”.
+- The sales product finder shows current stock and uses the requested column
+  alignments and narrow stock column.
+- The sales product finder title is localized as product search.
 - Clearing the query restores the unfiltered results, and existing product selection behaviour still works.
 - Search labels and feedback remain usable in English, Spanish, and Catalan at supported window sizes.
 

@@ -28,7 +28,9 @@ import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
 import java.util.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import com.openbravo.data.loader.*;
 import com.openbravo.format.Formats;
@@ -776,6 +778,16 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// Products list
 	public final SentenceList getProductList() {
 		return productListSentence("?(QBF_FILTER)");
+	}
+
+	public final Map<String, Double> getProductStocks() throws BasicException {
+		List<Object[]> rows = new PreparedSentence(s, "SELECT PRODUCT, SUM(UNITS) FROM STOCKCURRENT GROUP BY PRODUCT",
+				null, new SerializerReadBasic(new Datas[]{Datas.STRING, Datas.DOUBLE})).list();
+		Map<String, Double> stocks = new HashMap<>();
+		for (Object[] row : rows) {
+			stocks.put((String) row[0], row[1] == null ? 0.0 : (Double) row[1]);
+		}
+		return stocks;
 	}
 
 	// Products list
