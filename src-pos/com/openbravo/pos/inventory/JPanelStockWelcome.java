@@ -28,6 +28,8 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Path2D;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -845,7 +847,36 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		card.add(words, BorderLayout.CENTER);
 		card.getAccessibleContext().setAccessibleName(tr(key));
 		card.addActionListener(e -> navigate.run());
+		wireCardEvents(card, card.getComponent(0));
+		wireCardEvents(card, words);
 		return card;
+	}
+
+	private static void wireCardEvents(JButton card, Component component) {
+		component.setCursor(card.getCursor());
+		component.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent event) {
+				card.getModel().setRollover(true);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent event) {
+				java.awt.Point point = SwingUtilities.convertPoint(component, event.getPoint(), card);
+				if (!card.contains(point))
+					card.getModel().setRollover(false);
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent event) {
+				if (SwingUtilities.isLeftMouseButton(event))
+					card.doClick();
+			}
+		});
+		if (component instanceof java.awt.Container) {
+			for (Component child : ((java.awt.Container) component).getComponents())
+				wireCardEvents(card, child);
+		}
 	}
 
 	private static JTextArea wrapped(String value, java.awt.Font font, Color color) {
@@ -1045,6 +1076,8 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 			setContentAreaFilled(false);
 			setOpaque(false);
 			setFocusPainted(false);
+			setRolloverEnabled(true);
+			setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
 		}
 		@Override
 		protected void paintComponent(Graphics graphics) {
