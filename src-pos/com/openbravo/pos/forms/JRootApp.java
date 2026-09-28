@@ -22,6 +22,7 @@ package com.openbravo.pos.forms;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
+import java.awt.geom.Path2D;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,9 +30,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 
 import com.openbravo.pos.printer.*;
 import com.openbravo.pos.theme.RetailPOSColors;
+import com.openbravo.pos.theme.RetailPOSTheme;
 
 import com.openbravo.beans.*;
 
@@ -55,19 +58,17 @@ public class JRootApp extends JPanel implements AppView {
 	private static final int HEADER_HEIGHT = 64;
 	private static final int HEADER_LOGO_HEIGHT = 40;
 	private static final int HEADER_GAP = 18;
-	// Retail POS design system tokens (com.openbravo.pos.theme.RetailPOSColors).
-	private static final Color HEADER_BACKGROUND = RetailPOSColors.surface100();
-	private static final Color HEADER_RULE = RetailPOSColors.border();
-	private static final Color HEADER_TEXT = RetailPOSColors.ink();
-	private static final Color HEADER_TEXT_MUTED = RetailPOSColors.inkMuted();
-	private static final Color LOGIN_BACKGROUND = RetailPOSColors.surface0();
-	private static final Color ADMIN_BUTTON = new Color(0x374151);
-
-	// Two columns of staff buttons, four rows before the grid starts scrolling.
-	private static final int LOGIN_BUTTON_WIDTH = 240;
-	private static final int LOGIN_BUTTON_HEIGHT = 64;
-	private static final int LOGIN_GRID_WIDTH = 2 * LOGIN_BUTTON_WIDTH + 30;
-	private static final int LOGIN_GRID_HEIGHT = 4 * LOGIN_BUTTON_HEIGHT + 45;
+	private static final int CARD_ARC = 16;
+	private JPanel loginSteps;
+	private JPanel choiceStep;
+	private int modeContentWidth;
+	private JPanel administratorStep;
+	private JPanel pickerColumn;
+	private JPanel pickerHeader;
+	private JPanel peopleGrid;
+	private JButton backButton;
+	private JLabel tillLabel;
+	private final java.util.List<JButton> administratorButtons = new java.util.ArrayList<>();
 
 	private AppProperties m_props;
 	private Session session;
@@ -83,6 +84,7 @@ public class JRootApp extends JPanel implements AppView {
 
 	private StringBuffer inputtext;
 	private boolean m_administrationLogin;
+	private KeyEventDispatcher cardDispatcher;
 
 	private DeviceTicket m_TP;
 	private TicketParser m_TTP;
@@ -99,21 +101,44 @@ public class JRootApp extends JPanel implements AppView {
 		// Inicializo los componentes visuales
 		initComponents();
 		initHeader();
-		jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
+		cardDispatcher = event -> {
+			if (!m_administrationLogin || !m_jPanelLogin.isShowing() || !SwingUtilities.isDescendingFrom(
+					KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner(), m_jPanelLogin)) {
+				return false;
+			}
+			if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ESCAPE) {
+				showChoiceStep();
+				return true;
+			}
+			if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER
+					&& inputtext.length() > 0) {
+				processKey('\n');
+				return true;
+			}
+			if (event.getID() == KeyEvent.KEY_TYPED && !event.isAltDown() && !event.isControlDown()
+					&& !event.isMetaDown() && !Character.isISOControl(event.getKeyChar())
+					&& event.getKeyChar() != ' ') {
+				processKey(event.getKeyChar());
+				return true;
+			}
+			return false;
+		};
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(cardDispatcher);
 	}
 
 	private void initHeader() {
 
 		Font base = m_jLblSubTitle.getFont();
 		m_jLblSubTitle.setFont(base.deriveFont(Font.PLAIN, 14f));
-		m_jLblClock.setFont(base.deriveFont(Font.BOLD, 16f));
+		m_jLblClock.setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD.deriveFont(20f));
 		m_jLblOperator.setFont(base.deriveFont(Font.PLAIN, 12f));
 		m_jLblDemo.setFont(base.deriveFont(Font.BOLD, 16f));
-		m_jLblDemo.setForeground(new Color(0x78350F));
-		m_jLblDemo.setBackground(new Color(0xFDE68A));
+		m_jLblDemo.setForeground(RetailPOSColors.warning());
+		m_jLblDemo.setBackground(RetailPOSColors.surface100());
 		m_jLblDemo.setHorizontalAlignment(SwingConstants.CENTER);
-		m_jLblDemo.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(0xF59E0B), 1),
-				BorderFactory.createEmptyBorder(6, 14, 6, 14)));
+		m_jLblDemo.setBorder(
+				BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.warning(), 1),
+						BorderFactory.createEmptyBorder(6, 14, 6, 14)));
 		m_jLblDemo.setOpaque(true);
 		m_jLblDemo.setText(AppLocal.getIntString("Label.DemoMode"));
 		m_jLblDemo.setVisible(false);
@@ -131,7 +156,7 @@ public class JRootApp extends JPanel implements AppView {
 	private void updateHeaderStatus() {
 
 		Date now = new Date();
-		m_jLblClock.setText(DateFormat.getTimeInstance(DateFormat.SHORT).format(now));
+		m_jLblClock.setText(new java.text.SimpleDateFormat("HH:mm").format(now));
 
 		String sdate = DateFormat.getDateInstance(DateFormat.MEDIUM).format(now);
 		m_jLblOperator
@@ -240,6 +265,7 @@ public class JRootApp extends JPanel implements AppView {
 	public void tryToClose() {
 
 		if (closeAppView()) {
+			KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(cardDispatcher);
 
 			// success. continue with the shut down
 
@@ -287,6 +313,9 @@ public class JRootApp extends JPanel implements AppView {
 		m_iActiveCashSequence = iSeq;
 		m_dActiveCashDateStart = dStart;
 		m_dActiveCashDateEnd = dEnd;
+		if (tillLabel != null) {
+			updateCashStatus();
+		}
 
 		m_propsdb.setProperty("activecash", m_sActiveCashIndex);
 		m_dlSystem.setResourceAsProperties(m_props.getHost() + "/properties", m_propsdb);
@@ -369,11 +398,8 @@ public class JRootApp extends JPanel implements AppView {
 
 		try {
 
-			jScrollPane1.getViewport().setView(null);
-
-			JFlowPanel jPeople = new JFlowPanel();
-			jPeople.setOpaque(false);
-			jPeople.applyComponentOrientation(getComponentOrientation());
+			peopleGrid.removeAll();
+			administratorButtons.clear();
 
 			java.util.List people = m_dlSystem.listPeopleVisible();
 
@@ -385,22 +411,377 @@ public class JRootApp extends JPanel implements AppView {
 					continue;
 				}
 
-				JButton btn = new JButton(new AppUserAction(user));
-				btn.applyComponentOrientation(getComponentOrientation());
-				btn.setFocusPainted(false);
-				btn.setFocusable(false);
-				btn.setRequestFocusEnabled(false);
-				btn.setHorizontalAlignment(SwingConstants.LEADING);
-				btn.setMaximumSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
-				btn.setPreferredSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
-				btn.setMinimumSize(new Dimension(LOGIN_BUTTON_WIDTH, LOGIN_BUTTON_HEIGHT));
-
-				jPeople.add(btn);
+				JButton btn = administratorButton(user);
+				administratorButtons.add(btn);
+				peopleGrid.add(btn);
 			}
-			jScrollPane1.getViewport().setView(jPeople);
+			reflowPeople();
 
 		} catch (BasicException ee) {
 			LOGGER.log(Level.WARNING, "event=login_users_load_failed", ee);
+		}
+	}
+
+	JButton administratorButton(AppUser user) {
+		JButton btn = new RoundedButton(false);
+		btn.setAction(new AppUserAction(user));
+		btn.applyComponentOrientation(getComponentOrientation());
+		btn.setText("<html><b>" + escapeHtml(user.getName()) + "</b><br>" + AppLocal.getIntString(
+				AppUser.ROLE_ADMINISTRATOR.equals(user.getRole()) ? "Label.AdministratorRole" : "Label.ManagerRole")
+				+ "</html>");
+		btn.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(17f));
+		btn.setHorizontalAlignment(SwingConstants.LEADING);
+		if (user.getIcon() == null) {
+			btn.setIcon(new InitialsIcon(user.getName()));
+		}
+		btn.setIconTextGap(12);
+		styleSecondary(btn, false);
+		btn.setBorder(BorderFactory.createCompoundBorder(new RoundedBorder(RetailPOSColors.border(), 1, CARD_ARC),
+				BorderFactory.createEmptyBorder(12, 16, 12, 16)));
+		focusRing(btn);
+		return btn;
+	}
+
+	private static String escapeHtml(String text) {
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	private void reflowPeople() {
+		// Leave breathing room on both sides of the picker. At a 1024px till this
+		// yields a centred 720px grid, with readable cards in two columns.
+		int width = Math.max(0, Math.min(720, m_jPanelLogin.getWidth() - 192));
+		int columns = width >= 520 ? 2 : 1;
+		if (!(peopleGrid.getLayout() instanceof GridLayout)
+				|| ((GridLayout) peopleGrid.getLayout()).getColumns() != columns) {
+			peopleGrid.setLayout(new GridLayout(0, columns, 12, 12));
+		}
+		peopleGrid.setPreferredSize(null);
+		int height = peopleGrid.getPreferredSize().height;
+		peopleGrid.setPreferredSize(new Dimension(width, height));
+		peopleGrid.setMaximumSize(new Dimension(width, peopleGrid.getPreferredSize().height));
+		peopleGrid.setMinimumSize(new Dimension(0, 0));
+		pickerColumn.setPreferredSize(new Dimension(width, pickerHeader.getPreferredSize().height + 20 + height));
+		pickerColumn.setMaximumSize(pickerColumn.getPreferredSize());
+		pickerColumn.setMinimumSize(new Dimension(0, 0));
+		administratorStep.invalidate();
+		peopleGrid.revalidate();
+		pickerColumn.revalidate();
+		administratorStep.revalidate();
+	}
+
+	private void updateCashStatus() {
+		if (m_props == null || m_dActiveCashDateStart == null) {
+			return;
+		}
+		renderCashStatus(m_props.getHost(), m_dActiveCashDateEnd == null);
+	}
+
+	void renderCashStatus(String till, boolean open) {
+		tillLabel.setText(AppLocal.getIntString("Label.Till") + " " + till + "  \u00b7  "
+				+ AppLocal.getIntString(open ? "Label.CashOpen" : "Label.CashClosed"));
+		m_jSalesMode.setText(salesModeText(open));
+		m_jSalesMode.setToolTipText(AppLocal.getIntString(open ? "Label.SalesModeHint" : "Label.SalesNewSessionHint"));
+		sizeModeButtons();
+	}
+
+	void sizeModeButtons() {
+		// Give the two touch targets the same visual weight without stretching them
+		// across a full-screen till. The content width remains the lower bound.
+		int available = m_jPanelLogin.getWidth() - 64;
+		int width = Math.max(modeContentWidth, Math.min(560, available * 54 / 100));
+		m_jSalesMode.setPreferredSize(new Dimension(width, m_jSalesMode.getPreferredSize().height));
+		m_jSalesMode.setMaximumSize(m_jSalesMode.getPreferredSize());
+		m_jAdminMode.setPreferredSize(new Dimension(width, m_jAdminMode.getPreferredSize().height));
+		m_jAdminMode.setMaximumSize(m_jAdminMode.getPreferredSize());
+		choiceStep.revalidate();
+	}
+
+	private String salesModeText(boolean open) {
+		return "<html><b>" + AppLocal.getIntString("Button.SalesMode") + "</b><br><font size='4'>"
+				+ AppLocal.getIntString(open ? "Label.SalesModeHint" : "Label.SalesNewSessionHint") + "</font></html>";
+	}
+
+	private void showChoiceStep() {
+		m_administrationLogin = false;
+		inputtext = new StringBuffer();
+		((CardLayout) loginSteps.getLayout()).show(loginSteps, "choice");
+		updateCashStatus();
+		SwingUtilities.invokeLater(() -> m_jSalesMode.requestFocusInWindow());
+	}
+
+	private void showAdministratorStep() {
+		m_administrationLogin = true;
+		inputtext = new StringBuffer();
+		listPeople(true);
+		((CardLayout) loginSteps.getLayout()).show(loginSteps, "administrators");
+		SwingUtilities.invokeLater(() -> {
+			if (!administratorButtons.isEmpty()) {
+				administratorButtons.get(0).requestFocusInWindow();
+			} else {
+				backButton.requestFocusInWindow();
+			}
+		});
+	}
+
+	private void styleSecondary(JButton button, boolean danger) {
+		button.setBackground(RetailPOSColors.surface100());
+		button.setForeground(danger ? RetailPOSColors.dangerText() : RetailPOSColors.ink());
+		button.setOpaque(false);
+		button.setBorder(BorderFactory.createCompoundBorder(
+				new RoundedBorder(danger ? RetailPOSColors.danger() : RetailPOSColors.border(), 1, CARD_ARC),
+				BorderFactory.createEmptyBorder(12, 20, 12, 20)));
+	}
+
+	private void focusRing(JButton button) {
+		javax.swing.border.Border normal = button.getBorder();
+		button.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2), normal));
+		button.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent event) {
+				button.setBorder(BorderFactory.createCompoundBorder(
+						new RoundedBorder(RetailPOSColors.borderStrong(), 2, CARD_ARC + 4), normal));
+			}
+			@Override
+			public void focusLost(FocusEvent event) {
+				button.setBorder(
+						BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2), normal));
+			}
+		});
+	}
+
+	private static class RoundedBorder extends AbstractBorder {
+		private final Color color;
+		private final int thickness;
+		private final int arc;
+
+		RoundedBorder(Color color, int thickness, int arc) {
+			this.color = color;
+			this.thickness = thickness;
+			this.arc = arc;
+		}
+
+		@Override
+		public Insets getBorderInsets(Component component) {
+			return new Insets(thickness, thickness, thickness, thickness);
+		}
+
+		@Override
+		public void paintBorder(Component component, Graphics graphics, int x, int y, int width, int height) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(color);
+			g.setStroke(new BasicStroke(thickness));
+			int inset = thickness / 2;
+			g.drawRoundRect(x + inset, y + inset, width - thickness, height - thickness, arc, arc);
+			g.dispose();
+		}
+	}
+
+	private static class ModeIcon implements Icon {
+		private final boolean sales;
+
+		ModeIcon(boolean sales) {
+			this.sales = sales;
+		}
+
+		@Override
+		public int getIconWidth() {
+			return 28;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return 28;
+		}
+
+		@Override
+		public void paintIcon(Component component, Graphics graphics, int x, int y) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.translate(x + (sales ? 2 : 0), y + (sales ? 2 : 0));
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(sales ? RetailPOSColors.onBrand() : RetailPOSColors.ink());
+			g.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			if (sales) {
+				// Same 24x24 basket silhouette as the wireframe SVG. Keep the curved
+				// handle and the tapered body inside the icon's 28x28 paint bounds.
+				Path2D.Double basket = new Path2D.Double();
+				basket.moveTo(4, 7);
+				basket.lineTo(20, 7);
+				basket.lineTo(18.6, 17.2);
+				basket.curveTo(18.45, 18.25, 17.65, 19, 16.6, 19);
+				basket.lineTo(7.4, 19);
+				basket.curveTo(6.35, 19, 5.55, 18.25, 5.4, 17.2);
+				basket.closePath();
+				g.draw(basket);
+				Path2D.Double handle = new Path2D.Double();
+				handle.moveTo(9, 7);
+				handle.lineTo(9, 5.5);
+				handle.curveTo(9, 3.85, 10.35, 2.5, 12, 2.5);
+				handle.curveTo(13.65, 2.5, 15, 3.85, 15, 5.5);
+				handle.lineTo(15, 7);
+				g.draw(handle);
+			} else {
+				for (int row = 0; row < 3; row++) {
+					int cy = 7 + row * 7;
+					g.drawLine(3, cy, 25, cy);
+					g.setColor(RetailPOSColors.surface100());
+					g.fillOval(row == 1 ? 15 : 7, cy - 4, 8, 8);
+					g.setColor(RetailPOSColors.ink());
+					g.drawOval(row == 1 ? 15 : 7, cy - 4, 8, 8);
+				}
+			}
+			g.dispose();
+		}
+	}
+
+	private static class ExitIcon implements Icon {
+		@Override
+		public int getIconWidth() {
+			return 20;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return 20;
+		}
+
+		@Override
+		public void paintIcon(Component component, Graphics graphics, int x, int y) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.translate(x, y);
+			g.scale(20.0 / 24, 20.0 / 24);
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(RetailPOSColors.danger());
+			g.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			Path2D.Double door = new Path2D.Double();
+			door.moveTo(10, 4);
+			door.lineTo(6, 4);
+			door.curveTo(4.9, 4, 4, 4.9, 4, 6);
+			door.lineTo(4, 18);
+			door.curveTo(4, 19.1, 4.9, 20, 6, 20);
+			door.lineTo(10, 20);
+			g.draw(door);
+			Path2D.Double arrow = new Path2D.Double();
+			arrow.moveTo(15, 8);
+			arrow.lineTo(19, 12);
+			arrow.lineTo(15, 16);
+			arrow.moveTo(19, 12);
+			arrow.lineTo(9, 12);
+			g.draw(arrow);
+			g.dispose();
+		}
+	}
+
+	private static class BackIcon implements Icon {
+		@Override
+		public int getIconWidth() {
+			return 20;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return 20;
+		}
+
+		@Override
+		public void paintIcon(Component component, Graphics graphics, int x, int y) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.translate(x, y);
+			g.scale(20.0 / 24, 20.0 / 24);
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(RetailPOSColors.ink());
+			g.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			Path2D.Double arrow = new Path2D.Double();
+			arrow.moveTo(15, 5);
+			arrow.lineTo(8, 12);
+			arrow.lineTo(15, 19);
+			g.draw(arrow);
+			g.dispose();
+		}
+	}
+
+	private static class RoundedButton extends JButton {
+		private final boolean primary;
+		private boolean chevron;
+
+		RoundedButton(boolean primary) {
+			this.primary = primary;
+			setOpaque(false);
+			setContentAreaFilled(false);
+			setRolloverEnabled(true);
+		}
+
+		void setChevron(boolean value) {
+			chevron = value;
+			repaint();
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(primary
+					? (getModel().isRollover() || getModel().isPressed()
+							? RetailPOSColors.brandStrong()
+							: RetailPOSColors.brand())
+					: (getModel().isRollover() ? RetailPOSColors.surface200() : RetailPOSColors.surface100()));
+			g.fillRoundRect(2, 2, getWidth() - 4, getHeight() - 4, CARD_ARC, CARD_ARC);
+			g.dispose();
+			super.paintComponent(graphics);
+			if (chevron) {
+				Graphics2D arrow = (Graphics2D) graphics.create();
+				arrow.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				arrow.setColor(primary ? RetailPOSColors.onBrand() : RetailPOSColors.inkMuted());
+				arrow.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				int center = getHeight() / 2;
+				if (getComponentOrientation().isLeftToRight()) {
+					int x = getWidth() - 27;
+					arrow.drawLine(x, center - 6, x + 6, center);
+					arrow.drawLine(x + 6, center, x, center + 6);
+				} else {
+					arrow.drawLine(27, center - 6, 21, center);
+					arrow.drawLine(21, center, 27, center + 6);
+				}
+				arrow.dispose();
+			}
+		}
+	}
+
+	private static class InitialsIcon implements Icon {
+		private final String initials;
+
+		InitialsIcon(String name) {
+			StringBuilder letters = new StringBuilder();
+			for (String word : name.trim().split("\\s+")) {
+				if (!word.isEmpty() && letters.length() < 2) {
+					letters.append(word.charAt(0));
+				}
+			}
+			initials = letters.toString().toUpperCase(Locale.getDefault());
+		}
+
+		@Override
+		public int getIconWidth() {
+			return 40;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return 40;
+		}
+
+		@Override
+		public void paintIcon(Component component, Graphics graphics, int x, int y) {
+			Graphics2D g = (Graphics2D) graphics.create();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setColor(RetailPOSColors.surface200());
+			g.fillOval(x, y, 40, 40);
+			g.setColor(RetailPOSColors.inkMuted());
+			g.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(15f));
+			FontMetrics metrics = g.getFontMetrics();
+			g.drawString(initials, x + (40 - metrics.stringWidth(initials)) / 2,
+					y + (40 + metrics.getAscent()) / 2 - 3);
+			g.dispose();
 		}
 	}
 
@@ -506,25 +887,14 @@ public class JRootApp extends JPanel implements AppView {
 
 	private void showLogin() {
 
-		m_administrationLogin = false;
-		jLabel1.setText(AppLocal.getIntString("Label.ChooseMode"));
-		m_jSalesMode.setVisible(true);
-		m_jAdminMode.setVisible(true);
-		m_jLogonName.setVisible(false);
-		jScrollPane1.getViewport().setView(null);
 		showView("login");
+		showChoiceStep();
 
 		// show welcome message
 		printerStart();
 
 		// keyboard listener activation
 		inputtext = new StringBuffer();
-		m_txtKeys.setText(null);
-		java.awt.EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				m_txtKeys.requestFocus();
-			}
-		});
 	}
 
 	private void processKey(char c) {
@@ -588,24 +958,20 @@ public class JRootApp extends JPanel implements AppView {
 		m_jPanelLogin = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
 		jLabel1 = new javax.swing.JLabel();
-		m_jSalesMode = new javax.swing.JButton();
-		m_jAdminMode = new javax.swing.JButton();
+		m_jSalesMode = new RoundedButton(true);
+		m_jAdminMode = new RoundedButton(false);
 		jPanel5 = new javax.swing.JPanel();
-		m_jLogonName = new javax.swing.JPanel();
-		jScrollPane1 = new javax.swing.JScrollPane();
 		jPanel2 = new javax.swing.JPanel();
 		jPanel8 = new javax.swing.JPanel();
-		m_jAbout = new javax.swing.JButton();
-		m_jClose = new javax.swing.JButton();
-		jPanel1 = new javax.swing.JPanel();
-		m_txtKeys = new javax.swing.JTextField();
+		m_jAbout = new JButton();
+		m_jClose = new RoundedButton(false);
 
 		setPreferredSize(new java.awt.Dimension(1024, 768));
 		setLayout(new java.awt.BorderLayout());
 
-		m_jPanelTitle.setBackground(HEADER_BACKGROUND);
+		m_jPanelTitle.setBackground(RetailPOSColors.surface100());
 		m_jPanelTitle.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, HEADER_RULE),
+				javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, RetailPOSColors.border()),
 				javax.swing.BorderFactory.createEmptyBorder(0, HEADER_GAP, 0, HEADER_GAP)));
 		m_jPanelTitle.setPreferredSize(new java.awt.Dimension(0, HEADER_HEIGHT));
 		m_jPanelTitle.setLayout(new java.awt.BorderLayout());
@@ -618,11 +984,11 @@ public class JRootApp extends JPanel implements AppView {
 		m_jLblTitle.setBorder(javax.swing.BorderFactory.createCompoundBorder(
 				javax.swing.BorderFactory.createEmptyBorder(12, 0, 12, 0),
 				javax.swing.BorderFactory.createCompoundBorder(
-						javax.swing.BorderFactory.createMatteBorder(0, 0, 0, 1, HEADER_RULE),
+						javax.swing.BorderFactory.createMatteBorder(0, 0, 0, 1, RetailPOSColors.border()),
 						javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, HEADER_GAP))));
 		m_jPanelBrand.add(m_jLblTitle, java.awt.BorderLayout.LINE_START);
 
-		m_jLblSubTitle.setForeground(HEADER_TEXT_MUTED);
+		m_jLblSubTitle.setForeground(RetailPOSColors.inkMuted());
 		m_jLblSubTitle.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, HEADER_GAP, 0, 0));
 		m_jPanelBrand.add(m_jLblSubTitle, java.awt.BorderLayout.CENTER);
 
@@ -635,11 +1001,11 @@ public class JRootApp extends JPanel implements AppView {
 
 		m_jPanelStatus.add(m_jLblDemo);
 
-		m_jLblClock.setForeground(HEADER_TEXT);
+		m_jLblClock.setForeground(RetailPOSColors.ink());
 		m_jLblClock.setAlignmentX(java.awt.Component.RIGHT_ALIGNMENT);
 		m_jPanelStatus.add(m_jLblClock);
 
-		m_jLblOperator.setForeground(HEADER_TEXT_MUTED);
+		m_jLblOperator.setForeground(RetailPOSColors.inkMuted());
 		m_jLblOperator.setAlignmentX(java.awt.Component.RIGHT_ALIGNMENT);
 		m_jPanelStatus.add(m_jLblOperator);
 
@@ -653,112 +1019,140 @@ public class JRootApp extends JPanel implements AppView {
 
 		m_jPanelLogin.setLayout(new java.awt.BorderLayout());
 
-		jPanel4.setBorder(javax.swing.BorderFactory.createEmptyBorder(48, 24, 24, 24));
-		jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.Y_AXIS));
+		jPanel4.setLayout(new GridBagLayout());
+		loginSteps = new JPanel(new CardLayout());
+		loginSteps.setOpaque(false);
+		choiceStep = new JPanel();
+		choiceStep.setOpaque(false);
+		choiceStep.setLayout(new BoxLayout(choiceStep, BoxLayout.Y_AXIS));
+		choiceStep.setBorder(BorderFactory.createEmptyBorder(24, 8, 24, 8));
+		tillLabel = new JLabel();
+		tillLabel.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(13f));
+		tillLabel.setForeground(RetailPOSColors.inkMuted());
+		tillLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		choiceStep.add(tillLabel);
+		choiceStep.add(Box.createVerticalStrut(8));
+		jLabel1.setText(AppLocal.getIntString("Label.ChooseMode"));
+		jLabel1.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(28f));
+		jLabel1.setForeground(RetailPOSColors.ink());
+		jLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+		choiceStep.add(jLabel1);
+		choiceStep.add(Box.createVerticalStrut(24));
 
-		jLabel1.setText(AppLocal.getIntString("Label.WhoWorks")); // NOI18N
-		jLabel1.setFont(jLabel1.getFont().deriveFont(java.awt.Font.BOLD, 20f));
-		jLabel1.setForeground(HEADER_TEXT);
-		jLabel1.setAlignmentX(0.5F);
-		jPanel4.add(jLabel1);
-
-		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
-
-		m_jSalesMode.setText("<html><b>" + AppLocal.getIntString("Button.SalesMode") + "</b><br>" + "<font size='3'>"
-				+ AppLocal.getIntString("Label.SalesModeHint") + "</font></html>");
-		m_jSalesMode.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/menu-sales.png")));
+		// Size the shared mode column for the longer closed-session wording.
+		m_jSalesMode.setText(salesModeText(false));
+		m_jSalesMode.setIcon(new ModeIcon(true));
+		((RoundedButton) m_jSalesMode).setChevron(true);
 		m_jSalesMode.setToolTipText(AppLocal.getIntString("Label.SalesModeHint"));
 		RetailPOSColors.primaryButton(m_jSalesMode);
-		m_jSalesMode.setFont(m_jSalesMode.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		m_jSalesMode.setOpaque(false);
+		m_jSalesMode.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(20f));
 		m_jSalesMode.setHorizontalAlignment(SwingConstants.LEADING);
 		m_jSalesMode.setIconTextGap(18);
-		m_jSalesMode.setFocusPainted(false);
-		m_jSalesMode.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
-		m_jSalesMode.setOpaque(true);
+		m_jSalesMode.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 52));
+		m_jSalesMode.setOpaque(false);
 		m_jSalesMode.setAlignmentX(0.5F);
-		m_jSalesMode.setMaximumSize(new Dimension(460, 82));
-		m_jSalesMode.setPreferredSize(new Dimension(460, 82));
+		focusRing(m_jSalesMode);
 		m_jSalesMode.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				openSalesView();
 			}
 		});
 		m_jAdminMode.setText("<html><b>" + AppLocal.getIntString("Button.AdministrationMode") + "</b><br>"
-				+ "<font size='3'>" + AppLocal.getIntString("Label.AdministrationModeHint") + "</font></html>");
-		m_jAdminMode.setIcon(new ImageIcon(getClass().getResource("/com/openbravo/images/menu-maintenance.png")));
+				+ "<font size='4'>" + AppLocal.getIntString("Label.AdministrationModeHint") + "</font></html>");
+		m_jAdminMode.setIcon(new ModeIcon(false));
+		((RoundedButton) m_jAdminMode).setChevron(true);
 		m_jAdminMode.setToolTipText(AppLocal.getIntString("Label.AdministrationModeHint"));
-		m_jAdminMode.setBackground(ADMIN_BUTTON);
-		m_jAdminMode.setForeground(Color.WHITE);
-		m_jAdminMode.setFont(m_jAdminMode.getFont().deriveFont(java.awt.Font.BOLD, 20f));
+		styleSecondary(m_jAdminMode, false);
+		m_jAdminMode.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(20f));
 		m_jAdminMode.setHorizontalAlignment(SwingConstants.LEADING);
 		m_jAdminMode.setIconTextGap(18);
-		m_jAdminMode.setFocusPainted(false);
-		m_jAdminMode.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
-		m_jAdminMode.setOpaque(true);
+		m_jAdminMode
+				.setBorder(BorderFactory.createCompoundBorder(new RoundedBorder(RetailPOSColors.border(), 1, CARD_ARC),
+						BorderFactory.createEmptyBorder(18, 24, 18, 52)));
+		focusRing(m_jAdminMode);
 		m_jAdminMode.setAlignmentX(0.5F);
-		m_jAdminMode.setMaximumSize(new Dimension(460, 82));
-		m_jAdminMode.setPreferredSize(new Dimension(460, 82));
 		m_jAdminMode.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				m_administrationLogin = true;
-				jLabel1.setText(AppLocal.getIntString("Label.ChooseAdministrator"));
-				m_jSalesMode.setVisible(true);
-				m_jAdminMode.setVisible(true);
-				m_jLogonName.setVisible(true);
-				listPeople(true);
-				jPanel4.revalidate();
-				jPanel4.repaint();
+				showAdministratorStep();
 			}
 		});
-		jPanel4.add(m_jSalesMode);
-		jPanel4.add(javax.swing.Box.createVerticalStrut(8));
-		jPanel4.add(m_jAdminMode);
-		jPanel4.add(javax.swing.Box.createVerticalStrut(20));
+		Dimension modeSize = m_jSalesMode.getPreferredSize();
+		Dimension adminSize = m_jAdminMode.getPreferredSize();
+		modeContentWidth = Math.max(modeSize.width, adminSize.width);
+		sizeModeButtons();
+		choiceStep.add(m_jSalesMode);
+		choiceStep.add(Box.createVerticalStrut(12));
+		choiceStep.add(m_jAdminMode);
+		loginSteps.add(choiceStep, "choice");
 
-		m_jLogonName.setLayout(new java.awt.BorderLayout());
-		m_jLogonName.setOpaque(false);
-		m_jLogonName.setAlignmentX(0.5F);
-		m_jLogonName.setMaximumSize(new java.awt.Dimension(LOGIN_GRID_WIDTH, LOGIN_GRID_HEIGHT));
-		m_jLogonName.setVisible(false);
-
-		jScrollPane1.setBorder(null);
-		jScrollPane1.setOpaque(false);
-		jScrollPane1.getViewport().setOpaque(false);
-		jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-		jScrollPane1.setPreferredSize(new java.awt.Dimension(LOGIN_GRID_WIDTH, LOGIN_GRID_HEIGHT));
-		m_jLogonName.add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-		jPanel4.add(m_jLogonName);
+		administratorStep = new JPanel();
+		administratorStep.setLayout(new GridBagLayout());
+		administratorStep.setOpaque(false);
+		administratorStep.setBorder(BorderFactory.createEmptyBorder(24, 12, 24, 12));
+		pickerColumn = new JPanel(new BorderLayout(0, 20));
+		pickerColumn.setOpaque(false);
+		pickerColumn.setAlignmentX(Component.CENTER_ALIGNMENT);
+		pickerHeader = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+		pickerHeader.setOpaque(false);
+		backButton = new RoundedButton(false);
+		backButton.setText(AppLocal.getIntString("Button.BackToModes"));
+		backButton.setIcon(new BackIcon());
+		backButton.setIconTextGap(8);
+		styleSecondary(backButton, false);
+		focusRing(backButton);
+		backButton.addActionListener(event -> showChoiceStep());
+		pickerHeader.add(backButton);
+		pickerHeader.add(Box.createHorizontalStrut(16));
+		JPanel pickerCopy = new JPanel();
+		pickerCopy.setOpaque(false);
+		pickerCopy.setLayout(new BoxLayout(pickerCopy, BoxLayout.Y_AXIS));
+		JLabel pickerTitle = new JLabel(AppLocal.getIntString("Label.ChooseAdministrator"));
+		pickerTitle.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(28f));
+		pickerTitle.setForeground(RetailPOSColors.ink());
+		pickerCopy.add(pickerTitle);
+		JLabel pickerHint = new JLabel(AppLocal.getIntString("Label.AdministratorPickerHint"));
+		pickerHint.setForeground(RetailPOSColors.inkMuted());
+		pickerCopy.add(pickerHint);
+		pickerHeader.add(pickerCopy);
+		pickerColumn.add(pickerHeader, BorderLayout.NORTH);
+		peopleGrid = new JPanel();
+		peopleGrid.setOpaque(false);
+		peopleGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
+		peopleGrid.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent event) {
+				reflowPeople();
+			}
+		});
+		pickerColumn.add(peopleGrid, BorderLayout.CENTER);
+		GridBagConstraints pickerPosition = new GridBagConstraints();
+		pickerPosition.weightx = 1;
+		pickerPosition.weighty = 1;
+		pickerPosition.anchor = GridBagConstraints.CENTER;
+		administratorStep.add(pickerColumn, pickerPosition);
+		loginSteps.add(administratorStep, "administrators");
+		GridBagConstraints centered = new GridBagConstraints();
+		centered.fill = GridBagConstraints.HORIZONTAL;
+		centered.weightx = 1;
+		centered.insets = new Insets(0, 32, 0, 32);
+		jPanel4.add(loginSteps, centered);
 
 		m_jPanelLogin.add(jPanel4, java.awt.BorderLayout.CENTER);
-		m_jPanelLogin.setBackground(LOGIN_BACKGROUND);
+		m_jPanelLogin.setBackground(RetailPOSColors.surface0());
 		jPanel4.setOpaque(false);
 
 		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 24, 20, 24));
 		jPanel5.setLayout(new java.awt.BorderLayout());
 
-		// Card swipes are read by a zero-sized field that always holds the focus.
-		jPanel1.setLayout(null);
-		jPanel1.setPreferredSize(new java.awt.Dimension(0, 0));
-
-		m_txtKeys.setPreferredSize(new java.awt.Dimension(0, 0));
-		m_txtKeys.addKeyListener(new java.awt.event.KeyAdapter() {
-			public void keyTyped(java.awt.event.KeyEvent evt) {
-				m_txtKeysKeyTyped(evt);
-			}
-		});
-		jPanel1.add(m_txtKeys);
-		m_txtKeys.setBounds(0, 0, 0, 0);
-
 		jPanel2.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 0, 0));
-		jPanel2.add(jPanel1);
 
 		m_jAbout.setText(AppLocal.getIntString("Button.About")); // NOI18N
-		m_jAbout.setForeground(HEADER_TEXT_MUTED);
-		m_jAbout.setFocusPainted(false);
-		m_jAbout.setFocusable(false);
-		m_jAbout.setRequestFocusEnabled(false);
+		m_jAbout.setForeground(RetailPOSColors.inkMuted());
+		m_jAbout.setOpaque(false);
+		m_jAbout.setContentAreaFilled(false);
+		m_jAbout.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+		focusRing(m_jAbout);
 		m_jAbout.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				m_jAboutActionPerformed(evt);
@@ -770,11 +1164,11 @@ public class JRootApp extends JPanel implements AppView {
 
 		jPanel8.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 0, 0));
 
-		m_jClose.setText(AppLocal.getIntString("Button.Close")); // NOI18N
-		m_jClose.setForeground(HEADER_TEXT_MUTED);
-		m_jClose.setFocusPainted(false);
-		m_jClose.setFocusable(false);
-		m_jClose.setRequestFocusEnabled(false);
+		m_jClose.setText(AppLocal.getIntString("Button.CloseApplication"));
+		styleSecondary(m_jClose, true);
+		m_jClose.setIcon(new ExitIcon());
+		m_jClose.setIconTextGap(8);
+		focusRing(m_jClose);
 		m_jClose.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
 				m_jCloseActionPerformed(evt);
@@ -785,6 +1179,15 @@ public class JRootApp extends JPanel implements AppView {
 		jPanel5.add(jPanel8, java.awt.BorderLayout.LINE_END);
 
 		m_jPanelLogin.add(jPanel5, java.awt.BorderLayout.SOUTH);
+		m_jPanelLogin.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent event) {
+				sizeModeButtons();
+				if (m_administrationLogin) {
+					reflowPeople();
+				}
+			}
+		});
 
 		m_jPanelContainer.add(m_jPanelLogin, "login");
 
@@ -821,22 +1224,12 @@ public class JRootApp extends JPanel implements AppView {
 		JOptionPane.showMessageDialog(this, about, AppLocal.getIntString("Button.About"), JOptionPane.PLAIN_MESSAGE);
 	}
 
-	private void m_txtKeysKeyTyped(java.awt.event.KeyEvent evt) {// GEN-FIRST:event_m_txtKeysKeyTyped
-
-		m_txtKeys.setText("0");
-
-		processKey(evt.getKeyChar());
-
-	}// GEN-LAST:event_m_txtKeysKeyTyped
-
 	// Variables declaration - do not modify//GEN-BEGIN:variables
 	private javax.swing.JLabel jLabel1;
-	private javax.swing.JPanel jPanel1;
 	private javax.swing.JPanel jPanel2;
 	private javax.swing.JPanel jPanel4;
 	private javax.swing.JPanel jPanel5;
 	private javax.swing.JPanel jPanel8;
-	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JButton m_jAbout;
 	private javax.swing.JButton m_jClose;
 	private javax.swing.JLabel m_jLblClock;
@@ -846,12 +1239,10 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JButton m_jSalesMode;
 	private javax.swing.JLabel m_jLblSubTitle;
 	private javax.swing.JLabel m_jLblTitle;
-	private javax.swing.JPanel m_jLogonName;
 	private javax.swing.JPanel m_jPanelBrand;
 	private javax.swing.JPanel m_jPanelContainer;
 	private javax.swing.JPanel m_jPanelLogin;
 	private javax.swing.JPanel m_jPanelStatus;
 	private javax.swing.JPanel m_jPanelTitle;
-	private javax.swing.JTextField m_txtKeys;
 	// End of variables declaration//GEN-END:variables
 }
