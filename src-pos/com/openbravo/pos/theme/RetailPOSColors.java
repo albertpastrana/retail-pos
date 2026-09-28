@@ -128,6 +128,20 @@ public final class RetailPOSColors {
 		return token("retailpos.danger", 0x8a2a22);
 	}
 
+	/** Readable text for danger-outlined controls and badges on surface100. */
+	public static Color dangerText() {
+		Color danger = danger();
+		return (luminance(surface100()) + 0.05) / (luminance(danger) + 0.05) >= 4.5 ? danger : ink();
+	}
+
+	private static double luminance(Color color) {
+		double[] channels = {color.getRed() / 255.0, color.getGreen() / 255.0, color.getBlue() / 255.0};
+		for (int i = 0; i < channels.length; i++) {
+			channels[i] = channels[i] <= 0.04045 ? channels[i] / 12.92 : Math.pow((channels[i] + 0.055) / 1.055, 2.4);
+		}
+		return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+	}
+
 	/** Neutral notices: scan-to-import lookup, update available. Used sparingly. */
 	public static Color info() {
 		return token("retailpos.info", 0x3c6e8f);

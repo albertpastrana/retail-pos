@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Pantalla inicial — tema fosc, caixa tancada</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:"Manrope","Segoe UI",system-ui,sans-serif;background:#1b1712;color:#f3ece1}
+a{color:#e2764c}a:hover{color:#f0925f}
+button{font-family:inherit}
+</style>
+</head>
+<body>
+
+<div style="width: 1024px; height: 768px; box-sizing: border-box; display: flex; flex-direction: column; background: #1b1712; overflow: hidden">
+
+  <div style="height: 64px; flex-shrink: 0; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 18px; background: #241f19; border-bottom: 1px solid #786b57">
+    <div style="display: flex; align-items: center; padding: 12px 18px 12px 0; border-right: 1px solid #786b57">
+      <div style="width: 78px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px dashed #786b57; border-radius: 6px; font-size: 11px; line-height: 14px; font-weight: 600; color: #b2a695">Window.Logo</div>
+    </div>
+    <div style="flex-grow: 1; font-size: 15px; line-height: 22px; font-weight: 500; color: #f3ece1">Botiga Sant Antoni</div>
+    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px">
+      <div style="font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace; font-size: 20px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #f3ece1">21:34</div>
+      <div style="font-size: 13px; line-height: 18px; font-weight: 500; color: #b2a695">Dijous, 24 de setembre</div>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; overflow: hidden">
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #b2a695">Caixa 1 · Magatzem principal</div>
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; color: #f3ece1">Què vols fer?</h1>
+    </div>
+
+    <div style="box-sizing: border-box; width: 560px; padding: 14px 20px; display: flex; align-items: center; gap: 14px; background: #241f19; border: 1px solid #786b57; border-radius: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.4)">
+      <div style="display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(201,70,58,0.22); border: 1px solid #c9463a">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f3ece1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>
+        <span style="font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.04em; color: #f3ece1">CAIXA TANCADA</span>
+      </div>
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px">
+        <div style="font-size: 15px; line-height: 22px; font-weight: 500; color: #f3ece1">Sessió <span style="font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace; font-weight: 500; font-variant-numeric: tabular-nums">148</span> tancada a les <span style="font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace; font-weight: 500; font-variant-numeric: tabular-nums">21:10</span></div>
+        <div style="font-size: 13px; line-height: 18px; font-weight: 500; color: #b2a695">Total del dia <span style="font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums">1.284,50 €</span></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+
+      <button type="button" style="box-sizing: border-box; width: 560px; min-height: 88px; padding: 18px 24px; display: flex; align-items: center; gap: 16px; background: #e2764c; color: #2b1206; border: 1px solid #e2764c; border-radius: 10px; text-align: left; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16l-1.4 10.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8Z"></path><path d="M9 7V5.5a3 3 0 0 1 6 0V7"></path></svg>
+        <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 17px; line-height: 24px; font-weight: 700">Vendes</span>
+          <span style="font-size: 13px; line-height: 18px; font-weight: 500">Obre una sessió nova i comença a vendre</span>
+        </span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+
+      <button type="button" style="box-sizing: border-box; width: 560px; min-height: 88px; padding: 18px 24px; display: flex; align-items: center; gap: 16px; background: #241f19; color: #f3ece1; border: 1px solid #786b57; border-radius: 10px; text-align: left; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f3ece1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path><circle cx="9" cy="7" r="2" fill="#241f19"></circle><circle cx="15" cy="12" r="2" fill="#241f19"></circle><circle cx="8" cy="17" r="2" fill="#241f19"></circle></svg>
+        <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 17px; line-height: 24px; font-weight: 700">Administració</span>
+          <span style="font-size: 13px; line-height: 18px; font-weight: 500; color: #b2a695">Gestiona productes, estoc i configuració</span>
+        </span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b2a695" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+
+    </div>
+
+  </div>
+
+  <div style="flex-shrink: 0; box-sizing: border-box; padding: 0 24px 20px; display: flex; align-items: center; gap: 12px">
+    <button type="button" style="box-sizing: border-box; min-height: 48px; padding: 0 16px; background: transparent; border: 0; border-radius: 10px; font-size: 15px; line-height: 22px; font-weight: 500; color: #b2a695; cursor: pointer">Quant a</button>
+    <div style="flex-grow: 1"></div>
+    <button type="button" style="box-sizing: border-box; min-height: 48px; padding: 0 16px; display: flex; align-items: center; gap: 8px; background: #241f19; border: 1px solid #c9463a; border-radius: 10px; font-size: 15px; line-height: 22px; font-weight: 500; color: #f3ece1; cursor: pointer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9463a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"></path><path d="M15 8l4 4-4 4"></path><path d="M19 12H9"></path></svg>
+      Tanca l'aplicació
+    </button>
+  </div>
+
+</div>
+
+</body>
+</html>

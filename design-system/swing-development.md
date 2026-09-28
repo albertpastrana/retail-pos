@@ -81,6 +81,8 @@ UIManager.setLookAndFeel(new FlatLightLaf());
 
 Disabled controls keep their normal background and foreground; FlatLaf's standard disabled painting supplies the approximately 45% attenuation documented in the design system. Do not set `TextField.disabledBackground` or a component-specific `disabledBackground` to a solid token, especially not to the same colour as the enabled state.
 
+For danger-outlined badges and secondary buttons on `surface-100`, use `RetailPOSColors.dangerText()` for the text and `danger()` for the outline. The dark theme's danger token does not provide 4.5:1 contrast for small text on that surface; the helper selects `ink` when necessary. Keep the outline and the explicit status/action label so the meaning does not rely on colour alone.
+
 ## 2. Fonts: register them, don't look them up by name
 
 The real Manrope and IBM Plex Mono files are in this system's `fonts/` folder as `.woff2` (for the web side). Swing needs `.ttf`/`.otf`, so convert once and commit the result — do not ship `.woff2` next to the `.jar`:
