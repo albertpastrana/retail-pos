@@ -24,6 +24,16 @@ The following unused methods were also removed on 2026-09-25:
 
 - `ListQBFModelNumber.getNonMandatoryString()`
 - `ListQBFModelNumber.getNonMandatoryNumber()`
+- `Base64Encoder.encode(byte[])` (the class remains used by `ResourcesView`)
+
+An additional class-level candidate was found during the follow-up graph and
+repository-wide search and removed on 2026-09-25:
+
+- `src-pos/com/openbravo/pos/ticket/Signumprovider.java`
+
+The class and its `addPositive`/`addNegative` methods had no in-repository
+callers. Its removal still requires checking external plugins or installed
+extensions because it was a public class.
 
 The public `AppView.getBean(String)` lookup is also being retired. There are no
 in-repository callers that require the untyped API after the dynamic task
@@ -133,6 +143,11 @@ by configuration-driven or indirect runtime integrations. Compilation and
 `check` pass; database integration is pending because the Docker daemon is not
 running in the current environment.
 
+On 2026-09-25, removed the confirmed unused classes, methods, and
+`DataLogicSales.FallbackPrice.priceSell`. `spotlessApply` and the focused Java
+compilation tasks pass. External extension compatibility and database/runtime
+integration checks remain pending.
+
 ## Dependency inventory
 
 The remaining declared dependencies have been classified as follows:
@@ -153,3 +168,72 @@ The pending groups must be exercised through the supported legacy integrations
 before removal. The next validation should cover Velocity ticket rendering,
 Axis/PayPoint or SOAP flows, barcode generation, all configured database
 drivers, application packaging, and the normal sale and receipt flows.
+
+## src-beans audit (2026-09-26)
+
+The first repository-wide reference pass classified the contents of
+`src-beans` as follows:
+
+- `com.openbravo.basic.BasicException` is active throughout `src-data` and
+  `src-pos`.
+- `com.openbravo.format.Formats` and `DoubleUtils` are active. The legacy
+  `FormatsConstrain`, `FormatsException`, `FormatsRESOURCE`, and
+  `FormatsValidate` classes have no callers outside their own definitions and
+  are removal candidates, pending public API and external extension checks.
+- `com.openbravo.beans` is active. Calendar and time panels are reached from
+  `JCalendarDialog`; `JFlowPanel`, `JNumberKeys`, `JPasswordDialog`,
+  `LocaleResources`, `RoundedBorder`, and the related event classes have
+  current callers. `DateUtils` needs a method-level audit rather than a
+  package-level removal.
+- `com.openbravo.editor.JEditorCurrencyPositive` is active in
+  `JPaymentDebt`, with `JEditorNumber`, `JEditorAbstract`, `EditorComponent`,
+  and `com.openbravo.format.Formats` as its implementation dependencies. The
+  other editor widgets (`JEditorString`, `JEditorPassword`, `JEditorDouble`,
+  `JEditorDoublePositive`, `JEditorIntegerPositive`, `JEditorCurrency`, and
+  `JEditorStringNumber`) have no repository callers. `JEditorKeys` and the
+  `EditorKeys` interface also have no active construction or registration path;
+  they should be removed or explicitly retained only after checking external
+  consumers.
+- Of the 178 PNG files under `com/openbravo/images`, 109 have a textual
+  repository reference and 69 have none. The 69 no-reference candidates are
+  mostly old menu, KDE/desktop, calculator, report, and branding assets. This
+  is only a static result: database-seeded resources are loaded from
+  `RESOURCES`, while migrations seed templates under `pos/templates`, not
+  these image files. The no-reference list must still be checked against
+  installed database rows and external plugins before deletion.
+
+No `src-beans` files were removed by this pass. The next slice should delete
+only confirmed orphan editor/format classes and image candidates in a separate
+reviewable change, then run compilation, packaging, and the database/resource
+integration checks.
+
+## Necessity review (2026-09-26)
+
+`BasicException` is not merely an unused-looking wrapper. It is the checked
+exception in the public contracts of the data loader (`SentenceList`,
+`DataResultSet`, `DataWrite`, `DataRead`, `BaseSentence`, and related APIs),
+and it is caught or asserted by current POS code and integration tests. It has
+no special runtime behaviour beyond `Exception`, so it could be replaced by a
+different exception type, but doing so would require a broad API and catch-site
+migration. Decision: retain it as necessary current architecture.
+
+The PostgreSQL database configured by `dev-pg.properties` was inspected on
+2026-09-26. Its `RESOURCES` image rows are `Button.OpenDrawer`, `Button.Print`,
+`Printer.Ticket.Logo`, and `Window.Logo`; none refers to a file under
+`src-beans/com/openbravo/images`. The current database therefore adds no
+retention requirement for the 69 image files with no repository reference.
+The rows remain database-backed application resources and must not be removed
+as part of this `src-beans` cleanup.
+
+Necessity decisions from the current repository and database are:
+
+- Retain `BasicException`, active `Formats`, `DoubleUtils`, and the active
+  `beans` components.
+- Retain the `JEditorCurrencyPositive` dependency chain used by
+  `JPaymentDebt`.
+- Mark the other editor widgets, `JEditorKeys`, `EditorKeys`, and the four
+  unused format helper classes as removable candidates, subject to the
+  external extension/API check.
+- Mark the 69 unreferenced `src-beans` PNG files as removable candidates.
+  No current code or current database row requires them, but removal should
+  still be made as a separate change with packaging verification.
