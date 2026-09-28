@@ -73,7 +73,7 @@ dependencies {
         "commons-collections:commons-collections:3.2.2",
         "commons-discovery:commons-discovery:0.5",
         "commons-lang:commons-lang:2.6",
-        "commons-logging:commons-logging:1.2",
+        "commons-logging:commons-logging:1.4.0",
         "com.formdev:flatlaf:3.7.2",
         "oro:oro:2.0.8",
         "org.apache.velocity:velocity:1.7",
