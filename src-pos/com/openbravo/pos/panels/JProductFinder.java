@@ -7,13 +7,16 @@ import java.awt.Frame;
 import java.awt.Window;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.user.ListProvider;
@@ -37,6 +40,7 @@ public class JProductFinder extends JDialog {
 	private Date ticketDate;
 	private CustomerInfoExt customer;
 	private boolean showTaxInclusivePrice;
+	private Map<String, Double> productStocks = java.util.Collections.emptyMap();
 
 	public static final int PRODUCT_ALL = 0;
 	public static final int PRODUCT_NORMAL = 1;
@@ -59,6 +63,12 @@ public class JProductFinder extends JDialog {
 		this.ticketDate = ticketDate;
 		this.customer = customer;
 		this.showTaxInclusivePrice = taxesLogic != null;
+		try {
+			this.productStocks = dlSales.getProductStocks();
+		} catch (BasicException exception) {
+			LOGGER.log(java.util.logging.Level.WARNING, "event=product_search_stock_failed", exception);
+			this.productStocks = java.util.Collections.emptyMap();
+		}
 		initComponents();
 		jcmdOK.setText(AppLocal.getIntString(actionKey));
 		ProductFilterSales filter = new ProductFilterSales();
@@ -131,20 +141,23 @@ public class JProductFinder extends JDialog {
 
 	private static class ProductTableModel extends AbstractTableModel {
 		private final List<ProductInfoExt> products;
+		private final Map<String, Double> productStocks;
 		private final TaxesLogic taxesLogic;
 		private final Date ticketDate;
 		private final CustomerInfoExt customer;
 		private final boolean showTaxInclusivePrice;
 		private final String[] columns;
 
-		ProductTableModel(List<ProductInfoExt> products, TaxesLogic taxesLogic, Date ticketDate,
-				CustomerInfoExt customer, boolean showTaxInclusivePrice) {
+		ProductTableModel(List<ProductInfoExt> products, Map<String, Double> productStocks, TaxesLogic taxesLogic,
+				Date ticketDate, CustomerInfoExt customer, boolean showTaxInclusivePrice) {
 			this.products = products;
+			this.productStocks = productStocks;
 			this.taxesLogic = taxesLogic;
 			this.ticketDate = ticketDate;
 			this.customer = customer;
 			this.showTaxInclusivePrice = showTaxInclusivePrice;
 			columns = new String[]{AppLocal.getIntString("label.prodref"), AppLocal.getIntString("label.prodname"),
+					AppLocal.getIntString("label.productfinder.stock"),
 					AppLocal.getIntString(showTaxInclusivePrice ? "label.productfinder.pvp" : "label.price")};
 		}
 
@@ -169,6 +182,8 @@ public class JProductFinder extends JDialog {
 				case 1 :
 					return product.getName();
 				case 2 :
+					return Formats.DOUBLE.formatValue(productStocks.getOrDefault(product.getID(), 0.0));
+				case 3 :
 					return formatPrice(product, showTaxInclusivePrice ? taxesLogic : null, ticketDate, customer);
 				default :
 					return "";
@@ -196,16 +211,17 @@ public class JProductFinder extends JDialog {
 		jcmdCancel = new javax.swing.JButton();
 
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		setTitle(AppLocal.getIntString("form.productslist"));
+		setTitle(AppLocal.getIntString("form.productfinder"));
 		jTableProducts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		jTableProducts.setAutoCreateRowSorter(true);
 		jTableProducts.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		jTableProducts.setFillsViewportHeight(true);
 		jTableProducts.setRowHeight(32);
-		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList(), taxesLogic, ticketDate,
-				customer, showTaxInclusivePrice));
+		jTableProducts.setModel(new ProductTableModel(java.util.Collections.emptyList(), productStocks, taxesLogic,
+				ticketDate, customer, showTaxInclusivePrice));
 		jTableProducts
-				.setPreferredScrollableViewportSize(new java.awt.Dimension(800, jTableProducts.getRowHeight() * 8));
+				.setPreferredScrollableViewportSize(new java.awt.Dimension(900, jTableProducts.getRowHeight() * 8));
+		configureColumnAlignments();
 		jTableProducts.getSelectionModel().addListSelectionListener(event -> jcmdOK.setEnabled(hasSelectableProduct()));
 		jTableProducts.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
@@ -215,7 +231,7 @@ public class JProductFinder extends JDialog {
 			}
 		});
 		jScrollPane1.setViewportView(jTableProducts);
-		jScrollPane1.setPreferredSize(new java.awt.Dimension(800, 300));
+		jScrollPane1.setPreferredSize(new java.awt.Dimension(900, 300));
 		jPanel5.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		jPanel5.add(jScrollPane1, BorderLayout.CENTER);
 		showProductMessage("message.productfilter");
@@ -257,8 +273,9 @@ public class JProductFinder extends JDialog {
 	private void executeSearch() {
 		try {
 			List<ProductInfoExt> products = lpr.loadData();
-			jTableProducts
-					.setModel(new ProductTableModel(products, taxesLogic, ticketDate, customer, showTaxInclusivePrice));
+			jTableProducts.setModel(new ProductTableModel(products, productStocks, taxesLogic, ticketDate, customer,
+					showTaxInclusivePrice));
+			configureColumnAlignments();
 			if (products.isEmpty()) {
 				showProductMessage("message.productfilter.empty");
 				jcmdOK.setEnabled(false);
@@ -280,12 +297,26 @@ public class JProductFinder extends JDialog {
 
 	private void setColumnWidths() {
 		int width = jTableProducts.getPreferredScrollableViewportSize().width;
-		int referenceWidth = width / 5;
-		int priceWidth = Math.max(150, width / 5);
+		int referenceWidth = 160;
+		int stockWidth = 70;
+		int priceWidth = 150;
 		jTableProducts.getColumnModel().getColumn(0).setPreferredWidth(referenceWidth);
 		jTableProducts.getColumnModel().getColumn(1)
-				.setPreferredWidth(Math.max(100, width - referenceWidth - priceWidth));
-		jTableProducts.getColumnModel().getColumn(2).setPreferredWidth(priceWidth);
+				.setPreferredWidth(Math.max(100, width - referenceWidth - stockWidth - priceWidth));
+		jTableProducts.getColumnModel().getColumn(2).setPreferredWidth(stockWidth);
+		jTableProducts.getColumnModel().getColumn(3).setPreferredWidth(priceWidth);
+	}
+
+	private void configureColumnAlignments() {
+		int[] alignments = {SwingConstants.LEFT, SwingConstants.CENTER, SwingConstants.RIGHT, SwingConstants.RIGHT};
+		for (int column = 0; column < alignments.length; column++) {
+			DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+			renderer.setHorizontalAlignment(alignments[column]);
+			jTableProducts.getColumnModel().getColumn(column).setCellRenderer(renderer);
+			DefaultTableCellRenderer header = new DefaultTableCellRenderer();
+			header.setHorizontalAlignment(alignments[column]);
+			jTableProducts.getColumnModel().getColumn(column).setHeaderRenderer(header);
+		}
 	}
 
 	private javax.swing.JTable jTableProducts;
