@@ -533,7 +533,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, CODETYPE, NAME, PRICEBUY, PRICESELL, "
 									+ "CATEGORY, TAXCAT, STOCKCOST, STOCKVOLUME, IMAGE, ISCOM, "
 									+ "ATTRIBUTES, BRAND, FAMILY, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, 'EAN13', ?, ?, ?, ?, ?, NULL, NULL, "
-									+ s.DB.FALSE() + ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+									+ "NULL, " + s.DB.FALSE() + ", NULL, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
 					PreparedStatement findCat = connection
 							.prepareStatement("SELECT PRODUCT FROM PRODUCTS_CAT WHERE PRODUCT = ?");
 					PreparedStatement insertCat = connection
