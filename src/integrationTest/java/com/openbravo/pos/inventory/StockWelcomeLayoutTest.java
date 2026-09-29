@@ -79,7 +79,7 @@ class StockWelcomeLayoutTest {
 					assertTrue(header.getComponent(1).getX() + header.getComponent(1).getWidth() <= header.getWidth());
 					JPanel page = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
 					JPanel jobs = (JPanel) page.getComponent(2);
-					JPanel entries = (JPanel) page.getComponent(6);
+					JPanel entries = (JPanel) page.getComponent(7);
 					JButton firstJob = (JButton) jobs.getComponent(0);
 					JPanel words = (JPanel) firstJob.getComponent(1);
 					assertTrue(words.getComponent(1).getHeight() > 0, "Hint: card=" + firstJob.getBounds() + " words="
@@ -106,7 +106,7 @@ class StockWelcomeLayoutTest {
 					product.taxRate = 0.10;
 					view.renderMatches(product.code, List.of(product), false);
 					layout(view);
-					JPanel facets = (JPanel) ((JPanel) ((JPanel) page.getComponent(3)).getComponent(0)).getComponent(1);
+					JPanel facets = (JPanel) ((JPanel) ((JPanel) page.getComponent(4)).getComponent(0)).getComponent(1);
 					assertEquals(5, facets.getComponentCount());
 					assertTrue(facets.getComponent(0) instanceof JButton);
 					for (int i = 1; i < 5; i++)
@@ -158,14 +158,14 @@ class StockWelcomeLayoutTest {
 					layout(view);
 					JPanel page = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
 					JPanel jobs = (JPanel) page.getComponent(2);
-					JPanel entries = (JPanel) page.getComponent(6);
+					JPanel entries = (JPanel) page.getComponent(7);
 					assertEquals(0, jobs.getX(), locale.toString());
 					assertEquals(0, entries.getX(), locale.toString());
 					assertEquals(page.getWidth(), jobs.getWidth(), locale.toString());
 					assertEquals(page.getWidth(), entries.getWidth(), locale.toString());
-					assertEquals(6, jobs.getComponentCount());
+					assertEquals(5, jobs.getComponentCount());
 					assertEquals(6, entries.getComponentCount());
-					JPanel queue = (JPanel) page.getComponent(4);
+					JPanel queue = (JPanel) page.getComponent(5);
 					JPanel queueCard = (JPanel) queue.getComponent(1);
 					JPanel metrics = (JPanel) queueCard.getComponent(0);
 					for (Component component : metrics.getComponents()) {
@@ -219,7 +219,7 @@ class StockWelcomeLayoutTest {
 						assertEquals(3,
 								((java.awt.GridLayout) ((JPanel) widePage.getComponent(2)).getLayout()).getColumns());
 						assertEquals(6,
-								((java.awt.GridLayout) ((JPanel) widePage.getComponent(6)).getLayout()).getColumns());
+								((java.awt.GridLayout) ((JPanel) widePage.getComponent(7)).getLayout()).getColumns());
 						BufferedImage image = new BufferedImage(1800, 1050, BufferedImage.TYPE_INT_RGB);
 						java.awt.Graphics2D graphics = image.createGraphics();
 						try {
@@ -314,7 +314,7 @@ class StockWelcomeLayoutTest {
 				view.setSize(760, 700);
 				layout(view);
 				JPanel page = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
-				JPanel results = (JPanel) page.getComponent(3);
+				JPanel results = (JPanel) page.getComponent(4);
 				assertEquals(page.getWidth(), results.getWidth());
 				assertEquals(0, results.getX());
 				assertTrue(results.getComponent(0).getHeight() >= 48);

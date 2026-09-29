@@ -110,6 +110,7 @@ final class RolePermissions {
 			case "com.openbravo.pos.inventory.TaxPanel" -> "Menu.Taxes";
 			case "com.openbravo.pos.inventory.TaxCategoriesPanel" -> "Menu.TaxCategories";
 			case "com.openbravo.pos.inventory.StockDiaryPanel" -> "Menu.StockDiary";
+			case "com.openbravo.pos.inventory.StockReceivingPanel" -> "receiving.title";
 			case "com.openbravo.pos.inventory.ReplenishmentPanel" -> "Menu.Replenishment";
 			case "com.openbravo.pos.inventory.StockManagement" -> "Menu.StockMovement";
 			case "com.openbravo.pos.forms.MenuSalesManagement" -> "Menu.SalesManagement";

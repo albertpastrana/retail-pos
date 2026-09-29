@@ -36,6 +36,8 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -62,12 +64,15 @@ import javax.swing.event.DocumentListener;
  * menu entry.
  */
 public final class JPanelStockWelcome extends JPanel implements JPanelView, BeanFactoryApp {
+	private static final Logger logger = Logger.getLogger(JPanelStockWelcome.class.getName());
 	private static final String PREFIX = "com.openbravo.pos.inventory.";
 	private static final String REPLENISHMENT = PREFIX + "ReplenishmentPanel";
+	private static final String RECEIVING = PREFIX + "StockReceivingPanel";
 	private final MenuDefinition menu;
 	private final JTextField search = new JTextField();
 	private final JPanel results = new JPanel();
 	private final JPanel queue = new JPanel();
+	private final JPanel unfinished = new JPanel();
 	private JPanel jobsHeading;
 	private JPanel jobGrid;
 	private JLabel searchHint;
@@ -154,7 +159,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		jobsHeading = section("stock.welcome.jobs");
 		addRow(page, jobsHeading, row++);
 		String[][] jobs = {{"stock.welcome.new", "ProductsPanel"}, {"stock.welcome.sale", "SaleMarkPanel"},
-				{"stock.welcome.receive", "StockDiaryPanel"}, {"stock.welcome.correct", "StockDiaryPanel"},
+				{"stock.welcome.receive", "StockReceivingPanel"}, {"stock.welcome.correct", "StockDiaryPanel"},
 				{"stock.welcome.priceRules", "PriceRulesPanel"}, {"stock.welcome.organize", "CategoriesPanel"}};
 		jobGrid = grid(3, 12, 480, 860);
 		for (String[] job : jobs) {
@@ -163,6 +168,8 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 				JButton card = jobCard(job[0], () -> {
 					if ("stock.welcome.new".equals(job[0]))
 						createProduct();
+					else if ("stock.welcome.receive".equals(job[0]))
+						startReceiving();
 					else
 						destination.actionPerformed(null);
 				});
@@ -170,6 +177,9 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 			}
 		}
 		addRow(page, jobGrid, row++);
+		unfinished.setLayout(new GridBagLayout());
+		unfinished.setOpaque(false);
+		addRow(page, unfinished, row++);
 		results.setLayout(new GridBagLayout());
 		results.setOpaque(false);
 		results.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -270,6 +280,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		else
 			checkCatalogue();
 		loadQueue();
+		loadUnfinished();
 	}
 	@Override
 	public boolean deactivate() {
@@ -580,6 +591,61 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		};
 	}
 
+	private void startReceiving() {
+		if (action(RECEIVING) == null)
+			return;
+		open(RECEIVING);
+		try {
+			app.getBean(StockReceivingPanel.class).startNew();
+		} catch (BeanFactoryException e) {
+			new MessageInf(e).show(this);
+		}
+	}
+
+	private void loadUnfinished() {
+		if (action(RECEIVING) == null)
+			return;
+		new SwingWorker<List<StockSessionRepository.Session>, Void>() {
+			@Override
+			protected List<StockSessionRepository.Session> doInBackground() throws Exception {
+				return new StockSessionRepository(app.getSession().getConnection()).openSessions();
+			}
+			@Override
+			protected void done() {
+				try {
+					unfinished.removeAll();
+					List<StockSessionRepository.Session> sessions = get();
+					if (!sessions.isEmpty()) {
+						addRow(unfinished, section("receiving.unfinished"), 0);
+						JPanel cards = grid(2, 12, 480, 860);
+						for (StockSessionRepository.Session session : sessions) {
+							if (!"RECEIPT".equals(session.type))
+								continue; // The count entry point belongs to the counting screen.
+							JButton card = button("receiving.resume", () -> {
+								open(RECEIVING);
+								try {
+									app.getBean(StockReceivingPanel.class).resume(session.id);
+								} catch (BeanFactoryException e) {
+									new MessageInf(e).show(JPanelStockWelcome.this);
+								}
+							});
+							card.setText(session.supplier + " · " + session.note + " · " + session.lines + " "
+									+ tr("receiving.lines") + "  →");
+							cards.add(card);
+						}
+						addRow(unfinished, cards, 1);
+					}
+					unfinished.revalidate();
+					unfinished.repaint();
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "event=stock_sessions_load_failed", e);
+					unfinished.removeAll();
+					addRow(unfinished, text(tr("stock.welcome.error")), 0);
+				}
+			}
+		}.execute();
+	}
+
 	private void loadQueue() {
 		if (action(REPLENISHMENT) == null)
 			return;
@@ -643,7 +709,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		queue.removeAll();
 		JPanel shortcuts = grid(3, 10, 470, 860);
 		String[][] jobs = {{"stock.welcome.new", "ProductsPanel", "new"},
-				{"stock.welcome.receive", "StockDiaryPanel", "receive"},
+				{"stock.welcome.receive", "StockReceivingPanel", "receive"},
 				{"stock.welcome.sale", "SaleMarkPanel", "sale"}};
 		for (String[] job : jobs) {
 			if (action(PREFIX + job[1]) == null)
@@ -658,6 +724,8 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 			shortcut.addActionListener(e -> {
 				if ("ProductsPanel".equals(job[1]))
 					createProduct();
+				else if ("StockReceivingPanel".equals(job[1]))
+					startReceiving();
 				else
 					open(PREFIX + job[1]);
 			});
