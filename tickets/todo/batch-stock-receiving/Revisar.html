@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Entrada de mercaderia — revisar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;font-family:"Manrope","Segoe UI",system-ui,sans-serif;background:#f5f1ea}
+a{color:#241c14}a:hover{color:#8f3216}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:0.04em}
+.row{display:flex;align-items:center;gap:12px;box-sizing:border-box;padding:10px 16px;border-top:1px solid rgba(150,137,111,0.45)}
+</style>
+</head>
+<body>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; display: flex; flex-direction: column; background: #f5f1ea; color: #241c14; overflow: hidden">
+
+  <div style="display: flex; align-items: center; gap: 16px; box-sizing: border-box; padding: 14px 24px; background: #fffdf9; border-bottom: 1px solid #96896f">
+    <a href="Main.html" aria-label="Tornar a escanejar" style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid #96896f; border-radius: 10px; flex-shrink: 0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#241c14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <div style="flex-grow: 1">
+      <div style="font-size: 20px; font-weight: 700">Revisar — Comercial Vinícola Segre <span class="num" style="font-size: 15px; font-weight: 500; color: #6b6154">albarà A-24/3318</span></div>
+      <div style="margin-top: 2px; font-size: 13px; color: #6b6154">Compara aquests totals amb el peu de l'albarà abans de confirmar</div>
+    </div>
+    <a href="Main.html" style="display: inline-flex; align-items: center; height: 48px; padding: 0 16px; background: #fffdf9; border: 1px solid #96896f; border-radius: 10px; font-size: 17px; font-weight: 600; text-decoration: none; flex-shrink: 0">Seguir escanejant</a>
+    <button type="button" style="display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 20px; background: #b8481f; border: 0; border-radius: 10px; color: #ffffff; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer; flex-shrink: 0; opacity: 0.45">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+      Donar entrada
+    </button>
+  </div>
+
+  <div style="flex-grow: 1; box-sizing: border-box; padding: 20px 24px; display: flex; gap: 24px; overflow: hidden">
+
+    <div style="flex-grow: 1; box-sizing: border-box; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08); display: flex; flex-direction: column; overflow: hidden">
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px 10px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #6b6154; flex-grow: 1">EL QUE ENTRARÀ A L'ESTOC</span>
+        <span style="font-size: 13px; color: #6b6154">Ordenat com l'albarà, per nom</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 0 16px 8px; font-size: 13px; color: #6b6154">
+        <span style="flex-grow: 1">Producte</span>
+        <span style="width: 132px">Codi</span>
+        <span style="width: 80px; text-align: right">Rebut</span>
+        <span style="width: 90px; text-align: right">Ara</span>
+        <span style="width: 90px; text-align: right">Quedarà</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Cava Freixenet Cordón Negro 75 cl</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410396112041</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+12</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">18</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">30</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Cava Juvé &amp; Camps Reserva 75 cl</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410310000217</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+12</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">4</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">16</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Vermut Yzaguirre Rojo 1 l</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410396112058</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+6</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">7</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">13</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Vi blanc Perelada Blanc Pescador 75 cl</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410396001048</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+24</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">9</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">33</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Vi negre Muga Reserva 75 cl</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410113004215</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+6</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">4</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">10</span>
+      </div>
+
+      <div class="row">
+        <span style="flex-grow: 1; font-size: 17px">Vi negre Scala Dei Garnatxa 75 cl</span>
+        <span class="num" style="width: 132px; font-size: 13px">8410113000453</span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 20px; font-weight: 600; color: #1f6b5c">+6</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; color: #6b6154">6</span>
+        <span class="num" style="width: 90px; text-align: right; font-size: 17px; font-weight: 600">12</span>
+      </div>
+
+      <div class="row" style="color: #6b6154">
+        <span style="flex-grow: 1; font-size: 17px">i 2 línies més</span>
+        <span style="width: 132px"></span>
+        <span class="num" style="width: 80px; text-align: right; font-size: 17px">+18</span>
+        <span style="width: 90px"></span>
+        <span style="width: 90px"></span>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+
+      <div style="display: flex; align-items: center; gap: 20px; padding: 12px 16px; background: #e5dac5; border-top: 1px solid #96896f">
+        <span style="font-size: 15px; color: #6b6154">Línies <span class="num" style="font-size: 20px; font-weight: 600; color: #241c14">8</span></span>
+        <span style="font-size: 15px; color: #6b6154">Unitats <span class="num" style="font-size: 32px; line-height: 36px; font-weight: 600; color: #241c14">84</span></span>
+        <span style="flex-grow: 1"></span>
+        <span style="font-size: 15px; color: #6b6154">Quadra amb el peu de l'albarà?</span>
+      </div>
+
+    </div>
+
+    <div style="width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px">
+
+      <div style="box-sizing: border-box; padding: 14px 16px; background: rgba(138,42,34,0.10); border: 1px solid #8a2a22; border-radius: 6px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a2a22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5"/><path d="M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+          <span style="font-size: 17px; font-weight: 700; color: #8a2a22">1 codi desconegut</span>
+        </div>
+        <div style="margin-top: 6px; font-size: 15px; line-height: 21px">
+          <span class="num">8437008291043</span> · <span class="num">3</span> unitats. Si és un article nou del proveïdor, dona'l d'alta; si no, treu-lo. Fins llavors no es pot donar entrada.
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px">
+          <button type="button" style="flex-grow: 1; height: 48px; background: #fffdf9; border: 1px solid #96896f; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; color: #241c14; cursor: pointer">Donar-lo d'alta</button>
+          <button type="button" style="height: 48px; padding: 0 14px; background: #fffdf9; border: 1px solid #8a2a22; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; color: #8a2a22; cursor: pointer">Treure'l</button>
+        </div>
+      </div>
+
+      <div style="box-sizing: border-box; padding: 14px 16px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px; box-shadow: 0 1px 2px rgba(36,28,20,0.08)">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a5300" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5"/><path d="M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+          <span style="font-size: 17px; font-weight: 700">6 línies sense puntejar</span>
+        </div>
+        <div style="margin-top: 6px; font-size: 15px; line-height: 21px; color: #6b6154">
+          Les has escanejat però no les has marcat contra el paper. Pots donar entrada igualment: puntejar és per a tu, no per al sistema.
+        </div>
+        <a href="Main.html" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 48px; margin-top: 12px; background: #fffdf9; border: 1px solid #96896f; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none">Anar a puntejar-les</a>
+      </div>
+
+      <div style="box-sizing: border-box; padding: 14px 16px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px">
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #6b6154">HI HA RES A L'ALBARÀ QUE NO HAGI ARRIBAT?</div>
+        <div style="margin-top: 6px; font-size: 15px; line-height: 21px; color: #6b6154">
+          Apunta-ho i anirà a la llista de reposició com a pendent amb el proveïdor. No mou estoc.
+        </div>
+        <button type="button" style="box-sizing: border-box; width: 100%; height: 48px; margin-top: 12px; background: #fffdf9; border: 1px solid #96896f; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; color: #241c14; cursor: pointer">Apuntar el que falta</button>
+      </div>
+
+      <div style="box-sizing: border-box; padding: 14px 16px; background: #fffdf9; border: 1px solid #96896f; border-radius: 16px">
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: #6b6154">EN DONAR ENTRADA</div>
+        <div style="margin-top: 8px; font-size: 15px; line-height: 21px">
+          Se suma el rebut a l'estoc de cada article, amb l'albarà <span class="num">A-24/3318</span> apuntat a cada moviment. Els preus de cost no es toquen.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

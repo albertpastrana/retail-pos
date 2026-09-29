@@ -648,6 +648,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formDescription.requestFocusInWindow();
 	}
 
+	/**
+	 * Prepare a missing delivery-note item with the supplier recorded in its note.
+	 */
+	public void startManualEntry(String code, String note) {
+		startManualEntry(code);
+		formNoteArea.setText(note);
+	}
+
 	/** Locate an already-open replenishment entry without adding a duplicate. */
 	public void showProductOnList(String code) {
 		search.setText(code);
