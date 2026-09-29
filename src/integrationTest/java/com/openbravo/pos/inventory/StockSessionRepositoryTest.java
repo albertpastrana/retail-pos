@@ -213,6 +213,7 @@ class StockSessionRepositoryTest {
 						assertThrows(TimeoutException.class, () -> staleEdit.get(250, TimeUnit.MILLISECONDS));
 						double before = stock(c, "p1");
 						repo.post(racing.id, "user");
+						c.commit(); // The test owns this transaction and releases the receipt lock.
 						ExecutionException rejection = assertThrows(ExecutionException.class,
 								() -> staleEdit.get(10, TimeUnit.SECONDS));
 						assertTrue(rejection.getCause() instanceof IllegalStateException);
@@ -227,6 +228,31 @@ class StockSessionRepositoryTest {
 				}
 				worker.shutdownNow();
 			}
+
+			StockSessionRepository.Session callerOwned = repo.open("Supplier", "TXN", "0", "user");
+			repo.scanProduct(callerOwned.id, "p1", "123", 1, false);
+			int committedDiary = count(c, "STOCKDIARY");
+			double committedStock = stock(c, "p1");
+			c.setAutoCommit(false);
+			try {
+				repo.post(callerOwned.id, "user");
+				assertFalse(c.getAutoCommit());
+				assertNull(repo.get(callerOwned.id)); // Posted only inside the caller transaction.
+				c.rollback();
+				assertNotNull(repo.get(callerOwned.id));
+				assertEquals(committedDiary, count(c, "STOCKDIARY"));
+				assertEquals(committedStock, stock(c, "p1"));
+				repo.discard(callerOwned.id);
+				assertFalse(c.getAutoCommit());
+				assertNull(repo.get(callerOwned.id)); // Deleted only inside the caller transaction.
+				c.rollback();
+				assertNotNull(repo.get(callerOwned.id));
+			} finally {
+				c.rollback();
+				c.setAutoCommit(true);
+			}
+			repo.discard(callerOwned.id);
+			assertNull(repo.get(callerOwned.id));
 		}
 	}
 

@@ -368,7 +368,8 @@ final class StockSessionRepository {
 	void discard(String session) throws SQLException {
 		boolean auto = connection.getAutoCommit();
 		try {
-			connection.setAutoCommit(false);
+			if (auto)
+				connection.setAutoCommit(false);
 			try (PreparedStatement lock = connection.prepareStatement(
 					"SELECT ID FROM STOCKSESSION WHERE ID=? AND TYPE='RECEIPT' AND STATUS='OPEN' FOR UPDATE")) {
 				lock.setString(1, session);
@@ -388,19 +389,23 @@ final class StockSessionRepository {
 				if (receipt.executeUpdate() != 1)
 					throw new IllegalStateException("Receipt is no longer open");
 			}
-			connection.commit();
+			if (auto)
+				connection.commit();
 		} catch (SQLException | RuntimeException ex) {
-			connection.rollback();
+			if (auto)
+				connection.rollback();
 			throw ex;
 		} finally {
-			connection.setAutoCommit(auto);
+			if (auto)
+				connection.setAutoCommit(true);
 		}
 	}
 
 	void post(String session, String user) throws SQLException {
 		boolean auto = connection.getAutoCommit();
 		try {
-			connection.setAutoCommit(false);
+			if (auto)
+				connection.setAutoCommit(false);
 			Session s;
 			try (PreparedStatement lock = connection.prepareStatement(
 					"SELECT ID FROM STOCKSESSION WHERE ID=? AND TYPE='RECEIPT' AND STATUS='OPEN' FOR UPDATE")) {
@@ -489,12 +494,15 @@ final class StockSessionRepository {
 				finish.setString(2, session);
 				finish.executeUpdate();
 			}
-			connection.commit();
+			if (auto)
+				connection.commit();
 		} catch (SQLException | RuntimeException ex) {
-			connection.rollback();
+			if (auto)
+				connection.rollback();
 			throw ex;
 		} finally {
-			connection.setAutoCommit(auto);
+			if (auto)
+				connection.setAutoCommit(true);
 		}
 	}
 }
