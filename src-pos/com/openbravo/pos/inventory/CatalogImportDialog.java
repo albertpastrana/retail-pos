@@ -55,7 +55,7 @@ public final class CatalogImportDialog {
 	private static final Logger LOGGER = Logger.getLogger(CatalogImportDialog.class.getName());
 
 	public enum Copy {
-		RECEIPT, STOCK
+		RECEIPT, STOCK, RECEIVING
 	}
 
 	private final Component parent;
@@ -91,6 +91,16 @@ public final class CatalogImportDialog {
 
 	public static CatalogImportDialog forStock(Component parent, AppView app, DataLogicSales dlSales)
 			throws BasicException {
+		return forStockOrReceiving(parent, app, dlSales, Copy.STOCK);
+	}
+
+	public static CatalogImportDialog forReceiving(Component parent, AppView app, DataLogicSales dlSales)
+			throws BasicException {
+		return forStockOrReceiving(parent, app, dlSales, Copy.RECEIVING);
+	}
+
+	private static CatalogImportDialog forStockOrReceiving(Component parent, AppView app, DataLogicSales dlSales,
+			Copy copy) throws BasicException {
 		PriceRuleService priceRules = new PriceRuleService(app.getSession());
 		TaxRegime regime;
 		try {
@@ -99,7 +109,7 @@ public final class CatalogImportDialog {
 			throw new BasicException(AppLocal.getIntString("message.pricerules.loaderror"), e);
 		}
 		return new CatalogImportDialog(parent, app, dlSales, new TaxesLogic(dlSales.getTaxList().list()), new Date(),
-				null, dlSales.getTaxCategoriesList().list(), "001", priceRules, regime, Copy.STOCK);
+				null, dlSales.getTaxCategoriesList().list(), "001", priceRules, regime, copy);
 	}
 
 	public boolean wasCancelled() {
@@ -115,12 +125,16 @@ public final class CatalogImportDialog {
 		unknown = false;
 		LOGGER.log(Level.INFO, "event=catalog_import_start copy={0} code=\"{1}\"", new Object[]{copy, code});
 		ProductInfoExt product = dlSales.getProductInfoByCode(code);
+		// A receipt scan resolves only a catalogue product's own barcode, not a
+		// padded or secondary barcode matched by the sales lookup.
+		if (copy == Copy.RECEIVING && product != null && !code.equals(product.getCode()))
+			product = null;
 		if (product != null) {
 			LOGGER.log(Level.INFO, "event=catalog_import_existing_product code=\"{0}\"", code);
 			return product;
 		}
 		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, null, null);
-		if (catalogProduct == null && copy == Copy.RECEIPT) {
+		if (catalogProduct == null && copy != Copy.STOCK) {
 			unknown = true;
 			LOGGER.log(Level.INFO, "event=catalog_fallback_miss code=\"{0}\"", code);
 			return null;
@@ -149,6 +163,12 @@ public final class CatalogImportDialog {
 			}
 			LOGGER.log(Level.INFO, "event=catalog_import_family_success code=\"{0}\" variants={1}",
 					new Object[]{code, editedFamily.size()});
+			if (copy == Copy.RECEIVING) {
+				for (ProductInfoExt variant : editedFamily)
+					if (code.equals(variant.getCode()) || ("0" + code).equals(variant.getCode())
+							|| ("00" + code).equals(variant.getCode()))
+						return importedByExactCode(variant.getCode());
+			}
 			return dlSales.getProductInfoByCode(code);
 		}
 		ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
@@ -161,22 +181,42 @@ public final class CatalogImportDialog {
 		applyImportedStock(editedProduct);
 		LOGGER.log(Level.INFO, "event=catalog_import_success code=\"{0}\" family=\"{1}\"",
 				new Object[]{code, editedProduct.getFamily()});
-		return product;
+		return copy == Copy.RECEIVING ? importedByExactCode(editedProduct.getCode()) : product;
+	}
+
+	private ProductInfoExt importedByExactCode(String code) throws BasicException {
+		try (java.sql.PreparedStatement find = app.getSession().getConnection()
+				.prepareStatement("SELECT ID FROM PRODUCTS WHERE CODE=?")) {
+			find.setString(1, code);
+			try (java.sql.ResultSet rows = find.executeQuery()) {
+				if (rows.next())
+					return dlSales.getProductInfo(rows.getString(1));
+			}
+		} catch (java.sql.SQLException e) {
+			throw new BasicException("Cannot locate imported barcode " + code, e);
+		}
+		throw new BasicException("Cannot locate imported barcode " + code);
 	}
 
 	private String confirmLabel(boolean family) {
-		if (copy == Copy.STOCK) {
+		if (copy == Copy.RECEIVING)
+			return AppLocal.getIntString(family ? "receiving.importFamily" : "receiving.importProduct");
+		if (copy != Copy.RECEIPT) {
 			return AppLocal.getIntString(family ? "button.createfamily" : "button.createproduct");
 		}
 		return AppLocal.getIntString(family ? "button.addfamilytoreceipt" : "button.addtoreceipt");
 	}
 
 	private String familyMessageKey() {
-		return copy == Copy.STOCK ? "message.importproductfamily.stock" : "message.importproductfamily";
+		if (copy == Copy.RECEIVING)
+			return "receiving.importFamilyHint";
+		return copy != Copy.RECEIPT ? "message.importproductfamily.stock" : "message.importproductfamily";
 	}
 
 	private String importMessageKey(boolean fromCatalog) {
-		if (copy == Copy.STOCK) {
+		if (copy == Copy.RECEIVING)
+			return "receiving.importHint";
+		if (copy != Copy.RECEIPT) {
 			return fromCatalog ? "message.importproduct.stock" : "message.importproduct.unknown.stock";
 		}
 		return fromCatalog ? "message.importproduct" : "message.importproduct.unknown";
@@ -385,7 +425,8 @@ public final class CatalogImportDialog {
 		fields.add(prices.offer, constraints);
 		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":", prices.priceBlock());
 		ProductFormLayout.addRow(fields, 7, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-		ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.prodstock") + ":", stock);
+		if (copy != Copy.RECEIVING)
+			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.prodstock") + ":", stock);
 
 		JPanel content = new JPanel(new BorderLayout(0, 12));
 		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
@@ -555,6 +596,8 @@ public final class CatalogImportDialog {
 	}
 
 	private void applyImportedStock(ProductInfoExt product) throws BasicException {
+		if (copy == Copy.RECEIVING)
+			return;
 		String raw = product.getProperty("import.stock");
 		if (raw == null || raw.isEmpty()) {
 			return;
@@ -798,7 +841,8 @@ public final class CatalogImportDialog {
 			fields.add(applyPrice, constraints);
 
 			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-			ProductFormLayout.addRow(fields, 9, AppLocal.getIntString("label.prodstock") + ":", stock);
+			if (copy != Copy.RECEIVING)
+				ProductFormLayout.addRow(fields, 9, AppLocal.getIntString("label.prodstock") + ":", stock);
 
 			codeLabel.setEnabled(false);
 			JPanel header = new JPanel(new BorderLayout());

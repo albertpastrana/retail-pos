@@ -614,25 +614,13 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 			protected void done() {
 				try {
 					unfinished.removeAll();
-					List<StockSessionRepository.Session> sessions = get();
+					List<StockSessionRepository.Session> sessions = get().stream()
+							.filter(session -> "RECEIPT".equals(session.type)).toList();
 					if (!sessions.isEmpty()) {
 						addRow(unfinished, section("receiving.unfinished"), 0);
 						JPanel cards = grid(2, 12, 480, 860);
-						for (StockSessionRepository.Session session : sessions) {
-							if (!"RECEIPT".equals(session.type))
-								continue; // The count entry point belongs to the counting screen.
-							JButton card = button("receiving.resume", () -> {
-								open(RECEIVING);
-								try {
-									app.getBean(StockReceivingPanel.class).resume(session.id);
-								} catch (BeanFactoryException e) {
-									new MessageInf(e).show(JPanelStockWelcome.this);
-								}
-							});
-							card.setText(session.supplier + " · " + session.note + " · " + session.lines + " "
-									+ tr("receiving.lines") + "  →");
-							cards.add(card);
-						}
+						for (StockSessionRepository.Session session : sessions)
+							cards.add(pendingReceiptCard(session));
 						addRow(unfinished, cards, 1);
 					}
 					unfinished.revalidate();
@@ -644,6 +632,39 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 				}
 			}
 		}.execute();
+	}
+
+	JButton pendingReceiptCard(StockSessionRepository.Session receipt) {
+		JButton card = button("receiving.resume", () -> {
+			open(RECEIVING);
+			try {
+				app.getBean(StockReceivingPanel.class).resume(receipt.id);
+			} catch (BeanFactoryException e) {
+				new MessageInf(e).show(this);
+			}
+		});
+		card.setText(null);
+		card.setLayout(new BorderLayout());
+		JPanel words = column();
+		JLabel supplier = new JLabel(receipt.supplier);
+		supplier.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(18f));
+		supplier.setForeground(RetailPOSColors.ink());
+		JLabel note = new JLabel(AppLocal.getIntString("receiving.noteShort", receipt.note) + " · " + receipt.lines
+				+ " " + tr("receiving.lines"));
+		note.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(16f));
+		note.setForeground(RetailPOSColors.inkMuted());
+		words.add(supplier);
+		words.add(Box.createVerticalStrut(6));
+		words.add(note);
+		card.add(words, BorderLayout.CENTER);
+		// Two readable lines and a full-card hit area, including the inner labels.
+		card.setPreferredSize(new Dimension(0,
+				Math.max(80, supplier.getPreferredSize().height + note.getPreferredSize().height + 6 + 28)));
+		card.getAccessibleContext()
+				.setAccessibleName(tr("receiving.resume") + ": " + receipt.supplier + ", " + note.getText());
+		card.setToolTipText(card.getAccessibleContext().getAccessibleName());
+		wireCardEvents(card, words);
+		return card;
 	}
 
 	private void loadQueue() {

@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /** Shared persisted scanning sessions; only posting a receipt touches stock. */
@@ -18,8 +20,9 @@ final class StockSessionRepository {
 	}
 
 	static final class Line {
-		String id, product, code, name, reference;
+		String id, product, code, barcode, name, reference, brand;
 		double units, stock;
+		Double retailPrice;
 		boolean ticked;
 		Timestamp scanned;
 	}
@@ -94,8 +97,19 @@ final class StockSessionRepository {
 			throw new IllegalStateException("Session is no longer open");
 		resolveUnknowns(session);
 		String variant = hasCurrentVariantColumn() ? " AND S.ATTRIBUTESETINSTANCE_ID IS NULL" : "";
+		Set<String> productColumns = productColumns();
+		String brand = productColumns.contains("BRAND") ? "P.BRAND" : "CAST(NULL AS CHAR(1))";
+		String price = productColumns.contains("PRICESELL") ? "P.PRICESELL" : "CAST(NULL AS DECIMAL(18,4))";
+		String tax = productColumns.contains("TAXCAT") && hasTaxRates()
+				? "(SELECT MAX(T.RATE) FROM TAXES T WHERE T.CATEGORY=P.TAXCAT "
+						+ "AND T.CUSTCATEGORY IS NULL AND T.VALIDFROM <= CURRENT_TIMESTAMP "
+						+ "AND T.VALIDFROM=(SELECT MAX(T2.VALIDFROM) FROM TAXES T2 "
+						+ "WHERE T2.CATEGORY=P.TAXCAT AND T2.CUSTCATEGORY IS NULL "
+						+ "AND T2.VALIDFROM <= CURRENT_TIMESTAMP))"
+				: "CAST(NULL AS DECIMAL(18,4))";
 		try (PreparedStatement sql = connection.prepareStatement("SELECT L.ID,L.PRODUCT,L.CODE,L.UNITS,L.TICKED,"
-				+ "L.DATELAST,P.NAME,P.REFERENCE,COALESCE((SELECT SUM(S.UNITS) FROM STOCKCURRENT S "
+				+ "L.DATELAST,P.NAME,P.REFERENCE,P.CODE," + brand + " AS BRAND," + price + " AS PRICESELL," + tax
+				+ " AS TAX_RATE,COALESCE((SELECT SUM(S.UNITS) FROM STOCKCURRENT S "
 				+ "WHERE S.PRODUCT=L.PRODUCT AND S.LOCATION=?" + variant + "),0) AS CURRENTUNITS "
 				+ "FROM STOCKSESSIONLINE L LEFT JOIN PRODUCTS P ON P.ID=L.PRODUCT " + "WHERE L.STOCKSESSION=? ORDER BY "
 				+ (byName ? "P.NAME,L.CODE" : "L.DATELAST DESC,L.ID DESC"))) {
@@ -112,12 +126,38 @@ final class StockSessionRepository {
 					line.scanned = rs.getTimestamp(6);
 					line.name = rs.getString(7);
 					line.reference = rs.getString(8);
-					line.stock = rs.getDouble(9);
+					line.barcode = line.product == null ? line.code : rs.getString(9);
+					line.brand = rs.getString(10);
+					Double priceSell = rs.getObject(11) == null ? null : rs.getDouble(11);
+					Double taxRate = rs.getObject(12) == null ? null : rs.getDouble(12);
+					line.retailPrice = priceSell == null || taxRate == null ? null : priceSell * (1 + taxRate);
+					line.stock = rs.getDouble(13);
 					result.add(line);
 				}
 			}
 		}
 		return result;
+	}
+
+	private Set<String> productColumns() throws SQLException {
+		Set<String> columns = new HashSet<>();
+		try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM PRODUCTS WHERE 1=0");
+				ResultSet rows = statement.executeQuery()) {
+			java.sql.ResultSetMetaData metadata = rows.getMetaData();
+			for (int index = 1; index <= metadata.getColumnCount(); index++)
+				columns.add(metadata.getColumnName(index).toUpperCase(java.util.Locale.ROOT));
+		}
+		return columns;
+	}
+
+	private boolean hasTaxRates() {
+		try (PreparedStatement statement = connection
+				.prepareStatement("SELECT CATEGORY,CUSTCATEGORY,VALIDFROM,RATE FROM TAXES WHERE 1=0");
+				ResultSet ignored = statement.executeQuery()) {
+			return true;
+		} catch (SQLException e) {
+			return false;
+		}
 	}
 
 	private boolean hasCurrentVariantColumn() throws SQLException {
@@ -208,12 +248,9 @@ final class StockSessionRepository {
 		resolveUnknowns(session);
 		String normalized = code == null || code.isBlank() ? productId : code.trim();
 		String product = null;
-		try (PreparedStatement lookup = connection.prepareStatement(productId == null
-				? "SELECT ID FROM PRODUCTS WHERE CODE=? OR REFERENCE=?"
-				: "SELECT ID FROM PRODUCTS WHERE ID=?")) {
+		try (PreparedStatement lookup = connection.prepareStatement(
+				productId == null ? "SELECT ID FROM PRODUCTS WHERE CODE=?" : "SELECT ID FROM PRODUCTS WHERE ID=?")) {
 			lookup.setString(1, productId == null ? normalized : productId);
-			if (productId == null)
-				lookup.setString(2, normalized);
 			try (ResultSet rs = lookup.executeQuery()) {
 				if (rs.next()) {
 					product = rs.getString(1);
@@ -224,8 +261,7 @@ final class StockSessionRepository {
 			}
 		}
 		Timestamp now = new Timestamp(System.currentTimeMillis());
-		// Different barcode aliases of the same product must still accumulate on one
-		// line.
+		// Finder selection and barcode scans accumulate on the same product line.
 		try (PreparedStatement update = connection.prepareStatement("UPDATE STOCKSESSIONLINE SET UNITS="
 				+ (override ? "?" : "UNITS+?") + ",DATELAST=? WHERE STOCKSESSION=? AND "
 				+ (product == null ? "PRODUCT IS NULL AND CODE=?" : "PRODUCT=?"))) {
@@ -294,6 +330,38 @@ final class StockSessionRepository {
 			sql.setString(1, line);
 			sql.setString(2, session);
 			sql.executeUpdate();
+		}
+	}
+
+	void discard(String session) throws SQLException {
+		boolean auto = connection.getAutoCommit();
+		try {
+			connection.setAutoCommit(false);
+			try (PreparedStatement lock = connection.prepareStatement(
+					"SELECT ID FROM STOCKSESSION WHERE ID=? AND TYPE='RECEIPT' AND STATUS='OPEN' FOR UPDATE")) {
+				lock.setString(1, session);
+				try (ResultSet rs = lock.executeQuery()) {
+					if (!rs.next())
+						throw new IllegalStateException("Receipt is no longer open");
+				}
+			}
+			try (PreparedStatement lines = connection
+					.prepareStatement("DELETE FROM STOCKSESSIONLINE WHERE STOCKSESSION=?")) {
+				lines.setString(1, session);
+				lines.executeUpdate();
+			}
+			try (PreparedStatement receipt = connection
+					.prepareStatement("DELETE FROM STOCKSESSION WHERE ID=? AND TYPE='RECEIPT' AND STATUS='OPEN'")) {
+				receipt.setString(1, session);
+				if (receipt.executeUpdate() != 1)
+					throw new IllegalStateException("Receipt is no longer open");
+			}
+			connection.commit();
+		} catch (SQLException | RuntimeException ex) {
+			connection.rollback();
+			throw ex;
+		} finally {
+			connection.setAutoCommit(auto);
 		}
 	}
 

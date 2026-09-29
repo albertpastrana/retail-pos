@@ -25,7 +25,7 @@ class StockSessionRepositoryTest {
 			sql.execute("INSERT INTO LOCATIONS VALUES ('0')");
 			sql.execute(
 					"CREATE TABLE PRODUCTS (ID VARCHAR(255) PRIMARY KEY,NAME VARCHAR(255),CODE VARCHAR(255),REFERENCE VARCHAR(255))");
-			sql.execute("INSERT INTO PRODUCTS VALUES ('p1','Milk','123','M1'),('p2','Wine','456','W2')");
+			sql.execute("INSERT INTO PRODUCTS VALUES ('p1','Milk','123','M1'),('p2','Wine','456','123')");
 			sql.execute("CREATE TABLE STOCKCURRENT (LOCATION VARCHAR(255),PRODUCT VARCHAR(255),UNITS DOUBLE)");
 			sql.execute("INSERT INTO STOCKCURRENT VALUES ('0','p1',4)");
 			sql.execute(
@@ -53,11 +53,24 @@ class StockSessionRepositoryTest {
 			assertEquals(1, repo.lines(receipt.id, false).size());
 			assertThrows(IllegalArgumentException.class,
 					() -> repo.quantity(receipt.id, repo.lines(receipt.id, false).get(0).id, 1.5));
-			repo.scan(receipt.id, "123", 1, false);
+			repo.scan(receipt.id, "123", 1, false); // A different product has reference 123.
 			repo.scan(receipt.id, "123", 1, false);
 			repo.scan(receipt.id, "456", 6, true);
 			repo.scan(receipt.id, "unknown", 3, true);
 			assertEquals(3, repo.lines(receipt.id, false).size());
+			repo.scan(receipt.id, "M1", 1, false);
+			StockSessionRepository.Line referenceScan = repo.lines(receipt.id, false).stream()
+					.filter(line -> "M1".equals(line.code)).findFirst().orElseThrow();
+			assertNull(referenceScan.product); // The scanner never interprets a reference as a barcode.
+			assertEquals("M1", referenceScan.barcode);
+			repo.remove(receipt.id, referenceScan.id);
+			repo.scanProduct(receipt.id, "p1", "M1", 1, false); // Finder still selects by ID.
+			StockSessionRepository.Line chosen = repo.lines(receipt.id, false).stream()
+					.filter(line -> "p1".equals(line.product)).findFirst().orElseThrow();
+			assertEquals("123", chosen.barcode);
+			assertEquals("M1", chosen.reference);
+			assertNull(chosen.retailPrice); // Legacy minimal product schema has no price/tax data.
+			assertEquals(4, chosen.units);
 			repo.tickAll(receipt.id, true);
 			assertTrue(repo.lines(receipt.id, false).stream().allMatch(line -> line.ticked));
 			repo.tickAll(receipt.id, false);
@@ -73,7 +86,7 @@ class StockSessionRepositoryTest {
 				continued.remove(receipt.id, unknown.id);
 				StockSessionRepository.Line milk = continued.lines(receipt.id, false).stream()
 						.filter(l -> "p1".equals(l.product)).findFirst().orElseThrow();
-				assertEquals(3, milk.units);
+				assertEquals(4, milk.units);
 				continued.quantity(receipt.id, milk.id, 5);
 				continued.tick(receipt.id, milk.id, true);
 				assertTrue(continued.lines(receipt.id, false).stream().filter(l -> "p1".equals(l.product)).findFirst()
@@ -128,6 +141,33 @@ class StockSessionRepositoryTest {
 				}
 				assertEquals(2, seen);
 			}
+			StockSessionRepository.Session trial = repo.open("Trial supplier", "TEST-1", "0", "user");
+			repo.scan(trial.id, "123", 3, true);
+			repo.scan(trial.id, "unknown", 1, true);
+			assertEquals(1, repo.openSessions().size());
+			int diaryBefore = count(c, "STOCKDIARY");
+			double stockBefore = stock(c, "p1");
+			repo.discard(trial.id);
+			assertNull(repo.get(trial.id));
+			assertTrue(repo.openSessions().isEmpty());
+			try (PreparedStatement deletedLines = c
+					.prepareStatement("SELECT COUNT(*) FROM STOCKSESSIONLINE WHERE STOCKSESSION=?")) {
+				deletedLines.setString(1, trial.id);
+				try (ResultSet rows = deletedLines.executeQuery()) {
+					assertTrue(rows.next());
+					assertEquals(0, rows.getInt(1));
+				}
+			}
+			assertEquals(stockBefore, stock(c, "p1"));
+			assertEquals(diaryBefore, count(c, "STOCKDIARY"));
+			assertThrows(IllegalStateException.class, () -> repo.discard(trial.id));
+			assertThrows(IllegalStateException.class, () -> repo.discard(receipt.id));
+			assertThrows(IllegalStateException.class, () -> repo.discard(next.id));
+			StockSessionRepository.Session emptyTrial = repo.open("Trial supplier", "TEST-2", "0", "user");
+			repo.discard(emptyTrial.id);
+			assertTrue(repo.openSessions().isEmpty());
+			StockSessionRepository.Session following = repo.open("Supplier", "A-44", "0", "user");
+			assertNotNull(repo.get(following.id)); // A failed discard does not poison the shared connection.
 		}
 	}
 

@@ -402,6 +402,73 @@ class StockWelcomeLayoutTest {
 	}
 
 	@Test
+	void pendingReceiptIsOneTouchSizedResumeCardInThreeLanguages() throws Exception {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es"), new Locale("ca")}) {
+				AppLocal.setLocale(locale);
+				SwingUtilities.invokeAndWait(() -> {
+					StockSessionRepository.Session receipt = new StockSessionRepository.Session();
+					receipt.id = "trial";
+					receipt.supplier = "Comercial Vinícola Segre";
+					receipt.note = "TEST-1";
+					receipt.lines = 2;
+					String prompt = AppLocal.getIntString("receiving.discardConfirm", receipt.supplier, receipt.note);
+					assertTrue(prompt.contains(receipt.supplier) && prompt.contains(receipt.note), locale.toString());
+					JButton card = new JPanelStockWelcome(null, new MenuDefinition("Menu.StockManagement"))
+							.pendingReceiptCard(receipt);
+					for (int width : new int[]{280, 480}) {
+						card.setSize(width, 88);
+						layout(card);
+						assertEquals(1, card.getComponentCount());
+						JPanel identity = (JPanel) card.getComponent(0);
+						javax.swing.JLabel supplier = (javax.swing.JLabel) identity.getComponent(0);
+						javax.swing.JLabel note = (javax.swing.JLabel) identity.getComponent(2);
+						assertEquals(receipt.supplier, supplier.getText());
+						assertTrue(note.getText().contains(receipt.note));
+						assertTrue(supplier.getPreferredSize().width <= identity.getWidth());
+						assertTrue(note.getPreferredSize().width <= identity.getWidth());
+						assertEquals(width, card.getWidth());
+						assertTrue(card.getHeight() >= 80, locale + " width=" + width);
+						assertTrue(card.isFocusable());
+						assertTrue(card.getAccessibleContext().getAccessibleName().contains(receipt.supplier));
+						assertTrue(card.getAccessibleContext().getAccessibleName().contains(receipt.note));
+						if (width == 280) {
+							BufferedImage image = new BufferedImage(width, 88, BufferedImage.TYPE_INT_RGB);
+							java.awt.Graphics2D graphics = image.createGraphics();
+							try {
+								graphics.setColor(RetailPOSColors.surface0());
+								graphics.fillRect(0, 0, width, 88);
+								card.paint(graphics);
+								ImageIO.write(image, "png",
+										new File("build/receiving-pending-" + locale.getLanguage() + ".png"));
+							} catch (java.io.IOException e) {
+								throw new AssertionError(e);
+							} finally {
+								graphics.dispose();
+							}
+						}
+					}
+					for (java.awt.event.ActionListener listener : card.getActionListeners())
+						card.removeActionListener(listener);
+					java.util.concurrent.atomic.AtomicInteger clicks = new java.util.concurrent.atomic.AtomicInteger();
+					card.addActionListener(e -> clicks.incrementAndGet());
+					JPanel identity = (JPanel) card.getComponent(0);
+					for (Component label : new Component[]{identity.getComponent(0), identity.getComponent(2)}) {
+						label.dispatchEvent(new java.awt.event.MouseEvent(label,
+								java.awt.event.MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, 5, 5, 1, false,
+								java.awt.event.MouseEvent.BUTTON1));
+					}
+					card.doClick();
+					assertEquals(3, clicks.get(), locale + " whole card must resume the receipt");
+				});
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
 	void lightAndDarkThemesPaintAtMinimumWindowSize() throws Exception {
 		RetailPOSTheme.registerDefaultsSource();
 		try {
