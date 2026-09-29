@@ -1,6 +1,7 @@
 package com.openbravo.pos.inventory;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -154,14 +155,19 @@ final class StockSessionRepository {
 		return columns;
 	}
 
-	private boolean hasTaxRates() {
-		try (PreparedStatement statement = connection
-				.prepareStatement("SELECT CATEGORY,CUSTCATEGORY,VALIDFROM,RATE FROM TAXES WHERE 1=0");
-				ResultSet ignored = statement.executeQuery()) {
-			return true;
-		} catch (SQLException e) {
-			return false;
+	private boolean hasTaxRates() throws SQLException {
+		// A failed SELECT would abort the open receipt transaction on PostgreSQL.
+		DatabaseMetaData metadata = connection.getMetaData();
+		for (String table : new String[]{"TAXES", "taxes"}) {
+			Set<String> columns = new HashSet<>();
+			try (ResultSet rows = metadata.getColumns(connection.getCatalog(), connection.getSchema(), table, "%")) {
+				while (rows.next())
+					columns.add(rows.getString("COLUMN_NAME").toUpperCase(java.util.Locale.ROOT));
+			}
+			if (columns.containsAll(Set.of("CATEGORY", "CUSTCATEGORY", "VALIDFROM", "RATE")))
+				return true;
 		}
+		return false;
 	}
 
 	private boolean hasCurrentVariantColumn() throws SQLException {
