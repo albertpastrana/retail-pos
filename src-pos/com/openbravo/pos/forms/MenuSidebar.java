@@ -51,6 +51,7 @@ public class MenuSidebar extends JPanel implements Scrollable {
 		toggle.setAlignmentX(LEFT_ALIGNMENT);
 		toggle.setHorizontalAlignment(SwingConstants.LEADING);
 		toggle.setText(AppLocal.getIntString("Button.CollapseMenu"));
+		toggle.setToolTipText(AppLocal.getIntString("Button.CollapseMenu"));
 		toggle.setFont(toggle.getFont().deriveFont(12f));
 		toggle.setIconTextGap(8);
 		Dimension toggleSize = toggle.getPreferredSize();

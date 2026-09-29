@@ -127,9 +127,11 @@ IBM Plex Mono's files carry clean names (`IBM Plex Mono`, `IBM Plex Mono Medium`
 
 Whatever layout manager a screen already uses (`GridBagLayout`, SwingX, absolute positioning in the older dialogs), carry the numbers over as `insets`/gaps rather than eyeballing new ones: `space-4` (16px) for panel and dialog padding, `space-2`–`space-3` (8–12px) between related controls, `space-8` (32px) between the ticket panel and the product grid. The one hard rule, not a suggestion: **no keypad key, product tile or primary button gets a preferred height under `space-12` (48px)**. That's the number that matters for a touch screen — retrofit it into a screen before touching its colours or fonts if the two ever compete for time.
 
-## 5. Icons: PNG today, SVG as the next step
+## 5. Icons: local SVG with FlatSVGIcon
 
-The existing templates (`Button.OpenDrawer.png`, `Button.Print.png`, the coin/banknote set) are flat PNGs loaded as `ImageIcon` — this system's six SVG icons follow the same visual family (24×24, 2px stroke, single ink colour) so they drop into that exact pattern: export each as PNG at the sizes those templates already use (typically 1x + a 2x for high-DPI displays) rather than inventing a new loading path. `com.formdev:flatlaf-extras` (not yet a dependency) adds `FlatSVGIcon`, which paints the actual SVG at any size and is the natural next step once more than a handful of icons exist — worth adding when the icon set grows past what hand-exported PNGs can keep up with, not before.
+The existing templates (`Button.OpenDrawer.png`, `Button.Print.png`, the coin/banknote set) remain legacy PNGs. New design-system icons are local SVG resources and are loaded through `com.openbravo.pos.util.PosIcons`, which uses `com.formdev:flatlaf-extras:3.7.2` and `FlatSVGIcon`. The shared loader validates the packaged resource before returning a critical icon and derives the requested logical size from the 24×24 source geometry. Do not create separate 1x/2x exports.
+
+SVGs use `stroke="currentColor"` and `fill="currentColor"` only for filled details. `FlatSVGIcon` sets the SVG paint colour from the Swing component foreground, so icons follow light and dark theme tokens without browser-only assumptions. Set an intentional semantic colour on the component when an icon is semantic rather than navigational.
 
 ## 6. What to leave alone for now
 

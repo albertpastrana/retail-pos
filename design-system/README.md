@@ -24,7 +24,7 @@ Everything sits on the 4px scale from `space-1` to `space-16`; a keypad key or a
 
 ## Iconography
 
-Retail POS has no icon font and no third-party icon set: the six icons shipped in the **Icons** asset group (`cash-drawer`, `print`, `barcode-scan`, `card-payment`, `discount-tag`, `search`) establish the family a future icon earns membership in by matching, not by being close enough — 24×24, 2px stroke, rounded caps and joins, no fill except a single accent dot where the glyph needs one (`discount-tag`'s hole). Each is drawn in a fixed ink colour (`#241c14`) rather than `currentColor`, because these are served as plain images: recolour by exporting a themed copy, never by wrapping one in a coloured container. Use an icon beside its label the first time an action appears on a screen (a toolbar, a menu); once a cashier knows the sales screen, icon-only is fine for the same action repeated (a ticket line's void icon).
+Retail POS uses Lucide as its primary UI glyph family, with no icon font or JavaScript icon package. The **Icons** asset group contains local 24×24 SVGs using a 2px stroke, rounded caps and joins, and `currentColor`: `printer`, `credit-card`, `tag`, `search`, `barcode-scan`, and `cash-drawer`. The first four are Lucide icons; the last two are documented POS-specific exceptions because their scan affordance and cash-drawer meaning have no exact Lucide equivalent. Swing renders these SVGs with `FlatSVGIcon` from `flatlaf-extras`, so the active light/dark theme supplies the colour at paint time. Use an icon beside its label the first time an action appears on a screen (a toolbar, a menu); once a cashier knows the sales screen, icon-only is fine for the same action repeated (a ticket line's void icon).
 
 ## Logo
 
