@@ -12,7 +12,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 
@@ -168,6 +174,53 @@ class StockSessionRepositoryTest {
 			assertTrue(repo.openSessions().isEmpty());
 			StockSessionRepository.Session following = repo.open("Supplier", "A-44", "0", "user");
 			assertNotNull(repo.get(following.id)); // A failed discard does not poison the shared connection.
+			sql.execute("INSERT INTO PRODUCTS VALUES ('p4','Other milk','123','M4')");
+			repo.scanProduct(following.id, "p1", "123", 1, false);
+			repo.scanProduct(following.id, "p4", "123", 2, false);
+			repo.scanProduct(following.id, "p4", "123", 1, false);
+			List<StockSessionRepository.Line> sharedBarcode = repo.lines(following.id, false);
+			assertEquals(2, sharedBarcode.size());
+			assertEquals(1,
+					sharedBarcode.stream().filter(line -> "p1".equals(line.product)).findFirst().orElseThrow().units);
+			assertEquals(3,
+					sharedBarcode.stream().filter(line -> "p4".equals(line.product)).findFirst().orElseThrow().units);
+			assertTrue(sharedBarcode.stream().allMatch(line -> "123".equals(line.barcode)));
+			assertThrows(IllegalArgumentException.class, () -> repo.scan(following.id, "123", 1, false));
+
+			StockSessionRepository.Session racing = repo.open("Supplier", "A-45", "0", "user");
+			repo.scanProduct(racing.id, "p1", "123", 2, false);
+			String lineId = repo.lines(racing.id, false).get(0).id;
+			var worker = Executors.newSingleThreadExecutor();
+			try (Connection competing = DriverManager.getConnection(url)) {
+				c.setAutoCommit(false);
+				try (PreparedStatement lock = c.prepareStatement("SELECT ID FROM STOCKSESSION WHERE ID=? FOR UPDATE")) {
+					lock.setString(1, racing.id);
+					try (ResultSet locked = lock.executeQuery()) {
+						assertTrue(locked.next());
+						CountDownLatch started = new CountDownLatch(1);
+						var staleEdit = worker.submit(() -> {
+							started.countDown();
+							new StockSessionRepository(competing).quantity(racing.id, lineId, 9);
+							return null;
+						});
+						assertTrue(started.await(5, TimeUnit.SECONDS));
+						assertThrows(TimeoutException.class, () -> staleEdit.get(250, TimeUnit.MILLISECONDS));
+						double before = stock(c, "p1");
+						repo.post(racing.id, "user");
+						ExecutionException rejection = assertThrows(ExecutionException.class,
+								() -> staleEdit.get(10, TimeUnit.SECONDS));
+						assertTrue(rejection.getCause() instanceof IllegalStateException);
+						assertEquals(before + 2, stock(c, "p1"));
+						assertEquals(2, repo.lines(following.id, false).size());
+					}
+				}
+			} finally {
+				if (!c.getAutoCommit()) {
+					c.rollback();
+					c.setAutoCommit(true);
+				}
+				worker.shutdownNow();
+			}
 		}
 	}
 

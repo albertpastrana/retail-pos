@@ -50,6 +50,7 @@
     <class name="com.openbravo.pos.inventory.TaxPanel"/>
     <class name="com.openbravo.pos.inventory.TaxCategoriesPanel"/>
     <class name="com.openbravo.pos.inventory.StockDiaryPanel"/>
+    <class name="com.openbravo.pos.inventory.StockReceivingPanel"/>
     <class name="com.openbravo.pos.inventory.ReplenishmentPanel"/>
     <class name="Menu.Replenishment.Add"/>
     <class name="com.openbravo.pos.inventory.StockManagement"/>

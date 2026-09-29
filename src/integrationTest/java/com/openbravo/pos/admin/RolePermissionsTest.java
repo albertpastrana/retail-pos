@@ -41,6 +41,17 @@ class RolePermissionsTest {
 	}
 
 	@Test
+	void receivingAccessCanBeGrantedAndRevokedInTheRolesEditor() throws Exception {
+		String receiving = "com.openbravo.pos.inventory.StockReceivingPanel";
+		assertThat(RolePermissions.catalogue()).contains(receiving);
+		String initial = "<permissions><class name=\"" + receiving + "\"/>"
+				+ "<class name=\"custom.Unknown\"/></permissions>";
+		assertThat(RolePermissions.keys(RolePermissions.update(initial, Set.of()))).containsExactly("custom.Unknown");
+		assertThat(RolePermissions.keys(RolePermissions.update(initial, Set.of(receiving))))
+				.containsExactlyInAnyOrder(receiving, "custom.Unknown");
+	}
+
+	@Test
 	void externalEntitiesAreRejected() {
 		assertThatThrownBy(() -> RolePermissions.keys("<!DOCTYPE permissions [<!ENTITY x SYSTEM 'file:///etc/passwd'>]>"
 				+ "<permissions><class name='&x;'/></permissions>")).isInstanceOf(Exception.class);

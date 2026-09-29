@@ -125,10 +125,12 @@ public final class CatalogImportDialog {
 		unknown = false;
 		LOGGER.log(Level.INFO, "event=catalog_import_start copy={0} code=\"{1}\"", new Object[]{copy, code});
 		ProductInfoExt product = dlSales.getProductInfoByCode(code);
-		// A receipt scan resolves only a catalogue product's own barcode, not a
-		// padded or secondary barcode matched by the sales lookup.
-		if (copy == Copy.RECEIVING && product != null && !code.equals(product.getCode()))
-			product = null;
+		// An alias found by the sales lookup is not an unknown catalogue product.
+		// A receiving scan accepts only PRODUCTS.CODE and must not import it again.
+		if (copy == Copy.RECEIVING && product != null && !code.equals(product.getCode())) {
+			unknown = true;
+			return null;
+		}
 		if (product != null) {
 			LOGGER.log(Level.INFO, "event=catalog_import_existing_product code=\"{0}\"", code);
 			return product;
@@ -145,7 +147,9 @@ public final class CatalogImportDialog {
 			LOGGER.log(Level.INFO, "event=catalog_fallback_match code=\"{0}\" family=\"{1}\"",
 					new Object[]{code, catalogProduct.getFamily()});
 		}
-		List<ProductInfoExt> family = catalogProduct == null
+		// Receiving only creates the scanned product. Family import can update the
+		// prices of variants already in the catalogue; that is a separate job.
+		List<ProductInfoExt> family = catalogProduct == null || copy == Copy.RECEIVING
 				? new ArrayList<ProductInfoExt>()
 				: dlSales.getCatalogProductFamily(code, null, null);
 		if (family.size() > 1) {
