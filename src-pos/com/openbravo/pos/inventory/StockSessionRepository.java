@@ -91,6 +91,10 @@ final class StockSessionRepository {
 	}
 
 	List<Line> lines(String session, boolean byName) throws SQLException {
+		return withLockedSession(session, () -> readLines(session, byName));
+	}
+
+	private List<Line> readLines(String session, boolean byName) throws SQLException {
 		List<Line> result = new ArrayList<>();
 		Session s = get(session);
 		if (s == null)
@@ -219,25 +223,10 @@ final class StockSessionRepository {
 			throws SQLException {
 		if ((productId == null && (code == null || code.isBlank())) || !wholeQuantity(quantity))
 			throw new IllegalArgumentException("Enter a code and a positive quantity");
-		boolean auto = connection.getAutoCommit();
-		try {
-			connection.setAutoCommit(false);
-			try (PreparedStatement lock = connection.prepareStatement(
-					"SELECT ID FROM STOCKSESSION WHERE ID=? AND TYPE='RECEIPT' AND STATUS='OPEN' FOR UPDATE")) {
-				lock.setString(1, session);
-				try (ResultSet rs = lock.executeQuery()) {
-					if (!rs.next())
-						throw new IllegalStateException("Receipt is no longer open");
-				}
-			}
+		withLockedSession(session, () -> {
 			scanLocked(session, productId, code, quantity, override);
-			connection.commit();
-		} catch (SQLException | RuntimeException ex) {
-			connection.rollback();
-			throw ex;
-		} finally {
-			connection.setAutoCommit(auto);
-		}
+			return null;
+		});
 	}
 
 	private void scanLocked(String session, String productId, String code, double quantity, boolean override)
@@ -277,7 +266,9 @@ final class StockSessionRepository {
 			insert.setString(1, UUID.randomUUID().toString());
 			insert.setString(2, session);
 			insert.setString(3, product);
-			insert.setString(4, normalized);
+			// Resolved lines are identified by product. The original scanned code
+			// may be shared by another product, while unknown lines retain that code.
+			insert.setString(4, product == null ? normalized : product);
 			insert.setDouble(5, quantity);
 			insert.setTimestamp(6, now);
 			insert.setTimestamp(7, now);
@@ -300,36 +291,71 @@ final class StockSessionRepository {
 	}
 
 	void tickAll(String session, boolean checked) throws SQLException {
-		if (get(session) == null)
-			throw new IllegalStateException("Session is no longer open");
-		try (PreparedStatement sql = connection
-				.prepareStatement("UPDATE STOCKSESSIONLINE SET TICKED=? WHERE STOCKSESSION=?")) {
-			sql.setInt(1, checked ? 1 : 0);
-			sql.setString(2, session);
-			sql.executeUpdate();
-		}
+		withLockedSession(session, () -> {
+			try (PreparedStatement sql = connection
+					.prepareStatement("UPDATE STOCKSESSIONLINE SET TICKED=? WHERE STOCKSESSION=?")) {
+				sql.setInt(1, checked ? 1 : 0);
+				sql.setString(2, session);
+				sql.executeUpdate();
+			}
+			return null;
+		});
 	}
 
 	private void change(String statement, String session, String line, double value) throws SQLException {
-		if (get(session) == null)
-			throw new IllegalStateException("Session is no longer open");
-		try (PreparedStatement sql = connection.prepareStatement(statement)) {
-			sql.setDouble(1, value);
-			sql.setString(2, line);
-			sql.setString(3, session);
-			if (sql.executeUpdate() != 1)
-				throw new IllegalArgumentException("Line no longer exists");
-		}
+		withLockedSession(session, () -> {
+			try (PreparedStatement sql = connection.prepareStatement(statement)) {
+				sql.setDouble(1, value);
+				sql.setString(2, line);
+				sql.setString(3, session);
+				if (sql.executeUpdate() != 1)
+					throw new IllegalArgumentException("Line no longer exists");
+			}
+			return null;
+		});
 	}
 
 	void remove(String session, String line) throws SQLException {
-		if (get(session) == null)
-			throw new IllegalStateException("Session is no longer open");
-		try (PreparedStatement sql = connection
-				.prepareStatement("DELETE FROM STOCKSESSIONLINE WHERE ID=? AND STOCKSESSION=?")) {
-			sql.setString(1, line);
-			sql.setString(2, session);
-			sql.executeUpdate();
+		withLockedSession(session, () -> {
+			try (PreparedStatement sql = connection
+					.prepareStatement("DELETE FROM STOCKSESSIONLINE WHERE ID=? AND STOCKSESSION=?")) {
+				sql.setString(1, line);
+				sql.setString(2, session);
+				sql.executeUpdate();
+			}
+			return null;
+		});
+	}
+
+	@FunctionalInterface
+	private interface SqlAction<T> {
+		T run() throws SQLException;
+	}
+
+	private <T> T withLockedSession(String session, SqlAction<T> action) throws SQLException {
+		boolean ownTransaction = connection.getAutoCommit();
+		try {
+			if (ownTransaction)
+				connection.setAutoCommit(false);
+			try (PreparedStatement lock = connection
+					.prepareStatement("SELECT ID FROM STOCKSESSION WHERE ID=? AND STATUS='OPEN' FOR UPDATE")) {
+				lock.setString(1, session);
+				try (ResultSet rs = lock.executeQuery()) {
+					if (!rs.next())
+						throw new IllegalStateException("Session is no longer open");
+				}
+			}
+			T result = action.run();
+			if (ownTransaction)
+				connection.commit();
+			return result;
+		} catch (SQLException | RuntimeException ex) {
+			if (ownTransaction)
+				connection.rollback();
+			throw ex;
+		} finally {
+			if (ownTransaction)
+				connection.setAutoCommit(true);
 		}
 	}
 

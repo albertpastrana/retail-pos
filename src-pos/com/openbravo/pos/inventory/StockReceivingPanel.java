@@ -774,13 +774,18 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			JPanel notes = new JPanel(new GridLayout(0, 1, 4, 4));
 			if (unknown > 0)
 				notes.add(wrapped(tr("receiving.unknownWarning") + " " + unknown, noteWidth));
+			if (unknown > 0 && !canEditCatalogue())
+				notes.add(wrapped(tr("receiving.requiresProductAccess"), noteWidth));
 			if (unticked > 0)
 				notes.add(wrapped(tr("receiving.untickedWarning") + " " + unticked, noteWidth));
 			notes.add(wrapped(tr("receiving.missingHint"), noteWidth));
 			actions.add(notes, BorderLayout.NORTH);
 			JPanel buttons = new JPanel(new GridLayout(0, 1, 6, 6));
-			if (unknown > 0)
-				buttons.add(button("receiving.create", this::createUnknown));
+			if (unknown > 0) {
+				JButton create = button("receiving.create", this::createUnknown);
+				create.setEnabled(canEditCatalogue());
+				buttons.add(create);
+			}
 			buttons.add(button("receiving.missing", this::missing));
 			buttons.add(button("receiving.back", () -> {
 				reviewing = false;
@@ -888,7 +893,9 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			String scanned = code.getText().trim();
 			ProductInfoExt known = sales == null || scanned.isEmpty() ? null : sales.getProductInfoByCode(scanned);
 			String importedId = null;
-			if (!scanned.isEmpty() && sales != null && (known == null || !scanned.equals(known.getCode()))
+			// Sales also finds padded and secondary codes. A receipt scan resolves
+			// PRODUCTS.CODE only; an alias must not trigger a duplicate import.
+			if (!scanned.isEmpty() && sales != null && known == null && canEditCatalogue()
 					&& sales.getCatalogProductByCode(scanned, null, null) != null) {
 				ProductInfoExt imported = CatalogImportDialog.forReceiving(this, app, sales).importIfAbsent(scanned);
 				if (imported == null)
@@ -914,6 +921,10 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 		} finally {
 			code.requestFocusInWindow();
 		}
+	}
+
+	private boolean canEditCatalogue() {
+		return app != null && app.getAppUserView().getTaskAction("com.openbravo.pos.inventory.ProductsPanel") != null;
 	}
 
 	private void searchProduct() {
@@ -1040,8 +1051,7 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 	private void createUnknown() {
 		StockSessionRepository.Line unresolved = lines.stream().filter(line -> line.product == null).findFirst()
 				.orElse(null);
-		if (unresolved == null
-				|| app.getAppUserView().getTaskAction("com.openbravo.pos.inventory.ProductsPanel") == null)
+		if (unresolved == null || !canEditCatalogue())
 			return;
 		app.getAppUserView().getTaskAction("com.openbravo.pos.inventory.ProductsPanel").actionPerformed(null);
 		try {
