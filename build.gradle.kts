@@ -87,6 +87,7 @@ dependencies {
             isTransitive = false
         }
     }
+    implementation("com.formdev:flatlaf-extras:3.7.2")
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
     runtimeOnly("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")

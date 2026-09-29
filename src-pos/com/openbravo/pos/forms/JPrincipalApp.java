@@ -33,6 +33,7 @@ import com.openbravo.data.gui.MessageInf;
 import com.openbravo.data.gui.JMessageDialog;
 import com.openbravo.pos.util.Hashcypher;
 import com.openbravo.pos.util.HiDpiIcon;
+import com.openbravo.pos.util.PosIcons;
 import com.openbravo.pos.theme.RetailPOSColors;
 
 /**
@@ -89,11 +90,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		applyComponentOrientation(appview.getComponentOrientation());
 
 		if (jButton1.getComponentOrientation().isLeftToRight()) {
-			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"), 1);
-			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"), 1);
+			menu_open = PosIcons.sidebarOpen(true);
+			menu_close = PosIcons.sidebarClose(true);
 		} else {
-			menu_open = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-left.png"), 1);
-			menu_close = new HiDpiIcon(getClass().getResource("/com/openbravo/images/menu-right.png"), 1);
+			menu_open = PosIcons.sidebarOpen(false);
+			menu_close = PosIcons.sidebarClose(false);
 		}
 		assignMenuButtonIcon();
 
@@ -245,8 +246,12 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private void assignMenuButtonIcon() {
 		jButton1.setIcon(m_menuRail ? menu_open : menu_close);
+		jButton1.setForeground(RetailPOSColors.inkMuted());
+		jButton1.setToolTipText(AppLocal.getIntString(m_menuRail ? "Button.OpenMenu" : "Button.CollapseMenu"));
 		if (m_jRailToggle != null) {
 			m_jRailToggle.setIcon(m_menuRail ? menu_open : menu_close);
+			m_jRailToggle.setForeground(RetailPOSColors.inkMuted());
+			m_jRailToggle.setToolTipText(AppLocal.getIntString("Button.OpenMenu"));
 		}
 	}
 
@@ -278,7 +283,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			rail.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 4));
 			rail.applyComponentOrientation(getComponentOrientation());
 			m_jRailToggle = new JButton();
-			m_jRailToggle.setIcon(menu_close);
+			m_jRailToggle.setIcon(menu_open);
 			m_jRailToggle.setPreferredSize(new Dimension(56, 56));
 			m_jRailToggle.setMinimumSize(new Dimension(56, 56));
 			m_jRailToggle.setMaximumSize(new Dimension(56, 56));
