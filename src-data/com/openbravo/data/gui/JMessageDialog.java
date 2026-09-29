@@ -21,6 +21,8 @@ package com.openbravo.data.gui;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import com.openbravo.data.loader.LocalRes;
 /**
@@ -28,6 +30,8 @@ import com.openbravo.data.loader.LocalRes;
  * @author adrian
  */
 public class JMessageDialog extends javax.swing.JDialog {
+
+	private static final Logger LOGGER = Logger.getLogger(JMessageDialog.class.getName());
 
 	/** Creates new form JMessageDialog */
 	private JMessageDialog(java.awt.Frame parent, boolean modal) {
@@ -49,6 +53,7 @@ public class JMessageDialog extends javax.swing.JDialog {
 	}
 
 	public static void showMessage(Component parent, MessageInf inf) {
+		logMessage(inf);
 
 		Window window = getWindow(parent);
 
@@ -111,6 +116,19 @@ public class JMessageDialog extends javax.swing.JDialog {
 
 		// myMsg.show();
 		myMsg.setVisible(true);
+	}
+
+	private static void logMessage(MessageInf inf) {
+		if (inf.getSignalWord() == MessageInf.SGN_SUCCESS) {
+			return;
+		}
+		String message = "event=message_dialog signal=" + inf.getErrorCodeMsg() + " message=" + inf.getMessageMsg();
+		Object cause = inf.getCause();
+		if (cause instanceof Throwable) {
+			LOGGER.log(Level.WARNING, message, (Throwable) cause);
+		} else {
+			LOGGER.warning(message);
+		}
 	}
 
 	/**

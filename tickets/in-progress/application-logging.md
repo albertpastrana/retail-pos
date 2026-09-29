@@ -25,6 +25,10 @@ Never log passwords, payment credentials, card data, full scanned codes, or unne
 
 The first two slices are implemented in the current branch. The ticket remains open until the remaining flows and operational documentation are complete.
 
+When an error is presented through `MessageInf`, the dialog layer must also log
+the user-visible failure and its throwable cause when available. Successful
+notifications remain unlogged.
+
 ## Done when
 
 - Startup logs include application version, Git revision, Java/runtime information, operating system, run ID, configuration source, and an allowlisted effective configuration.
