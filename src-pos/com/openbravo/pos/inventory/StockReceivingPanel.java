@@ -152,6 +152,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			} catch (IllegalArgumentException e) {
 				warn(tr("receiving.invalidQuantity"));
 				refresh();
+			} catch (IllegalStateException e) {
+				sessionClosed();
 			} catch (SQLException e) {
 				error(e);
 				refresh();
@@ -758,6 +760,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			drawActions(unknown, lines.size() - ticks);
 		} catch (SQLException e) {
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		}
 	}
 
@@ -821,6 +825,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			refresh();
 		} catch (SQLException e) {
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		}
 	}
 
@@ -859,6 +865,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			refresh();
 		} catch (SQLException e) {
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		}
 	}
 
@@ -916,6 +924,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "event=stock_receipt_scan_failed", e);
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		} catch (BasicException e) {
 			error(e);
 		} finally {
@@ -942,6 +952,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			warn(tr("receiving.invalidScan"));
 		} catch (SQLException e) {
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		}
 	}
 
@@ -981,6 +993,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			refresh();
 		} catch (SQLException e) {
 			error(e);
+		} catch (IllegalStateException e) {
+			sessionClosed();
 		}
 	}
 
@@ -1010,7 +1024,9 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			table.clearSelection();
 			refresh();
 			app.getAppUserView().getTaskAction("com.openbravo.pos.forms.MenuStockManagement").actionPerformed(null);
-		} catch (SQLException | IllegalStateException e) {
+		} catch (IllegalStateException e) {
+			sessionClosed();
+		} catch (SQLException e) {
 			error(e);
 			refresh();
 		}
@@ -1027,7 +1043,9 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 			reviewing = false;
 			refresh();
 			JOptionPane.showMessageDialog(this, tr("receiving.posted"));
-		} catch (IllegalArgumentException | IllegalStateException e) {
+		} catch (IllegalStateException e) {
+			sessionClosed();
+		} catch (IllegalArgumentException e) {
 			logger.warning("event=stock_receipt_post_rejected reason=" + e.getClass().getSimpleName());
 			warn(tr("receiving.postError") + " " + e.getMessage());
 			refresh();
@@ -1062,6 +1080,15 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 	}
 	private void warn(String message) {
 		JOptionPane.showMessageDialog(this, message, tr("receiving.title"), JOptionPane.WARNING_MESSAGE);
+	}
+	private void sessionClosed() {
+		logger.info("event=stock_receipt_session_closed");
+		session = null;
+		reviewing = false;
+		code.setText("");
+		table.clearSelection();
+		refresh();
+		warn(tr("receiving.sessionClosed"));
 	}
 	private void error(Exception e) {
 		logger.log(Level.SEVERE, "event=stock_receipt_ui_failed", e);

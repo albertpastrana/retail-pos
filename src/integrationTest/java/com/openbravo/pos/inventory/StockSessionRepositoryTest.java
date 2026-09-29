@@ -186,6 +186,12 @@ class StockSessionRepositoryTest {
 					sharedBarcode.stream().filter(line -> "p4".equals(line.product)).findFirst().orElseThrow().units);
 			assertTrue(sharedBarcode.stream().allMatch(line -> "123".equals(line.barcode)));
 			assertThrows(IllegalArgumentException.class, () -> repo.scan(following.id, "123", 1, false));
+			// Older catalogues may have TAXCAT but lack the TAXES table altogether.
+			// A failed SQL probe would abort a PostgreSQL receipt transaction.
+			sql.execute("ALTER TABLE PRODUCTS ADD TAXCAT VARCHAR(255)");
+			sql.execute("ALTER TABLE PRODUCTS ADD PRICESELL DOUBLE");
+			sql.execute("UPDATE PRODUCTS SET TAXCAT='missing',PRICESELL=10");
+			assertNull(repo.lines(following.id, false).get(0).retailPrice);
 
 			StockSessionRepository.Session racing = repo.open("Supplier", "A-45", "0", "user");
 			repo.scanProduct(racing.id, "p1", "123", 2, false);

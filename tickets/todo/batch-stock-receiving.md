@@ -157,6 +157,11 @@ unchanged if expected quantities later appear beside the received ones.
 
 ## Implementation status (2026-09-30)
 
+PR #78 follow-up: make the optional tax-schema check metadata-only so missing
+legacy tax columns cannot abort a PostgreSQL transaction. If another till
+posts or discards an open receipt during an edit, show a localized notice and
+return the panel to its empty state instead of leaking an uncaught exception.
+
 Implemented on PR #78: receipt sessions persist until confirmation or explicit
 Discard. Scanning matches `PRODUCTS.CODE` only, repeated scans add whole units,
 and choosing a product in the finder matches its ID even when codes collide.
@@ -169,6 +174,9 @@ requires ProductsPanel access, adds only the scanned variant and opens an editor
 without initial stock changes or edits to existing family variants;
 a scanned secondary alias never imports a duplicate. The receipt and its lines
 are locked for scans, unknown resolution, editing, review, posting, and Discard.
+Optional tax columns are detected through metadata without aborting a PostgreSQL
+transaction; if another register closes the receipt during editing, the operator
+sees a localized notice instead of a stale editable session.
 Posting updates stock, diary and matching replenishment entries atomically;
 Discard deletes only an open receipt and its draft lines, leaving stock intact.
 V50/V51 add the schema and role grants, and the administrator permission
