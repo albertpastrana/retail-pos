@@ -139,9 +139,10 @@ Also verify:
 On 2026-09-30, removed twelve unreferenced PNG assets from
 `src-beans/com/openbravo/images`: the eight unused alternate keypad states,
 `color_line16.png`, `gohome.png`, and the superseded `menu-left.png` /
-`menu-right.png` sidebar icons. The current repository-wide classification
-keeps the remaining PNGs because they are referenced directly by application
-code or by database migration/resource-loading paths.
+`menu-right.png` sidebar icons. The earlier review identified 69 PNGs without
+textual repository references; these twelve are now removed, while the
+remaining candidates stay pending targeted packaging, database-resource, and
+external-extension checks. Do not classify all remaining PNGs as referenced.
 
 On 2026-09-25, removed the seven high-confidence unused Gradle dependencies from
 `build.gradle.kts`. SwingX was already removed by the main-menu change. The

@@ -30,23 +30,19 @@ such use must be classified as intentional, restricted, or replaceable before
 being changed. Preserve compatibility with Derby, MySQL, PostgreSQL, installed
 databases, ticket resources, and configured integrations.
 
-## Slices
+## Related workstreams
 
-1. Reproduce and test the barcode SQL injection path, then replace string concatenation with parameterized SQL and safe regex handling.
-2. Restrict or replace Java deserialization and add regression coverage for valid serialized values and rejected classes.
-3. Decide whether database-backed Velocity templates are trusted configuration. If they are not strictly trusted, remove method access or replace the scripting mechanism with a constrained renderer.
-4. Harden every XML parser against XXE and entity expansion while preserving printer templates and role-permission parsing.
-5. Replace private-method reflection in `ProductsEditor` with an explicit typed API and document/whitelist remaining dynamic class loading.
-6. Design a password-hash migration from plain/SHA-1 formats to a modern salted password KDF without locking out existing installations.
-7. Replace database-password obfuscation with authenticated modern encryption or a protected secret-store/configuration approach, including migration and failure handling.
+The independent workstreams are tracked separately:
+
+- `tickets/todo/security-sql-injection.md`
+- `tickets/todo/security-deserialization.md`
+- `tickets/todo/security-template-execution.md`
+- `tickets/todo/security-xml-parsers.md`
+- `tickets/todo/security-dynamic-loading.md`
+- `tickets/todo/security-password-hashing.md`
+- `tickets/todo/security-database-credentials.md`
 
 ## Done when
 
-- Barcode input cannot alter the SQL statement and malformed or regex-special input is handled safely.
-- Untrusted serialized data cannot instantiate arbitrary classes or cause uncontrolled resource consumption.
-- Database-backed templates cannot invoke arbitrary application methods, or the trust boundary is explicit, enforced, and tested.
-- Both SAX parser paths reject external entities and unsafe DTDs, with tests covering malicious XML.
-- Dynamic class loading is restricted to supported classes and locations, and private reflection has been removed from application code.
-- Existing password formats are migrated or safely verified using a modern password KDF; empty and plaintext credentials are no longer accepted for new or changed passwords.
-- Database credentials are protected with authenticated encryption or an explicitly protected external secret mechanism.
-- Relevant unit, integration, database, printer, login, configuration, and packaging checks pass for supported environments.
+- Each related security workstream has an owner, a decision, and observable verification.
+- The related tickets are completed without regressions to supported databases, printer resources, authentication, or configured integrations.

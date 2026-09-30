@@ -42,12 +42,15 @@ It must retain resources that are still runtime dependencies, including receipt 
 
 ### Flyway startup configuration
 
-Change `DatabaseMigrator` to use `baselineVersion("1")` with `baselineOnMigrate(true)`.
+Keep automatic baselining disabled during normal application startup. Perform
+`baselineVersion("1")` only through an explicit, one-time production-adoption
+operation after the schema, database target, and verified backup have been
+checked.
 
 Expected behaviour:
 
 - An empty database has no tables, so Flyway executes the new `V1` and creates the current schema.
-- The controlled production database is non-empty and has its old Flyway history reset during the one-time transition, so Flyway records baseline version `1` without executing the new `V1` over live data.
+- The controlled production database is adopted explicitly after verification, so Flyway records baseline version `1` without executing the new `V1` over live data.
 - A second application startup is a no-op.
 
 Do not rely on `CREATE IF NOT EXISTS` as a substitute for the production adoption procedure. The production database is already at the target schema and should be baselined, not rebuilt in place.
