@@ -6,16 +6,16 @@ Related: `tickets/todo/security-antipatterns-audit.md`
 
 ## Goal
 
-Restrict configured class loading and remove unnecessary private reflection
-without breaking supported database, hardware, payment, or restart flows.
+Restrict configured class loading without breaking supported database, hardware,
+payment, or restart flows.
 
 ## Context
 
-`AppViewConnection`, `JRootApp`, `BeanFactoryData`, and `ProductsEditor` use
-dynamic loading or private-method reflection.
+`AppViewConnection`, `JRootApp`, and `BeanFactoryData` use dynamic loading.
+`ProductsEditor` private-method reflection is tracked separately in
+`tickets/todo/security-products-editor-reflection.md`.
 
 ## Done when
 
 - Supported dynamic classes and locations are explicitly restricted.
-- `ProductsEditor` no longer uses private reflection.
 - Supported configuration-driven integrations remain covered by tests.
