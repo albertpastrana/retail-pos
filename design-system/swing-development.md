@@ -131,7 +131,7 @@ Whatever layout manager a screen already uses (`GridBagLayout`, SwingX, absolute
 
 The existing templates (`Button.OpenDrawer.png`, `Button.Print.png`, the coin/banknote set) remain legacy PNGs. New design-system icons are local SVG resources and are loaded through `com.openbravo.pos.util.PosIcons`, which uses `com.formdev:flatlaf-extras:3.7.2` and `FlatSVGIcon`. The shared loader validates the packaged resource before returning a critical icon and derives the requested logical size from the 24×24 source geometry. Do not create separate 1x/2x exports.
 
-SVGs use `stroke="currentColor"` and `fill="currentColor"` only for filled details. `FlatSVGIcon` sets the SVG paint colour from the Swing component foreground, so icons follow light and dark theme tokens without browser-only assumptions. Set an intentional semantic colour on the component when an icon is semantic rather than navigational.
+SVGs use `stroke="currentColor"` and `fill="currentColor"` only for filled details. `PosIcons` applies `RetailPOSColors.ink()` through a `FlatSVGIcon` colour filter, so icons follow light and dark theme tokens without browser-only assumptions. Semantic colour is not available through this shared loader; use a separate intentional component or icon implementation when an icon must carry semantic meaning.
 
 ## 6. What to leave alone for now
 
