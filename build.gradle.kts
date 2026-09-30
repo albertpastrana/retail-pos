@@ -64,7 +64,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation("org.apache.derby:derby:10.14.2.0")
+    implementation("org.apache.derby:derby:10.17.1.0")
     implementation("org.flywaydb:flyway-core:9.22.3")
     implementation("org.flywaydb:flyway-mysql:9.22.3")
     listOf(
@@ -90,7 +90,7 @@ dependencies {
     implementation("com.formdev:flatlaf-extras:3.7.2")
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
     runtimeOnly("org.postgresql:postgresql:42.7.13")
-    "dataHelpersImplementation"("org.apache.derby:derby:10.14.2.0")
+    "dataHelpersImplementation"("org.apache.derby:derby:10.17.1.0")
     "dataHelpersImplementation"("org.postgresql:postgresql:42.7.13")
     "dataHelpersImplementation"("com.mysql:mysql-connector-j:8.4.0")
     "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:6.1.3")
