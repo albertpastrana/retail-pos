@@ -136,3 +136,11 @@ than per screen.
 - The basket's previous straight strokes looked like a cut-off handle and its rectangular body did not match the SVG. Replaced the strokes with the original tapered basket and curved handle path. Replaced the power icon on Close with the wireframe's exit-door arrow in both themes. The other mode icon remains within its paint bounds. Re-rendered and visually compared `light-ca-choice.png` and `dark-ca-choice.png`; `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.InitialScreenLayoutTest` and `git diff --check` pass. Live till interaction remains to be checked.
 - Picker revision (2026-09-28): Back uses the wireframe's left-pointing chevron. The centred grid displays two columns in `light-ca-administrators.png`, `dark-ca-administrators.png`, and the full-screen preview, with wider side margins at 1024×768 and 800×768; one column is reserved for exceptionally narrow viewports. `InitialScreenLayoutTest` asserts the column count and margins in all three languages and both themes. `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.InitialScreenLayoutTest`, `./gradlew check` and `git diff --check` passed. Live till interaction remains to be checked.
 - Header alignment correction (2026-09-28): Back, heading and hint now occupy the same centred column as the cards, with matching left edges. The layout test checks this in every locale and theme at 1024×768, plus 800px and full-screen widths; reviewed the rendered PNGs for all three sizes. `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.InitialScreenLayoutTest`, `./gradlew check`, and `git diff --check` passed. Live till interaction remains outstanding.
+
+## Shipped
+
+Implemented in commit `d7d57181` and its follow-up changes. The initial screen
+now has the revised mode hierarchy, till state, administrator picker, keyboard
+focus treatment, responsive layout, translated labels, and light/dark previews.
+The ticket is marked done for the shipped scope; live till interaction,
+scanner, resize, and display-scale checks remain follow-up verification.

@@ -190,3 +190,12 @@ review and the pending card from compact through counter widths.
 The ticket remains open for real-app scanner and keyboard/focus flows,
 fallback-import dialog behavior, posting, resizing and physical display-scale
 checks in EN/ES/CA. Count-session cards depend on the separate count flow.
+
+## Shipped
+
+Implemented in commits `85cc0c0e`, `f721878e`, `5ef3438f`, `1fbfe6df`, and
+`8ec7b188`. Receipt sessions, scanning, review, posting, discard, persistence,
+permissions, localization previews, and Derby/MySQL/PostgreSQL CI checks are
+implemented. The ticket is marked done for the shipped scope; live scanner,
+keyboard/focus, resize, and physical display-scale checks remain follow-up
+verification.

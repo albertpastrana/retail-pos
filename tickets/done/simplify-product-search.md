@@ -37,3 +37,11 @@ stock column is kept narrow and the dialog viewport is 900 px wide.
 ## Verification pending
 
 Manual validation is still needed in the sales product finder and stock product list: confirm live filtering, clearing, selection, and translated labels at supported window sizes in English, Spanish, and Catalan.
+
+## Shipped
+
+Implemented in commits `2f5b1f85`, `9a0e8fb1`, `51dd8cd6`, and `e0aa66aa`.
+Live contains-search filtering, localized placeholders, category selection,
+tax-inclusive PVP labeling, stock display, and the requested table layout are
+in the tree. The ticket is marked done for the shipped scope; the documented
+manual sales and stock-flow checks remain follow-up verification.
