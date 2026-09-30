@@ -75,7 +75,6 @@ public final class PosIcons {
 		public void paintIcon(Component component, Graphics graphics, int x, int y) {
 			Graphics mirrored = graphics.create(x, y, getIconWidth(), getIconHeight());
 			mirrored.translate(getIconWidth(), 0);
-			mirrored.setClip(0, 0, getIconWidth(), getIconHeight());
 			((java.awt.Graphics2D) mirrored).scale(-1, 1);
 			delegate.paintIcon(component, mirrored, 0, 0);
 			mirrored.dispose();
