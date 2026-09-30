@@ -17,4 +17,8 @@ database-backed serializable values.
 ## Done when
 
 - Deserialization uses an allowlist or is replaced with a safer representation.
-- Valid existing values and rejected classes are covered by regression tests.
+- Input size and object-graph limits cover depth, references, or an equivalent
+  bounded resource budget; rejected oversized and deeply nested values cannot
+  consume uncontrolled memory or CPU.
+- Valid existing values, rejected classes, oversized input, and deeply nested
+  values are covered by regression tests.
