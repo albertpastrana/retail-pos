@@ -9,11 +9,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.flywaydb.core.internal.jdbc.DriverDataSource;
 
 final class DatabaseMigrator {
 	private static final Logger logger = Logger.getLogger(DatabaseMigrator.class.getName());
 
 	private static final String DERBY_URL_PREFIX = "jdbc:derby:";
+	private static final String DERBY_DRIVER = "org.apache.derby.iapi.jdbc.AutoloadedDriver";
 	private static final String DATABASE_NOT_FOUND = "XJ004";
 
 	private static final String BINARY_TYPE = "binary_type";
@@ -39,9 +42,15 @@ final class DatabaseMigrator {
 		// A database that predates Flyway already holds everything V1 and V2 create,
 		// so adopt it at version 2 rather than replaying the baseline over live data.
 		try {
-			Flyway.configure().dataSource(url, user, password).locations("classpath:db/migration")
-					.placeholders(placeholders).baselineOnMigrate(true).baselineVersion("2").validateOnMigrate(true)
-					.load().migrate();
+			FluentConfiguration configuration = Flyway.configure();
+			if (url.startsWith(DERBY_URL_PREFIX)) {
+				configuration.dataSource(new DriverDataSource(DatabaseMigrator.class.getClassLoader(), DERBY_DRIVER,
+						url, user, password));
+			} else {
+				configuration.dataSource(url, user, password);
+			}
+			configuration.locations("classpath:db/migration").placeholders(placeholders).baselineOnMigrate(true)
+					.baselineVersion("2").validateOnMigrate(true).load().migrate();
 			logger.info("event=database_migration_success url=" + LogSanitizer.jdbcUrl(url));
 		} catch (RuntimeException e) {
 			logger.log(Level.SEVERE, "event=database_migration_failed url=" + LogSanitizer.jdbcUrl(url), e);
