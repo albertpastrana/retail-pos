@@ -94,17 +94,22 @@ public final class JPanelPaymentSales extends javax.swing.JPanel implements JPan
 
 	private void loadRows() {
 		load.setEnabled(false);
+		final long started = ReportLog.start("payment_sales");
 		new SwingWorker<List<PaymentSalesRow>, Void>() {
 			@Override
 			protected List<PaymentSalesRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection(), period.getParameters());
+				return ReportLog
+						.inOperation(() -> repository.load(app.getSession().getConnection(), period.getParameters()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((PaymentSalesTableModel) table.getModel()).setRows(get());
+					List<PaymentSalesRow> rows = get();
+					((PaymentSalesTableModel) table.getModel()).setRows(rows);
+					ReportLog.success("payment_sales", rows.size(), started);
 				} catch (Exception e) {
+					ReportLog.failure("payment_sales", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelPaymentSales.this);
 				} finally {

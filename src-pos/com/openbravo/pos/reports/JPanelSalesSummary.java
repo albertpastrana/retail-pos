@@ -127,17 +127,22 @@ public final class JPanelSalesSummary extends JPanel implements JPanelView, Bean
 
 	private void loadSummary() {
 		load.setEnabled(false);
+		final long started = ReportLog.start("sales_summary");
 		new SwingWorker<SalesSummary, Void>() {
 			@Override
 			protected SalesSummary doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection(), period.getParameters());
+				return ReportLog
+						.inOperation(() -> repository.load(app.getSession().getConnection(), period.getParameters()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					showSummary(get());
+					SalesSummary summary = get();
+					showSummary(summary);
+					ReportLog.success("sales_summary", summary.getReceiptCount(), started);
 				} catch (Exception e) {
+					ReportLog.failure("sales_summary", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelSalesSummary.this);
 				} finally {

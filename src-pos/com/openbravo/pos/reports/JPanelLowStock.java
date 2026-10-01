@@ -92,17 +92,21 @@ public final class JPanelLowStock extends javax.swing.JPanel implements JPanelVi
 
 	private void loadRows() {
 		refresh.setEnabled(false);
+		final long started = ReportLog.start("low_stock");
 		new SwingWorker<List<LowStockRow>, Void>() {
 			@Override
 			protected List<LowStockRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection());
+				return ReportLog.inOperation(() -> repository.load(app.getSession().getConnection()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((LowStockTableModel) table.getModel()).setRows(get());
+					List<LowStockRow> rows = get();
+					((LowStockTableModel) table.getModel()).setRows(rows);
+					ReportLog.success("low_stock", rows.size(), started);
 				} catch (Exception e) {
+					ReportLog.failure("low_stock", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelLowStock.this);
 				} finally {

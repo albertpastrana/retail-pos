@@ -60,6 +60,8 @@ public class DeviceTicket {
 	}
 
 	public DeviceTicket(Component parent, AppProperties props) {
+		long started = System.currentTimeMillis();
+		logger.info("event=device_initialization_start");
 
 		PrinterWritterPool pws = new PrinterWritterPool();
 
@@ -74,6 +76,7 @@ public class DeviceTicket {
 				m_deviceFiscal = new DeviceFiscalPrinterNull();
 			}
 		} catch (TicketPrinterException e) {
+			logger.log(Level.WARNING, "event=device_fiscal_initialization_failed", e);
 			m_deviceFiscal = new DeviceFiscalPrinterNull(e.getMessage());
 		}
 
@@ -108,7 +111,7 @@ public class DeviceTicket {
 				m_devicedisplay = new DeviceDisplayNull();
 			}
 		} catch (TicketPrinterException e) {
-			logger.log(Level.WARNING, e.getMessage(), e);
+			logger.log(Level.WARNING, "event=device_display_initialization_failed", e);
 			m_devicedisplay = new DeviceDisplayNull(e.getMessage());
 		}
 
@@ -180,7 +183,7 @@ public class DeviceTicket {
 					addPrinter(sPrinterIndex, new DevicePrinterJavaPOS(sPrinterParam1, sPrinterParam2));
 				}
 			} catch (TicketPrinterException e) {
-				logger.log(Level.WARNING, e.getMessage(), e);
+				logger.log(Level.WARNING, "event=device_printer_initialization_failed printer=" + sPrinterIndex, e);
 			}
 
 			// siguiente impresora...
@@ -188,6 +191,8 @@ public class DeviceTicket {
 			sPrinterIndex = Integer.toString(iPrinterIndex);
 			sprinter = props.getProperty("machine.printer." + sPrinterIndex);
 		}
+		logger.info("event=device_initialization_success printers=" + m_deviceprinterslist.size() + " duration_ms="
+				+ (System.currentTimeMillis() - started));
 	}
 
 	private void addPrinter(String sPrinterIndex, DevicePrinter p) {

@@ -23,7 +23,13 @@ Never log passwords, payment credentials, card data, full scanned codes, or unne
 3. Instrument inventory, customers, reports, backups, updates, and remaining device flows.
 4. Add operation durations, asynchronous context propagation, operational documentation, and broader flow coverage.
 
-The first two slices are implemented in the current branch. The ticket remains open until the remaining flows and operational documentation are complete.
+The first two slices were already implemented in the branch. The remaining
+flows and operational documentation are now complete.
+
+The remaining flow coverage is implemented at shared boundaries: report
+workers, table/editor persistence, database backups, update checks, and device
+initialization/printing. These boundaries intentionally log operation names,
+counts, outcomes, and durations rather than raw inputs.
 
 ## Done when
 
@@ -37,3 +43,15 @@ The first two slices are implemented in the current branch. The ticket remains o
 - Default logging remains useful without logging every keystroke or SQL statement.
 - Tests cover formatter output, configuration redaction, correlation IDs, and representative flow events.
 - Logging behaviour is documented, including log locations, levels, event conventions, and temporary diagnostic logging.
+
+## Shipped
+
+- Added structured report, editor persistence, backup, update, device
+  initialization, and printer events with durations and terminal outcomes.
+- Added operation contexts for asynchronous report, backup, and update work.
+- Added operator-facing logging documentation at
+  `docs/operations/logging.md` and linked it from the README.
+- Verified Java compilation, `spotlessCheck`, and the logging, backup, and
+  update integration tests. The broader `check` task remains blocked by this
+  branch's pre-existing missing `CatalogTsvParser` and `CatalogVariantModel`
+  sources used by data helpers.
