@@ -25,11 +25,21 @@ import java.awt.image.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.Properties;
 
 public class ImageUtils {
 
 	private static char[] HEXCHARS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+	private static final int MAX_SERIALIZED_BYTES = 1024 * 1024;
+	private static final long MAX_SERIALIZED_DEPTH = 50;
+	private static final long MAX_SERIALIZED_REFERENCES = 10_000;
+	private static final long MAX_SERIALIZED_ARRAY_LENGTH = 100_000;
+	private static final ObjectInputFilter SERIALIZABLE_FILTER = ImageUtils::filterSerializableInput;
 
 	/** Creates a new instance of ImageUtils */
 	private ImageUtils() {
@@ -130,13 +140,12 @@ public class ImageUtils {
 	}
 
 	public static Object readSerializable(byte[] b) {
-		if (b == null) {
+		if (b == null || b.length > MAX_SERIALIZED_BYTES) {
 			return null;
 		} else {
-			try {
-				ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b));
+			try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(b))) {
+				in.setObjectInputFilter(SERIALIZABLE_FILTER);
 				Object obj = in.readObject();
-				in.close();
 				return obj;
 			} catch (ClassNotFoundException eCNF) {
 				// logger.error("Cannot create lists object", eCNF);
@@ -146,6 +155,36 @@ public class ImageUtils {
 				return null;
 			}
 		}
+	}
+
+	private static ObjectInputFilter.Status filterSerializableInput(ObjectInputFilter.FilterInfo info) {
+		if (info.depth() > MAX_SERIALIZED_DEPTH || info.references() > MAX_SERIALIZED_REFERENCES
+				|| info.arrayLength() > MAX_SERIALIZED_ARRAY_LENGTH) {
+			return ObjectInputFilter.Status.REJECTED;
+		}
+		Class<?> serialClass = info.serialClass();
+		return serialClass == null || isAllowedSerializableClass(serialClass)
+				? ObjectInputFilter.Status.ALLOWED
+				: ObjectInputFilter.Status.REJECTED;
+	}
+
+	private static boolean isAllowedSerializableClass(Class<?> type) {
+		if (type.isArray()) {
+			return isAllowedSerializableClass(type.getComponentType());
+		}
+		if (type.isPrimitive()) {
+			return true;
+		}
+		Package typePackage = type.getPackage();
+		String packageName = typePackage == null ? "" : typePackage.getName();
+		if (packageName.equals("com.openbravo.pos.ticket") || packageName.equals("com.openbravo.pos.customers")
+				|| packageName.equals("java.util")) {
+			return true;
+		}
+		return type == String.class || type == Boolean.class || type == Byte.class || type == Character.class
+				|| type == Double.class || type == Float.class || type == Integer.class || type == Long.class
+				|| type == Short.class || type == ArrayList.class || type == LinkedList.class || type == HashMap.class
+				|| type == Hashtable.class || type == Properties.class || type == Date.class;
 	}
 
 	public static byte[] writeSerializable(Object o) {

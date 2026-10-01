@@ -14,6 +14,10 @@ classes or consuming uncontrolled resources.
 `ImageUtils.readSerializable` calls `ObjectInputStream.readObject()` for
 database-backed serializable values.
 
+The supported serialized value is the shared-ticket object graph. The filter
+therefore allows the ticket and customer domains plus the JDK value and
+collection classes used by that graph. Other classes are rejected.
+
 ## Done when
 
 - Deserialization uses an allowlist or is replaced with a safer representation.
@@ -22,3 +26,9 @@ database-backed serializable values.
   consume uncontrolled memory or CPU.
 - Valid existing values, rejected classes, oversized input, and deeply nested
   values are covered by regression tests.
+
+## Shipped
+
+- Added an allowlist and bounded `ObjectInputFilter` to `ImageUtils`.
+- Added regression coverage for valid tickets, rejected classes, oversized
+  input, and deeply nested graphs in `ImageUtilsTest`.
