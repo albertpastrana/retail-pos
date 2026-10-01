@@ -26,10 +26,10 @@ import java.applet.*;
 
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import com.openbravo.pos.forms.DataLogicSystem;
+import com.openbravo.pos.util.XmlParserFactory;
 
 public class TicketParser extends DefaultHandler {
 
@@ -77,8 +77,7 @@ public class TicketParser extends DefaultHandler {
 		try {
 
 			if (m_sp == null) {
-				SAXParserFactory spf = SAXParserFactory.newInstance();
-				m_sp = spf.newSAXParser();
+				m_sp = XmlParserFactory.newSecureSAXParser();
 			}
 			m_sp.parse(new InputSource(in), this);
 

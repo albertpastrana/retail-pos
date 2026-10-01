@@ -26,9 +26,9 @@ import java.util.*;
 import javax.swing.Icon;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.util.Hashcypher;
+import com.openbravo.pos.util.XmlParserFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.xml.sax.Attributes;
@@ -161,8 +161,7 @@ public class AppUser {
 		if (sRolePermisions != null) {
 			try {
 				if (m_sp == null) {
-					SAXParserFactory spf = SAXParserFactory.newInstance();
-					m_sp = spf.newSAXParser();
+					m_sp = XmlParserFactory.newSecureSAXParser();
 				}
 				m_sp.parse(new InputSource(new StringReader(sRolePermisions)), new ConfigurationHandler());
 
