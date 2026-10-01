@@ -164,6 +164,14 @@ tasks.named("compileDataHelpersJava") {
     mustRunAfter(syncRunJars)
 }
 
+tasks.named("compileTestJava") {
+    dependsOn(syncRunJars)
+}
+
+tasks.named("processTestResources") {
+    dependsOn(syncRunJars)
+}
+
 tasks.named("compileIntegrationTestJava") {
     mustRunAfter(syncRunJars)
 }
