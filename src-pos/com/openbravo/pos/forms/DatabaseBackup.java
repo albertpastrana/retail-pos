@@ -8,6 +8,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -391,15 +393,21 @@ public final class DatabaseBackup {
 	}
 
 	private static void gzip(File source, File target) throws BasicException {
-		try (FileInputStream input = new FileInputStream(source);
-				GZIPOutputStream output = new GZIPOutputStream(new FileOutputStream(target))) {
-			byte[] buffer = new byte[8192];
-			int read;
-			while ((read = input.read(buffer)) >= 0) {
-				output.write(buffer, 0, read);
+		File staging = new File(target.getAbsolutePath() + ".tmp");
+		try {
+			try (FileInputStream input = new FileInputStream(source);
+					GZIPOutputStream output = new GZIPOutputStream(new FileOutputStream(staging))) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = input.read(buffer)) >= 0) {
+					output.write(buffer, 0, read);
+				}
 			}
+			Files.move(staging.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			throw new BasicException("Could not gzip database backup: " + e.getMessage(), e);
+		} finally {
+			deleteFile(staging, "temporary compressed backup");
 		}
 	}
 
