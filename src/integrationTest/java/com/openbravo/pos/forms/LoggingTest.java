@@ -42,11 +42,20 @@ public class LoggingTest {
 	@Test
 	public void throwableCredentialsAreRedacted() {
 		LogRecord record = new LogRecord(Level.WARNING, "operation failed");
-		record.setThrown(new IllegalStateException("password=secret token=private"));
+		record.setThrown(new IllegalStateException(
+				"password=secret token=private Authorization: Bearer bearer-secret {\"token\":\"json-secret\"}"));
 
 		String formatted = new LogFormatter().format(record);
 
-		assertThat(formatted).contains("password=<redacted>", "token=<redacted>").doesNotContain("secret", "private");
+		assertThat(formatted).contains("password=<redacted>", "token=<redacted>").doesNotContain("secret", "private",
+				"bearer-secret", "json-secret");
+	}
+
+	@Test
+	public void uriCredentialsWithAtSignsAreRedacted() {
+		String result = LogSanitizer.sanitize("https://alice:pa@ss@example.com/pos");
+
+		assertThat(result).isEqualTo("https://<redacted>@example.com/pos").doesNotContain("pa@ss");
 	}
 	@Test
 	public void configurationSummaryDoesNotExposeCredentials() {

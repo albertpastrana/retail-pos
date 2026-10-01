@@ -11,9 +11,11 @@ import java.io.StringWriter;
 public final class LogSanitizer {
 
 	private static final Pattern CREDENTIAL = Pattern.compile("(?i)(password|passwd|pwd|user)=([^&;\\s]*)");
-	private static final Pattern SECRET = Pattern
-			.compile("(?i)(token|secret|authorization|card(number)?|pan)=([^\\s&;,)]*)");
-	private static final Pattern URI_CREDENTIAL = Pattern.compile("(?i)(://)[^/@\\s:]+:[^/@\\s]+@");
+	private static final Pattern AUTHORIZATION = Pattern
+			.compile("(?i)(authorization\\s*[:=]\\s*)(?:[\\\"'][^\\\"']*[\\\"']|[^\\s,;}]+(?:\\s+[^\\s,;}]+)?)");
+	private static final Pattern SECRET = Pattern.compile(
+			"(?i)([\\\"']?(?:token|secret|password|passwd|pwd|authorization|card(number)?|pan)[\\\"']?\\s*[:=]\\s*)(?:[\\\"'][^\\\"']*[\\\"']|[^\\s,;}&)]*)");
+	private static final Pattern URI_CREDENTIAL = Pattern.compile("(?i)(://)[^/@\\s:]+:[^/?#\\s]*@");
 
 	private LogSanitizer() {
 	}
@@ -35,9 +37,11 @@ public final class LogSanitizer {
 		if (value == null) {
 			return null;
 		}
-		String sanitized = CREDENTIAL.matcher(value).replaceAll("$1=<redacted>");
-		sanitized = SECRET.matcher(sanitized).replaceAll("$1=<redacted>");
-		return URI_CREDENTIAL.matcher(sanitized).replaceAll("$1<redacted>@");
+		String sanitized = URI_CREDENTIAL.matcher(value).replaceAll("$1<redacted>@");
+		sanitized = AUTHORIZATION.matcher(sanitized).replaceAll("$1<redacted>");
+		sanitized = SECRET.matcher(sanitized).replaceAll("$1<redacted>");
+		sanitized = CREDENTIAL.matcher(sanitized).replaceAll("$1=<redacted>");
+		return sanitized;
 	}
 
 	/**
