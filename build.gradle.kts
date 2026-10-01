@@ -171,6 +171,10 @@ tasks.named("processTestResources") {
     dependsOn(syncRunJars)
 }
 
+tasks.named("processIntegrationTestResources") {
+    dependsOn(syncRunJars)
+}
+
 tasks.named("compileIntegrationTestJava") {
     mustRunAfter(syncRunJars)
 }
