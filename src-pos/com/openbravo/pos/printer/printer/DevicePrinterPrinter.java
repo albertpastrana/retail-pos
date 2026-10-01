@@ -232,6 +232,8 @@ public class DevicePrinterPrinter implements DevicePrinter {
 	 */
 	@Override
 	public void endReceipt() {
+		long started = System.currentTimeMillis();
+		logger.info("event=printer_print_start");
 
 		try {
 
@@ -267,10 +269,15 @@ public class DevicePrinterPrinter implements DevicePrinter {
 						imageable_width, imageable_height), DocFlavor.SERVICE_FORMATTED.PRINTABLE, null);
 
 				printjob.print(doc, aset);
+				logger.info("event=printer_print_success duration_ms=" + (System.currentTimeMillis() - started));
+			} else {
+				logger.info("event=printer_print_cancelled reason=no_printer duration_ms="
+						+ (System.currentTimeMillis() - started));
 			}
 
 		} catch (PrintException ex) {
-			logger.log(Level.WARNING, AppLocal.getIntString("message.printererror"), ex);
+			logger.log(Level.WARNING,
+					"event=printer_print_failed duration_ms=" + (System.currentTimeMillis() - started), ex);
 			JMessageDialog.showMessage(parent,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.printererror"), ex));
 		}

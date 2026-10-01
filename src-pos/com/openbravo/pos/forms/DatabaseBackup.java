@@ -67,6 +67,7 @@ public final class DatabaseBackup {
 	}
 
 	public static File backup(AppProperties props) throws BasicException {
+		long started = System.currentTimeMillis();
 		BackupConfiguration backup = BackupConfiguration.from(props);
 		DatabaseConfiguration database = DatabaseConfiguration.from(props);
 		String backupDir = backup.getDirectory();
@@ -104,6 +105,8 @@ public final class DatabaseBackup {
 		}
 
 		ConnectionInfo info = parseConnectionInfo(url);
+		logger.info("event=backup_start databaseType=" + info.getType() + " databaseHost=" + info.getHost()
+				+ " databaseName=" + LogSanitizer.field(info.getDatabaseName()) + " directoryConfigured=true");
 		String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 
 		File resultFile;
@@ -126,6 +129,8 @@ public final class DatabaseBackup {
 			((AppConfig) props).setProperty(BACKUP_LASTDATE_KEY, today);
 		}
 
+		logger.info("event=backup_success databaseType=" + info.getType() + " duration_ms="
+				+ (System.currentTimeMillis() - started));
 		return resultFile;
 	}
 
@@ -173,14 +178,15 @@ public final class DatabaseBackup {
 
 		Thread backupThread = new Thread(new Runnable() {
 			public void run() {
-				try {
+				try (LogContext.Scope ignored = LogContext.beginOperation()) {
 					File target = backup(props);
 					if (props instanceof AppConfig) {
 						ConfigurationStore.save((AppConfig) props);
 					}
-					logger.info("Daily database backup created at: " + target.getAbsolutePath());
+					logger.info("event=backup_daily_success databaseType="
+							+ parseConnectionInfo(props.getProperty("db.URL")).getType());
 				} catch (Exception e) {
-					logger.log(Level.WARNING, "Daily database backup failed: " + e.getMessage(), e);
+					logger.log(Level.WARNING, "event=backup_daily_failed", e);
 				}
 			}
 		}, "DailyDatabaseBackupThread");

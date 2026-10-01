@@ -40,12 +40,16 @@ import com.openbravo.data.user.ListProvider;
 import com.openbravo.data.user.SaveProvider;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author adrianromero
  */
 public abstract class JPanelTable extends JPanel implements JPanelView, BeanFactoryApp {
+
+	private static final Logger LOGGER = Logger.getLogger(JPanelTable.class.getName());
 
 	protected BrowsableEditableData bd;
 	protected DirtyManager dirty;
@@ -219,8 +223,17 @@ public abstract class JPanelTable extends JPanel implements JPanelView, BeanFact
 	}
 
 	public void activate() throws BasicException {
+		long started = System.currentTimeMillis();
+		LOGGER.info("event=table_activate_start table=" + getClass().getSimpleName());
 		startNavigation();
-		bd.actionLoad();
+		try {
+			bd.actionLoad();
+			LOGGER.info("event=table_activate_success table=" + getClass().getSimpleName() + " duration_ms="
+					+ (System.currentTimeMillis() - started));
+		} catch (BasicException e) {
+			LOGGER.log(Level.WARNING, "event=table_activate_failed table=" + getClass().getSimpleName(), e);
+			throw e;
+		}
 	}
 
 	public boolean deactivate() {

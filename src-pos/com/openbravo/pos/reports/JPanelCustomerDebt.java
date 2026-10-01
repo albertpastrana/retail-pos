@@ -92,17 +92,21 @@ public final class JPanelCustomerDebt extends JPanel implements JPanelView, Bean
 
 	private void loadRows() {
 		refresh.setEnabled(false);
+		final long started = ReportLog.start("customer_debt");
 		new SwingWorker<List<CustomerDebtRow>, Void>() {
 			@Override
 			protected List<CustomerDebtRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection());
+				return ReportLog.inOperation(() -> repository.load(app.getSession().getConnection()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((CustomerDebtTableModel) table.getModel()).setRows(get());
+					List<CustomerDebtRow> rows = get();
+					((CustomerDebtTableModel) table.getModel()).setRows(rows);
+					ReportLog.success("customer_debt", rows.size(), started);
 				} catch (Exception e) {
+					ReportLog.failure("customer_debt", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelCustomerDebt.this);
 				} finally {

@@ -202,6 +202,8 @@ Grafana Alloy configuration for the Linux POS host, PostgreSQL, host metrics,
 and rotating POS logs lives in [observability/alloy/](observability/alloy/).
 The configuration reads Grafana Cloud and database credentials from
 `/etc/alloy/env`; credentials are intentionally not stored in this repository.
+Application log locations, event conventions, levels, and safe temporary
+diagnostics are documented in [Application logging](docs/operations/logging.md).
 
 ## Upstream
 

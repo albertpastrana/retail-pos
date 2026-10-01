@@ -20,6 +20,8 @@
 package com.openbravo.data.gui;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.LocalRes;
@@ -29,6 +31,8 @@ import com.openbravo.data.user.DirtyManager;
 import com.openbravo.data.user.StateListener;
 
 public class JSaver extends JPanel implements StateListener {
+
+	private static final Logger LOGGER = Logger.getLogger(JSaver.class.getName());
 
 	protected BrowsableEditableData m_bd;
 	private DirtyManager m_dirty;
@@ -156,7 +160,9 @@ public class JSaver extends JPanel implements StateListener {
 		// Add your handling code here:
 		try {
 			m_bd.saveData();
+			LOGGER.info("event=record_save_success");
 		} catch (BasicException eD) {
+			LOGGER.log(Level.WARNING, "event=record_save_failed", eD);
 			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, LocalRes.getIntString("message.nosave"), eD);
 			msg.show(this);
 		}
@@ -166,7 +172,9 @@ public class JSaver extends JPanel implements StateListener {
 		// Add your handling code here:
 		try {
 			m_bd.actionDelete();
+			LOGGER.info("event=record_delete_success");
 		} catch (BasicException eD) {
+			LOGGER.log(Level.WARNING, "event=record_delete_failed", eD);
 			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, LocalRes.getIntString("message.nodelete"), eD);
 			msg.show(this);
 		}
@@ -176,7 +184,9 @@ public class JSaver extends JPanel implements StateListener {
 		// Add your handling code here:
 		try {
 			m_bd.actionInsert();
+			LOGGER.info("event=record_insert_start");
 		} catch (BasicException eD) {
+			LOGGER.log(Level.WARNING, "event=record_insert_failed", eD);
 			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, LocalRes.getIntString("message.nonew"), eD);
 			msg.show(this);
 		}

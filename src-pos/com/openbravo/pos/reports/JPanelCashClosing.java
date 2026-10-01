@@ -93,17 +93,22 @@ public final class JPanelCashClosing extends javax.swing.JPanel implements JPane
 
 	private void loadRows() {
 		load.setEnabled(false);
+		final long started = ReportLog.start("cash_closing_report");
 		new SwingWorker<List<CashClosingRow>, Void>() {
 			@Override
 			protected List<CashClosingRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection(), period.getParameters());
+				return ReportLog
+						.inOperation(() -> repository.load(app.getSession().getConnection(), period.getParameters()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((CashClosingTableModel) table.getModel()).setRows(get());
+					List<CashClosingRow> rows = get();
+					((CashClosingTableModel) table.getModel()).setRows(rows);
+					ReportLog.success("cash_closing_report", rows.size(), started);
 				} catch (Exception e) {
+					ReportLog.failure("cash_closing_report", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelCashClosing.this);
 				} finally {

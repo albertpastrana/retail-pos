@@ -33,23 +33,23 @@ public final class UpdateChecker {
 
 	public static void checkAsync(final AppConfig config, final Component parent) {
 		if ("false".equalsIgnoreCase(config.getProperty("update.check"))) {
-			logger.info("Update check disabled by configuration");
+			logger.info("event=update_check_skipped reason=disabled");
 			return;
 		}
 
 		final String endpoint = configuredUrl(config);
-		logger.info("Starting update check; endpoint=" + endpoint + ", local directory="
-				+ config.getProperty("update.dir"));
+		logger.info("event=update_check_start endpoint_configured=true local_package_directory_configured="
+				+ (config.getProperty("update.dir") != null));
 		Thread checker = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
+				try (LogContext.Scope ignored = LogContext.beginOperation()) {
 					Release release = findLocal(config.getProperty("update.dir"));
 					if (release == null || !hasNewerVersion(release)) {
 						release = fetch(endpoint);
 					}
 					if (release != null && hasNewerVersion(release)) {
-						logger.info("New application version available: " + release.version);
+						logger.info("event=update_available version=" + LogSanitizer.field(release.version));
 						final Release availableRelease = release;
 						java.awt.EventQueue.invokeLater(new Runnable() {
 							@Override
@@ -58,7 +58,7 @@ public final class UpdateChecker {
 							}
 						});
 					} else {
-						logger.info("No newer application version found; current=" + AppLocal.APP_VERSION);
+						logger.info("event=update_check_complete available=false");
 					}
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Unexpected error while checking for application updates", e);
@@ -71,13 +71,13 @@ public final class UpdateChecker {
 
 	private static Release findLocal(String directory) {
 		if (directory == null || directory.trim().isEmpty()) {
-			logger.info("No local update directory configured");
+			logger.info("event=update_local_scan_skipped reason=directory_unset");
 			return null;
 		}
 		File updateDirectory = new File(directory);
 		File[] files = updateDirectory.listFiles();
 		if (files == null) {
-			logger.warning("Cannot read local update directory: " + updateDirectory.getAbsolutePath());
+			logger.warning("event=update_local_scan_failed reason=directory_unreadable");
 			return null;
 		}
 		String platform = platformName();
@@ -97,7 +97,7 @@ public final class UpdateChecker {
 			}
 		}
 		if (newest != null) {
-			logger.info("Found verified local update package: " + newest.packageFile.getAbsolutePath());
+			logger.info("event=update_local_package_verified version=" + LogSanitizer.field(newest.version));
 		}
 		return newest;
 	}
@@ -154,7 +154,7 @@ public final class UpdateChecker {
 			connection.setRequestProperty("Accept", "application/vnd.github+json");
 			connection.setRequestProperty("User-Agent", AppLocal.APP_ID + "-update-checker");
 			int responseCode = connection.getResponseCode();
-			logger.info("Update endpoint response: " + responseCode);
+			logger.info("event=update_remote_response status=" + responseCode);
 			if (responseCode != HttpURLConnection.HTTP_OK) {
 				return null;
 			}
@@ -174,10 +174,10 @@ public final class UpdateChecker {
 				return null;
 			}
 			Release release = new Release(tag.group(1), page.group(1));
-			logger.info("Update endpoint release: " + release.version);
+			logger.info("event=update_remote_release version=" + LogSanitizer.field(release.version));
 			return release;
 		} catch (Exception e) {
-			logger.log(Level.WARNING, "Could not check for application updates", e);
+			logger.log(Level.WARNING, "event=update_remote_failed", e);
 			return null;
 		} finally {
 			if (connection != null) {
