@@ -61,6 +61,28 @@ public class DataLogicSalesPersistenceIT {
 	}
 
 	@Test
+	public void barcodeLookupTreatsMalformedAndInjectionShapedInputAsData() throws Exception {
+		String url = "jdbc:derby:memory:barcodeLookupPersistenceIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO BARCODE_TABLE (PID, CODE) VALUES ('gift-voucher-10', 'ALT-10')");
+			}
+
+			assertThat(sales.getProductInfoByCode("VAL10").getID()).isEqualTo("gift-voucher-10");
+			assertThat(sales.getProductInfoByCode("ALT-10").getID()).isEqualTo("gift-voucher-10");
+			assertThat(sales.getProductInfoByCode("' OR '1'='1")).isNull();
+			assertThat(sales.getProductInfoByCode("[.*]")).isNull();
+			assertThat(sales.getProductInfoByCode(null)).isNull();
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	public void savesRefundWithInboundStockMovement() throws Exception {
 		String url = "jdbc:derby:memory:refundPersistenceIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);
