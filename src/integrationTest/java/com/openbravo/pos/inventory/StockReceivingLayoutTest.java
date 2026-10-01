@@ -32,6 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.internal.jdbc.DriverDataSource;
 import org.junit.jupiter.api.Test;
 
 class StockReceivingLayoutTest {
@@ -55,8 +56,11 @@ class StockReceivingLayoutTest {
 				sql.execute(
 						"CREATE TABLE STOCKDIARY (ID VARCHAR(255),DATENEW TIMESTAMP,REASON INTEGER,LOCATION VARCHAR(255),PRODUCT VARCHAR(255),UNITS DOUBLE,PRICE DOUBLE)");
 				sql.execute("CREATE TABLE ROLES (ID VARCHAR(255),PERMISSIONS BLOB)");
-				Flyway.configure().dataSource(url, null, null).locations("classpath:db/migration")
-						.baselineOnMigrate(true).baselineVersion("49").load().migrate();
+				Flyway.configure()
+						.dataSource(new DriverDataSource(StockReceivingLayoutTest.class.getClassLoader(),
+								"org.apache.derby.iapi.jdbc.AutoloadedDriver", url, null, null))
+						.locations("classpath:db/migration").baselineOnMigrate(true).baselineVersion("49").load()
+						.migrate();
 				sql.execute("INSERT INTO STOCKCURRENT (LOCATION,PRODUCT,UNITS) VALUES ('0','p1',1.5)");
 				StockSessionRepository repo = new StockSessionRepository(c);
 				StockSessionRepository.Session session = repo.open("Comercial Vinícola Segre", "A-24/3318", "0",

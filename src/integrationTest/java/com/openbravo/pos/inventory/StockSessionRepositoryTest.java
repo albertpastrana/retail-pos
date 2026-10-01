@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.internal.jdbc.DriverDataSource;
 import org.junit.jupiter.api.Test;
 
 class StockSessionRepositoryTest {
@@ -46,8 +47,10 @@ class StockSessionRepositoryTest {
 								.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 				role.executeUpdate();
 			}
-			Flyway flyway = Flyway.configure().dataSource(url, null, null).locations("classpath:db/migration")
-					.baselineOnMigrate(true).baselineVersion("49").load();
+			Flyway flyway = Flyway.configure()
+					.dataSource(new DriverDataSource(StockSessionRepositoryTest.class.getClassLoader(),
+							"org.apache.derby.iapi.jdbc.AutoloadedDriver", url, null, null))
+					.locations("classpath:db/migration").baselineOnMigrate(true).baselineVersion("49").load();
 			flyway.migrate();
 			flyway.migrate();
 			StockSessionRepository repo = new StockSessionRepository(c);
