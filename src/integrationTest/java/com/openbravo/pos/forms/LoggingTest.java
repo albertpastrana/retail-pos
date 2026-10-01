@@ -38,6 +38,16 @@ public class LoggingTest {
 
 		assertThat(result).contains("user=<redacted>", "password=<redacted>").doesNotContain("secret");
 	}
+
+	@Test
+	public void throwableCredentialsAreRedacted() {
+		LogRecord record = new LogRecord(Level.WARNING, "operation failed");
+		record.setThrown(new IllegalStateException("password=secret token=private"));
+
+		String formatted = new LogFormatter().format(record);
+
+		assertThat(formatted).contains("password=<redacted>", "token=<redacted>").doesNotContain("secret", "private");
+	}
 	@Test
 	public void configurationSummaryDoesNotExposeCredentials() {
 		AppConfig config = new AppConfig();

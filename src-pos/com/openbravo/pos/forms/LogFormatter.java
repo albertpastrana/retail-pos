@@ -3,8 +3,6 @@
 //
 package com.openbravo.pos.forms;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -31,9 +29,7 @@ public final class LogFormatter extends Formatter {
 		}
 		result.append(" message=").append(oneLine(formatMessage(record)));
 		if (record.getThrown() != null) {
-			StringWriter stack = new StringWriter();
-			record.getThrown().printStackTrace(new PrintWriter(stack));
-			result.append(" exception=").append(oneLine(stack.toString()));
+			result.append(" exception=").append(oneLine(LogSanitizer.throwable(record.getThrown())));
 		}
 		return result.append(System.lineSeparator()).toString();
 	}
