@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.openbravo.pos.ticket.TicketInfo;
+import com.openbravo.pos.ticket.TicketLineInfo;
+import com.openbravo.pos.ticket.TaxInfo;
 import org.junit.jupiter.api.Test;
 
 public class ImageUtilsTest {
@@ -14,6 +16,8 @@ public class ImageUtilsTest {
 	public void readsExistingSerializedTicket() {
 		TicketInfo ticket = new TicketInfo();
 		ticket.setProperty("test", "value");
+		ticket.addLine(new TicketLineInfo("product", 1.0, 2.0,
+				new TaxInfo("tax", "Tax", "category", null, null, null, 0.21, false, 1)));
 
 		Object result = ImageUtils.readSerializable(ImageUtils.writeSerializable(ticket));
 
