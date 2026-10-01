@@ -4,17 +4,40 @@
 package com.openbravo.pos.forms;
 
 import java.util.regex.Pattern;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /** Removes credentials from values that may be written to diagnostics. */
 public final class LogSanitizer {
 
-	private static final Pattern CREDENTIAL = Pattern.compile("(?i)(password|passwd|pwd|user)=([^&;]*)");
+	private static final Pattern CREDENTIAL = Pattern.compile("(?i)(password|passwd|pwd|user)=([^&;\\s]*)");
+	private static final Pattern SECRET = Pattern
+			.compile("(?i)(token|secret|authorization|card(number)?|pan)=([^\\s&;,)]*)");
+	private static final Pattern URI_CREDENTIAL = Pattern.compile("(?i)(://)[^/@\\s:]+:[^/@\\s]+@");
 
 	private LogSanitizer() {
 	}
 
 	public static String jdbcUrl(String url) {
-		return url == null ? null : CREDENTIAL.matcher(url).replaceAll("$1=<redacted>");
+		return url == null ? null : sanitize(url);
+	}
+
+	public static String throwable(Throwable throwable) {
+		if (throwable == null) {
+			return null;
+		}
+		StringWriter stack = new StringWriter();
+		throwable.printStackTrace(new PrintWriter(stack));
+		return sanitize(stack.toString());
+	}
+
+	public static String sanitize(String value) {
+		if (value == null) {
+			return null;
+		}
+		String sanitized = CREDENTIAL.matcher(value).replaceAll("$1=<redacted>");
+		sanitized = SECRET.matcher(sanitized).replaceAll("$1=<redacted>");
+		return URI_CREDENTIAL.matcher(sanitized).replaceAll("$1<redacted>@");
 	}
 
 	/**

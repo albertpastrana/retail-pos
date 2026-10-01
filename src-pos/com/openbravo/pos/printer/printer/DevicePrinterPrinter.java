@@ -238,6 +238,7 @@ public class DevicePrinterPrinter implements DevicePrinter {
 		try {
 
 			PrintService ps;
+			String noPrinterReason = "no_printer";
 
 			if (printservice == null) {
 				String[] printers = ReportUtils.getPrintNames();
@@ -250,6 +251,7 @@ public class DevicePrinterPrinter implements DevicePrinter {
 					if (selectprinter.isOK()) {
 						ps = ReportUtils.getPrintService(selectprinter.getPrintService());
 					} else {
+						noPrinterReason = "selection_cancelled";
 						ps = null;
 					}
 				}
@@ -271,7 +273,7 @@ public class DevicePrinterPrinter implements DevicePrinter {
 				printjob.print(doc, aset);
 				logger.info("event=printer_print_success duration_ms=" + (System.currentTimeMillis() - started));
 			} else {
-				logger.info("event=printer_print_cancelled reason=no_printer duration_ms="
+				logger.info("event=printer_print_cancelled reason=" + noPrinterReason + " duration_ms="
 						+ (System.currentTimeMillis() - started));
 			}
 
