@@ -2,6 +2,8 @@ package com.openbravo.pos.forms;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.util.AltEncrypter;
@@ -291,19 +294,24 @@ public final class DatabaseBackup {
 					"Cannot find pg_dump executable in PATH or standard locations. Please install PostgreSQL client tools or set backup.pg_dump.");
 		}
 
-		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql");
-		List<String> cmd = buildPgDumpCommand(pgDump, info, user, targetFile);
+		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql.gz");
+		File sqlFile = new File(dir, targetFile.getName().substring(0, targetFile.getName().length() - 3));
+		try {
+			List<String> cmd = buildPgDumpCommand(pgDump, info, user, sqlFile);
+			ProcessBuilder pb = new ProcessBuilder(cmd);
+			if (password != null && !password.isEmpty()) {
+				pb.environment().put("PGPASSWORD", password);
+			}
+			if (user != null && !user.isEmpty()) {
+				pb.environment().put("PGUSER", user);
+			}
 
-		ProcessBuilder pb = new ProcessBuilder(cmd);
-		if (password != null && !password.isEmpty()) {
-			pb.environment().put("PGPASSWORD", password);
+			runProcess(pb, "pg_dump");
+			gzip(sqlFile, targetFile);
+			return targetFile;
+		} finally {
+			deleteFile(sqlFile, "temporary PostgreSQL dump");
 		}
-		if (user != null && !user.isEmpty()) {
-			pb.environment().put("PGUSER", user);
-		}
-
-		runProcess(pb, "pg_dump");
-		return targetFile;
 	}
 
 	private static File backupMySQL(AppProperties props, ConnectionInfo info, String user, String password, File dir,
@@ -316,7 +324,8 @@ public final class DatabaseBackup {
 					"Cannot find mysqldump executable in PATH or standard locations. Please install MySQL client tools.");
 		}
 
-		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql");
+		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql.gz");
+		File sqlFile = new File(dir, targetFile.getName().substring(0, targetFile.getName().length() - 3));
 		List<String> cmd = new ArrayList<String>();
 		cmd.add(mysqldump);
 		cmd.add("-h");
@@ -328,7 +337,7 @@ public final class DatabaseBackup {
 			cmd.add(user);
 		}
 		cmd.add("-r");
-		cmd.add(targetFile.getAbsolutePath());
+		cmd.add(sqlFile.getAbsolutePath());
 		cmd.add(info.getDatabaseName());
 
 		ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -336,13 +345,19 @@ public final class DatabaseBackup {
 			pb.environment().put("MYSQL_PWD", password);
 		}
 
-		runProcess(pb, "mysqldump");
-		return targetFile;
+		try {
+			runProcess(pb, "mysqldump");
+			gzip(sqlFile, targetFile);
+			return targetFile;
+		} finally {
+			deleteFile(sqlFile, "temporary MySQL dump");
+		}
 	}
 
 	private static File backupDerby(String url, String user, String password, ConnectionInfo info, File dir,
 			String timestamp) throws BasicException {
 		File targetDir = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp);
+		File targetFile = new File(dir, targetDir.getName() + ".tar.gz");
 		try {
 			Connection conn;
 			if (user != null && !user.isEmpty()) {
@@ -361,10 +376,52 @@ public final class DatabaseBackup {
 			} finally {
 				conn.close();
 			}
+			String tar = findExecutable(null, "tar", new String[]{"/usr/bin/tar", "/bin/tar"});
+			if (tar == null) {
+				throw new BasicException("Cannot find tar executable to compress the Derby backup.");
+			}
+			runProcess(new ProcessBuilder(tar, "-czf", targetFile.getAbsolutePath(), "-C", dir.getAbsolutePath(),
+					targetDir.getName()), "tar");
+			return targetFile;
 		} catch (SQLException e) {
 			throw new BasicException("Derby backup failed: " + e.getMessage(), e);
+		} finally {
+			deleteRecursively(targetDir);
 		}
-		return targetDir;
+	}
+
+	private static void gzip(File source, File target) throws BasicException {
+		try (FileInputStream input = new FileInputStream(source);
+				GZIPOutputStream output = new GZIPOutputStream(new FileOutputStream(target))) {
+			byte[] buffer = new byte[8192];
+			int read;
+			while ((read = input.read(buffer)) >= 0) {
+				output.write(buffer, 0, read);
+			}
+		} catch (IOException e) {
+			throw new BasicException("Could not gzip database backup: " + e.getMessage(), e);
+		}
+	}
+
+	private static void deleteFile(File file, String description) {
+		if (file.exists() && !file.delete()) {
+			logger.warning("Could not delete " + description + ": " + file.getAbsolutePath());
+		}
+	}
+
+	private static void deleteRecursively(File file) {
+		if (!file.exists()) {
+			return;
+		}
+		if (file.isDirectory()) {
+			File[] children = file.listFiles();
+			if (children != null) {
+				for (File child : children) {
+					deleteRecursively(child);
+				}
+			}
+		}
+		deleteFile(file, "temporary Derby backup");
 	}
 
 	private static String findExecutable(String preferred, String name, String[] standardPaths) {

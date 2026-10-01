@@ -1,11 +1,13 @@
 package com.openbravo.pos.forms;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -95,7 +97,7 @@ public class DatabaseBackupTest {
 
 		// Simulate backup file created today
 		String today = new SimpleDateFormat("yyyyMMdd").format(new Date());
-		File todayBackup = new File(backupDir, "backup-pos-" + today + "-120000.sql");
+		File todayBackup = new File(backupDir, "backup-pos-" + today + "-120000.sql.gz");
 		FileOutputStream out = new FileOutputStream(todayBackup);
 		out.write("DUMP".getBytes());
 		out.close();
@@ -128,7 +130,11 @@ public class DatabaseBackupTest {
 		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isTrue();
 
 		File result = DatabaseBackup.backup(appProps);
-		assertThat(result).isNotNull().exists().isDirectory();
+		assertThat(result).isNotNull().exists().isFile();
+		assertThat(result.getName()).endsWith(".tar.gz");
+		try (GZIPInputStream input = new GZIPInputStream(new FileInputStream(result))) {
+			assertThat(input.read()).isNotEqualTo(-1);
+		}
 
 		// After backup, daily backup is no longer needed
 		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
