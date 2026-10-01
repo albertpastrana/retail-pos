@@ -99,17 +99,22 @@ public final class JPanelProductSales extends JPanel implements JPanelView, Bean
 
 	private void loadRows() {
 		load.setEnabled(false);
+		final long started = ReportLog.start("product_sales");
 		new SwingWorker<List<ProductSalesRow>, Void>() {
 			@Override
 			protected List<ProductSalesRow> doInBackground() throws Exception {
-				return repository.load(app.getSession().getConnection(), period.getParameters());
+				return ReportLog
+						.inOperation(() -> repository.load(app.getSession().getConnection(), period.getParameters()));
 			}
 
 			@Override
 			protected void done() {
 				try {
-					((ProductSalesTableModel) table.getModel()).setRows(get());
+					List<ProductSalesRow> rows = get();
+					((ProductSalesTableModel) table.getModel()).setRows(rows);
+					ReportLog.success("product_sales", rows.size(), started);
 				} catch (Exception e) {
+					ReportLog.failure("product_sales", started, e);
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelProductSales.this);
 				} finally {
