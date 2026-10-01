@@ -63,19 +63,7 @@ public class DeviceTicket {
 		PrinterWritterPool pws = new PrinterWritterPool();
 
 		// La impresora fiscal
-		StringParser sf = new StringParser(props.getProperty("machine.fiscalprinter"));
-		String sFiscalType = sf.nextToken(':');
-		String sFiscalParam1 = sf.nextToken(',');
-		try {
-			if ("javapos".equals(sFiscalType)) {
-				m_deviceFiscal = new DeviceFiscalPrinterJavaPOS(sFiscalParam1);
-			} else {
-				m_deviceFiscal = new DeviceFiscalPrinterNull();
-			}
-		} catch (TicketPrinterException e) {
-			logger.log(Level.WARNING, "event=device_fiscal_initialization_failed", e);
-			m_deviceFiscal = new DeviceFiscalPrinterNull(e.getMessage());
-		}
+		m_deviceFiscal = new DeviceFiscalPrinterNull();
 
 		// El visor
 		StringParser sd = new StringParser(props.getProperty("machine.display"));
