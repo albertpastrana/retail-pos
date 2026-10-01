@@ -170,7 +170,7 @@ public class ImageUtils {
 
 	private static boolean isAllowedSerializableClass(Class<?> type) {
 		if (type.isArray()) {
-			return isAllowedSerializableClass(type.getComponentType());
+			return type == Object[].class || isAllowedSerializableClass(type.getComponentType());
 		}
 		if (type.isPrimitive()) {
 			return true;
@@ -181,10 +181,10 @@ public class ImageUtils {
 				|| packageName.equals("java.util")) {
 			return true;
 		}
-		return type == String.class || type == Boolean.class || type == Byte.class || type == Character.class
-				|| type == Double.class || type == Float.class || type == Integer.class || type == Long.class
-				|| type == Short.class || type == ArrayList.class || type == LinkedList.class || type == HashMap.class
-				|| type == Hashtable.class || type == Properties.class || type == Date.class;
+		return type == String.class || type == Number.class || type == Boolean.class || type == Byte.class
+				|| type == Character.class || type == Double.class || type == Float.class || type == Integer.class
+				|| type == Long.class || type == Short.class || type == ArrayList.class || type == LinkedList.class
+				|| type == HashMap.class || type == Hashtable.class || type == Properties.class || type == Date.class;
 	}
 
 	public static byte[] writeSerializable(Object o) {
