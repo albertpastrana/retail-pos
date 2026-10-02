@@ -29,7 +29,7 @@ Relevant current configuration:
 - `build.gradle.kts:32-49` defines only the main, data-helper, and `integrationTest` source sets.
 - `build.gradle.kts:181-199` defines the external database integration task and `ciCheck`.
 - `.github/workflows/build.yml` starts both external databases for the check job.
-- `.github/workflows/release.yml` packages releases using `check` without `ciCheck`.
+- `.github/workflows/release.yml` runs `ciCheck` in a required integration job before the platform package jobs, which still run `check` for their platform-specific build.
 
 Do not attempt to automate every Swing interaction or raise global coverage targets before the critical business paths have representative tests. Prefer tests at service/repository boundaries, with a small number of stable end-to-end tests for the most important till workflows.
 
