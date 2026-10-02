@@ -22,7 +22,7 @@ The highest-risk gaps are the core shop flows:
 - Critical Swing workflows, permissions as observed in the UI, and EDT/threading behaviour.
 - Invalid input, malformed TSV files, duplicate data, missing resources, connection failures, and rollback paths.
 
-Current CI runs `./gradlew ciCheck` after starting MySQL and PostgreSQL, so every pull request depends on Docker, fixed local ports, and external database startup. It does not publish Gradle test reports. The release workflow runs `check`, but not the full external-database integration suite.
+Current CI runs `./gradlew ciCheck` after starting MySQL and PostgreSQL, so every pull request depends on Docker, fixed local ports, and external database startup. It does not publish Gradle test reports. The release workflow now runs the same integration gate before packaging, but still needs the broader test-lane and reporting work described below.
 
 Relevant current configuration:
 
@@ -43,6 +43,11 @@ Do not attempt to automate every Swing interaction or raise global coverage targ
 6. **Cover critical UI and hardware boundaries.** Add focused tests for permission-driven UI behaviour, receipt rendering, preview/reprint, drawer commands, printer/scanner/scale adapters, and error handling using fakes rather than physical devices.
 7. **Measure quality continuously.** Add JaCoCo with initial package-specific thresholds, then increase them as critical paths are covered. Consider mutation testing for monetary calculations, tax rules, discounts, and inventory changes. Track suite duration and flaky tests.
 8. **Align release guarantees.** Make the release workflow run the same relevant integration guarantee as pull requests, or document and enforce an equivalent release gate before publishing packages.
+
+The first release-gate slice is implemented: the tag-triggered release workflow
+runs `ciCheck` with clean MySQL and PostgreSQL containers before any platform
+package job can start. Releases use GitHub-generated notes from the tag and do
+not require a versioned release-notes file.
 
 ## Verification
 
