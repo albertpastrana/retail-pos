@@ -107,8 +107,18 @@ public abstract class QBFCompareEnum {
 	};
 	public final static QBFCompareEnum COMP_CONTAINS = new QBFCompareEnum(13, "qbf.contains") {
 		public String getExpression(String sField, String sSQLValue) {
-			String sPattern = wrapLike(sSQLValue, true, true);
-			return sPattern == null ? null : likeIgnoreCase(sField, sPattern);
+			if (sSQLValue == null || "NULL".equals(sSQLValue) || sSQLValue.length() < 2)
+				return null;
+			String[] terms = SearchTerms.split(sSQLValue.substring(1, sSQLValue.length() - 1));
+			if (terms.length == 0)
+				return null;
+			StringBuilder expression = new StringBuilder();
+			for (String term : terms) {
+				if (expression.length() > 0)
+					expression.append(" AND ");
+				expression.append(likeIgnoreCase(sField, "'%" + term + "%'"));
+			}
+			return expression.toString();
 		}
 	};
 
