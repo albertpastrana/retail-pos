@@ -147,11 +147,9 @@ public final class CatalogImportDialog {
 			LOGGER.log(Level.INFO, "event=catalog_fallback_match code=\"{0}\" family=\"{1}\"",
 					new Object[]{code, catalogProduct.getFamily()});
 		}
-		// Receiving only creates the scanned product. Family import can update the
-		// prices of variants already in the catalogue; that is a separate job.
-		List<ProductInfoExt> family = catalogProduct == null || copy == Copy.RECEIVING
-				? new ArrayList<ProductInfoExt>()
-				: dlSales.getCatalogProductFamily(code, null, null);
+		// Receiving only adds the scanned product to the receipt. The selected
+		// family variants are still created in the catalogue for later scans.
+		List<ProductInfoExt> family = familyForImport(code, catalogProduct, dlSales);
 		if (family.size() > 1) {
 			LOGGER.log(Level.INFO, "event=catalog_fallback_family_match code=\"{0}\" family=\"{1}\" variants={2}",
 					new Object[]{code, catalogProduct.getFamily(), family.size()});
@@ -168,10 +166,9 @@ public final class CatalogImportDialog {
 			LOGGER.log(Level.INFO, "event=catalog_import_family_success code=\"{0}\" variants={1}",
 					new Object[]{code, editedFamily.size()});
 			if (copy == Copy.RECEIVING) {
-				for (ProductInfoExt variant : editedFamily)
-					if (code.equals(variant.getCode()) || ("0" + code).equals(variant.getCode())
-							|| ("00" + code).equals(variant.getCode()))
-						return importedByExactCode(variant.getCode());
+				ProductInfoExt scannedVariant = receivingVariant(editedFamily, code);
+				if (scannedVariant != null)
+					return importedByExactCode(scannedVariant.getCode());
 			}
 			return dlSales.getProductInfoByCode(code);
 		}
@@ -186,6 +183,26 @@ public final class CatalogImportDialog {
 		LOGGER.log(Level.INFO, "event=catalog_import_success code=\"{0}\" family=\"{1}\"",
 				new Object[]{code, editedProduct.getFamily()});
 		return copy == Copy.RECEIVING ? importedByExactCode(editedProduct.getCode()) : product;
+	}
+
+	static List<ProductInfoExt> familyForImport(String code, ProductInfoExt catalogProduct, DataLogicSales dlSales)
+			throws BasicException {
+		return familyForImport(code, catalogProduct, dlSales, null, null);
+	}
+
+	static List<ProductInfoExt> familyForImport(String code, ProductInfoExt catalogProduct, DataLogicSales dlSales,
+			String productsPath, String categoriesPath) throws BasicException {
+		return catalogProduct == null
+				? new ArrayList<ProductInfoExt>()
+				: dlSales.getCatalogProductFamily(code, productsPath, categoriesPath);
+	}
+
+	static ProductInfoExt receivingVariant(List<ProductInfoExt> importedFamily, String code) {
+		for (ProductInfoExt variant : importedFamily)
+			if (code.equals(variant.getCode()) || ("0" + code).equals(variant.getCode())
+					|| ("00" + code).equals(variant.getCode()))
+				return variant;
+		return null;
 	}
 
 	private ProductInfoExt importedByExactCode(String code) throws BasicException {
