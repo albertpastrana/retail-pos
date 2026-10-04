@@ -31,6 +31,9 @@ public final class CatalogVariantModel {
 		if ("Gisela".equals(brand)) {
 			return value.indexOf('-') >= 0 ? before(value, '-') : before(value, ' ');
 		}
+		if ("Don Algodón".equals(brand)) {
+			return before(value, '-').trim();
+		}
 		if ("Ysabel Mora".equals(brand)) {
 			Matcher match = YSABEL_MODEL.matcher(value);
 			return match.find() ? match.group(1) : value;
