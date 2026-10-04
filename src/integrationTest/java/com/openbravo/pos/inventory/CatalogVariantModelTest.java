@@ -69,6 +69,21 @@ public class CatalogVariantModelTest {
 		assertFalse(containsCode(avet, "9990000000210"));
 	}
 
+	@Test
+	public void receivingImportLoadsTheWholeFamilyButReturnsTheScannedVariant() throws Exception {
+		DataLogicSales fixtureSales = new DataLogicSales();
+		List<ProductInfoExt> sourceFamily = fixtureSales.getCatalogProductFamily("9990000000101", PRODUCTS, CATEGORIES);
+		ProductInfoExt scanned = sourceFamily.get(0);
+
+		List<ProductInfoExt> family = CatalogImportDialog.familyForImport("9990000000101", scanned, fixtureSales,
+				PRODUCTS, CATEGORIES);
+
+		assertEquals(4, family.size());
+		assertTrue(containsCode(family, "9990000000101"));
+		assertTrue(containsCode(family, "9990000000104"));
+		assertEquals("9990000000101", CatalogImportDialog.receivingVariant(family, "9990000000101").getCode());
+	}
+
 	private boolean containsCode(List<ProductInfoExt> products, String code) {
 		for (ProductInfoExt product : products) {
 			if (code.equals(product.getCode())) {
