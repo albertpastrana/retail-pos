@@ -33,6 +33,8 @@ class StockWelcomeRepositoryTest {
 					"INSERT INTO TAXES VALUES ('t', NULL, '2020-01-01 00:00:00', 0.08), ('t', NULL, '2025-01-01 00:00:00', 0.10)");
 			sql.executeUpdate(
 					"INSERT INTO PRODUCTS VALUES ('milk', 'Milk', 'REF1', '12345678', 2.50, 15, 'c', 't', 'Farm')");
+			sql.executeUpdate(
+					"INSERT INTO PRODUCTS VALUES ('suje-blanc', 'Suje Blanc', 'OTHER', '87654321', 3.50, 10, 'c', 't', 'Farm')");
 			sql.executeUpdate("INSERT INTO PRICE_RULES VALUES ('Farm', 25, 'CENT')");
 			sql.executeUpdate("INSERT INTO STOCKCURRENT VALUES ('milk', 3), ('milk', -5)");
 			sql.executeUpdate("INSERT INTO STOCKDIARY VALUES ('milk', '2026-09-20 12:00:00')");
@@ -57,6 +59,9 @@ class StockWelcomeRepositoryTest {
 				assertEquals("2026-09-18 12:00:00.0", product.replenishmentCreated.toString());
 			}
 			assertTrue(repository.search("not found").isEmpty());
+			assertEquals(1, repository.search("suje blan").size());
+			assertTrue(repository.search("suje zzz").isEmpty());
+			assertEquals(2, repository.search("").size());
 			StockWelcomeRepository.Queue queue = repository.queue();
 			assertEquals(1, queue.pending);
 			assertEquals(0, queue.ordered);

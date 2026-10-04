@@ -1,6 +1,7 @@
 package com.openbravo.pos.inventory;
 
 import com.openbravo.pos.forms.AppView;
+import com.openbravo.data.loader.SearchTerms;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,6 +44,9 @@ final class StockWelcomeRepository {
 	}
 
 	List<Product> search(String text) throws SQLException {
+		String[] terms = SearchTerms.split(text);
+		String referenceFilter = containsFilter("P.REFERENCE", terms);
+		String nameFilter = containsFilter("P.NAME", terms);
 		String sql = "SELECT P.ID, P.NAME, P.REFERENCE, P.CODE, P.PRICESELL, P.SALE_PERCENT, "
 				+ "C.NAME AS CATEGORY_NAME, CP.NAME AS CATEGORY_PARENT, TC.NAME AS TAX_NAME, "
 				+ "(SELECT MAX(T.RATE) FROM TAXES T WHERE T.CATEGORY=P.TAXCAT "
@@ -55,16 +59,16 @@ final class StockWelcomeRepository {
 				+ "E.STATUS, E.CUSTOMER_NAME, E.CREATED_AT AS REPLENISHMENT_CREATED FROM PRODUCTS P "
 				+ "JOIN CATEGORIES C ON C.ID=P.CATEGORY LEFT JOIN CATEGORIES CP ON CP.ID=C.PARENTID "
 				+ "JOIN TAXCATEGORIES TC ON TC.ID=P.TAXCAT " + "LEFT JOIN PRICE_RULES R ON R.BRAND=P.BRAND "
-				+ "LEFT JOIN REPLENISHMENT_ENTRIES E ON E.OPEN_PRODUCT_ID=P.ID "
-				+ "WHERE UPPER(P.CODE)=UPPER(?) OR UPPER(P.REFERENCE) LIKE UPPER(?) "
-				+ "OR UPPER(P.NAME) LIKE UPPER(?) "
+				+ "LEFT JOIN REPLENISHMENT_ENTRIES E ON E.OPEN_PRODUCT_ID=P.ID " + "WHERE UPPER(P.CODE)=UPPER(?) OR "
+				+ referenceFilter + " OR " + nameFilter + " "
 				+ "ORDER BY CASE WHEN UPPER(P.CODE)=UPPER(?) THEN 0 ELSE 1 END, P.NAME";
 		List<Product> products = new ArrayList<>();
 		try (PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setString(1, text);
-			statement.setString(2, "%" + text + "%");
-			statement.setString(3, "%" + text + "%");
-			statement.setString(4, text);
+			int parameter = 2;
+			parameter = setLikeTerms(statement, parameter, terms);
+			parameter = setLikeTerms(statement, parameter, terms);
+			statement.setString(parameter, text);
 			statement.setMaxRows(6);
 			try (ResultSet rows = statement.executeQuery()) {
 				while (rows.next()) {
@@ -94,6 +98,24 @@ final class StockWelcomeRepository {
 			}
 		}
 		return products;
+	}
+
+	private static String containsFilter(String field, String[] terms) {
+		if (terms.length == 0)
+			return "1=1";
+		StringBuilder filter = new StringBuilder();
+		for (int i = 0; i < terms.length; i++) {
+			if (filter.length() > 0)
+				filter.append(" AND ");
+			filter.append("UPPER(").append(field).append(") LIKE UPPER(?)");
+		}
+		return filter.toString();
+	}
+
+	private static int setLikeTerms(PreparedStatement statement, int parameter, String[] terms) throws SQLException {
+		for (String term : terms)
+			statement.setString(parameter++, "%" + term + "%");
+		return parameter;
 	}
 
 	Queue queue() throws SQLException {

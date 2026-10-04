@@ -61,6 +61,13 @@ class ProductFilterTest {
 	}
 
 	@Test
+	void containsFilterRequiresEverySearchTerm() {
+		String sql = QBFCompareEnum.COMP_CONTAINS.getExpression("P.NAME", DataWriteUtils.getSQLValue("suje blan"));
+
+		assertThat(sql).isEqualTo("UPPER(P.NAME) LIKE UPPER('%suje%') AND UPPER(P.NAME) LIKE UPPER('%blan%')");
+	}
+
+	@Test
 	void salesProductFinderUsesDescendantsForSelectedCategory() throws Exception {
 		ProductFilterSales filter = new ProductFilterSales();
 		List<CategoryInfo> categories = Arrays.asList(category("pijames", null), category("hivern", "pijames"));
