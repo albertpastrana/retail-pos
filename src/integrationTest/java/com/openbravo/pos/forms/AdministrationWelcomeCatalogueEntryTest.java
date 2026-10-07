@@ -96,8 +96,11 @@ class AdministrationWelcomeCatalogueEntryTest {
 	}
 
 	private static void click(Component component) {
-		component.dispatchEvent(new MouseEvent(component, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, 5, 5,
-				1, false, MouseEvent.BUTTON1));
+		long when = System.currentTimeMillis();
+		component.dispatchEvent(
+				new MouseEvent(component, MouseEvent.MOUSE_PRESSED, when, 0, 5, 5, 1, false, MouseEvent.BUTTON1));
+		component.dispatchEvent(
+				new MouseEvent(component, MouseEvent.MOUSE_RELEASED, when + 1, 0, 5, 5, 1, false, MouseEvent.BUTTON1));
 	}
 
 	private static Action action(String name, String task, AtomicInteger opens) {
