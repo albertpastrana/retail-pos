@@ -10,6 +10,7 @@ import com.openbravo.pos.forms.DataLogicSales;
 import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.forms.MenuDefinition;
 import com.openbravo.pos.forms.MenuItemDefinition;
+import com.openbravo.pos.forms.WorkflowCard;
 import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.theme.RetailPOSTheme;
 import java.awt.BorderLayout;
@@ -920,24 +921,15 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 
 	private JButton jobCard(String key, Runnable navigate) {
 		String name = key.substring("stock.welcome.".length());
-		JButton card = new RoundedButton(32);
-		card.setLayout(new BorderLayout(12, 0));
-		style(card);
-		card.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
-		card.setPreferredSize(new Dimension(0, 112));
-		card.add(topIcon(name, RetailPOSColors.ink(), 22), BorderLayout.WEST);
-		JPanel words = new JPanel(new BorderLayout(0, 4));
-		words.setOpaque(false);
-		JTextArea title = wrapped(tr(key), RetailPOSTheme.MANROPE_BOLD.deriveFont(16f), RetailPOSColors.ink());
-		words.add(title, BorderLayout.NORTH);
-		JTextArea hint = wrapped(tr(key + ".hint"), RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f),
-				RetailPOSColors.inkMuted());
-		words.add(hint, BorderLayout.CENTER);
-		card.add(words, BorderLayout.CENTER);
+		Action action = new AbstractAction(tr(key)) {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				navigate.run();
+			}
+		};
+		WorkflowCard card = new WorkflowCard(new LineIcon(name, RetailPOSColors.ink(), 22), tr(key), tr(key + ".hint"),
+				action);
 		card.getAccessibleContext().setAccessibleName(tr(key));
-		card.addActionListener(e -> navigate.run());
-		wireCardEvents(card, card.getComponent(0));
-		wireCardEvents(card, words);
 		return card;
 	}
 
