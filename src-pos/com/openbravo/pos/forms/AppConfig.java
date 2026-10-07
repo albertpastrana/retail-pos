@@ -128,6 +128,8 @@ public class AppConfig implements AppProperties {
 		m_propsconfig.setProperty("machine.display", "screen");
 		m_propsconfig.setProperty("machine.screenmode", "window"); // fullscreen / window
 		m_propsconfig.setProperty("machine.ticketsbag", "standard");
+		m_propsconfig.setProperty("catalog.import.directory", "");
+		m_propsconfig.setProperty("catalog.import.publicKey", "");
 		m_propsconfig.setProperty("machine.scanner", "Not defined");
 
 		m_propsconfig.setProperty("payment.commerceid", "");

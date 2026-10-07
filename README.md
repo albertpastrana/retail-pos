@@ -169,6 +169,52 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 | `python3 data/apply-model-price.py Avet 3267 --cost 3.66 --price 5.95 --apply --insert` | Sets cost and ticket price on every variant of a model, then inserts them.                                                                       |
 | `updateResource` / `dumpResource` / `dumpAllResources` / `showResource`                 | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                          |
 
+### Startup catalog imports
+
+The POS can import signed catalog files automatically when it starts. Configure
+these properties in the local POS configuration:
+
+```properties
+catalog.import.directory=/path/to/catalog-import
+catalog.import.publicKey=/path/to/catalog-import/catalog-import-public.pem
+```
+
+The directory is local to each till. Files are only read at startup, and are
+moved to `processed/` or `rejected/` after processing. Every file needs a
+detached Ed25519 signature with the same base name and the `.sig` suffix:
+
+```text
+products-2026-10-05.tsv
+products-2026-10-05.tsv.sig
+fallback-products-2026-10-05.csv
+fallback-products-2026-10-05.csv.sig
+```
+
+The file name selects the allowed destination. `products-*` upserts
+`PRODUCTS` by barcode; `fallback-products-*` upserts the shared fallback
+catalog. Imports never delete rows or modify stock. Invalid signatures,
+unknown columns, duplicate barcodes, missing categories, and database errors
+reject the complete file and are written to the application log.
+
+Generate the key pair once on a trusted machine. Keep the private key in
+LastPass and install only the public key on each till:
+
+```sh
+openssl genpkey -algorithm Ed25519 -out catalog-import-private.pem
+openssl pkey -in catalog-import-private.pem -pubout -out catalog-import-public.pem
+```
+
+Sign a file before copying both files to the import directory:
+
+```sh
+openssl pkeyutl -sign -rawin -inkey catalog-import-private.pem \
+  -in products-2026-10-05.tsv -out products-2026-10-05.tsv.sig
+```
+
+Never copy `catalog-import-private.pem` to a till or commit either private key
+or production public-key configuration to the repository. During key rotation,
+replace the public key on all tills before sending files signed by the new key.
+
 `--args` replaces the whole argument list, including the database path. Paths are relative to the repo root.
 
 Example with a different Derby directory:
