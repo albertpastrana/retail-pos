@@ -227,7 +227,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 			cardDeltas[index].setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD.deriveFont(13f));
 			cardRanges[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 			cardRanges[index].setForeground(RetailPOSColors.inkMuted());
-			cardBaselines[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(11f));
+			cardBaselines[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(10f));
 			cardBaselines[index].setForeground(RetailPOSColors.inkMuted());
 			cardBaselineValues[index].setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 			cardBaselineValues[index].setForeground(RetailPOSColors.inkMuted());
