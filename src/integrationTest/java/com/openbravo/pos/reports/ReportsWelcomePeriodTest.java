@@ -32,6 +32,19 @@ public class ReportsWelcomePeriodTest {
 		assertEquals(LocalDate.of(2025, 9, 25), end(ReportsWelcomePeriod.ROLLING_YEAR.previous(today)));
 	}
 
+	@Test
+	public void historicalMonthRangeEndsOnTheLastDayInsteadOfToday() {
+		Date monthEnd = date(2026, 9, 30);
+		assertEquals(LocalDate.of(2026, 9, 1), start(ReportsWelcomePeriod.MONTH.current(monthEnd)));
+		assertEquals(LocalDate.of(2026, 10, 1), end(ReportsWelcomePeriod.MONTH.current(monthEnd)));
+	}
+
+	@Test
+	public void currentMonthUsesTheLastClosedDay() {
+		Date currentDate = date(2026, 10, 6);
+		assertEquals(LocalDate.of(2026, 10, 5), localDate(JPanelReportsWelcome.lastClosedDay(currentDate)));
+	}
+
 	private Date date(int year, int month, int day) {
 		return Date.from(LocalDate.of(year, month, day).atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
@@ -42,5 +55,9 @@ public class ReportsWelcomePeriodTest {
 
 	private LocalDate end(SalesSummaryParameters parameters) {
 		return parameters.getEndExclusive().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	}
+
+	private LocalDate localDate(Date value) {
+		return value.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 }

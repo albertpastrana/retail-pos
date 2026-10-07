@@ -234,6 +234,18 @@ The landing view is being implemented on the task branch:
   saved redemption lines, and backfills historical XML attributes. The selected
   period detail now includes redeemed stamps, returned euros, and last year's
   redeemed count.
+- The landing screen can move between the current month and earlier months
+  with touch-sized previous/next controls. The current month ends at the last
+  closed day;
+  historical months use their last day as the snapshot, and the next-month
+  control is disabled at the current month.
+- All current-period figures stop at the last closed day. The current day is
+  never included: on Tuesday the current week ends on Monday, while on Monday
+  the selected week is the previous completed week.
+- The month controls are placed immediately to the left of the detailed reports
+  action. They have no period text, use `<` and `>` labels, and are square
+  48px touch targets inside the selected week, month, or year card, without a
+  visible border. The rolling 12-month card has no navigation controls.
 
 The ticket remains open. The products/categories/payment/hour blocks,
 the optional record notice, and manual

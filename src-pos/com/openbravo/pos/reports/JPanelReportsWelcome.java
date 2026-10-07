@@ -27,6 +27,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import javax.swing.border.AbstractBorder;
@@ -57,6 +58,8 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private final JLabel[] cardRanges = new JLabel[ReportsWelcomePeriod.values().length];
 	private final JLabel[] cardBaselines = new JLabel[ReportsWelcomePeriod.values().length];
 	private final JLabel[] cardBaselineValues = new JLabel[ReportsWelcomePeriod.values().length];
+	private final JButton[] periodPrevious = new JButton[ReportsWelcomePeriod.values().length];
+	private final JButton[] periodNext = new JButton[ReportsWelcomePeriod.values().length];
 	private JLabel today;
 	private JLabel updated;
 	private JLabel receipts;
@@ -75,6 +78,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private JLabel loyaltyDelta;
 	private SalesSummaryComparison[] loaded;
 	private Date asOf = new Date();
+	private Date focusAsOf = asOf;
 	private int focusGeneration;
 	private JScrollPane scroll;
 	private AppView app;
@@ -108,7 +112,9 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 
 	@Override
 	public void activate() throws BasicException {
-		asOf = new Date();
+		Date currentDate = new Date();
+		asOf = lastClosedDay(currentDate);
+		focusAsOf = asOf;
 		updateDates();
 		javax.swing.SwingUtilities.invokeLater(() -> scroll.getVerticalScrollBar().setValue(0));
 		loadData();
@@ -221,18 +227,34 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 			cardDeltas[index].setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD.deriveFont(13f));
 			cardRanges[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 			cardRanges[index].setForeground(RetailPOSColors.inkMuted());
-			cardBaselines[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+			cardBaselines[index].setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(11f));
 			cardBaselines[index].setForeground(RetailPOSColors.inkMuted());
 			cardBaselineValues[index].setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 			cardBaselineValues[index].setForeground(RetailPOSColors.inkMuted());
 			JPanel content = new JPanel();
 			content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 			content.setOpaque(false);
-			content.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+			content.setBorder(BorderFactory.createEmptyBorder(14, 8, 14, 8));
 			JLabel label = new JLabel(period.getLabel().toUpperCase(Locale.getDefault()));
 			label.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(12f));
 			label.setForeground(RetailPOSColors.inkMuted());
-			content.add(label);
+			JPanel cardHeader = new JPanel(new BorderLayout());
+			cardHeader.setOpaque(false);
+			cardHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+			cardHeader.add(label, BorderLayout.CENTER);
+			if (period != ReportsWelcomePeriod.ROLLING_YEAR) {
+				JPanel navigation = new JPanel(new GridLayout(1, 2, 4, 0));
+				navigation.setOpaque(false);
+				JButton previous = periodButton("<", "reports.welcome.previousPeriod");
+				JButton next = periodButton(">", "reports.welcome.nextPeriod");
+				periodPrevious[index] = previous;
+				periodNext[index] = next;
+				previous.addActionListener(e -> changePeriod(period, -1));
+				next.addActionListener(e -> changePeriod(period, 1));
+				navigation.add(previous);
+				navigation.add(next);
+				cardHeader.add(navigation, BorderLayout.EAST);
+			}
 			content.add(cardRanges[index]);
 			content.add(Box.createVerticalStrut(7));
 			content.add(cardValues[index]);
@@ -241,6 +263,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 			content.add(Box.createVerticalStrut(5));
 			content.add(cardBaselines[index]);
 			content.add(cardBaselineValues[index]);
+			button.add(cardHeader, BorderLayout.NORTH);
 			button.add(content, BorderLayout.CENTER);
 			cards.add(button);
 			index++;
@@ -399,13 +422,19 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 
 	private void selectPeriod(ReportsWelcomePeriod period) {
 		selected = period;
+		focusAsOf = asOf;
 		for (int i = 0; i < periodButtons.length; i++) {
 			boolean active = ReportsWelcomePeriod.values()[i] == period;
 			periodButtons[i].setBackground(active ? RetailPOSColors.brandSubtle() : RetailPOSColors.surface100());
 			periodButtons[i].setBorder(BorderFactory.createCompoundBorder(
 					new RoundedLineBorder(active ? RetailPOSColors.brand() : RetailPOSColors.border(), 16, active),
 					BorderFactory.createEmptyBorder(1, 1, 1, 1)));
+			if (periodPrevious[i] != null) {
+				periodPrevious[i].setVisible(active);
+				periodNext[i].setVisible(active);
+			}
 		}
+		updatePeriodNavigation();
 		if (loaded != null) {
 			showDetail(loaded[selected.ordinal()]);
 			loadFocus();
@@ -455,6 +484,75 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		}.execute();
 	}
 
+	private JButton periodButton(String text, String tooltipKey) {
+		JButton button = new JButton(text);
+		button.setToolTipText(AppLocal.getIntString(tooltipKey));
+		button.getAccessibleContext().setAccessibleName(AppLocal.getIntString(tooltipKey));
+		button.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(22f));
+		button.setPreferredSize(new Dimension(48, 48));
+		button.setMinimumSize(button.getPreferredSize());
+		button.setMaximumSize(button.getPreferredSize());
+		styleButton(button, 10);
+		button.setBorder(BorderFactory.createEmptyBorder());
+		button.setContentAreaFilled(false);
+		button.setForeground(RetailPOSColors.inkMuted());
+		return button;
+	}
+
+	private void changePeriod(ReportsWelcomePeriod period, int amount) {
+		if (period == ReportsWelcomePeriod.ROLLING_YEAR) {
+			return;
+		}
+		Calendar targetStart = Calendar.getInstance();
+		targetStart.setTime(period.current(focusAsOf).getStartInclusive());
+		switch (period) {
+			case WEEK :
+				targetStart.add(Calendar.DAY_OF_MONTH, amount * 7);
+				break;
+			case MONTH :
+				targetStart.add(Calendar.MONTH, amount);
+				break;
+			case YEAR :
+				targetStart.add(Calendar.YEAR, amount);
+				break;
+			default :
+				throw new IllegalStateException("Unknown dashboard period");
+		}
+		Date currentStart = period.current(asOf).getStartInclusive();
+		if (targetStart.getTime().after(currentStart)) {
+			return;
+		}
+		if (targetStart.getTime().equals(currentStart)) {
+			focusAsOf = asOf;
+		} else {
+			Calendar targetEnd = (Calendar) targetStart.clone();
+			if (period == ReportsWelcomePeriod.WEEK) {
+				targetEnd.add(Calendar.DAY_OF_MONTH, 7);
+			} else {
+				targetEnd.add(period == ReportsWelcomePeriod.MONTH ? Calendar.MONTH : Calendar.YEAR, 1);
+			}
+			targetEnd.add(Calendar.DAY_OF_MONTH, -1);
+			focusAsOf = targetEnd.getTime();
+		}
+		loadFocus();
+		updatePeriodNavigation();
+	}
+
+	private void updatePeriodNavigation() {
+		for (int i = 0; i < periodNext.length; i++) {
+			if (periodNext[i] == null) {
+				continue;
+			}
+			boolean active = ReportsWelcomePeriod.values()[i] == selected;
+			periodPrevious[i].setVisible(active);
+			periodNext[i].setVisible(active);
+			if (active) {
+				periodNext[i].setEnabled(!selected.current(focusAsOf).getStartInclusive()
+						.equals(selected.current(asOf).getStartInclusive()));
+			}
+		}
+	}
+
 	private void showCard(int index, SalesSummaryComparison comparison) {
 		cardValues[index].setText(Formats.CURRENCY.formatValue(comparison.getCurrent().getNetSales()));
 		if (comparison.hasPreviousSales()) {
@@ -495,7 +593,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private void loadFocus() {
 		final int generation = ++focusGeneration;
 		final ReportsWelcomePeriod period = selected;
-		final Date snapshot = asOf;
+		final Date snapshot = focusAsOf;
 		chartTitle.setText(
 				AppLocal.getIntString(period == ReportsWelcomePeriod.WEEK || period == ReportsWelcomePeriod.MONTH
 						? "reports.welcome.chartDays"
@@ -510,7 +608,10 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		new SwingWorker<FocusData, Void>() {
 			@Override
 			protected FocusData doInBackground() throws Exception {
-				return new FocusData(trends.load(app.getSession().getConnection(), period, snapshot),
+				return new FocusData(
+						repository.loadComparison(app.getSession().getConnection(), period.current(snapshot),
+								period.previous(snapshot)),
+						trends.load(app.getSession().getConnection(), period, snapshot),
 						attentions.load(app.getSession().getConnection(), period.current(snapshot), snapshot));
 			}
 
@@ -521,6 +622,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 				}
 				try {
 					FocusData focus = get();
+					showDetail(focus.comparison);
 					chart.setTrend(focus.trend);
 					showNotices(focus.notices);
 				} catch (Exception e) {
@@ -566,10 +668,13 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	}
 
 	private static final class FocusData {
+		private final SalesSummaryComparison comparison;
 		private final SalesTrend trend;
 		private final java.util.List<ReportAttention> notices;
 
-		private FocusData(SalesTrend trend, java.util.List<ReportAttention> notices) {
+		private FocusData(SalesSummaryComparison comparison, SalesTrend trend,
+				java.util.List<ReportAttention> notices) {
+			this.comparison = comparison;
 			this.trend = trend;
 			this.notices = notices;
 		}
@@ -595,12 +700,23 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		String date = new SimpleDateFormat(pattern, locale).format(asOf);
 		today.setText(date.substring(0, 1).toUpperCase(locale) + date.substring(1));
 		updated.setText(AppLocal.getIntString("reports.welcome.updated",
-				DateFormat.getTimeInstance(DateFormat.SHORT, locale).format(asOf)));
+				DateFormat.getDateInstance(DateFormat.MEDIUM, locale).format(asOf)));
 		for (int i = 0; i < cardRanges.length; i++) {
 			if (cardRanges[i] != null) {
 				cardRanges[i].setText(ReportsWelcomePeriod.values()[i].rangeLabel(asOf));
 			}
 		}
+	}
+
+	static Date lastClosedDay(Date currentDate) {
+		Calendar closed = Calendar.getInstance();
+		closed.setTime(currentDate);
+		closed.add(Calendar.DAY_OF_MONTH, -1);
+		closed.set(Calendar.HOUR_OF_DAY, 0);
+		closed.set(Calendar.MINUTE, 0);
+		closed.set(Calendar.SECOND, 0);
+		closed.set(Calendar.MILLISECOND, 0);
+		return closed.getTime();
 	}
 
 	private void styleButton(JButton button, int radius) {
