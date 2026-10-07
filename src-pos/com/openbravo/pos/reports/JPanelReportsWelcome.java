@@ -489,7 +489,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		button.setToolTipText(AppLocal.getIntString(tooltipKey));
 		button.getAccessibleContext().setAccessibleName(AppLocal.getIntString(tooltipKey));
 		button.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(22f));
-		button.setPreferredSize(new Dimension(48, 48));
+		button.setPreferredSize(new Dimension(32, 32));
 		button.setMinimumSize(button.getPreferredSize());
 		button.setMaximumSize(button.getPreferredSize());
 		styleButton(button, 10);
