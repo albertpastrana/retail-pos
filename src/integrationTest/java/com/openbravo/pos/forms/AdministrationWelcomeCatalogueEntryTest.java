@@ -80,6 +80,8 @@ class AdministrationWelcomeCatalogueEntryTest {
 				if (expectStockWelcome) {
 					assertTrue(stockButton != null);
 					stockButton.doClick();
+					stockButton.setSize(500, 100);
+					stockButton.doLayout();
 					Component text = stockButton.getComponent(1);
 					click(stockButton.getComponent(0));
 					click(((Container) text).getComponent(0));

@@ -36,6 +36,7 @@ public final class WorkflowCard extends JButton {
 		setRolloverEnabled(true);
 		setText(null);
 		setIcon(null);
+		getAccessibleContext().setAccessibleName(title);
 		setFocusable(true);
 		setRequestFocusEnabled(true);
 		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -91,10 +92,9 @@ public final class WorkflowCard extends JButton {
 				if (!SwingUtilities.isLeftMouseButton(event) || !getModel().isPressed())
 					return;
 				java.awt.Point point = SwingUtilities.convertPoint(component, event.getPoint(), WorkflowCard.this);
+				getModel().setArmed(contains(point));
 				getModel().setPressed(false);
 				getModel().setArmed(false);
-				if (contains(point))
-					doClick();
 			}
 
 			@Override
