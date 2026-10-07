@@ -244,8 +244,9 @@ The landing view is being implemented on the task branch:
   the selected week is the previous completed week.
 - The month controls are placed immediately to the left of the detailed reports
   action. They have no period text, use `<` and `>` labels, and are square
-  48px touch targets inside the selected week, month, or year card, without a
-  visible border. The rolling 12-month card has no navigation controls.
+  square compact controls inside the selected week, month, or year card,
+  without a visible border. The rolling 12-month card has no navigation
+  controls.
 
 The ticket remains open. The products/categories/payment/hour blocks,
 the optional record notice, and manual
