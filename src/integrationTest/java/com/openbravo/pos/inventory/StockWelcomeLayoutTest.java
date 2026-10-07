@@ -2,6 +2,7 @@ package com.openbravo.pos.inventory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.openbravo.pos.forms.AppLocal;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -34,6 +36,30 @@ import javax.swing.UIManager;
 import org.junit.jupiter.api.Test;
 
 class StockWelcomeLayoutTest {
+	@Test
+	void catalogueActionsExplainProductsAndPricingRulesInThreeLanguages() {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es"), new Locale("ca")}) {
+				AppLocal.setLocale(locale);
+				String editProducts = switch (locale.getLanguage()) {
+					case "es" -> "Editar productos y precios";
+					case "ca" -> "Editar productes i preus";
+					default -> "Edit products and prices";
+				};
+				String priceRules = switch (locale.getLanguage()) {
+					case "es" -> "Cambiar las reglas de precios de una marca";
+					case "ca" -> "Canviar les regles de preus d'una marca";
+					default -> "Change a brand's pricing rules";
+				};
+				assertEquals(editProducts, AppLocal.getIntString("stock.welcome.editProducts"), locale.toString());
+				assertEquals(priceRules, AppLocal.getIntString("stock.welcome.priceRules"), locale.toString());
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
 	@Test
 	void permittedEntriesAndJobsFitAtMinimumWidthInThreeLanguages() throws Exception {
 		Locale original = Locale.getDefault();
@@ -48,9 +74,11 @@ class StockWelcomeLayoutTest {
 				SwingUtilities.invokeAndWait(() -> {
 					String products = "com.openbravo.pos.inventory.ProductsPanel";
 					String taxes = "com.openbravo.pos.inventory.TaxPanel";
+					AtomicInteger productOpens = new AtomicInteger();
 					Action productAction = new AbstractAction(AppLocal.getIntString("Menu.Products")) {
 						@Override
 						public void actionPerformed(ActionEvent e) {
+							productOpens.incrementAndGet();
 						}
 					};
 					productAction.putValue(AppUserView.ACTION_TASKNAME, products);
@@ -78,6 +106,8 @@ class StockWelcomeLayoutTest {
 					assertTrue(header.getComponent(1) instanceof JButton);
 					assertTrue(header.getComponent(1).getX() + header.getComponent(1).getWidth() <= header.getWidth());
 					JPanel page = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
+					JPanel scanBlock = (JPanel) page.getComponent(0);
+					assertTrue(scanBlock.getComponent(0).getHeight() >= 64, locale.toString());
 					JPanel jobs = (JPanel) page.getComponent(2);
 					JPanel entries = (JPanel) page.getComponent(7);
 					JButton firstJob = (JButton) jobs.getComponent(0);
@@ -90,8 +120,13 @@ class StockWelcomeLayoutTest {
 					assertEquals(0, entries.getX(), locale.toString());
 					assertEquals(page.getWidth(), jobs.getWidth(), locale.toString());
 					assertEquals(page.getWidth(), entries.getWidth(), locale.toString());
-					assertEquals(1, jobs.getComponentCount());
+					assertEquals(2, jobs.getComponentCount());
 					assertEquals(1, entries.getComponentCount());
+					JButton editProducts = (JButton) jobs.getComponent(1);
+					assertNotNull(((javax.swing.JLabel) editProducts.getComponent(0)).getIcon());
+					assertTrue(containsText(editProducts, AppLocal.getIntString("stock.welcome.editProducts")));
+					editProducts.doClick();
+					assertEquals(1, productOpens.get());
 					for (Component component : new Component[]{jobs.getComponent(0), entries.getComponent(0)}) {
 						JButton button = (JButton) component;
 						assertTrue(button.getWidth() > 0, locale.toString());
@@ -116,6 +151,20 @@ class StockWelcomeLayoutTest {
 		} finally {
 			AppLocal.setLocale(original);
 		}
+	}
+
+	private static boolean containsText(Component component, String expected) {
+		if (component instanceof javax.swing.JLabel label && expected.equals(label.getText()))
+			return true;
+		if (component instanceof javax.swing.AbstractButton button && expected.equals(button.getText()))
+			return true;
+		if (component instanceof Container container) {
+			for (Component child : container.getComponents()) {
+				if (containsText(child, expected))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	@Test

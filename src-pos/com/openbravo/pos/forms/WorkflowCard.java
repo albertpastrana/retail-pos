@@ -79,6 +79,25 @@ public final class WorkflowCard extends JButton {
 	private void wireEvents(Component component) {
 		component.addMouseListener(new MouseAdapter() {
 			@Override
+			public void mousePressed(MouseEvent event) {
+				if (SwingUtilities.isLeftMouseButton(event)) {
+					getModel().setArmed(true);
+					getModel().setPressed(true);
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent event) {
+				if (!SwingUtilities.isLeftMouseButton(event) || !getModel().isPressed())
+					return;
+				java.awt.Point point = SwingUtilities.convertPoint(component, event.getPoint(), WorkflowCard.this);
+				getModel().setPressed(false);
+				getModel().setArmed(false);
+				if (contains(point))
+					doClick();
+			}
+
+			@Override
 			public void mouseEntered(MouseEvent event) {
 				getModel().setRollover(true);
 				repaint();
@@ -92,11 +111,6 @@ public final class WorkflowCard extends JButton {
 				repaint();
 			}
 
-			@Override
-			public void mouseClicked(MouseEvent event) {
-				if (SwingUtilities.isLeftMouseButton(event))
-					doClick();
-			}
 		});
 		if (component instanceof java.awt.Container) {
 			for (Component child : ((java.awt.Container) component).getComponents())

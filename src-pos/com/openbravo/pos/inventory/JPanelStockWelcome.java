@@ -132,6 +132,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		searchWell.setLayout(new BorderLayout(12, 0));
 		searchWell.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 18));
 		searchWell.setPreferredSize(new Dimension(0, 64));
+		searchWell.setMinimumSize(new Dimension(0, 64));
 		searchWell.add(new JLabel(new LineIcon("scan", RetailPOSColors.ink(), 24)), BorderLayout.WEST);
 		search.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(17f));
 		search.setOpaque(false);
@@ -159,7 +160,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		addRow(page, scanBlock, row++);
 		jobsHeading = section("stock.welcome.jobs");
 		addRow(page, jobsHeading, row++);
-		String[][] jobs = {{"stock.welcome.new", "ProductsPanel"}, {"stock.welcome.sale", "SaleMarkPanel"},
+		String[][] jobs = {{"stock.welcome.new", "ProductsPanel"}, {"stock.welcome.editProducts", "ProductsPanel"},
 				{"stock.welcome.receive", "StockReceivingPanel"}, {"stock.welcome.correct", "StockDiaryPanel"},
 				{"stock.welcome.priceRules", "PriceRulesPanel"}, {"stock.welcome.organize", "CategoriesPanel"}};
 		jobGrid = grid(3, 12, 480, 860);
@@ -732,7 +733,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 		JPanel shortcuts = grid(3, 10, 470, 860);
 		String[][] jobs = {{"stock.welcome.new", "ProductsPanel", "new"},
 				{"stock.welcome.receive", "StockReceivingPanel", "receive"},
-				{"stock.welcome.sale", "SaleMarkPanel", "sale"}};
+				{"stock.welcome.editProducts", "ProductsPanel", "edit"}};
 		for (String[] job : jobs) {
 			if (action(PREFIX + job[1]) == null)
 				continue;
@@ -744,7 +745,7 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 			shortcut.add(label(job[0], 14, true), BorderLayout.CENTER);
 			shortcut.getAccessibleContext().setAccessibleName(tr(job[0]));
 			shortcut.addActionListener(e -> {
-				if ("ProductsPanel".equals(job[1]))
+				if ("stock.welcome.new".equals(job[0]))
 					createProduct();
 				else if ("StockReceivingPanel".equals(job[1]))
 					startReceiving();
@@ -1223,6 +1224,10 @@ public final class JPanelStockWelcome extends JPanel implements JPanelView, Bean
 				case "sale" -> {
 					line(g, 3, 4, 12, 4, 21, 13, 21, 16, 16, 21, 13, 21, 3, 11, 3, 4);
 					g.drawOval(6, 7, 2, 2);
+				}
+				case "edit", "editProducts" -> {
+					line(g, 4, 17, 5, 20, 8, 19, 19, 8, 15, 4, 4, 15);
+					line(g, 14, 5, 17, 8);
 				}
 				case "receive" -> {
 					g.drawRoundRect(3, 5, 18, 15, 2, 2);
