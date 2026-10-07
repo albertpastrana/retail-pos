@@ -76,7 +76,19 @@ enum ReportsWelcomePeriod {
 	String rangeLabel(Date date) {
 		DateFormat day = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault());
 		SalesSummaryParameters range = current(date);
-		return day.format(range.getStartInclusive()) + " – " + AppLocal.getIntString("reports.welcome.today");
+		Calendar end = Calendar.getInstance();
+		end.setTime(range.getEndExclusive());
+		end.add(Calendar.DAY_OF_MONTH, -1);
+		String endLabel = day.format(end.getTime());
+		Calendar today = Calendar.getInstance();
+		today.set(Calendar.HOUR_OF_DAY, 0);
+		today.set(Calendar.MINUTE, 0);
+		today.set(Calendar.SECOND, 0);
+		today.set(Calendar.MILLISECOND, 0);
+		if (end.getTime().equals(today.getTime())) {
+			endLabel = AppLocal.getIntString("reports.welcome.today");
+		}
+		return day.format(range.getStartInclusive()) + " – " + endLabel;
 	}
 
 	String baselineLabel() {
