@@ -189,6 +189,7 @@ public class JRootApp extends JPanel implements AppView {
 		}
 
 		m_dlSystem = getBean(DataLogicSystem.class);
+		CatalogFileImporter.importAtStartup(session, m_props);
 
 		// Cargamos las propiedades de base de datos
 		m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
