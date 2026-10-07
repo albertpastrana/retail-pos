@@ -184,7 +184,7 @@ class StockWelcomeLayoutTest {
 								for (Component line : words.getComponents()) {
 									assertTrue(
 											line.getHeight() > 0 && line.getY() + line.getHeight() <= words.getHeight(),
-											locale + ": " + ((javax.swing.JTextArea) line).getText());
+											locale + ": line=" + line);
 								}
 							} else {
 								javax.swing.JLabel caption = (javax.swing.JLabel) button.getComponent(0);

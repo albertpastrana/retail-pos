@@ -2,11 +2,9 @@ package com.openbravo.pos.forms;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.util.HiDpiIcon;
-import com.openbravo.pos.theme.RetailPOSColors;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -16,9 +14,6 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 import javax.swing.JLabel;
@@ -46,7 +40,6 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 	private static final Color TEXT = new Color(36, 28, 20);
 	private static final Color MUTED = new Color(107, 97, 84);
 	private static final Color BORDER = new Color(150, 137, 111);
-	private static final int CARD_RADIUS = 22;
 
 	private AppView app;
 	private JTextField search;
@@ -146,7 +139,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 	}
 
 	private boolean focusFirstWorkflow(Component component) {
-		if (component instanceof WorkflowButton) {
+		if (component instanceof WorkflowCard) {
 			component.requestFocusInWindow();
 			return true;
 		}
@@ -180,10 +173,10 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		all.setOpaque(false);
 		int row = 0;
 		all.add(sectionHeading(AppLocal.getIntString("Workflow.Common")), fullWidthRow(row++));
-		all.add(grid(commonEntries(), true), fullWidthRow(row++));
+		all.add(grid(commonEntries()), fullWidthRow(row++));
 		all.add(sectionHeading(AppLocal.getIntString("Workflow.Everything")), fullWidthRow(row++));
 		for (WorkflowCategory category : catalogue()) {
-			List<JPanel> entries = usablePanels(category.entries, false);
+			List<JPanel> entries = usablePanels(category.entries);
 			if (!entries.isEmpty()) {
 				all.add(categoryHeading(category.labelKey), fullWidthRow(row++));
 				all.add(responsiveLinks(entries, 3, 0), fullWidthRow(row++));
@@ -210,9 +203,9 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 			for (WorkflowEntry entry : category.entries) {
 				if (entry.matches(query) && usable(entry)) {
 					if (entry.common) {
-						commonResults.add(workflowButton(entry, true));
+						commonResults.add(workflowButton(entry));
 					} else {
-						catalogueResults.add(workflowButton(entry, false));
+						catalogueResults.add(workflowButton(entry));
 					}
 				}
 			}
@@ -234,11 +227,11 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		return result;
 	}
 
-	private List<JPanel> usablePanels(List<WorkflowEntry> entries, boolean common) {
+	private List<JPanel> usablePanels(List<WorkflowEntry> entries) {
 		List<JPanel> result = new ArrayList<JPanel>();
 		for (WorkflowEntry entry : entries) {
 			if (usable(entry)) {
-				result.add(workflowButton(entry, common));
+				result.add(workflowButton(entry));
 			}
 		}
 		return result;
@@ -252,8 +245,8 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		return "com.openbravo.pos.sales.JPanelTicketSales".equals(entry.taskName) && app instanceof JRootApp;
 	}
 
-	private JPanel grid(List<WorkflowEntry> entries, boolean common) {
-		return responsivePanels(usablePanels(entries, common), 3, 16);
+	private JPanel grid(List<WorkflowEntry> entries) {
+		return responsivePanels(usablePanels(entries), 3, 16);
 	}
 
 	private JPanel responsivePanels(final List<JPanel> panels, final int wideColumns, int gap) {
@@ -301,7 +294,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 	}
 
 	private JPanel asCatalogLink(JPanel panel) {
-		WorkflowButton button = (WorkflowButton) panel.getComponent(0);
+		WorkflowCard button = (WorkflowCard) panel.getComponent(0);
 		return new JPanel(new BorderLayout()) {
 			{
 				setOpaque(false);
@@ -310,7 +303,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		};
 	}
 
-	private JPanel workflowButton(final WorkflowEntry entry, boolean common) {
+	private JPanel workflowButton(final WorkflowEntry entry) {
 		final javax.swing.Action action = isSalesWorkflow(entry)
 				? new javax.swing.AbstractAction(AppLocal.getIntString(entry.labelKey)) {
 					@Override
@@ -321,7 +314,8 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 				: app.getAppUserView().getTaskAction(entry.taskName);
 		JPanel wrapper = new JPanel(new BorderLayout());
 		wrapper.setOpaque(false);
-		WorkflowButton button = new WorkflowButton(entry, action, common);
+		WorkflowCard button = new WorkflowCard(new HiDpiIcon(JPanelWelcome.class.getResource(entry.icon)),
+				AppLocal.getIntString(entry.labelKey), AppLocal.getIntString(entry.hintKey), action);
 		wrapper.add(button, BorderLayout.CENTER);
 		return wrapper;
 	}
@@ -540,89 +534,6 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		}
 	}
 
-	private static final class WorkflowButton extends JButton {
-		private WorkflowButton(WorkflowEntry entry, javax.swing.Action action, boolean common) {
-			setAction(action);
-			setRolloverEnabled(true);
-			setText(null);
-			setFocusable(true);
-			setRequestFocusEnabled(true);
-			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			setHorizontalAlignment(SwingConstants.LEADING);
-			setVerticalAlignment(common ? SwingConstants.CENTER : SwingConstants.TOP);
-			setLayout(common ? new BorderLayout(12, 0) : new BorderLayout(0, 7));
-			setBorder(BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.border(), CARD_RADIUS),
-					BorderFactory.createEmptyBorder(common ? 16 : 6, common ? 16 : 8, common ? 16 : 6,
-							common ? 16 : 8)));
-			setBackground(RetailPOSColors.surface100());
-			setContentAreaFilled(false);
-			setOpaque(false);
-			setMargin(new Insets(0, 0, 0, 0));
-			JLabel iconLabel = new JLabel(new HiDpiIcon(JPanelWelcome.class.getResource(entry.icon)));
-			add(iconLabel, common ? BorderLayout.WEST : BorderLayout.NORTH);
-			JPanel text = new JPanel();
-			text.setOpaque(false);
-			text.setLayout(new javax.swing.BoxLayout(text, javax.swing.BoxLayout.Y_AXIS));
-			JLabel title = label(AppLocal.getIntString(entry.labelKey), common ? 16 : 14, Font.BOLD, TEXT);
-			text.add(title);
-			if (common) {
-				text.add(label(AppLocal.getIntString(entry.hintKey), 13, Font.PLAIN, MUTED));
-			}
-			add(text, BorderLayout.CENTER);
-			wireHover(iconLabel);
-			wireHover(text);
-		}
-
-		private void wireHover(Component component) {
-			component.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseEntered(MouseEvent event) {
-					getModel().setRollover(true);
-					repaint();
-				}
-
-				@Override
-				public void mouseExited(MouseEvent event) {
-					java.awt.Point point = SwingUtilities.convertPoint(component, event.getPoint(),
-							WorkflowButton.this);
-					if (!contains(point))
-						getModel().setRollover(false);
-					repaint();
-				}
-			});
-			if (component instanceof java.awt.Container) {
-				for (Component child : ((java.awt.Container) component).getComponents())
-					wireHover(child);
-			}
-		}
-
-		@Override
-		protected void paintComponent(Graphics graphics) {
-			Graphics2D g2 = (Graphics2D) graphics.create();
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g2.setColor(getModel().isRollover() ? RetailPOSColors.surface200() : getBackground());
-			g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, CARD_RADIUS, CARD_RADIUS);
-			g2.clip(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), CARD_RADIUS, CARD_RADIUS));
-			super.paintComponent(g2);
-			g2.dispose();
-		}
-
-		private JButton asLink() {
-			JButton link = new JButton(getAction());
-			link.setText("\u203a  " + getAction().getValue(javax.swing.Action.NAME));
-			link.setIcon(null);
-			link.setDisabledIcon(null);
-			link.setFont(link.getFont().deriveFont(Font.PLAIN, 14f));
-			link.setForeground(TEXT);
-			link.setHorizontalAlignment(SwingConstants.LEADING);
-			link.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
-			link.setContentAreaFilled(false);
-			link.setFocusPainted(true);
-			link.setMargin(new Insets(0, 0, 0, 0));
-			return link;
-		}
-	}
-
 	private static final class RoundedLineBorder extends AbstractBorder {
 		private final Color color;
 		private final int radius;
@@ -636,9 +547,7 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		public void paintBorder(Component component, Graphics graphics, int x, int y, int width, int height) {
 			Graphics2D g2 = (Graphics2D) graphics.create();
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g2.setColor(component instanceof WorkflowButton && ((WorkflowButton) component).getModel().isRollover()
-					? RetailPOSColors.borderStrong()
-					: color);
+			g2.setColor(color);
 			g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
 			g2.dispose();
 		}
@@ -648,4 +557,5 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 			return new Insets(1, 1, 1, 1);
 		}
 	}
+
 }

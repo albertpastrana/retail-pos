@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,7 +80,11 @@ class AdministrationWelcomeCatalogueEntryTest {
 				if (expectStockWelcome) {
 					assertTrue(stockButton != null);
 					stockButton.doClick();
-					assertEquals(1, stockOpens.get());
+					Component text = stockButton.getComponent(1);
+					click(stockButton.getComponent(0));
+					click(((Container) text).getComponent(0));
+					click(((Container) text).getComponent(1));
+					assertEquals(4, stockOpens.get());
 				} else {
 					assertFalse(stockButton != null);
 					assertTrue(findTaskButton(welcome, PRODUCTS) != null);
@@ -88,6 +93,11 @@ class AdministrationWelcomeCatalogueEntryTest {
 		} finally {
 			AppLocal.setLocale(original);
 		}
+	}
+
+	private static void click(Component component) {
+		component.dispatchEvent(new MouseEvent(component, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, 5, 5,
+				1, false, MouseEvent.BUTTON1));
 	}
 
 	private static Action action(String name, String task, AtomicInteger opens) {
