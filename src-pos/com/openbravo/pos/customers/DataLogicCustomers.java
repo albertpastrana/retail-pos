@@ -103,6 +103,11 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 
 	public CustomerInfoExt createCustomer(final String name, final String phone, final String notes)
 			throws BasicException {
+		return createCustomer(name, phone, notes, 100.0);
+	}
+
+	public CustomerInfoExt createCustomer(final String name, final String phone, final String notes,
+			final double maxDebt) throws BasicException {
 		final String id = UUID.randomUUID().toString();
 		final String normalizedPhone = CustomerInfo.normalizePhone(phone);
 		new PreparedSentence(s,
@@ -115,7 +120,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 						setString(3, name.trim());
 						setString(4, normalizedPhone);
 						setString(5, notes);
-						setDouble(6, 0.0);
+						setDouble(6, maxDebt);
 					}
 				});
 		CustomerInfoExt customer = new CustomerInfoExt(id);
@@ -123,7 +128,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		customer.setPhone(normalizedPhone);
 		customer.setNotes(notes);
 		customer.setVisible(true);
-		customer.setMaxdebt(0.0);
+		customer.setMaxdebt(maxDebt);
 		return customer;
 	}
 
@@ -167,7 +172,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 		final String normalizedSearch = CustomerInfo.normalizePhone(search);
 		final String phoneSearch = normalizedSearch.isEmpty() ? "!" : "%" + normalizedSearch + "%";
 		return new PreparedSentence(s,
-				"SELECT ID, NAME, PHONE, NOTES, CURDEBT, VISIBLE FROM CUSTOMERS WHERE "
+				"SELECT ID, NAME, PHONE, NOTES, CURDEBT, MAXDEBT, VISIBLE FROM CUSTOMERS WHERE "
 						+ (includeInactive ? "1 = 1" : "VISIBLE = " + s.DB.TRUE())
 						+ (debtOnly ? " AND COALESCE(CURDEBT, 0) > 0" : "")
 						+ " AND (UPPER(NAME) LIKE UPPER(?) OR PHONE LIKE ?) ORDER BY NAME",
@@ -178,7 +183,8 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 						c.setPhone(dr.getString(3));
 						c.setNotes(dr.getString(4));
 						c.setCurdebt(dr.getDouble(5));
-						c.setVisible(dr.getBoolean(6).booleanValue());
+						c.setMaxdebt(dr.getDouble(6));
+						c.setVisible(dr.getBoolean(7).booleanValue());
 						return c;
 					}
 				}).list(new DataParams() {
@@ -190,14 +196,16 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 	}
 
 	public int updateCustomer(final CustomerInfoExt customer) throws BasicException {
-		return new PreparedSentence(s, "UPDATE CUSTOMERS SET NAME = ?, PHONE = ?, NOTES = ?, VISIBLE = ? WHERE ID = ?",
+		return new PreparedSentence(s,
+				"UPDATE CUSTOMERS SET NAME = ?, PHONE = ?, NOTES = ?, MAXDEBT = ?, VISIBLE = ? WHERE ID = ?",
 				SerializerWriteParams.INSTANCE).exec(new DataParams() {
 					public void writeValues() throws BasicException {
 						setString(1, customer.getName());
 						setString(2, CustomerInfo.normalizePhone(customer.getPhone()));
 						setString(3, customer.getNotes());
-						setBoolean(4, customer.isVisible());
-						setString(5, customer.getId());
+						setDouble(4, customer.getMaxdebt() == null ? 0.0 : customer.getMaxdebt());
+						setBoolean(5, customer.isVisible());
+						setString(6, customer.getId());
 					}
 				});
 	}

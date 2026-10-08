@@ -65,7 +65,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private final JCheckBox inactive = new JCheckBox("Mostra inactives");
 	private final JTextField name = new JTextField();
 	private final JTextField phone = new JTextField();
-	private final JTextArea notes = new JTextArea(4, 20);
+	private final JTextField maxDebt = new JTextField();
+	private final JTextArea notes = new JTextArea(6, 20);
 	private final JLabel detailTitle = new JLabel();
 	private final JLabel detailStatus = new JLabel();
 	private final JLabel debtValue = new JLabel();
@@ -84,6 +85,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private boolean resettingFilters;
 	private String originalName = "", originalPhone = "", originalNotes = "";
 	private boolean originalVisible;
+	private double originalMaxDebt;
 	private final Timer searchTimer;
 
 	public CustomersPanel() {
@@ -120,6 +122,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		};
 		name.getDocument().addDocumentListener(dirty);
 		phone.getDocument().addDocumentListener(dirty);
+		maxDebt.getDocument().addDocumentListener(dirty);
 		notes.getDocument().addDocumentListener(dirty);
 		newCustomer.addActionListener(e -> startNewCustomer());
 		debtOnly.addActionListener(e -> {
@@ -143,15 +146,12 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private JPanel buildHeader() {
 		JPanel header = new JPanel(new BorderLayout(18, 0));
 		header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(205, 205, 205)));
-		JLabel title = new JLabel("Clientes");
-		title.setFont(title.getFont().deriveFont(Font.BOLD, 24f));
-		header.add(title, BorderLayout.WEST);
 		count.setForeground(Color.GRAY);
-		header.add(count, BorderLayout.CENTER);
+		header.add(count, BorderLayout.WEST);
 		JPanel debt = new JPanel(new FlowLayout(FlowLayout.TRAILING, 8, 0));
 		debt.add(new JLabel("Deute total pendent"));
 		totalDebt.setFont(totalDebt.getFont().deriveFont(Font.BOLD, 20f));
-		totalDebt.setForeground(DARK_RED);
+		totalDebt.setForeground(RetailPOSColors.ink());
 		debt.add(totalDebt);
 		header.add(debt, BorderLayout.EAST);
 		return header;
@@ -229,12 +229,17 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		f.gridy = 4;
 		content.add(new JLabel("Notes"), f);
 		f.gridy = 5;
+		JScrollPane notesScroll = new JScrollPane(notes);
+		notesScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		notesScroll.setMinimumSize(new Dimension(0, notesScroll.getPreferredSize().height));
+		content.add(notesScroll, f);
+		addField(content, f, 6, "Deute permès (€)", maxDebt);
+		f.gridy = 8;
+		content.add(debtBlock(), f);
+		f.gridy = 9;
 		f.weighty = 1;
 		f.fill = GridBagConstraints.BOTH;
-		content.add(new JScrollPane(notes), f);
-		f.gridy = 6;
-		f.weighty = 0;
-		content.add(debtBlock(), f);
+		content.add(BoxPanel.glue(), f);
 		detail.add(content, BorderLayout.CENTER);
 		JPanel bottom = new JPanel(new BorderLayout());
 		bottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(210, 210, 210)));
@@ -284,9 +289,9 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 				BorderFactory.createEmptyBorder(10, 12, 10, 12)));
 		p.add(new JLabel("Deute acumulat"), BorderLayout.WEST);
 		debtValue.setFont(debtValue.getFont().deriveFont(Font.BOLD, 20f));
-		debtValue.setForeground(DARK_RED);
+		debtValue.setForeground(RetailPOSColors.ink());
 		p.add(debtValue, BorderLayout.EAST);
-		JLabel note = new JLabel("<html>Es calcula a partir dels albarans. No editable aquí.</html>");
+		JLabel note = new JLabel("<html>El deute acumulat es calcula a partir dels albarans.</html>");
 		note.setForeground(Color.GRAY);
 		p.add(note, BorderLayout.SOUTH);
 		return p;
@@ -375,11 +380,18 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 					}
 					count.setText(active + " clientes actives");
 					totalDebt.setText(MONEY.format(total) + " €");
+					totalDebt.setForeground(total > 0 ? RetailPOSColors.dangerText() : RetailPOSColors.ink());
 					listCount.setText(result.size() + " de " + all.size() + " fitxes");
-					if (!result.isEmpty())
-						table.setRowSelectionInterval(0, 0);
-					else
+					if (result.isEmpty()) {
 						clearDetail();
+					} else if (creating || isDirty()) {
+						if (selected == null || !selectId(selected.getId()))
+							table.clearSelection();
+					} else {
+						if (selected == null || !selectId(selected.getId()))
+							table.setRowSelectionInterval(0, 0);
+						showCustomer(model.customers.get(table.convertRowIndexToModel(table.getSelectedRow())));
+					}
 				} catch (Exception e) {
 					state.setForeground(DARK_RED);
 					state.setText("No s'han pogut carregar les fitxes");
@@ -403,13 +415,14 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		}
 		showCustomer(model.customers.get(table.convertRowIndexToModel(view)));
 	}
-	private void selectId(String id) {
+	private boolean selectId(String id) {
 		for (int i = 0; i < model.customers.size(); i++)
 			if (model.customers.get(i).getId().equals(id)) {
 				int v = table.convertRowIndexToView(i);
 				table.setRowSelectionInterval(v, v);
-				return;
+				return true;
 			}
+		return false;
 	}
 	private void showCustomer(CustomerInfoExt c) {
 		selected = c;
@@ -419,11 +432,15 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		notes.setText(value(c.getNotes()));
 		originalName = name.getText();
 		originalPhone = phone.getText();
+		originalMaxDebt = value(c.getMaxdebt());
+		maxDebt.setText(MONEY.format(originalMaxDebt));
 		originalNotes = notes.getText();
 		originalVisible = c.isVisible();
 		detailTitle.setText(originalName);
 		detailStatus.setText(c.isVisible() ? "Fitxa activa" : "Fitxa arxivada");
 		debtValue.setText(MONEY.format(c.getCurdebt() == null ? 0 : c.getCurdebt()) + " €");
+		debtValue.setForeground(
+				c.getCurdebt() != null && c.getCurdebt() > 0 ? RetailPOSColors.dangerText() : RetailPOSColors.ink());
 		archive.setText(c.isVisible() ? "Arxiva la fitxa…" : "Reactiva la fitxa");
 		state.setForeground(Color.GRAY);
 		state.setText(" ");
@@ -439,12 +456,15 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		creating = true;
 		name.setText("");
 		phone.setText("");
+		maxDebt.setText(MONEY.format(100.0));
 		notes.setText("");
 		originalName = originalPhone = originalNotes = "";
+		originalMaxDebt = 100.0;
 		originalVisible = true;
 		detailTitle.setText("Nova clienta");
 		detailStatus.setText("Nova clienta");
 		debtValue.setText("0,00 €");
+		debtValue.setForeground(RetailPOSColors.ink());
 		archive.setText("");
 		archive.setVisible(false);
 		setDetailEnabled(true);
@@ -453,8 +473,27 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private boolean isDirty() {
 		return !name.getText().equals(originalName)
 				|| !CustomerInfo.normalizePhone(phone.getText()).equals(CustomerInfo.normalizePhone(originalPhone))
-				|| !notes.getText().equals(originalNotes)
+				|| !isMaxDebtUnchanged() || !notes.getText().equals(originalNotes)
 				|| (selected != null && !creating && originalVisible != selected.isVisible());
+	}
+	private boolean isMaxDebtUnchanged() {
+		try {
+			return Double.compare(parseMaxDebt(), originalMaxDebt) == 0;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+	private double parseMaxDebt() {
+		String text = maxDebt.getText().trim().replace(" ", "").replace(',', '.');
+		if (text.isEmpty())
+			return 0.0;
+		double value = Double.parseDouble(text);
+		if (!Double.isFinite(value) || value < 0.0)
+			throw new NumberFormatException();
+		return value;
+	}
+	private double value(Double value) {
+		return value == null ? 0.0 : value.doubleValue();
 	}
 	private boolean confirmDiscard() {
 		if (!isDirty())
@@ -477,6 +516,14 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			return;
 		final boolean wasCreating = creating;
 		final String n = name.getText().trim(), p = CustomerInfo.normalizePhone(phone.getText()), nt = notes.getText();
+		final double md;
+		try {
+			md = parseMaxDebt();
+		} catch (NumberFormatException e) {
+			state.setForeground(DARK_RED);
+			state.setText("El deute permès ha de ser un import positiu o zero");
+			return;
+		}
 		if (n.isEmpty()) {
 			state.setForeground(DARK_RED);
 			state.setText("El nom és obligatori");
@@ -486,9 +533,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		new SwingWorker<CustomerInfoExt, Void>() {
 			protected CustomerInfoExt doInBackground() throws Exception {
 				if (creating)
-					return customers.createCustomer(n, p, nt);
+					return customers.createCustomer(n, p, nt, md);
 				selected.setName(n);
 				selected.setPhone(p);
+				selected.setMaxdebt(md);
 				selected.setNotes(nt);
 				customers.updateCustomer(selected);
 				return selected;
@@ -543,7 +591,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		creating = false;
 		name.setText("");
 		phone.setText("");
+		maxDebt.setText("");
 		notes.setText("");
+		originalName = originalPhone = originalNotes = "";
+		originalMaxDebt = 0.0;
 		detailTitle.setText("");
 		detailStatus.setText("Selecciona una fila de la llista");
 		debtValue.setText("");
@@ -557,6 +608,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private void setDetailEnabled(boolean enabled) {
 		name.setEnabled(enabled);
 		phone.setEnabled(enabled);
+		maxDebt.setEnabled(enabled);
 		notes.setEnabled(enabled);
 		updateActions();
 		archive.setEnabled(enabled && !creating);
@@ -598,7 +650,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			double d = v == null ? 0 : ((Number) v).doubleValue();
 			setText(MONEY.format(d));
 			if (!sel)
-				setForeground(d > 0 ? DARK_RED : Color.LIGHT_GRAY);
+				setForeground(d > 0 ? RetailPOSColors.dangerText() : RetailPOSColors.inkMuted());
 			return this;
 		}
 	}
