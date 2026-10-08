@@ -20,6 +20,8 @@ Implementation in the working tree: the editor uses a content-sized six-line not
 
 The initial-selection fix now opens the first customer's details as soon as the list loads, preserves the current row on refresh where possible, and clears selection rather than replacing unsaved edits. An automated test covers initial selection, switching rows, filtering to one row, empty results and returning to a customer. Awaiting operator verification in the running application.
 
+Pull-request review found three more cases: empty search results now preserve unsaved edits, declining a row change clears a misleading highlight if the edited customer is filtered out, and grouped Catalan currency (for example `1.234,00`) can be read back when editing a customer. Automated regression checks cover the empty search and grouped amount.
+
 ## Done when
 
 A cashier can change and save the allowed debt from the customer screen. Creating a new customer starts the allowed debt at 100 EUR. The value remains correct after reopening the customer. The initial first row opens the matching customer details, and filtering does not leave a highlighted row with unrelated details. The editor shows one screen title, normal-height inputs and a larger notes area styled by the active FlatLaf theme in light and dark modes. The user confirms the screenshot-based visual result.

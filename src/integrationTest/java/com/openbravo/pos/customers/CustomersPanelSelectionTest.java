@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.openbravo.basic.BasicException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JLabel;
@@ -13,6 +14,32 @@ import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 class CustomersPanelSelectionTest {
+	@Test
+	void formattedDebtCanBeReadBackWithoutMarkingCustomerDirty() throws Exception {
+		CustomersPanel panel = new CustomersPanel();
+		CustomerInfoExt customer = new CustomerInfoExt("first");
+		customer.setName("Aina");
+		customer.setMaxdebt(1234.0);
+		Method show = CustomersPanel.class.getDeclaredMethod("showCustomer", CustomerInfoExt.class);
+		Method dirty = CustomersPanel.class.getDeclaredMethod("isDirty");
+		Method parse = CustomersPanel.class.getDeclaredMethod("parseMaxDebt");
+		show.setAccessible(true);
+		dirty.setAccessible(true);
+		parse.setAccessible(true);
+		JTextField maxDebt = field(panel, "maxDebt", JTextField.class);
+		SwingUtilities.invokeAndWait(() -> {
+			try {
+				show.invoke(panel, customer);
+				assertEquals("1.234,00", maxDebt.getText());
+				assertEquals(false, dirty.invoke(panel));
+				maxDebt.setText("1250.50");
+				assertEquals(1250.50, (double) parse.invoke(panel));
+			} catch (ReflectiveOperationException e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+
 	@Test
 	void initialSelectionShowsFirstCustomerAndAllowsReselectingIt() throws Exception {
 		CustomersPanel panel = new CustomersPanel();
@@ -62,6 +89,57 @@ class CustomersPanelSelectionTest {
 			search.setText("Berta");
 		});
 		awaitTitle(title, "Berta");
+	}
+
+	@Test
+	void emptySearchDoesNotDiscardUnsavedDetails() throws Exception {
+		CustomersPanel panel = new CustomersPanel();
+		Field customers = CustomersPanel.class.getDeclaredField("customers");
+		customers.setAccessible(true);
+		customers.set(panel, new DataLogicCustomers() {
+			@Override
+			public List<CustomerInfoExt> searchCustomerSummaries(String value, boolean debtOnly, boolean inactive) {
+				if (!value.isEmpty())
+					return List.of();
+				CustomerInfoExt customer = new CustomerInfoExt("first");
+				customer.setName("Aina");
+				customer.setVisible(true);
+				return List.of(customer);
+			}
+		});
+		JLabel title = field(panel, "detailTitle", JLabel.class);
+		JTextField search = field(panel, "search", JTextField.class);
+		JTextField name = field(panel, "name", JTextField.class);
+		JTable table = field(panel, "table", JTable.class);
+		SwingUtilities.invokeAndWait(() -> {
+			try {
+				panel.activate();
+			} catch (BasicException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		awaitTitle(title, "Aina");
+		SwingUtilities.invokeAndWait(() -> {
+			name.setText("Unsaved Aina");
+			search.setText("nobody");
+		});
+		awaitRows(table, 0);
+		SwingUtilities.invokeAndWait(() -> {
+			assertEquals("Unsaved Aina", name.getText());
+			assertEquals("Aina", title.getText());
+			assertEquals(-1, table.getSelectedRow());
+		});
+	}
+
+	private static void awaitRows(JTable table, int expected) throws Exception {
+		AtomicReference<Integer> actual = new AtomicReference<>();
+		for (int i = 0; i < 100; i++) {
+			SwingUtilities.invokeAndWait(() -> actual.set(table.getRowCount()));
+			if (expected == actual.get())
+				return;
+			Thread.sleep(20);
+		}
+		assertEquals(expected, actual.get());
 	}
 
 	private static void awaitTitle(JLabel title, String expected) throws Exception {

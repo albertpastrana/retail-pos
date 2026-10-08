@@ -383,7 +383,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 					totalDebt.setForeground(total > 0 ? RetailPOSColors.dangerText() : RetailPOSColors.ink());
 					listCount.setText(result.size() + " de " + all.size() + " fitxes");
 					if (result.isEmpty()) {
-						clearDetail();
+						if (creating || isDirty())
+							table.clearSelection();
+						else
+							clearDetail();
 					} else if (creating || isDirty()) {
 						if (selected == null || !selectId(selected.getId()))
 							table.clearSelection();
@@ -408,8 +411,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			return;
 		if (!confirmDiscard()) {
 			loading = true;
-			if (selected != null)
-				selectId(selected.getId());
+			if (selected == null || !selectId(selected.getId()))
+				table.clearSelection();
 			loading = false;
 			return;
 		}
@@ -484,7 +487,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		}
 	}
 	private double parseMaxDebt() {
-		String text = maxDebt.getText().trim().replace(" ", "").replace(',', '.');
+		String text = maxDebt.getText().trim().replace(" ", "");
+		if (text.matches("\\d{1,3}(\\.\\d{3})+(,\\d+)?"))
+			text = text.replace(".", "");
+		text = text.replace(',', '.');
 		if (text.isEmpty())
 			return 0.0;
 		double value = Double.parseDouble(text);
