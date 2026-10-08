@@ -761,6 +761,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				SerializerWriteString.INSTANCE, CategoryInfo.getSerializerReadParented()).list(category);
 	}
 
+	public final CategoryInfo getCatalogCategory(String id) throws BasicException {
+		return (CategoryInfo) new PreparedSentence(s, "SELECT ID, NAME, PARENTID, IMAGE FROM CATEGORIES WHERE ID = ?",
+				SerializerWriteString.INSTANCE, CategoryInfo.getSerializerReadParented()).find(id);
+	}
+
 	public List<ProductInfoExt> getProductCatalog(String category) throws BasicException {
 		return new PreparedSentence(s,
 				"SELECT " + ProductInfoExt.infoColumns("P")

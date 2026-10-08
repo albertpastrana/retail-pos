@@ -326,6 +326,28 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 		}
 	}
 
+	private CategoryInfo productCategory(ProductInfoExt product) {
+		String categoryId = product.getCategoryID();
+		if (categoryId == null) {
+			return null;
+		}
+		Set<String> visited = new HashSet<String>();
+		try {
+			for (String id = categoryId; id != null && visited.add(id) && !categoriesById.containsKey(id);) {
+				CategoryInfo category = m_dlSales.getCatalogCategory(id);
+				if (category == null) {
+					break;
+				}
+				categoriesById.put(id, category);
+				id = category.getParentID();
+			}
+		} catch (BasicException e) {
+			LOGGER.log(java.util.logging.Level.WARNING,
+					"event=catalog_category_path_load_failed category=" + categoryId, e);
+		}
+		return categoriesById.get(categoryId);
+	}
+
 	private void showRootCategoriesPanel() {
 
 		selectIndicatorCategories();
@@ -391,9 +413,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 
 						selectIndicatorPanel(product.getName());
 						showingProductDetails = true;
-						showBreadcrumb(showingcategory == null
-								? (CategoryInfo) m_jListCategories.getSelectedValue()
-								: showingcategory, product.getName());
+						showBreadcrumb(productCategory(product), product.getName());
 
 						CardLayout cl = (CardLayout) (m_jProducts.getLayout());
 						cl.show(m_jProducts, "PRODUCT." + id);
@@ -413,9 +433,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 			// already exists
 			selectIndicatorPanel(product.getName());
 			showingProductDetails = true;
-			showBreadcrumb(
-					showingcategory == null ? (CategoryInfo) m_jListCategories.getSelectedValue() : showingcategory,
-					product.getName());
+			showBreadcrumb(productCategory(product), product.getName());
 
 			CardLayout cl = (CardLayout) (m_jProducts.getLayout());
 			cl.show(m_jProducts, "PRODUCT." + id);
