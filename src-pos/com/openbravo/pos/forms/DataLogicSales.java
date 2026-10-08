@@ -756,8 +756,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	public final List<CategoryInfo> getSubcategories(String category) throws BasicException {
-		return new PreparedSentence(s, "SELECT ID, NAME, IMAGE FROM CATEGORIES WHERE PARENTID = ? ORDER BY NAME",
-				SerializerWriteString.INSTANCE, CategoryInfo.getSerializerRead()).list(category);
+		return new PreparedSentence(s,
+				"SELECT ID, NAME, PARENTID, IMAGE FROM CATEGORIES WHERE PARENTID = ? ORDER BY NAME",
+				SerializerWriteString.INSTANCE, CategoryInfo.getSerializerReadParented()).list(category);
 	}
 
 	public List<ProductInfoExt> getProductCatalog(String category) throws BasicException {

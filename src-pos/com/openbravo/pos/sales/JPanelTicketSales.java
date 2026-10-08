@@ -55,7 +55,9 @@ public class JPanelTicketSales extends JPanelTicket {
 				Integer.parseInt(m_jbtnconfig.getProperty("img-height", "54")));
 		m_cat.addActionListener(new CatalogListener());
 		m_cat.getComponent()
-				.setPreferredSize(new Dimension(0, Integer.parseInt(m_jbtnconfig.getProperty("cat-height", "245"))));
+				// Room for two compact tile rows plus the breadcrumb; raises the
+				// catalogue boundary towards the keypad notice at counter size.
+				.setPreferredSize(new Dimension(0, Integer.parseInt(m_jbtnconfig.getProperty("cat-height", "312"))));
 		return m_cat.getComponent();
 	}
 
