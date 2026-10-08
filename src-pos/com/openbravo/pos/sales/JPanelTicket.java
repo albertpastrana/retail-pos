@@ -193,20 +193,26 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				new Object[]{getClass().getName(), elapsedMillis(started)});
 	}
 
-	// The row above the receipt mixes named buttons with the seller ones, so every
-	// control in it takes the height of the tallest one.
+	// Allow each caption its real width, including the button border and padding.
+	// Seller and action buttons share the same height even after captions change.
 	private void alignOptionsRowHeight() {
 
 		List<JComponent> controls = new ArrayList<JComponent>();
 		collectButtons(m_jOptions, controls);
+		for (JComponent control : controls) {
+			sizeTopButton((AbstractButton) control);
+		}
+	}
 
-		int height = 0;
-		for (JComponent control : controls) {
-			height = Math.max(height, control.getPreferredSize().height);
-		}
-		for (JComponent control : controls) {
-			control.setPreferredSize(new Dimension(control.getPreferredSize().width, height));
-		}
+	private static void sizeTopButton(AbstractButton button) {
+		button.setMargin(new Insets(8, 4, 4, 4));
+		Insets insets = button.getInsets();
+		int captionWidth = button.getText() == null
+				? 0
+				: button.getFontMetrics(button.getFont()).stringWidth(button.getText());
+		int width = Math.max(64, captionWidth + insets.left + insets.right + 12);
+		// Reserve the icon, caption and border space as well as the top inset.
+		button.setPreferredSize(new Dimension(width, 72));
 	}
 
 	private static long elapsedMillis(long started) {
@@ -356,6 +362,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_jSubtotalEuros.setText(null);
 			m_jTaxesEuros.setText(null);
 			m_jTotalEuros.setText(null);
+			m_jProductCount.setText("0");
 			updateLoyaltyLabel();
 
 			stateToZero();
@@ -409,9 +416,18 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			}
 		}
 		TillButtons.labelUnderIcon(btnCustomer, label);
+		sizeTopButton(btnCustomer);
 	}
 
 	private void printPartialTotals() {
+		double products = 0.0;
+		for (TicketLineInfo line : m_oTicket.getLines()) {
+			if (!line.isProductCom() && line.getProperty("discount.scope") == null
+					&& !LoyaltyStamps.isRedemption(line)) {
+				products += Math.abs(line.getMultiply());
+			}
+		}
+		m_jProductCount.setText(Formats.DOUBLE.formatValue(products));
 
 		if (m_oTicket.getLinesCount() == 0) {
 			m_jSubtotalEuros.setText(null);
@@ -441,6 +457,22 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				: AppLocal.getIntString("label.loyalty.thispurchase",
 						Integer.valueOf(LoyaltyStamps.stampsEarned(m_oTicket)), loyaltyName);
 		m_jLoyalty.setText("<html><div align=\"center\" style='width: 170px'>" + notice + "</div></html>");
+	}
+
+	private void addSummaryPair(JLabel title, JLabel value, int column, int valueWidth) {
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.gridx = column;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.BASELINE_LEADING;
+		constraints.insets = new Insets(0, 12, 0, 6);
+		m_jPanTotals.add(title, constraints);
+		value.setHorizontalAlignment(SwingConstants.TRAILING);
+		value.setPreferredSize(new Dimension(valueWidth, value.getFontMetrics(value.getFont()).getHeight() + 4));
+		constraints = new GridBagConstraints();
+		constraints.gridx = column + 1;
+		constraints.gridy = 0;
+		constraints.anchor = GridBagConstraints.BASELINE_TRAILING;
+		m_jPanTotals.add(value, constraints);
 	}
 
 	private void paintTicketLine(int index, TicketLineInfo oLine) {
@@ -1328,7 +1360,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	// <editor-fold defaultstate="collapsed" desc="Generated
 	// Code">//GEN-BEGIN:initComponents
 	private void initComponents() {
-		java.awt.GridBagConstraints gridBagConstraints;
 
 		m_jPanContainer = new javax.swing.JPanel();
 		m_jOptions = new javax.swing.JPanel();
@@ -1349,6 +1380,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPanelCentral = new javax.swing.JPanel();
 		jPanel4 = new javax.swing.JPanel();
 		m_jPanTotals = new javax.swing.JPanel();
+		m_jProductCount = new javax.swing.JLabel();
+		m_jLblProductCount = new javax.swing.JLabel();
 		m_jTotalEuros = new javax.swing.JLabel();
 		m_jLblTotalEuros1 = new javax.swing.JLabel();
 		m_jSubtotalEuros = new javax.swing.JLabel();
@@ -1499,87 +1532,48 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		jPanel4.setLayout(new java.awt.BorderLayout());
 
 		m_jPanTotals.setLayout(new java.awt.GridBagLayout());
-
-		m_jTotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
-		m_jTotalEuros.setFont(new java.awt.Font("Dialog", 1, 14));
-		m_jTotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-		m_jTotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory
-						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
-				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
-		m_jTotalEuros.setOpaque(true);
-		m_jTotalEuros.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jTotalEuros.setRequestFocusEnabled(false);
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 3;
-		gridBagConstraints.gridy = 1;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.weightx = 1.0;
-		gridBagConstraints.weighty = 1.0;
-		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-		m_jPanTotals.add(m_jTotalEuros, gridBagConstraints);
-
-		m_jLblTotalEuros1.setText(AppLocal.getIntString("label.totalcash")); // NOI18N
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 2;
-		gridBagConstraints.gridy = 1;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-		m_jPanTotals.add(m_jLblTotalEuros1, gridBagConstraints);
-
-		m_jSubtotalEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
-		m_jSubtotalEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-		m_jSubtotalEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory
-						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
-				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
-		m_jSubtotalEuros.setOpaque(true);
-		m_jSubtotalEuros.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jSubtotalEuros.setRequestFocusEnabled(false);
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 3;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.weightx = 1.0;
-		gridBagConstraints.weighty = 1.0;
-		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-		m_jPanTotals.add(m_jSubtotalEuros, gridBagConstraints);
-
-		m_jTaxesEuros.setBackground(com.openbravo.pos.theme.RetailPOSColors.surface100());
-		m_jTaxesEuros.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-		m_jTaxesEuros.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-				javax.swing.BorderFactory
-						.createLineBorder(javax.swing.UIManager.getDefaults().getColor("Button.darkShadow")),
-				javax.swing.BorderFactory.createEmptyBorder(1, 4, 1, 4)));
-		m_jTaxesEuros.setOpaque(true);
-		m_jTaxesEuros.setPreferredSize(new java.awt.Dimension(150, 25));
-		m_jTaxesEuros.setRequestFocusEnabled(false);
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 1;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.weightx = 1.0;
-		gridBagConstraints.weighty = 1.0;
-		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 5);
-		m_jPanTotals.add(m_jTaxesEuros, gridBagConstraints);
-
-		m_jLblTotalEuros2.setText(AppLocal.getIntString("label.taxcash")); // NOI18N
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 0;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
-		m_jPanTotals.add(m_jLblTotalEuros2, gridBagConstraints);
-
-		m_jLblTotalEuros3.setText(AppLocal.getIntString("label.subtotalcash")); // NOI18N
-		gridBagConstraints = new java.awt.GridBagConstraints();
-		gridBagConstraints.gridx = 2;
-		gridBagConstraints.gridy = 0;
-		gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
-		gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-		m_jPanTotals.add(m_jLblTotalEuros3, gridBagConstraints);
-
-		jPanel4.add(m_jPanTotals, java.awt.BorderLayout.LINE_END);
+		m_jPanTotals.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 0, 4, 0));
+		m_jLblTotalEuros3.setText(AppLocal.getIntString("label.subtotalcash"));
+		m_jLblTotalEuros2.setText(AppLocal.getIntString("label.taxcash"));
+		m_jLblTotalEuros1.setText(AppLocal.getIntString("label.totalcash"));
+		java.awt.Font summaryFont = javax.swing.UIManager.getFont("Label.font");
+		m_jTotalEuros.setFont(summaryFont.deriveFont(java.awt.Font.BOLD, 20f));
+		m_jLblTotalEuros1.setFont(summaryFont.deriveFont(java.awt.Font.BOLD, 16f));
+		m_jSubtotalEuros.setForeground(com.openbravo.pos.theme.RetailPOSColors.inkMuted());
+		m_jTaxesEuros.setForeground(com.openbravo.pos.theme.RetailPOSColors.inkMuted());
+		m_jLblTotalEuros3.setForeground(com.openbravo.pos.theme.RetailPOSColors.inkMuted());
+		m_jLblTotalEuros2.setForeground(com.openbravo.pos.theme.RetailPOSColors.inkMuted());
+		int amountWidth = m_jSubtotalEuros.getFontMetrics(m_jSubtotalEuros.getFont()).stringWidth("-9.999,99 €") + 4;
+		int totalWidth = m_jTotalEuros.getFontMetrics(m_jTotalEuros.getFont()).stringWidth("-9.999,99 €") + 4;
+		m_jLblProductCount.setText(AppLocal.getIntString("label.sales.products") + ":");
+		m_jLblProductCount.setForeground(com.openbravo.pos.theme.RetailPOSColors.inkMuted());
+		m_jProductCount.setFont(summaryFont.deriveFont(java.awt.Font.BOLD, 16f));
+		m_jProductCount.setHorizontalAlignment(javax.swing.SwingConstants.LEADING);
+		m_jProductCount.setPreferredSize(new java.awt.Dimension(
+				m_jProductCount.getFontMetrics(m_jProductCount.getFont()).stringWidth("9999,999") + 4,
+				m_jProductCount.getFontMetrics(m_jProductCount.getFont()).getHeight() + 4));
+		m_jProductCount.setText("0");
+		java.awt.GridBagConstraints countConstraints = new java.awt.GridBagConstraints();
+		countConstraints.gridx = 0;
+		countConstraints.gridy = 0;
+		countConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
+		countConstraints.insets = new java.awt.Insets(0, 0, 0, 4);
+		m_jPanTotals.add(m_jLblProductCount, countConstraints);
+		countConstraints = new java.awt.GridBagConstraints();
+		countConstraints.gridx = 1;
+		countConstraints.gridy = 0;
+		countConstraints.anchor = java.awt.GridBagConstraints.BASELINE_LEADING;
+		m_jPanTotals.add(m_jProductCount, countConstraints);
+		countConstraints = new java.awt.GridBagConstraints();
+		countConstraints.gridx = 2;
+		countConstraints.gridy = 0;
+		countConstraints.weightx = 1.0;
+		countConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+		m_jPanTotals.add(new javax.swing.JPanel(), countConstraints);
+		addSummaryPair(m_jLblTotalEuros2, m_jTaxesEuros, 3, amountWidth);
+		addSummaryPair(m_jLblTotalEuros3, m_jSubtotalEuros, 5, amountWidth);
+		addSummaryPair(m_jLblTotalEuros1, m_jTotalEuros, 7, totalWidth);
+		jPanel4.add(m_jPanTotals, java.awt.BorderLayout.CENTER);
 
 		m_jPanelCentral.add(jPanel4, java.awt.BorderLayout.SOUTH);
 
@@ -1629,7 +1623,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		m_jPanEntries.add(m_jNumberKeys);
 
 		// A readout, not a field: the keypad writes here and nothing else does.
-		m_jPanReadout.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 5, 5));
+		m_jPanReadout.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 0, 5));
 		m_jPanReadout.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 8, 0));
 		m_jPanReadout.setMaximumSize(new java.awt.Dimension(32767, 40));
 
@@ -1647,12 +1641,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		m_jPanEntries.add(m_jPanReadout);
 
-		// Three wrapped lines of the notice at the width of the keypad column, so the
-		// count at the end of the sentence is never the part that gets cut off.
-		m_jPanLoyalty.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 5, 0, 5));
+		// Keep the notice immediately below the readout instead of reserving a tall
+		// blank row: on compact tills the bottom of this column can be clipped.
+		m_jPanLoyalty.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 5, 2, 5));
 		m_jPanLoyalty.setLayout(new java.awt.BorderLayout());
-		m_jPanLoyalty.setPreferredSize(new java.awt.Dimension(180, 76));
-		m_jPanLoyalty.setMaximumSize(new java.awt.Dimension(32767, 76));
+		m_jPanLoyalty.setMaximumSize(new java.awt.Dimension(32767, 32767));
 
 		m_jLoyalty.setFont(new java.awt.Font("Dialog", 1, 13));
 		m_jLoyalty.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -1831,6 +1824,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JButton m_jEnter;
 	private javax.swing.JTextField m_jKeyFactory;
 	private javax.swing.JLabel m_jLblCode;
+	private javax.swing.JLabel m_jLblProductCount;
 	private javax.swing.JLabel m_jLblTotalEuros1;
 	private javax.swing.JLabel m_jLblTotalEuros2;
 	private javax.swing.JLabel m_jLblTotalEuros3;
@@ -1850,6 +1844,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private javax.swing.JPanel m_jPanelScripts;
 	private javax.swing.JLabel m_jPor;
 	private javax.swing.JLabel m_jPrice;
+	private javax.swing.JLabel m_jProductCount;
 	private javax.swing.JLabel m_jScanStatus;
 	private javax.swing.JLabel m_jLoyalty;
 	private javax.swing.JLabel m_jSubtotalEuros;
