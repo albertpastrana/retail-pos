@@ -8,9 +8,16 @@ import com.openbravo.pos.catalog.JCatalog;
 import com.openbravo.pos.catalog.JCatalogTab;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.format.Formats;
+import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.sales.JPanelTicket;
 import com.openbravo.pos.sales.JPanelTicketSales;
 import com.openbravo.pos.ticket.CategoryInfo;
+import com.openbravo.pos.ticket.LoyaltyStamps;
+import com.openbravo.pos.ticket.ProductInfoExt;
+import com.openbravo.pos.ticket.TaxInfo;
+import com.openbravo.pos.ticket.TicketInfo;
+import com.openbravo.pos.ticket.TicketLineInfo;
 import com.openbravo.data.loader.Session;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -23,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Date;
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
@@ -35,6 +43,7 @@ import org.junit.jupiter.api.Test;
 
 class SalesCatalogLayoutTest {
 	@Test
+	@SuppressWarnings("unchecked")
 	void subcategoryQueriesPreserveParentIdsForFullBreadcrumbs() throws Exception {
 		Session session = new Session("jdbc:derby:memory:catalogPath" + UUID.randomUUID() + ";create=true", null, null);
 		try {
@@ -49,6 +58,16 @@ class SalesCatalogLayoutTest {
 			sales.init(session);
 			assertEquals("root", sales.getSubcategories("root").get(0).getParentID());
 			assertEquals("middle", sales.getSubcategories("middle").get(0).getParentID());
+			JCatalog catalog = new JCatalog(sales);
+			ProductInfoExt product = new ProductInfoExt();
+			product.setCategoryID("leaf");
+			Method resolve = JCatalog.class.getDeclaredMethod("productCategory", ProductInfoExt.class);
+			resolve.setAccessible(true);
+			CategoryInfo resolved = (CategoryInfo) resolve.invoke(catalog, product);
+			assertEquals("leaf", resolved.getID());
+			Map<String, CategoryInfo> categories = (Map<String, CategoryInfo>) catalogField(catalog, "categoriesById");
+			assertEquals("middle", categories.get("leaf").getParentID());
+			assertEquals("root", categories.get("middle").getParentID());
 		} finally {
 			session.close();
 		}
@@ -144,8 +163,15 @@ class SalesCatalogLayoutTest {
 						}
 						int x = total.getX();
 						total.setText("€ 123,45");
+						Method resize = JPanelTicket.class.getDeclaredMethod("updateSummaryWidths");
+						resize.setAccessible(true);
+						resize.invoke(sales);
 						summary.doLayout();
 						assertEquals(x, total.getX());
+						total.setText("€ 123.456.789,99");
+						resize.invoke(sales);
+						assertTrue(total.getPreferredSize().width >= total.getFontMetrics(total.getFont())
+								.stringWidth(total.getText()));
 					} catch (Exception ex) {
 						throw new AssertionError(ex);
 					}
@@ -160,6 +186,51 @@ class SalesCatalogLayoutTest {
 		Field field = JPanelTicket.class.getDeclaredField(name);
 		field.setAccessible(true);
 		return field.get(target);
+	}
+
+	@Test
+	void productCountExcludesNonProductsAndLongCustomerCaptionsKeepToolbarUsable() throws Exception {
+		SwingUtilities.invokeAndWait(() -> {
+			try {
+				JPanelTicketSales sales = new JPanelTicketSales();
+				TicketInfo ticket = new TicketInfo();
+				TaxInfo tax = new TaxInfo("tax", "Tax", "cat", new Date(0), null, null, 0.0, false, null);
+				ticket.addLine(new TicketLineInfo("Shirt", "cat", 2.5, 10, tax));
+				ticket.addLine(new TicketLineInfo("Return", "cat", -3, 10, tax));
+				TicketLineInfo comment = new TicketLineInfo("Comment", "cat", 4, 0, tax);
+				comment.setProperty("product.com", "true");
+				ticket.addLine(comment);
+				TicketLineInfo discount = new TicketLineInfo("Discount", "cat", 1, -1, tax);
+				discount.setProperty("discount.scope", "total");
+				ticket.addLine(discount);
+				TicketLineInfo redemption = new TicketLineInfo("Redemption", "cat", 1, -1, tax);
+				LoyaltyStamps.markRedemption(redemption);
+				ticket.addLine(redemption);
+				Field current = JPanelTicket.class.getDeclaredField("m_oTicket");
+				current.setAccessible(true);
+				current.set(sales, ticket);
+				Method totals = JPanelTicket.class.getDeclaredMethod("printPartialTotals");
+				totals.setAccessible(true);
+				totals.invoke(sales);
+				assertEquals(Formats.DOUBLE.formatValue(5.5), ((JLabel) field(sales, "m_jProductCount")).getText());
+				CustomerInfoExt customer = new CustomerInfoExt("c1");
+				customer.setName("Very long customer name ".repeat(10));
+				ticket.setCustomer(customer);
+				Method updateCustomer = JPanelTicket.class.getDeclaredMethod("updateCustomerButton");
+				updateCustomer.setAccessible(true);
+				updateCustomer.invoke(sales);
+				JButton customerButton = (JButton) field(sales, "btnCustomer");
+				assertTrue(customerButton.getPreferredSize().width <= 160);
+				assertTrue(customerButton.getText().endsWith("…"));
+				assertTrue(customerButton.getToolTipText().contains(customer.getName()));
+				Method clear = JPanelTicket.class.getDeclaredMethod("clearSummary");
+				clear.setAccessible(true);
+				clear.invoke(sales);
+				assertEquals("0", ((JLabel) field(sales, "m_jProductCount")).getText());
+			} catch (Exception ex) {
+				throw new AssertionError(ex);
+			}
+		});
 	}
 
 	@Test

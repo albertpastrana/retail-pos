@@ -359,10 +359,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		if (m_oTicket == null) {
 			m_ticketlines.clearTicketLines();
 
-			m_jSubtotalEuros.setText(null);
-			m_jTaxesEuros.setText(null);
-			m_jTotalEuros.setText(null);
-			m_jProductCount.setText("0");
+			clearSummary();
 			updateLoyaltyLabel();
 
 			stateToZero();
@@ -415,8 +412,29 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				label += " " + Formats.CURRENCY.formatValue(customer.getCurdebt());
 			}
 		}
+		btnCustomer.setToolTipText(AppLocal.getIntString("tooltiptext.customer") + ": " + label);
 		TillButtons.labelUnderIcon(btnCustomer, label);
+		btnCustomer.setMargin(new Insets(8, 4, 4, 4));
+		int maxWidth = m_jOptions.getWidth() > 0 ? Math.min(160, Math.max(80, m_jOptions.getWidth() / 5)) : 160;
+		Insets insets = btnCustomer.getInsets();
+		int textWidth = maxWidth - insets.left - insets.right - 12;
+		if (btnCustomer.getFontMetrics(btnCustomer.getFont()).stringWidth(label) > textWidth) {
+			String truncated = label;
+			while (truncated.length() > 1
+					&& btnCustomer.getFontMetrics(btnCustomer.getFont()).stringWidth(truncated + "…") > textWidth) {
+				truncated = truncated.substring(0, truncated.length() - 1);
+			}
+			TillButtons.labelUnderIcon(btnCustomer, truncated + "…");
+		}
 		sizeTopButton(btnCustomer);
+	}
+
+	private void clearSummary() {
+		m_jSubtotalEuros.setText(null);
+		m_jTaxesEuros.setText(null);
+		m_jTotalEuros.setText(null);
+		m_jProductCount.setText("0");
+		updateSummaryWidths();
 	}
 
 	private void printPartialTotals() {
@@ -438,7 +456,22 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_jTaxesEuros.setText(m_oTicket.printTax());
 			m_jTotalEuros.setText(m_oTicket.printTotal());
 		}
+		updateSummaryWidths();
 		updateLoyaltyLabel();
+	}
+
+	private void updateSummaryWidths() {
+		fitSummaryValue(m_jProductCount, "9999,999");
+		fitSummaryValue(m_jSubtotalEuros, "-9.999,99 €");
+		fitSummaryValue(m_jTaxesEuros, "-9.999,99 €");
+		fitSummaryValue(m_jTotalEuros, "-9.999,99 €");
+		m_jPanTotals.revalidate();
+	}
+
+	private static void fitSummaryValue(JLabel value, String example) {
+		int width = Math.max(value.getFontMetrics(value.getFont()).stringWidth(example),
+				value.getFontMetrics(value.getFont()).stringWidth(value.getText() == null ? "" : value.getText())) + 4;
+		value.setPreferredSize(new Dimension(width, value.getFontMetrics(value.getFont()).getHeight() + 4));
 	}
 
 	private void updateLoyaltyLabel() {
