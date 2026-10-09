@@ -1,13 +1,19 @@
 package com.openbravo.pos.inventory;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -16,7 +22,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.Icon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -25,10 +34,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -39,6 +48,12 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.DefaultCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.border.Border;
+
+import com.openbravo.pos.theme.RetailPOSColors;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.format.Formats;
@@ -247,8 +262,7 @@ public final class CatalogImportDialog {
 			throws BasicException {
 		LOGGER.log(Level.INFO, "event=catalog_family_editor_start code=\"{0}\" variants={1}",
 				new Object[]{code, family.size()});
-		// One model shared by the checkbox each variant card draws under its price,
-		// so the choice follows the cashier from card to card.
+		// The checkbox follows the cashier from variant to variant.
 		final JToggleButton.ToggleButtonModel applyPriceModel = new JToggleButton.ToggleButtonModel();
 		applyPriceModel.setSelected(true);
 		final List<VariantImportState> variants = new ArrayList<VariantImportState>();
@@ -267,11 +281,59 @@ public final class CatalogImportDialog {
 		editor.load(variants.get(scannedRow));
 		final VariantTableModel model = new VariantTableModel(variants);
 		final JTable table = new JTable(model);
+		model.stockChanged = new java.util.function.BiConsumer<Integer, String>() {
+			@Override
+			public void accept(Integer row, String value) {
+				if (editor.current == variants.get(row.intValue()))
+					editor.stock.setText(value);
+			}
+		};
+		final JButton confirm = touchButton(confirmLabel(true));
+		confirm.setBackground(RetailPOSColors.brand());
+		confirm.setForeground(RetailPOSColors.onBrand());
+		final JLabel status = new JLabel();
+		final Runnable refreshStatus = new Runnable() {
+			@Override
+			public void run() {
+				int count = 0;
+				for (VariantImportState variant : variants)
+					if (variant.selected)
+						count++;
+				VariantImportState scanned = null;
+				for (VariantImportState variant : variants)
+					if (variant.scanned)
+						scanned = variant;
+				boolean priced = scanned != null
+						&& ProductPriceMath.parsePositiveCurrency(scanned.grossPrice, false) != null;
+				confirm.setEnabled(priced);
+				confirm.setBackground(priced ? RetailPOSColors.brand() : RetailPOSColors.surface200());
+				confirm.setForeground(priced ? RetailPOSColors.onBrand() : RetailPOSColors.inkMuted());
+				boolean samePrice = priced;
+				for (VariantImportState variant : variants)
+					if (samePrice && variant.selected && !scanned.grossPrice.equals(variant.grossPrice))
+						samePrice = false;
+				status.setText(AppLocal.getIntString(
+						!priced
+								? "label.variants.status.missing"
+								: samePrice ? "label.variants.status.sameprice" : "label.variants.status.ready",
+						Integer.valueOf(count), scanned == null ? "" : scanned.grossPrice));
+				editor.refreshPriceHint();
+			}
+		};
+		model.onChange = refreshStatus;
+		editor.onChange = new Runnable() {
+			@Override
+			public void run() {
+				model.fireTableDataChanged();
+				refreshStatus.run();
+			}
+		};
 		final boolean[] applyingFamilyPrice = new boolean[]{false};
 		editor.priceChangeListener = new Runnable() {
 			@Override
 			public void run() {
 				if (!applyPriceModel.isSelected() || applyingFamilyPrice[0] || editor.prices.reportlock) {
+					refreshStatus.run();
 					return;
 				}
 				Double gross = ProductPriceMath.parsePositiveCurrency(editor.prices.sellTax.getText(), false);
@@ -287,6 +349,7 @@ public final class CatalogImportDialog {
 						}
 					}
 					model.fireTableDataChanged();
+					refreshStatus.run();
 				} finally {
 					applyingFamilyPrice[0] = false;
 				}
@@ -316,69 +379,234 @@ public final class CatalogImportDialog {
 			}
 		};
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setRowHeight(28);
-		table.getColumnModel().getColumn(0).setMaxWidth(42);
-		table.getColumnModel().getColumn(1).setPreferredWidth(190);
-		table.getColumnModel().getColumn(2).setPreferredWidth(90);
-		table.getColumnModel().getColumn(3).setPreferredWidth(90);
+		table.setRowHeight(48);
+		table.setShowGrid(false);
+		table.setIntercellSpacing(new Dimension(0, 0));
+		table.setBackground(RetailPOSColors.surface100());
+		table.getTableHeader().setBackground(RetailPOSColors.surface100());
+		table.getTableHeader().setForeground(RetailPOSColors.inkMuted());
+		table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(13f));
+		table.getColumnModel().getColumn(0).setMaxWidth(48);
+		table.getColumnModel().getColumn(1).setPreferredWidth(245);
+		table.getColumnModel().getColumn(2).setPreferredWidth(85);
+		table.getColumnModel().getColumn(3).setPreferredWidth(82);
+		JTextField rowStock = ProductFormLayout.numberField(true, 5);
+		rowStock.setHorizontalAlignment(SwingConstants.CENTER);
+		rowStock.setBackground(RetailPOSColors.surface200());
+		rowStock.putClientProperty("JComponent.roundRect", Boolean.TRUE);
+		table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(rowStock) {
+			@Override
+			public Component getTableCellEditorComponent(JTable source, Object value, boolean selected, int row,
+					int column) {
+				Component field = super.getTableCellEditorComponent(source, value, selected, row, column);
+				SwingUtilities.invokeLater(() -> {
+					if (source.isEditing() && source.getEditingRow() == row && source.getEditingColumn() == column)
+						rowStock.selectAll();
+				});
+				return field;
+			}
+		});
+		JCheckBox rowCheckEditor = variantCheckBox();
+		rowCheckEditor.setHorizontalAlignment(SwingConstants.CENTER);
+		table.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(rowCheckEditor));
+		table.getColumnModel().getColumn(0).setCellRenderer(new TableCellRenderer() {
+			private final JPanel cell = new JPanel(new BorderLayout());
+			private final JCheckBox check = variantCheckBox();
+			{
+				check.setHorizontalAlignment(SwingConstants.CENTER);
+				check.setOpaque(false);
+				cell.add(check, BorderLayout.CENTER);
+			}
+			@Override
+			public Component getTableCellRendererComponent(JTable source, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				check.setSelected(Boolean.TRUE.equals(value));
+				cell.setBackground(variantRowBackground(variants.get(row), selected, row));
+				cell.setBorder(variantRowBorder(variants.get(row), 0, 3));
+				return cell;
+			}
+		});
+		DefaultTableCellRenderer rowRenderer = new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable source, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				super.getTableCellRendererComponent(source, value, selected, focused, row, column);
+				VariantImportState variant = variants.get(row);
+				setBackground(variantRowBackground(variant, selected, row));
+				setForeground(
+						column == 2 && variant.scanned && AppLocal.getIntString("label.variants.missing").equals(value)
+								? RetailPOSColors.dangerText()
+								: RetailPOSColors.ink());
+				setBorder(variantRowBorder(variant, column, 3));
+				setHorizontalAlignment(column == 1 ? SwingConstants.LEFT : SwingConstants.CENTER);
+				return this;
+			}
+		};
+		for (int column = 1; column < 3; column++)
+			table.getColumnModel().getColumn(column).setCellRenderer(rowRenderer);
+		table.getColumnModel().getColumn(3).setCellRenderer(new TableCellRenderer() {
+			private final JPanel cell = new JPanel(new BorderLayout());
+			private final JPanel well = new JPanel(new BorderLayout()) {
+				@Override
+				protected void paintComponent(Graphics graphics) {
+					Graphics2D pen = (Graphics2D) graphics.create();
+					try {
+						pen.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+						pen.setColor(RetailPOSColors.surface200());
+						pen.fillRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 8, 8);
+						pen.setColor(RetailPOSColors.border());
+						pen.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 8, 8);
+					} finally {
+						pen.dispose();
+					}
+				}
+			};
+			private final JLabel valueLabel = new JLabel("", SwingConstants.CENTER);
+			{
+				well.setOpaque(false);
+				well.add(valueLabel, BorderLayout.CENTER);
+				cell.add(well, BorderLayout.CENTER);
+			}
+			@Override
+			public Component getTableCellRendererComponent(JTable source, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				cell.setBackground(variantRowBackground(variants.get(row), selected, row));
+				cell.setBorder(BorderFactory.createCompoundBorder(variantRowBorder(variants.get(row), 3, 3),
+						BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+				valueLabel.setForeground(RetailPOSColors.ink());
+				valueLabel.setFont(source.getFont());
+				valueLabel.setText(value.toString());
+				return cell;
+			}
+		});
 
-		final JPanel cards = new JPanel(new CardLayout());
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent event) {
 				int selected = table.getSelectedRow();
 				if (!event.getValueIsAdjusting() && selected >= 0) {
+					if (table.isEditing())
+						table.getCellEditor().stopCellEditing();
 					editor.load(variants.get(selected));
-					focusPriceField(editor.stock);
 				}
 			}
 		});
 		table.setRowSelectionInterval(scannedRow, scannedRow);
-		cards.add(editor.getPanel(applyPriceModel), "editor");
-		focusImportField(editor.stock);
+		JPanel detail = editor.getPanel(applyPriceModel);
+		focusImportField(editor.prices.sellTax);
 
-		JButton selectAll = new JButton(AppLocal.getIntString("button.variants.all"));
+		JButton selectAll = touchButton(AppLocal.getIntString("button.variants.all"));
 		selectAll.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				model.selectAll();
 			}
 		});
-		JButton scannedOnly = new JButton(AppLocal.getIntString("button.variants.scanned"));
+		JButton scannedOnly = touchButton(AppLocal.getIntString("button.variants.scanned"));
 		scannedOnly.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				model.selectScannedOnly();
 			}
 		});
-		JPanel listButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+		JPanel listButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
 		listButtons.add(selectAll);
 		listButtons.add(scannedOnly);
 
 		JPanel variantsPanel = new JPanel(new BorderLayout(0, 6));
 		variantsPanel.add(listButtons, BorderLayout.NORTH);
 		JScrollPane scroll = new JScrollPane(table);
-		scroll.setPreferredSize(new Dimension(420, 330));
+		// Give the variant list another 48px touch row of vertical space.
+		scroll.setPreferredSize(new Dimension(460, 440));
+		scroll.setBorder(BorderFactory.createLineBorder(RetailPOSColors.border()));
+		scroll.getViewport().setBackground(RetailPOSColors.surface100());
 		variantsPanel.add(scroll, BorderLayout.CENTER);
 
-		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, variantsPanel, cards);
-		split.setResizeWeight(0.5);
-		split.setBorder(null);
+		JPanel body = new JPanel(new GridBagLayout());
+		GridBagConstraints placement = new GridBagConstraints();
+		placement.gridx = 0;
+		placement.weightx = 0.55;
+		placement.weighty = 1;
+		placement.fill = GridBagConstraints.BOTH;
+		body.add(variantsPanel, placement);
+		placement.gridx = 1;
+		placement.weightx = 0;
+		body.add(Box.createHorizontalStrut(32), placement);
+		placement.gridx = 2;
+		placement.weightx = 0.45;
+		body.add(detail, placement);
 
-		JPanel content = new JPanel(new BorderLayout(0, 10));
-		content.add(buildFamilyImportMessage(), BorderLayout.NORTH);
-		content.add(split, BorderLayout.CENTER);
-		enlargeDialogFont(content);
+		JPanel content = new JPanel(new BorderLayout(0, 16));
+		JPanel header = new JPanel(new BorderLayout(16, 0));
+		JPanel intro = new JPanel(new BorderLayout(0, 4));
+		JLabel heading = new JLabel(AppLocal.getIntString("title.importproductfamily"));
+		heading.setFont(heading.getFont().deriveFont(Font.BOLD, 20f));
+		intro.add(heading, BorderLayout.NORTH);
+		intro.add(buildFamilyImportMessage(), BorderLayout.SOUTH);
+		header.add(intro, BorderLayout.CENTER);
+		JLabel ean = new JLabel("<html><div style='text-align:right'><small>"
+				+ AppLocal.getIntString("label.variants.scannedean") + "</small><br>" + code + "</div></html>");
+		ean.setHorizontalAlignment(SwingConstants.RIGHT);
+		header.add(ean, BorderLayout.EAST);
+		content.add(header, BorderLayout.NORTH);
+		content.add(body, BorderLayout.CENTER);
+		JButton skip = touchButton(AppLocal.getIntString("button.skipitem"));
+		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+		actions.add(skip);
+		actions.add(confirm);
+		JPanel footer = new JPanel(new BorderLayout(12, 0));
+		status.setFont(status.getFont().deriveFont(13f));
+		status.setForeground(RetailPOSColors.inkMuted());
+		footer.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createMatteBorder(1, 0, 0, 0, RetailPOSColors.border()),
+				BorderFactory.createEmptyBorder(16, 0, 0, 0)));
+		footer.add(status, BorderLayout.WEST);
+		footer.add(actions, BorderLayout.EAST);
+		content.add(footer, BorderLayout.SOUTH);
+		refreshStatus.run();
+		content.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
+				BorderFactory.createEmptyBorder(24, 32, 24, 32)));
+		styleFamilySurface(content);
 		LOGGER.log(Level.INFO, "event=catalog_family_dialog_ready code=\"{0}\" variants={1}",
 				new Object[]{code, family.size()});
 
 		String title = AppLocal.getIntString("title.importproductfamily");
-		Object[] options = new Object[]{confirmLabel(true), AppLocal.getIntString("button.skipitem")};
+		Window owner = SwingUtilities.getWindowAncestor(parent);
+		final JDialog dialog = new JDialog(owner, AppLocal.APP_NAME, java.awt.Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.getContentPane().add(content);
+		dialog.getRootPane().setDefaultButton(null);
+		dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowOpened(java.awt.event.WindowEvent event) {
+				focusPriceField(editor.prices.sellTax);
+			}
+		});
+		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"),
+				"skipVariantImport");
+		dialog.getRootPane().getActionMap().put("skipVariantImport", new javax.swing.AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				dialog.dispose();
+			}
+		});
+		final boolean[] accepted = {false};
+		confirm.addActionListener(event -> {
+			if (table.isEditing())
+				table.getCellEditor().stopCellEditing();
+			accepted[0] = true;
+			dialog.setVisible(false);
+		});
+		skip.addActionListener(event -> dialog.dispose());
+		dialog.pack();
+		dialog.setLocationRelativeTo(parent);
 		while (true) {
-			int result = showImportOptionDialog(content, title, options);
-			if (result != 0) {
+			dialog.setVisible(true);
+			if (!accepted[0]) {
+				dialog.dispose();
 				return null;
 			}
+			accepted[0] = false;
 			List<ProductInfoExt> selected = new ArrayList<ProductInfoExt>();
 			for (int i = 0; i < variants.size(); i++) {
 				VariantImportState variant = variants.get(i);
@@ -399,6 +627,7 @@ public final class CatalogImportDialog {
 				selected.add(product);
 			}
 			if (!selected.isEmpty()) {
+				dialog.dispose();
 				return selected;
 			}
 		}
@@ -524,6 +753,82 @@ public final class CatalogImportDialog {
 		for (Component child : component.getComponents()) {
 			if (child instanceof JComponent) {
 				enlargeDialogFont((JComponent) child);
+			}
+		}
+	}
+
+	private JButton touchButton(String label) {
+		JButton button = new JButton(label);
+		Dimension size = button.getPreferredSize();
+		button.setPreferredSize(new Dimension(size.width + 16, Math.max(48, size.height)));
+		return button;
+	}
+
+	private void styleFamilySurface(JComponent component) {
+		if (component instanceof JPanel)
+			component.setBackground(RetailPOSColors.surface100());
+		for (Component child : component.getComponents())
+			if (child instanceof JComponent)
+				styleFamilySurface((JComponent) child);
+	}
+
+	private Color variantRowBackground(VariantImportState variant, boolean selected, int row) {
+		if (variant.scanned || row % 2 != 0)
+			return RetailPOSColors.surface200();
+		return selected ? RetailPOSColors.brandSubtle() : RetailPOSColors.surface100();
+	}
+
+	private Border variantRowBorder(VariantImportState variant, int column, int lastColumn) {
+		return BorderFactory.createCompoundBorder(
+				variant.scanned
+						? BorderFactory.createMatteBorder(2, column == 0 ? 2 : 0, 2, column == lastColumn ? 2 : 0,
+								RetailPOSColors.borderStrong())
+						: BorderFactory.createEmptyBorder(2, column == 0 ? 2 : 0, 2, column == lastColumn ? 2 : 0),
+				BorderFactory.createEmptyBorder(0, column == 1 ? 8 : 0, 0, 0));
+	}
+
+	private JCheckBox variantCheckBox() {
+		JCheckBox check = new JCheckBox();
+		check.setIcon(new VariantCheckIcon(false));
+		check.setSelectedIcon(new VariantCheckIcon(true));
+		return check;
+	}
+
+	private static final class VariantCheckIcon implements Icon {
+		private final boolean checked;
+
+		private VariantCheckIcon(boolean checked) {
+			this.checked = checked;
+		}
+
+		@Override
+		public int getIconWidth() {
+			return 22;
+		}
+
+		@Override
+		public int getIconHeight() {
+			return 22;
+		}
+
+		@Override
+		public void paintIcon(Component component, Graphics graphics, int x, int y) {
+			Graphics2D pen = (Graphics2D) graphics.create();
+			try {
+				pen.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				pen.setColor(checked ? RetailPOSColors.ink() : RetailPOSColors.surface100());
+				pen.fillRoundRect(x + 1, y + 1, 20, 20, 3, 3);
+				if (checked) {
+					pen.setColor(RetailPOSColors.surface100());
+					pen.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+					pen.drawLine(x + 5, y + 11, x + 9, y + 15);
+					pen.drawLine(x + 9, y + 15, x + 17, y + 6);
+				} else {
+					pen.setColor(RetailPOSColors.border());
+					pen.drawRoundRect(x + 1, y + 1, 20, 20, 3, 3);
+				}
+			} finally {
+				pen.dispose();
 			}
 		}
 	}
@@ -686,7 +991,7 @@ public final class CatalogImportDialog {
 		private String buy;
 		private String grossPrice;
 		private String taxId;
-		private String stock = "";
+		private String stock = "0";
 
 		private VariantImportState(ProductInfoExt product, boolean scanned) {
 			this.product = product;
@@ -694,7 +999,9 @@ public final class CatalogImportDialog {
 			this.name = product.getName();
 			this.reference = product.getReference();
 			if (Boolean.parseBoolean(product.getProperty("catalog.price.available", "false"))) {
-				this.buy = ProductPriceMath.formatCurrency(Double.valueOf(product.getPriceBuy()));
+				this.buy = ProductPriceMath.formatCurrency(Double.valueOf(Math.max(0.0, product.getPriceBuy())));
+			} else {
+				this.buy = ProductPriceMath.formatCurrency(Double.valueOf(0.0));
 			}
 			if (product.getPriceSell() > 0.0) {
 				this.grossPrice = ProductPriceMath.formatCurrency(Double.valueOf(product.getPriceSell()));
@@ -710,11 +1017,19 @@ public final class CatalogImportDialog {
 		private final JTextField stock = ProductFormLayout.numberField(true);
 		private JPanel panel;
 		private final JLabel headingLabel = new JLabel();
-		private final JLabel codeLabel = new JLabel();
+		private final JLabel summaryName = new JLabel();
+		private final JLabel summaryReference = new JLabel();
+		private final JLabel priceHint = new JLabel();
+		private final JPanel identity = new JPanel(new BorderLayout());
+		private JPanel summaryCard;
+		private JPanel editCard;
+		private final JButton editIdentity = new JButton();
+		private boolean editingIdentity;
 		private VariantImportState current;
 		private boolean loading;
 		private Runnable priceChangeListener;
 		private Runnable categoryChangeListener;
+		private Runnable onChange;
 		private boolean stockInvalid;
 
 		private VariantImportEditor(VariantImportState initial) throws BasicException {
@@ -736,7 +1051,6 @@ public final class CatalogImportDialog {
 			};
 			name.getDocument().addDocumentListener(changed);
 			reference.getDocument().addDocumentListener(changed);
-			prices.buy.getDocument().addDocumentListener(changed);
 			prices.sellTax.getDocument().addDocumentListener(changed);
 			stock.getDocument().addDocumentListener(changed);
 			prices.sellTax.getDocument().addDocumentListener(new DocumentListener() {
@@ -760,6 +1074,22 @@ public final class CatalogImportDialog {
 						categoryChangeListener.run();
 				}
 			});
+			editIdentity.addActionListener(event -> {
+				editingIdentity = !editingIdentity;
+				identity.removeAll();
+				identity.add(editingIdentity ? editCard : summaryCard, BorderLayout.CENTER);
+				identity.revalidate();
+				identity.repaint();
+				editIdentity.setText("<html><u>"
+						+ AppLocal.getIntString(
+								editingIdentity ? "button.variants.closeidentity" : "button.variants.editidentity")
+						+ "</u></html>");
+				Window window = SwingUtilities.getWindowAncestor(identity);
+				if (window != null)
+					window.pack();
+				if (editingIdentity)
+					focusPriceField(name);
+			});
 		}
 
 		private void load(VariantImportState variant) {
@@ -776,21 +1106,18 @@ public final class CatalogImportDialog {
 				if (preferredTax == null || preferredTax.isEmpty())
 					preferredTax = defaultTaxCategoryId;
 				selectTax(preferredTax);
-				if (variant.buy != null) {
-					prices.buy.setText(variant.buy);
-				} else if (Boolean.parseBoolean(variant.product.getProperty("catalog.price.available", "false"))) {
-					prices.buy.setText(ProductPriceMath.formatCurrency(Double.valueOf(variant.product.getPriceBuy())));
+				prices.buy.setText(variant.buy);
+				Double grossPrice = ProductPriceMath.parseCurrency(variant.grossPrice);
+				if (grossPrice != null) {
+					prices.setGrossPrice(grossPrice.doubleValue());
 				} else {
-					prices.buy.setText("");
-				}
-				if (variant.grossPrice != null) {
-					prices.setGrossPrice(ProductPriceMath.parseCurrency(variant.grossPrice));
-				} else if (!Boolean.parseBoolean(variant.product.getProperty("catalog.price.available", "false"))) {
 					prices.sellTax.setText("");
 				}
 				stock.setText(variant.stock);
-				headingLabel.setText("<html><b>" + variantLabel(variant.product, variant.scanned) + "</b></html>");
-				codeLabel.setText(variant.product.getCode());
+				headingLabel.setText(AppLocal.getIntString(
+						variant.scanned ? "label.variants.scannedheading" : "label.variants.variantheading"));
+				updateNameSummary();
+				summaryReference.setText(reference.getText());
 			} finally {
 				loading = false;
 			}
@@ -808,13 +1135,18 @@ public final class CatalogImportDialog {
 		}
 
 		private void selectTax(String taxId) {
+			int fallback = 0;
 			for (int i = 0; i < prices.tax.getItemCount(); i++) {
 				TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getItemAt(i);
-				if (taxId.equals(tax.getID())) {
+				if (tax.getID().equals(defaultTaxCategoryId))
+					fallback = i;
+				if (tax.getID().equals(taxId)) {
 					prices.tax.setSelectedIndex(i);
 					return;
 				}
 			}
+			if (prices.tax.getItemCount() > 0)
+				prices.tax.setSelectedIndex(fallback);
 		}
 
 		private void save(VariantImportState variant) {
@@ -829,56 +1161,132 @@ public final class CatalogImportDialog {
 			TaxCategoryInfo tax = (TaxCategoryInfo) prices.tax.getSelectedItem();
 			variant.taxId = tax == null ? null : tax.getID();
 			variant.stock = stock.getText();
+			updateNameSummary();
+			summaryReference.setText(variant.reference);
+		}
+
+		private void updateNameSummary() {
+			String title = name.getText();
+			if (title.endsWith(" [" + reference.getText() + "]"))
+				title = title.substring(0, title.length() - reference.getText().length() - 3);
+			summaryName.setText(title);
+			summaryName.setToolTipText(name.getText());
 		}
 
 		private JPanel getPanel(JToggleButton.ToggleButtonModel applyPriceModel) {
 			if (panel != null)
 				return panel;
-			JCheckBox applyPrice = new JCheckBox(AppLocal.getIntString("label.variants.applyprice"));
+			JCheckBox applyPrice = variantCheckBox();
+			applyPrice.setText(AppLocal.getIntString("label.variants.applyprice"));
+			applyPrice.setOpaque(false);
 			applyPrice.setModel(applyPriceModel);
-			applyPrice.setToolTipText(AppLocal.getIntString("label.variants.applyprice.hint"));
+			applyPrice.addActionListener(event -> {
+				if (applyPrice.isSelected() && priceChangeListener != null)
+					priceChangeListener.run();
+			});
 			panel = buildPanel(applyPrice);
 			return panel;
 		}
 
 		private JPanel buildPanel(JCheckBox applyPrice) {
-			JPanel fields = new JPanel(new GridBagLayout());
-			ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodname") + ":", name);
-			ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory") + ":", category);
-			ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodref") + ":", reference);
-			ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
-			ProductFormLayout.addRow(fields, 4, prices.secondaryLabel() + ":", prices.secondary);
-			GridBagConstraints constraints = new GridBagConstraints();
-			constraints.insets = ProductFormLayout.ROW_INSETS;
-			constraints.anchor = GridBagConstraints.WEST;
-			constraints.fill = GridBagConstraints.HORIZONTAL;
-			constraints.gridx = 1;
-			constraints.gridy = 5;
-			fields.add(prices.offer, constraints);
-			ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":",
-					prices.priceBlock());
-
-			constraints.gridy = 7;
-			fields.add(applyPrice, constraints);
-
-			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-			if (copy != Copy.RECEIVING)
-				ProductFormLayout.addRow(fields, 9, AppLocal.getIntString("label.prodstock") + ":", stock);
-
-			codeLabel.setEnabled(false);
-			JPanel header = new JPanel(new BorderLayout());
+			headingLabel.setFont(headingLabel.getFont().deriveFont(Font.BOLD, 12f));
+			headingLabel.setForeground(RetailPOSColors.inkMuted());
+			summaryCard = new JPanel(new java.awt.GridLayout(2, 1));
+			summaryName.setPreferredSize(new Dimension(350, 24));
+			summaryName.setFont(summaryName.getFont().deriveFont(Font.BOLD, 16f));
+			summaryReference.setFont(summaryReference.getFont().deriveFont(13f));
+			summaryReference.setForeground(RetailPOSColors.inkMuted());
+			summaryCard.add(summaryName);
+			summaryCard.add(summaryReference);
+			editCard = new JPanel(new GridBagLayout());
+			name.setPreferredSize(new Dimension(350, 48));
+			reference.setPreferredSize(new Dimension(350, 48));
+			ProductFormLayout.addFullRow(editCard, 0, new JLabel(AppLocal.getIntString("label.prodname")));
+			ProductFormLayout.addFullRow(editCard, 1, name);
+			ProductFormLayout.addFullRow(editCard, 2, new JLabel(AppLocal.getIntString("label.prodref")));
+			ProductFormLayout.addFullRow(editCard, 3, reference);
+			identity.add(summaryCard, BorderLayout.CENTER);
+			editIdentity.setText("<html><u>" + AppLocal.getIntString("button.variants.editidentity") + "</u></html>");
+			editIdentity.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+			editIdentity.setBorderPainted(false);
+			editIdentity.setContentAreaFilled(false);
+			editIdentity.setHorizontalAlignment(SwingConstants.LEFT);
+			editIdentity.setPreferredSize(new Dimension(editIdentity.getPreferredSize().width, 48));
+			editIdentity.setFont(editIdentity.getFont().deriveFont(Font.BOLD, 15f));
+			editIdentity.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			JPanel header = new JPanel(new BorderLayout(0, 4));
 			header.add(headingLabel, BorderLayout.NORTH);
-			header.add(codeLabel, BorderLayout.CENTER);
+			header.add(identity, BorderLayout.CENTER);
+			header.add(editIdentity, BorderLayout.SOUTH);
 
-			JPanel result = new JPanel(new BorderLayout(0, 8));
+			JPanel fields = new JPanel(new GridBagLayout());
+			category.setPreferredSize(new Dimension(350, 48));
+			prices.sellTax.setPreferredSize(new Dimension(150, 48));
+			prices.sellTax.setFont(prices.sellTax.getFont().deriveFont(Font.BOLD, 26f));
+			prices.sellTax.putClientProperty("JTextField.placeholderText", ProductPriceMath.formatCurrency(0.0));
+			stock.setPreferredSize(new Dimension(72, 48));
+			stock.setFont(stock.getFont().deriveFont(Font.BOLD, 26f));
+			ProductFormLayout.addFullRow(fields, 0, new JLabel(AppLocal.getIntString("label.prodcategory")));
+			ProductFormLayout.addFullRow(fields, 1, category);
+			JPanel priceStock = new JPanel(new java.awt.GridLayout(1, 2, 12, 0));
+			JPanel pricePanel = new JPanel(new BorderLayout(0, 4));
+			JLabel priceLabel = new JLabel("<html><body style='width: 145px'>"
+					+ AppLocal.getIntString("label.prodpriceselltax") + "</body></html>");
+			pricePanel.add(priceLabel, BorderLayout.NORTH);
+			pricePanel.add(prices.sellTax, BorderLayout.CENTER);
+			pricePanel.add(priceHint, BorderLayout.SOUTH);
+			JPanel stockPanel = new JPanel(new BorderLayout(0, 4));
+			JLabel stockLabel = new JLabel(AppLocal.getIntString("label.variants.stock"));
+			stockLabel.setPreferredSize(
+					new Dimension(stockLabel.getPreferredSize().width, priceLabel.getPreferredSize().height));
+			stockPanel.add(stockLabel, BorderLayout.NORTH);
+			JPanel stepper = new JPanel(new BorderLayout());
+			JButton minus = touchButton("−");
+			JButton plus = touchButton("+");
+			minus.setBackground(RetailPOSColors.surface200());
+			plus.setBackground(RetailPOSColors.surface200());
+			minus.addActionListener(event -> stepStock(-1));
+			plus.addActionListener(event -> stepStock(1));
+			stock.setHorizontalAlignment(SwingConstants.CENTER);
+			stepper.add(minus, BorderLayout.WEST);
+			stepper.add(stock, BorderLayout.CENTER);
+			stepper.add(plus, BorderLayout.EAST);
+			JPanel stockControl = new JPanel(new BorderLayout());
+			stockControl.add(stepper, BorderLayout.NORTH);
+			stockPanel.add(stockControl, BorderLayout.CENTER);
+			priceStock.add(pricePanel);
+			priceStock.add(stockPanel);
+			ProductFormLayout.addFullRow(fields, 2, priceStock);
+			applyPrice.setPreferredSize(new Dimension(applyPrice.getPreferredSize().width, 48));
+			ProductFormLayout.addFullRow(fields, 3, applyPrice);
+			JPanel result = new JPanel(new BorderLayout(0, 16));
 			result.add(header, BorderLayout.NORTH);
 			result.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
 			return result;
 		}
 
+		private void refreshPriceHint() {
+			boolean missing = ProductPriceMath.parsePositiveCurrency(prices.sellTax.getText(), false) == null;
+			priceHint.setText(missing ? AppLocal.getIntString("label.variants.pricehint") : " ");
+			priceHint.setForeground(RetailPOSColors.dangerText());
+		}
+
+		private void stepStock(int delta) {
+			try {
+				Double value = (Double) Formats.DOUBLE.parseValue(stock.getText());
+				stock.setText(
+						Formats.DOUBLE.formatValue(Double.valueOf(Math.max(0, (value == null ? 0 : value) + delta))));
+			} catch (BasicException ignored) {
+				stock.setText("0");
+			}
+		}
+
 		private void changed() {
-			if (!loading && current != null)
+			if (!loading && current != null) {
 				save(current);
+				if (onChange != null)
+					onChange.run();
+			}
 		}
 
 		private void priceChanged() {
@@ -899,8 +1307,10 @@ public final class CatalogImportDialog {
 
 	private final class VariantTableModel extends AbstractTableModel {
 		private final List<VariantImportState> variants;
+		private Runnable onChange;
+		private java.util.function.BiConsumer<Integer, String> stockChanged;
 		private final String[] columns = {"", AppLocal.getIntString("label.variant"),
-				AppLocal.getIntString("label.variants.cost"), AppLocal.getIntString("label.variants.price")};
+				AppLocal.getIntString("label.variants.price"), AppLocal.getIntString("label.variants.stock")};
 
 		private VariantTableModel(List<VariantImportState> variants) {
 			this.variants = variants;
@@ -928,7 +1338,7 @@ public final class CatalogImportDialog {
 
 		@Override
 		public boolean isCellEditable(int row, int column) {
-			return column == 0 && !variants.get(row).scanned;
+			return (column == 0 && !variants.get(row).scanned) || column == 3;
 		}
 
 		@Override
@@ -940,9 +1350,11 @@ public final class CatalogImportDialog {
 				case 1 :
 					return variantLabel(variant.product, variant.scanned);
 				case 2 :
-					return variant.buy == null ? "" : variant.buy;
+					return variant.grossPrice == null || variant.grossPrice.trim().isEmpty()
+							? variant.scanned ? AppLocal.getIntString("label.variants.missing") : "–"
+							: variant.grossPrice;
 				case 3 :
-					return variant.grossPrice == null ? "" : variant.grossPrice;
+					return variant.stock;
 				default :
 					return "";
 			}
@@ -953,7 +1365,13 @@ public final class CatalogImportDialog {
 			if (column == 0 && !variants.get(row).scanned) {
 				variants.get(row).selected = Boolean.TRUE.equals(value);
 				fireTableRowsUpdated(row, row);
+			} else if (column == 3) {
+				variants.get(row).stock = value.toString();
+				stockChanged.accept(Integer.valueOf(row), value.toString());
+				fireTableRowsUpdated(row, row);
 			}
+			if (onChange != null)
+				onChange.run();
 		}
 
 		private void selectAll() {
@@ -961,6 +1379,8 @@ public final class CatalogImportDialog {
 				variant.selected = true;
 			}
 			fireTableDataChanged();
+			if (onChange != null)
+				onChange.run();
 		}
 
 		private void selectScannedOnly() {
@@ -968,6 +1388,8 @@ public final class CatalogImportDialog {
 				variant.selected = variant.scanned;
 			}
 			fireTableDataChanged();
+			if (onChange != null)
+				onChange.run();
 		}
 	}
 
