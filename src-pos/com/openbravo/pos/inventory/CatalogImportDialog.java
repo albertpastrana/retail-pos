@@ -324,7 +324,9 @@ public final class CatalogImportDialog {
 		editor.onChange = new Runnable() {
 			@Override
 			public void run() {
-				model.fireTableDataChanged();
+				int row = variants.indexOf(editor.current);
+				if (row >= 0)
+					model.fireTableRowsUpdated(row, row);
 				refreshStatus.run();
 			}
 		};
@@ -348,7 +350,7 @@ public final class CatalogImportDialog {
 							target.grossPrice = editor.prices.sellTax.getText();
 						}
 					}
-					model.fireTableDataChanged();
+					model.fireTableRowsUpdated(0, variants.size() - 1);
 					refreshStatus.run();
 				} finally {
 					applyingFamilyPrice[0] = false;
@@ -1378,7 +1380,7 @@ public final class CatalogImportDialog {
 			for (VariantImportState variant : variants) {
 				variant.selected = true;
 			}
-			fireTableDataChanged();
+			fireTableRowsUpdated(0, variants.size() - 1);
 			if (onChange != null)
 				onChange.run();
 		}
@@ -1387,7 +1389,7 @@ public final class CatalogImportDialog {
 			for (VariantImportState variant : variants) {
 				variant.selected = variant.scanned;
 			}
-			fireTableDataChanged();
+			fireTableRowsUpdated(0, variants.size() - 1);
 			if (onChange != null)
 				onChange.run();
 		}

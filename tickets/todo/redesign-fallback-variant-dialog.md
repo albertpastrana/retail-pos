@@ -32,4 +32,6 @@ Implemented the follow-up controls and en/es/ca scanned-EAN label. The stock ren
 
 Latest cashier request: make the default dialog a little taller. Increased the variant list's preferred height by one 48px touch row (392 → 440) and reran `./gradlew spotlessApply` and the targeted integration test. The new height has not yet been visually checked in the running till; leave this ticket open for that check.
 
+Code review identified a selection regression: full-table refreshes during editing could clear the selected row. Refresh only the edited row during keystrokes and use row-update events for family-wide changes so the cashier keeps the current variant selected.
+
 Invalid catalogue prices are treated as missing while loading a variant, so the family editor remains open and the existing missing-price validation can guide the cashier instead of throwing on the Swing event thread.
