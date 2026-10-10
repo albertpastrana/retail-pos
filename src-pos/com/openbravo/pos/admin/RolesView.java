@@ -1,6 +1,7 @@
 package com.openbravo.pos.admin;
 
 import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.data.user.EditorRecord;
@@ -76,9 +77,9 @@ public class RolesView extends JPanel implements EditorRecord {
 		footer.add(count, BorderLayout.NORTH);
 		footer.add(impact, BorderLayout.CENTER);
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actions.add(discard);
 		actions.add(delete);
 		actions.add(xmlButton);
-		actions.add(discard);
 		RetailPOSColors.primaryButton(save);
 		actions.add(save);
 		footer.add(actions, BorderLayout.SOUTH);
@@ -224,9 +225,9 @@ public class RolesView extends JPanel implements EditorRecord {
 		}
 		JTextArea editor = new JTextArea(current, 20, 55);
 		editor.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 13));
-		int answer = JOptionPane.showConfirmDialog(this, new JScrollPane(editor),
-				AppLocal.getIntString("Admin.EditXml"), JOptionPane.OK_CANCEL_OPTION);
-		if (answer != JOptionPane.OK_OPTION)
+		int answer = JConfirmationDialog.show(this, new JScrollPane(editor), AppLocal.getIntString("Admin.EditXml"),
+				AppLocal.getIntString("Button.Cancel"), AppLocal.getIntString("Button.OK"), false);
+		if (answer != JOptionPane.YES_OPTION)
 			return;
 		try {
 			RolePermissions.keys(editor.getText());

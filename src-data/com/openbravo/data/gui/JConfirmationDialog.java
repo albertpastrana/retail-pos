@@ -16,17 +16,17 @@ public final class JConfirmationDialog {
 	private JConfirmationDialog() {
 	}
 
-	public static int show(Component parent, String message, String title, String safeAction, String primaryAction,
+	public static int show(Component parent, Object message, String title, String safeAction, String primaryAction,
 			boolean destructive) {
 		return show(parent, message, title, new String[]{safeAction, primaryAction}, 0, destructive);
 	}
 
-	public static int show(Component parent, String message, String title, String safeAction, String secondaryAction,
+	public static int show(Component parent, Object message, String title, String safeAction, String secondaryAction,
 			String primaryAction, boolean destructive) {
 		return show(parent, message, title, new String[]{safeAction, secondaryAction, primaryAction}, 0, destructive);
 	}
 
-	private static int show(Component parent, String message, String title, String[] actions, int safeIndex,
+	private static int show(Component parent, Object message, String title, String[] actions, int safeIndex,
 			boolean destructive) {
 		JOptionPane pane = new JOptionPane(message, JOptionPane.QUESTION_MESSAGE, JOptionPane.DEFAULT_OPTION, null,
 				actions, actions[safeIndex]);

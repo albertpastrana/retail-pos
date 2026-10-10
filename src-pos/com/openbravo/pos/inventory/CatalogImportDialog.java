@@ -687,10 +687,10 @@ public final class CatalogImportDialog {
 		enlargeDialogFont(content);
 
 		String title = AppLocal.getIntString("title.importproduct");
-		Object[] options = new Object[]{confirmLabel(false), AppLocal.getIntString("button.skipitem")};
+		Object[] options = new Object[]{AppLocal.getIntString("button.skipitem"), confirmLabel(false)};
 		while (true) {
 			int result = showImportOptionDialog(content, title, options);
-			if (result != 0) {
+			if (result == 0) {
 				return null;
 			}
 
@@ -738,7 +738,7 @@ public final class CatalogImportDialog {
 		});
 		dialog.setVisible(true);
 		Object value = optionPane.getValue();
-		return options[0].equals(value) ? 0 : 1;
+		return options[1].equals(value) ? 1 : 0;
 	}
 
 	private void enlargeDialogFont(JComponent component) {

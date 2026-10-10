@@ -74,8 +74,8 @@ public class PeopleView extends JPanel implements EditorRecord {
 		JPanel footer = new JPanel(new BorderLayout(8, 0));
 		footer.add(status, BorderLayout.WEST);
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		actions.add(delete);
 		actions.add(discard);
+		actions.add(delete);
 		RetailPOSColors.primaryButton(save);
 		actions.add(save);
 		footer.add(actions, BorderLayout.EAST);

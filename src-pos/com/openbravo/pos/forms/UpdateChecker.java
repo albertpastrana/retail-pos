@@ -291,20 +291,20 @@ public final class UpdateChecker {
 		if (release.packageFile != null) {
 			int choice = JOptionPane.showOptionDialog(parent, message, AppLocal.getIntString("update.title"),
 					JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
-					new Object[]{AppLocal.getIntString("update.install"), AppLocal.getIntString("update.later")},
-					AppLocal.getIntString("update.install"));
+					new Object[]{AppLocal.getIntString("update.later"), AppLocal.getIntString("update.install")},
+					AppLocal.getIntString("update.later"));
 			logger.info("Update dialog choice for local package: " + choice);
-			if (choice == 0) {
+			if (choice == 1) {
 				installAndRestart(parent, release.packageFile);
 			}
 			return;
 		}
 		int choice = JOptionPane.showOptionDialog(parent, message, AppLocal.getIntString("update.title"),
 				JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null,
-				new Object[]{AppLocal.getIntString("update.download"), AppLocal.getIntString("update.later")},
-				AppLocal.getIntString("update.download"));
+				new Object[]{AppLocal.getIntString("update.later"), AppLocal.getIntString("update.download")},
+				AppLocal.getIntString("update.later"));
 		logger.info("Update dialog choice for remote release: " + choice);
-		if (choice == 0) {
+		if (choice == 1) {
 			try {
 				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 					Desktop.getDesktop().browse(new URI(release.pageUrl));
