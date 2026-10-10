@@ -47,7 +47,7 @@ class SalesCatalogLayoutTest {
 		Method catalogHeight = JPanelTicketSales.class.getDeclaredMethod("catalogHeight", int.class, int.class);
 		catalogHeight.setAccessible(true);
 		assertEquals(245, catalogHeight.invoke(null, 312, 900));
-		assertEquals(180, catalogHeight.invoke(null, 312, 768));
+		assertEquals(113, catalogHeight.invoke(null, 312, 768));
 		assertEquals(300, catalogHeight.invoke(null, 300, 1080));
 	}
 

@@ -36,7 +36,6 @@ public class JPanelTicketSales extends JPanelTicket {
 
 	private static final int COMPACT_SCREEN_HEIGHT = 900;
 	private static final int COMPACT_CATALOG_HEIGHT = 245;
-	private static final int MINIMUM_CATALOG_HEIGHT = 180;
 
 	private CatalogSelector m_cat;
 
@@ -72,8 +71,7 @@ public class JPanelTicketSales extends JPanelTicket {
 		if (screenHeight > COMPACT_SCREEN_HEIGHT) {
 			return configuredHeight;
 		}
-		return Math.min(configuredHeight,
-				Math.max(MINIMUM_CATALOG_HEIGHT, screenHeight - (COMPACT_SCREEN_HEIGHT - COMPACT_CATALOG_HEIGHT)));
+		return Math.min(configuredHeight, Math.max(0, screenHeight - (COMPACT_SCREEN_HEIGHT - COMPACT_CATALOG_HEIGHT)));
 	}
 
 	private static int screenHeight() {
