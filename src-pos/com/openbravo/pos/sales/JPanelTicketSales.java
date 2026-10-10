@@ -29,8 +29,14 @@ import com.openbravo.pos.catalog.JCatalog;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
 
 public class JPanelTicketSales extends JPanelTicket {
+
+	private static final int COMPACT_SCREEN_HEIGHT = 900;
+	private static final int COMPACT_CATALOG_HEIGHT = 245;
+	private static final int MINIMUM_CATALOG_HEIGHT = 180;
 
 	private CatalogSelector m_cat;
 
@@ -57,8 +63,24 @@ public class JPanelTicketSales extends JPanelTicket {
 		m_cat.getComponent()
 				// Room for two compact tile rows plus the breadcrumb; raises the
 				// catalogue boundary towards the keypad notice at counter size.
-				.setPreferredSize(new Dimension(0, Integer.parseInt(m_jbtnconfig.getProperty("cat-height", "312"))));
+				.setPreferredSize(new Dimension(0, catalogHeight(
+						Integer.parseInt(m_jbtnconfig.getProperty("cat-height", "312")), screenHeight())));
 		return m_cat.getComponent();
+	}
+
+	static int catalogHeight(int configuredHeight, int screenHeight) {
+		if (screenHeight > COMPACT_SCREEN_HEIGHT) {
+			return configuredHeight;
+		}
+		return Math.min(configuredHeight,
+				Math.max(MINIMUM_CATALOG_HEIGHT, screenHeight - (COMPACT_SCREEN_HEIGHT - COMPACT_CATALOG_HEIGHT)));
+	}
+
+	private static int screenHeight() {
+		if (GraphicsEnvironment.isHeadless()) {
+			return Integer.MAX_VALUE;
+		}
+		return Toolkit.getDefaultToolkit().getScreenSize().height;
 	}
 
 	protected void resetSouthComponent() {
