@@ -732,7 +732,7 @@ public final class CatalogImportDialog {
 		dialog.getRootPane().getActionMap().put("confirmImport", new javax.swing.AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				optionPane.setValue(options[0]);
+				optionPane.setValue(options[1]);
 				dialog.dispose();
 			}
 		});
