@@ -44,20 +44,20 @@ public class DemoModeAction implements BeanFactoryApp, ProcessAction {
 
 		boolean hasDemo = config.getProperty(DemoMode.URL_KEY) != null;
 		Object[] options = hasDemo
-				? new Object[]{AppLocal.getIntString("Button.DemoContinue"), AppLocal.getIntString("Button.DemoCopy"),
-						AppLocal.getIntString("Button.DemoEmpty"), AppLocal.getIntString("Button.Cancel")}
-				: new Object[]{AppLocal.getIntString("Button.DemoCopy"), AppLocal.getIntString("Button.DemoEmpty"),
-						AppLocal.getIntString("Button.Cancel")};
+				? new Object[]{AppLocal.getIntString("Button.Cancel"), AppLocal.getIntString("Button.DemoContinue"),
+						AppLocal.getIntString("Button.DemoCopy"), AppLocal.getIntString("Button.DemoEmpty")}
+				: new Object[]{AppLocal.getIntString("Button.Cancel"), AppLocal.getIntString("Button.DemoCopy"),
+						AppLocal.getIntString("Button.DemoEmpty")};
 		int choice = JOptionPane.showOptionDialog((Component) app, AppLocal.getIntString("message.demoselect"),
 				AppLocal.getIntString("Menu.DemoMode"), JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 				options, options[0]);
-		if (choice < 0 || choice == options.length - 1) {
+		if (choice <= 0) {
 			return null;
 		}
-		if (hasDemo && choice == 0) {
+		if (hasDemo && choice == 1) {
 			DemoMode.prepare(config, false, false);
 		} else {
-			int sourceChoice = hasDemo ? choice - 1 : choice;
+			int sourceChoice = hasDemo ? choice - 2 : choice - 1;
 			DemoMode.prepare(config, sourceChoice == 0, true);
 		}
 		restartApplication(config);

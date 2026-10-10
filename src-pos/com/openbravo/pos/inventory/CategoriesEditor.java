@@ -36,6 +36,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -295,8 +296,9 @@ public class CategoriesEditor extends JPanel implements EditorRecord {
 		if (id == null)
 			return;
 		try {
-			if (!add && JOptionPane.showConfirmDialog(this, AppLocal.getIntString("category.catalog.remove.confirm"),
-					AppLocal.getIntString("category.catalog"), JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION)
+			if (!add && JConfirmationDialog.show(this, AppLocal.getIntString("category.catalog.remove.confirm"),
+					AppLocal.getIntString("category.catalog"), AppLocal.getIntString("Button.Cancel"),
+					AppLocal.getIntString("button.catalogdel"), true) != JOptionPane.YES_OPTION)
 				return;
 			catalogDelete.exec(id);
 			if (add)

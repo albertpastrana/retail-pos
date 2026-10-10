@@ -18,6 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
 
 public class CategoriesPanel extends JPanelTable {
@@ -110,9 +111,10 @@ public class CategoriesPanel extends JPanelTable {
 						JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-			int answer = JOptionPane.showConfirmDialog(this,
+			int answer = JConfirmationDialog.show(this,
 					AppLocal.getIntString("category.deleteconfirm").replace("{0}", editor.getCategoryName()),
-					AppLocal.getIntString("category.delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					AppLocal.getIntString("category.delete"), AppLocal.getIntString("Button.Cancel"),
+					AppLocal.getIntString("category.delete"), true);
 			if (answer == JOptionPane.YES_OPTION)
 				bd.actionDelete();
 		} catch (BasicException e) {

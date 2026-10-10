@@ -2,6 +2,7 @@ package com.openbravo.pos.admin;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.MessageInf;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppLocal;
@@ -19,9 +20,9 @@ final class AdminDelete {
 			JOptionPane.showMessageDialog(parent, AppLocal.getIntString("Admin.SaveBeforeDelete"));
 			return;
 		}
-		if (JOptionPane.showConfirmDialog(parent, String.format(AppLocal.getIntString("Admin.ConfirmDelete"), name),
-				AppLocal.getIntString("Admin.Delete"), JOptionPane.OK_CANCEL_OPTION,
-				JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION)
+		if (JConfirmationDialog.show(parent, String.format(AppLocal.getIntString("Admin.ConfirmDelete"), name),
+				AppLocal.getIntString("Admin.Delete"), AppLocal.getIntString("Button.Cancel"),
+				AppLocal.getIntString("Admin.Delete"), true) != JOptionPane.YES_OPTION)
 			return;
 		try {
 			data.actionDelete();

@@ -1,6 +1,7 @@
 package com.openbravo.pos.customers;
 
 import com.openbravo.basic.BasicException;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.BeanFactoryApp;
@@ -505,8 +506,9 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		if (!isDirty())
 			return true;
 		String who = creating ? "Nova clienta" : originalName;
-		int answer = JOptionPane.showConfirmDialog(this, "Tens canvis sense desar a «" + who + "». Els vols descartar?",
-				"Canvis sense desar", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int answer = JConfirmationDialog.show(this, "Tens canvis sense desar a «" + who + "». Els vols descartar?",
+				"Canvis sense desar", AppLocal.getIntString("customer.continue"),
+				AppLocal.getIntString("customer.discard"), false);
 		return answer == JOptionPane.YES_OPTION;
 	}
 	private void cancelEdit() {
@@ -568,8 +570,9 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		if (selected == null || creating)
 			return;
 		String action = selected.isVisible() ? "Arxivar" : "Reactivar";
-		int answer = JOptionPane.showConfirmDialog(this, action + " aquesta fitxa? Conserva l'historial i el deute.",
-				action + " fitxa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+		int answer = JConfirmationDialog.show(this, action + " aquesta fitxa? Conserva l'historial i el deute.",
+				action + " fitxa", AppLocal.getIntString("customer.cancel"),
+				AppLocal.getIntString(selected.isVisible() ? "customer.archive" : "customer.restore"), true);
 		if (answer != JOptionPane.YES_OPTION)
 			return;
 		final boolean visible = !selected.isVisible();

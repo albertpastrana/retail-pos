@@ -174,8 +174,6 @@ public class JFind extends JDialog {
 			}
 		});
 
-		jPanel2.add(jcmdOK);
-
 		jcmdCancel.setText(LocalRes.getIntString("button.cancel"));
 		jcmdCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -184,6 +182,7 @@ public class JFind extends JDialog {
 		});
 
 		jPanel2.add(jcmdCancel);
+		jPanel2.add(jcmdOK);
 
 		getContentPane().add(jPanel2, java.awt.BorderLayout.SOUTH);
 

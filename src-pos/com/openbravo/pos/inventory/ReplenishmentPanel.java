@@ -38,6 +38,7 @@ import javax.swing.JList;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -249,8 +250,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		if (row < 0)
 			return;
 		ReplenishmentEntry entry = entries.get(row);
-		int answer = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("Replenishment.ConfirmDelete"),
-				AppLocal.getIntString("Replenishment.Delete"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+		int answer = JConfirmationDialog.show(this, AppLocal.getIntString("Replenishment.ConfirmDelete"),
+				AppLocal.getIntString("Replenishment.Delete"), AppLocal.getIntString("Button.Cancel"),
+				AppLocal.getIntString("Replenishment.Delete"), true);
 		if (answer != JOptionPane.YES_OPTION)
 			return;
 		try {

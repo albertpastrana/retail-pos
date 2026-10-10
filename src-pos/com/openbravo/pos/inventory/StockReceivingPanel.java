@@ -43,6 +43,7 @@ import javax.swing.JComponent;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -673,8 +674,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 		form.add(new JLabel(tr("receiving.note")));
 		form.add(note);
 		while (true) {
-			int answer = JOptionPane.showConfirmDialog(this, form, tr("receiving.open"), JOptionPane.OK_CANCEL_OPTION,
-					JOptionPane.PLAIN_MESSAGE);
+			int answer = JConfirmationDialog.show(this, form, tr("receiving.open"), tr("receiving.cancel"),
+					tr("receiving.open"), false);
 			if (answer != JOptionPane.OK_OPTION) {
 				logger.info("event=stock_receipt_open_cancelled");
 				return;
@@ -985,8 +986,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 		StockSessionRepository.Line line = selected();
 		if (line == null)
 			return;
-		if (JOptionPane.showConfirmDialog(this, tr("receiving.removeConfirm"), tr("receiving.remove"),
-				JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION)
+		if (JConfirmationDialog.show(this, tr("receiving.removeConfirm"), tr("receiving.remove"),
+				tr("receiving.cancel"), tr("receiving.remove"), true) != JOptionPane.YES_OPTION)
 			return;
 		try {
 			repository.remove(session.id, line.id);
@@ -1032,8 +1033,8 @@ public final class StockReceivingPanel extends JPanel implements JPanelView, Bea
 		}
 	}
 	private void post() {
-		if (JOptionPane.showConfirmDialog(this, tr("receiving.confirm"), tr("receiving.post"),
-				JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION)
+		if (JConfirmationDialog.show(this, tr("receiving.confirm"), tr("receiving.post"), tr("receiving.cancel"),
+				tr("receiving.post"), false) != JOptionPane.YES_OPTION)
 			return;
 		try {
 			logger.info("event=stock_receipt_post_start lines=" + lines.size());

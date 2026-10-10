@@ -47,8 +47,8 @@ public final class SupervisorAuthorization {
 		}
 
 		AppUser supervisor = (AppUser) JOptionPane.showInputDialog(parent, operation,
-				AppLocal.getIntString("title.editor"), JOptionPane.QUESTION_MESSAGE, null, supervisors.toArray(),
-				supervisors.get(0));
+				AppLocal.getIntString("title.supervisorauthorization"), JOptionPane.QUESTION_MESSAGE, null,
+				supervisors.toArray(), supervisors.get(0));
 		if (supervisor == null) {
 			return false;
 		}

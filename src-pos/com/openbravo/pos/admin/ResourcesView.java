@@ -2,6 +2,7 @@ package com.openbravo.pos.admin;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.gui.ComboBoxValModel;
+import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.data.loader.ImageUtils;
 import com.openbravo.data.user.BrowsableEditableData;
 import com.openbravo.data.user.DirtyManager;
@@ -74,9 +75,9 @@ public class ResourcesView extends JPanel implements EditorRecord {
 		JPanel bottom = new JPanel(new BorderLayout());
 		bottom.add(status, BorderLayout.WEST);
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		actions.add(discard);
 		actions.add(delete);
 		actions.add(restore);
-		actions.add(discard);
 		RetailPOSColors.primaryButton(save);
 		actions.add(save);
 		bottom.add(actions, BorderLayout.EAST);
@@ -108,9 +109,9 @@ public class ResourcesView extends JPanel implements EditorRecord {
 		image.addPropertyChangeListener("image", event -> updateRestore());
 		dirty.addDirtyListener(value -> status.setText(AppLocal.getIntString(value ? "Admin.Unsaved" : "Admin.Saved")));
 		restore.addActionListener(e -> {
-			if (original == null || JOptionPane.showConfirmDialog(this, AppLocal.getIntString("Admin.ConfirmRestore"),
-					AppLocal.getIntString("Admin.RestoreOriginal"),
-					JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION)
+			if (original == null || JConfirmationDialog.show(this, AppLocal.getIntString("Admin.ConfirmRestore"),
+					AppLocal.getIntString("Admin.RestoreOriginal"), AppLocal.getIntString("Button.Cancel"),
+					AppLocal.getIntString("Admin.RestoreOriginal"), false) != JOptionPane.YES_OPTION)
 				return;
 			if (types.getSelectedItem() == ResourceType.IMAGE) {
 				image.setImage(ImageUtils.readImage(original));

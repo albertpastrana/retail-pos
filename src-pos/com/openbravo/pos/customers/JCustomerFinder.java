@@ -2,6 +2,7 @@ package com.openbravo.pos.customers;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.data.gui.JConfirmationDialog;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -148,8 +149,8 @@ public class JCustomerFinder extends JDialog {
 		fields.add(name);
 		fields.add(new JLabel(AppLocal.getIntString("customer.phone")));
 		fields.add(phone);
-		int result = JOptionPane.showConfirmDialog(this, fields, AppLocal.getIntString("customer.new"),
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		int result = JConfirmationDialog.show(this, fields, AppLocal.getIntString("customer.new"),
+				AppLocal.getIntString("button.cancelcustomer"), AppLocal.getIntString("customer.new"), false);
 		if (result != JOptionPane.OK_OPTION) {
 			return;
 		}
@@ -165,16 +166,16 @@ public class JCustomerFinder extends JDialog {
 				StringBuilder message = new StringBuilder("A customer already has this phone:\n");
 				for (CustomerInfo c : existing)
 					message.append(c.getName()).append("\n");
-				Object[] options = {"Select existing", "Create anyway", "Cancel"};
+				Object[] options = {"Cancel", "Select existing", "Create anyway"};
 				int choice = JOptionPane.showOptionDialog(this, message.toString(),
 						AppLocal.getIntString("customer.title"), JOptionPane.DEFAULT_OPTION,
 						JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-				if (choice == 0) {
+				if (choice == 1) {
 					selectedCustomer = existing.get(0);
 					dispose();
 					return;
 				}
-				if (choice != 1)
+				if (choice != 2)
 					return;
 			}
 			CustomerInfoExt created = dlCustomers.createCustomer(name.getText(), normalizedPhone);

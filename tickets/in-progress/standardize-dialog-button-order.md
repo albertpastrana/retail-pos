@@ -23,3 +23,15 @@ Use action meaning rather than literal labels: cancel, close, keep editing, or d
 - English, Spanish, and Catalan labels remain visible and correctly associated with their actions at supported window sizes.
 - Automated checks cover the shared layout/order rule and representative dialogs from each major area; manual checks record the concrete screens and flows reviewed.
 - Existing contextual action labels remain contextual; this ticket changes placement and shared presentation, not the operation performed.
+
+## Decisions
+
+- Use the product convention already established by `JConfirmationDialog`: safe or secondary action on the left, primary action on the right.
+- Replace native two-action confirmations where Swing controls the affirmative-first order with the shared helper, preserving the existing result mapping.
+- In multi-action dialogs, put cancel or keep-editing first, then alternatives, and the action that applies the change last.
+
+## Progress
+
+The audit and first implementation pass cover administration delete/restore/XML editing, customer editing and archive actions, inventory category/replenishment/product/receiving flows, catalog import, demo mode, update prompts, and the shared find dialog. Existing shared confirmation flows and already-compliant payment, ticket, printer, product, and receipt dialogs were left unchanged. Native multi-choice dialogs that now use explicit option arrays were reordered with their result mappings updated.
+
+`./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.SupervisorAuthorizationTest` and `git diff --check` pass. Manual verification remains open for the concrete flows in English, Spanish, and Catalan, including keyboard focus, Enter/Escape, resize, and long labels.

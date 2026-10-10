@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
@@ -160,12 +161,12 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 		ProductBatchDraft draft = jeditor.captureBatchDraft(original);
 		ProductBatchDraft.OtherFields decision = ProductBatchDraft.OtherFields.DISCARD;
 		if (draft.otherChanged) {
-			Object[] options = {AppLocal.getIntString("batch.saveOther"), AppLocal.getIntString("batch.discardOther"),
-					AppLocal.getIntString("batch.cancelTransition")};
+			Object[] options = {AppLocal.getIntString("batch.cancelTransition"),
+					AppLocal.getIntString("batch.discardOther"), AppLocal.getIntString("batch.saveOther")};
 			int choice = JOptionPane.showOptionDialog(this, AppLocal.getIntString("batch.otherChanges"),
 					AppLocal.getIntString("batch.pendingTitle"), JOptionPane.DEFAULT_OPTION,
-					JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
-			decision = choice == 0
+					JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			decision = choice == 2
 					? ProductBatchDraft.OtherFields.SAVE
 					: choice == 1 ? ProductBatchDraft.OtherFields.DISCARD : ProductBatchDraft.OtherFields.CANCEL;
 		}
@@ -206,8 +207,9 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 	@Override
 	public boolean deactivate() {
 		if (batchNavigator != null && batchNavigator.hasPending()) {
-			int answer = JOptionPane.showConfirmDialog(this, AppLocal.getIntString("batch.leave"),
-					AppLocal.getIntString("batch.pendingTitle"), JOptionPane.YES_NO_OPTION);
+			int answer = JConfirmationDialog.show(this, AppLocal.getIntString("batch.leave"),
+					AppLocal.getIntString("batch.pendingTitle"), AppLocal.getIntString("Button.Cancel"),
+					AppLocal.getIntString("batch.discard"), true);
 			if (answer != JOptionPane.YES_OPTION)
 				return false;
 			batchNavigator.discardPending();
@@ -276,11 +278,8 @@ public class ProductsPanel extends JPanelTable2 implements EditorListener {
 
 	private void confirmDelete() {
 		String name = jeditor.getProductName();
-		Object[] options = {"Eliminar", "Cancel·la"};
-		int answer = JOptionPane.showOptionDialog(this,
-				"Eliminar «" + name + "» permanentment? Aquesta acció no es pot desfer.", "Eliminar producte",
-				JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
-		if (answer == 0) {
+		if (JConfirmationDialog.show(this, "Eliminar «" + name + "» permanentment? Aquesta acció no es pot desfer.",
+				"Eliminar producte", "Cancel·la", "Eliminar", true) == JOptionPane.YES_OPTION) {
 			try {
 				bd.actionDelete();
 			} catch (BasicException e) {
