@@ -43,6 +43,15 @@ import org.junit.jupiter.api.Test;
 
 class SalesCatalogLayoutTest {
 	@Test
+	void compactScreensGiveTheKeypadPriorityOverTheConfiguredCatalogHeight() throws Exception {
+		Method catalogHeight = JPanelTicketSales.class.getDeclaredMethod("catalogHeight", int.class, int.class);
+		catalogHeight.setAccessible(true);
+		assertEquals(245, catalogHeight.invoke(null, 312, 900));
+		assertEquals(180, catalogHeight.invoke(null, 312, 768));
+		assertEquals(300, catalogHeight.invoke(null, 300, 1080));
+	}
+
+	@Test
 	@SuppressWarnings("unchecked")
 	void subcategoryQueriesPreserveParentIdsForFullBreadcrumbs() throws Exception {
 		Session session = new Session("jdbc:derby:memory:catalogPath" + UUID.randomUUID() + ";create=true", null, null);
