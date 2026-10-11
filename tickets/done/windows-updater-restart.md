@@ -21,3 +21,7 @@ The fix must preserve external configuration and databases, keep rollback behavi
 - Replacement or restart failures are visible in the update log and restore the previous installation when appropriate.
 - The updater arguments and paths remain correct for normal Windows paths containing spaces.
 - Automated tests cover the Java-side updater command construction and relevant update flow behaviour.
+
+## Shipped
+
+The Windows updater now bounds the old-process wait, uses a stable working directory and explicit `cmd` invocation, validates the replacement launcher, logs move and rollback failures, and records restoration failures. Main paths: `scripts/update.bat`, `src-pos/com/openbravo/pos/forms/UpdateChecker.java`, and `src/integrationTest/java/com/openbravo/pos/forms/UpdateCheckerTest.java`.
