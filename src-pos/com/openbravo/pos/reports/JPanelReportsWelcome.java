@@ -725,7 +725,6 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		button.setForeground(RetailPOSColors.ink());
 		button.setBorder(BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.border(), radius),
 				BorderFactory.createEmptyBorder(1, 1, 1, 1)));
-		button.putClientProperty("FlatLaf.style", "arc: " + radius + ";");
 	}
 
 	private void scrollToReports() {

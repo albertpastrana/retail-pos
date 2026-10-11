@@ -46,7 +46,7 @@ public final class CatalogFileImporter {
 			return;
 		}
 		Path publicKeyFile = pathProperty(properties.getProperty(PUBLIC_KEY_PROPERTY));
-		if (publicKeyFile == null) {
+		if (publicKeyFile == null || !Files.isRegularFile(publicKeyFile)) {
 			LOGGER.warning("event=catalog_import_disabled reason=missing_public_key");
 			return;
 		}
