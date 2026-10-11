@@ -75,6 +75,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 	private JPanelTicketEdits m_panelticketedit;
 
 	private static final int RECENT_TICKETS = 10;
+	private static final int GIFT_RECEIPT_DIALOG_WIDTH = 760;
+	private static final int GIFT_RECEIPT_PRODUCT_WIDTH = 560;
 	private JTable m_jRecentTickets;
 
 	/** Creates new form JTicketsBagTicket */
@@ -720,6 +722,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 			JLabel product = new JLabel(truncateGiftReceiptLabel(fullLabel));
 			product.setToolTipText(fullLabel);
+			// Keep the price column within the dialog viewport at large display scales.
+			Dimension productSize = product.getPreferredSize();
+			product.setPreferredSize(new Dimension(GIFT_RECEIPT_PRODUCT_WIDTH, productSize.height));
 			rowConstraints.gridx = 1;
 			rowConstraints.weightx = 1.0;
 			rowConstraints.fill = GridBagConstraints.HORIZONTAL;
@@ -741,7 +746,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		int lineHeight = lineSelections.isEmpty() ? 48 : lineSelections.get(0).getPreferredSize().height;
 		int visibleLines = Math.min(10, Math.max(5, lineSelections.size()));
-		scroll.setPreferredSize(new Dimension(760, Math.max(300, lineHeight * visibleLines + 20)));
+		scroll.setPreferredSize(
+				new Dimension(GIFT_RECEIPT_DIALOG_WIDTH, Math.max(300, lineHeight * visibleLines + 20)));
 		content.add(scroll, BorderLayout.CENTER);
 
 		Object[] options = {AppLocal.getIntString("button.print"), AppLocal.getIntString("button.cancelselection")};
