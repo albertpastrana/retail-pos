@@ -20,3 +20,9 @@ The original sale, its lines, payments, stock, and totals must remain unchanged.
 - Printing with no selected lines is prevented with a clear message.
 - The Victorines redemption line never appears on a gift receipt.
 - The flow is available in English, Spanish, and Catalan.
+
+## Shipped
+
+- Added the localized line-selection dialog, product and price columns, long-label truncation, and in-memory filtered gift receipt printing in `JTicketsBagTicket`.
+- Added regression coverage in `GiftReceiptSelectionTest`.
+- Merged via PR #101 after all CI checks and CodeRabbit review passed.
