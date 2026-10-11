@@ -18,7 +18,7 @@ Per editar cal autorització d'una supervisora. Si l'acció no està disponible,
 1. A **Edició de vendes**, selecciona el tiquet original.
 2. Prem **Retorna**.
 3. A la pantalla de devolució, selecciona una línia i prem **Una unitat**, **Línia** o **Tot** segons el que es retorni. Comprova les quantitats.
-4. Prem **Igual**, revisa l'import i escull el mètode de devolució a la finestra de pagament.
-5. Prem **D'acord** per desar la devolució.
+4. Prem **Igual** i revisa l'import. La finestra de pagament selecciona el val com a mètode de devolució per defecte.
+5. Si cal, canvia a efectiu o targeta, confirma el mètode i prem **D'acord** per desar la devolució.
 
 Per fer una devolució cal autorització d'una supervisora. La devolució utilitza el tiquet original com a referència en lloc de crear una venda nova sense relació.
