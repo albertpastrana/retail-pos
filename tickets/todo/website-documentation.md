@@ -1,6 +1,6 @@
 # Astro + Starlight Website & Documentation Implementation
 
-Status: In progress. The public site publishes the existing English and Catalan operator guides; the repository Markdown remains the single source of truth. Spanish is not yet available as a source guide. Production output lives under a configurable base path for GitHub Pages.
+Status: Awaiting approval and deployment of [PR #110](https://github.com/albertpastrana/retail-pos/pull/110). The PR builds the English and Catalan guides; the repository Markdown remains the single source of truth. Spanish is not yet available as a source guide. After merging, verify the live site, search, print and PDF download before moving this ticket to `done/`.
 
 Implementation decisions (2026-10-11): The source guides are maintained in `docs/user/{en,ca}`. A build-time script generates temporary Starlight pages under `website/src/content/docs/` and ordered navigation from each language's `index.md`; no generated Markdown is committed. The site uses the shared `design-system/tokens.css` and fonts. Playwright Chromium renders one complete PDF per available language directly from the same Markdown and checks the production site in a browser. The default GitHub Pages base path is `/retail-pos/`; `SITE_URL` and `SITE_BASE` configure the deployment origin and path. GitHub Pages was enabled in repository settings with GitHub Actions as its source; the deployment and public URL still need to be checked after the PR reaches `main` before this ticket can be marked done.
 
