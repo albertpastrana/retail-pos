@@ -17,7 +17,7 @@ The fix must preserve external configuration and databases, keep rollback behavi
 ## Done when
 
 - A Windows update cannot wait forever for the old process; the updater records a clear failure and leaves the existing installation recoverable.
-- A successful replacement launches the new `start.bat` from a stable working directory and records whether the launcher started successfully.
+- A successful replacement launches the new `start.bat` from a stable working directory and records whether the launcher process started successfully. Application readiness remains outside the batch launcher's observable contract.
 - Replacement or restart failures are visible in the update log and restore the previous installation when appropriate.
 - The updater arguments and paths remain correct for normal Windows paths containing spaces.
 - Automated tests cover the Java-side updater command construction and relevant update flow behaviour.

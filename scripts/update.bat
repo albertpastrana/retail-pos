@@ -9,6 +9,7 @@ set "STAGING=%TEMP%\retail-pos-update-%RANDOM%"
 set "BACKUP=%INSTALL_DIR%.previous"
 set "RETAIL_POS_PACKAGE=%PACKAGE%"
 set "RETAIL_POS_STAGING=%STAGING%"
+set "NEW_DIR="
 
 if not defined PACKAGE (call :log ERROR: Package is missing & exit /B 1)
 if not defined INSTALL_DIR (call :log ERROR: Installation directory is missing & exit /B 1)
@@ -41,10 +42,11 @@ if errorlevel 1 (call :log ERROR: Could not change to a stable working directory
 if exist "%BACKUP%" rmdir /S /Q "%BACKUP%"
 move "%INSTALL_DIR%" "%BACKUP%" >>"%LOG_FILE%" 2>&1
 if errorlevel 1 (call :log ERROR: Could not move current installation to backup & exit /B 1)
-move "%NEW_DIR%" "%INSTALL_DIR%"
+move "%NEW_DIR%" "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
 if errorlevel 1 (
     call :log ERROR: Could not install new application; restoring backup
     move "%BACKUP%" "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
+    if errorlevel 1 call :log ERROR: Could not restore previous installation
     exit /B 1
 )
 call :log Application files replaced successfully
@@ -52,6 +54,7 @@ if not exist "%INSTALL_DIR%\start.bat" (
     call :log ERROR: New application has no start.bat; restoring backup
     rmdir /S /Q "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
     move "%BACKUP%" "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
+    if errorlevel 1 call :log ERROR: Could not restore previous installation
     exit /B 1
 )
 start "Retail POS" /B /D "%INSTALL_DIR%" "%ComSpec%" /D /C call "%INSTALL_DIR%\start.bat" >>"%LOG_FILE%" 2>&1
@@ -59,6 +62,7 @@ if errorlevel 1 (
     call :log ERROR: Could not start the updated application; restoring backup
     rmdir /S /Q "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
     move "%BACKUP%" "%INSTALL_DIR%" >>"%LOG_FILE%" 2>&1
+    if errorlevel 1 call :log ERROR: Could not restore previous installation
     exit /B 1
 )
 rmdir /S /Q "%BACKUP%" >>"%LOG_FILE%" 2>&1
