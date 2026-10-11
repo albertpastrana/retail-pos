@@ -32,3 +32,8 @@ missing fallback categories leave the selection empty. Added focused coverage
 for missing and available category IDs. `./gradlew spotlessApply` and
 `./gradlew integrationTest --tests com.openbravo.pos.inventory.CatalogVariantModelTest`
 pass.
+
+## Shipped
+
+Updated `CatalogImportDialog` and its integration coverage so unavailable
+fallback categories are not offered or persisted.
