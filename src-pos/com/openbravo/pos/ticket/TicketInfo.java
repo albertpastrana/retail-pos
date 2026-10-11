@@ -30,6 +30,7 @@ import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.LocalRes;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.payment.PaymentInfoMagcard;
+import com.openbravo.pos.util.RoundUtils;
 import com.openbravo.pos.util.StringUtils;
 
 /**
@@ -373,6 +374,21 @@ public class TicketInfo implements SerializableRead, Externalizable {
 	public double getTotal() {
 
 		return getSubTotal() + getTax();
+	}
+
+	/**
+	 * Classify an exchange when it is finalised, leaving pure returns as refunds.
+	 */
+	public void classifyExchangeByBalance() {
+		if (tickettype != RECEIPT_REFUND || RoundUtils.compare(getTotal(), 0.0) < 0) {
+			return;
+		}
+		for (TicketLineInfo line : m_aLines) {
+			if (line.getMultiply() > 0.0) {
+				tickettype = RECEIPT_NORMAL;
+				return;
+			}
+		}
 	}
 
 	public double getTotalPaid() {

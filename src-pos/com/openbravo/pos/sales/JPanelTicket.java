@@ -69,6 +69,7 @@ import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
 import com.openbravo.pos.ticket.LoyaltyStamps;
 import com.openbravo.pos.util.TillButtons;
+import com.openbravo.pos.util.RoundUtils;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -1190,33 +1191,37 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private boolean closeTicket(TicketInfo ticket, Object ticketext) {
 
 		boolean resultok = false;
+		int originalType = ticket.getTicketType();
 
 		if (m_App.getAppUserView().getUser().hasPermission("sales.Total")) {
 
 			try {
+				taxeslogic.calculateTaxes(ticket);
+				ticket.classifyExchangeByBalance();
 				boolean refund = ticket.getTicketType() == TicketInfo.RECEIPT_REFUND;
+				boolean noPayment = RoundUtils.compare(ticket.getTotal(), 0.0) == 0;
 				if (refund) {
 					LOGGER.info("event=refund_flow_start ticket=" + ticket.getId() + " total=" + ticket.getTotal()
 							+ " lines=" + ticket.getLinesCount());
 				}
 				// reset the payment info
-				taxeslogic.calculateTaxes(ticket);
-				if (ticket.getTotal() >= 0.0) {
-					ticket.resetPayments(); // Only reset if is sale
+				if (!refund || noPayment) {
+					ticket.resetPayments();
 				}
 
 				// Muestro el total
 				printTicket("Printer.TicketTotal", ticket, ticketext);
 
 				// Select the Payments information
-				JPaymentSelect paymentdialog = ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
-						? paymentdialogreceipt
-						: paymentdialogrefund;
-				paymentdialog.setPrintSelected("true".equals(m_jbtnconfig.getProperty("printselected", "true")));
-
-				paymentdialog.setTransactionID(ticket.getTransactionID());
-
-				boolean paymentAccepted = paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer());
+				JPaymentSelect paymentdialog = refund ? paymentdialogrefund : paymentdialogreceipt;
+				boolean printSelected = "true".equals(m_jbtnconfig.getProperty("printselected", "true"));
+				boolean paymentAccepted = noPayment;
+				if (!noPayment) {
+					paymentdialog.setPrintSelected(printSelected);
+					paymentdialog.setTransactionID(ticket.getTransactionID());
+					paymentAccepted = paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer());
+					printSelected = paymentdialog.isPrintSelected();
+				}
 				LOGGER.info("event=ticket_payment_result ticket=" + ticket.getId() + " type=" + ticketTypeName(ticket)
 						+ " accepted=" + paymentAccepted + " total=" + ticket.getTotal());
 				if (refund) {
@@ -1226,7 +1231,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				if (paymentAccepted) {
 
 					// assign the payments selected and calculate taxes.
-					ticket.setPayments(paymentdialog.getSelectedPayments());
+					if (!noPayment) {
+						ticket.setPayments(paymentdialog.getSelectedPayments());
+					}
 					if (refund) {
 						LOGGER.info("event=refund_payment_selected ticket=" + ticket.getId() + " payments="
 								+ ticket.getPayments().size());
@@ -1280,8 +1287,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 									+ ticket.getTotal());
 						}
 						// Print receipt.
-						printTicket(paymentdialog.isPrintSelected() ? "Printer.Ticket" : "Printer.Ticket2", ticket,
-								ticketext);
+						printTicket(printSelected ? "Printer.Ticket" : "Printer.Ticket2", ticket, ticketext);
 						resultok = true;
 					}
 				}
@@ -1303,6 +1309,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			// reset the payment info
 			m_oTicket.resetTaxes();
 			m_oTicket.resetPayments();
+			if (!resultok) {
+				ticket.setTicketType(originalType);
+			}
 		} else {
 			LOGGER.warning("event=ticket_close_denied ticket=" + ticket.getId() + " reason=missing_permission");
 		}
