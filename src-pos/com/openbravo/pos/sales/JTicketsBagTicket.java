@@ -26,7 +26,9 @@ import com.openbravo.pos.ticket.LoyaltyStamps;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -675,24 +677,125 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	private void m_jGiftPrintActionPerformed(java.awt.event.ActionEvent evt) {
 		if (m_ticket != null) {
-			String sresource = m_dlSystem.getResourceAsXML("Printer.TicketGift");
-			if (sresource == null) {
-				JMessageDialog.showMessage(this,
-						new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprintticket")));
-				return;
+			printGiftReceipt();
+		}
+	}
+
+	private void printGiftReceipt() {
+		JPanel linesPanel = new JPanel(new GridBagLayout());
+		List<JCheckBox> lineSelections = new ArrayList<JCheckBox>();
+		List<Integer> selectedLineIndexes = new ArrayList<Integer>();
+		GridBagConstraints headerConstraints = new GridBagConstraints();
+		headerConstraints.gridy = 0;
+		headerConstraints.insets = new Insets(0, 8, 8, 8);
+		headerConstraints.anchor = GridBagConstraints.WEST;
+		headerConstraints.gridx = 1;
+		headerConstraints.weightx = 1.0;
+		headerConstraints.fill = GridBagConstraints.HORIZONTAL;
+		linesPanel.add(new JLabel(AppLocal.getIntString("label.giftreceipt.product")), headerConstraints);
+		headerConstraints.gridx = 2;
+		headerConstraints.weightx = 0.0;
+		headerConstraints.fill = GridBagConstraints.NONE;
+		headerConstraints.anchor = GridBagConstraints.EAST;
+		linesPanel.add(new JLabel(AppLocal.getIntString("label.ticketline.price")), headerConstraints);
+
+		for (int i = 0; i < m_ticket.getLinesCount(); i++) {
+			TicketLineInfo line = m_ticket.getLine(i);
+			if (LoyaltyStamps.isRedemption(line)) {
+				continue;
 			}
-			try {
-				ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
-				script.put("ticket", m_ticket);
-				m_TTP2.printTicket(script.eval(sresource).toString());
-			} catch (ScriptException e) {
-				JMessageDialog.showMessage(this,
-						new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprint"), e));
-			} catch (TicketPrinterException e) {
-				JMessageDialog.showMessage(this,
-						new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprint"), e));
+			String fullLabel = (i + 1) + ". " + line.getProductName() + " (" + line.printMultiply() + ")";
+			JCheckBox selection = new JCheckBox("", true);
+			selection.setMargin(new Insets(8, 8, 8, 8));
+			selection.setToolTipText(fullLabel);
+			selection.getAccessibleContext().setAccessibleName(fullLabel);
+			lineSelections.add(selection);
+			selectedLineIndexes.add(i);
+
+			GridBagConstraints rowConstraints = new GridBagConstraints();
+			rowConstraints.gridy = lineSelections.size();
+			rowConstraints.insets = new Insets(2, 8, 2, 8);
+			rowConstraints.anchor = GridBagConstraints.WEST;
+			linesPanel.add(selection, rowConstraints);
+
+			JLabel product = new JLabel(truncateGiftReceiptLabel(fullLabel));
+			product.setToolTipText(fullLabel);
+			rowConstraints.gridx = 1;
+			rowConstraints.weightx = 1.0;
+			rowConstraints.fill = GridBagConstraints.HORIZONTAL;
+			linesPanel.add(product, rowConstraints);
+
+			JLabel price = new JLabel(line.printPriceTax());
+			rowConstraints.gridx = 2;
+			rowConstraints.weightx = 0.0;
+			rowConstraints.fill = GridBagConstraints.NONE;
+			rowConstraints.anchor = GridBagConstraints.EAST;
+			linesPanel.add(price, rowConstraints);
+		}
+
+		JLabel instruction = new JLabel(AppLocal.getIntString("message.giftreceiptselectlines"));
+		instruction.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+		JPanel content = new JPanel(new BorderLayout(0, 8));
+		content.add(instruction, BorderLayout.NORTH);
+		JScrollPane scroll = new JScrollPane(linesPanel);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		int lineHeight = lineSelections.isEmpty() ? 48 : lineSelections.get(0).getPreferredSize().height;
+		int visibleLines = Math.min(10, Math.max(5, lineSelections.size()));
+		scroll.setPreferredSize(new Dimension(760, Math.max(300, lineHeight * visibleLines + 20)));
+		content.add(scroll, BorderLayout.CENTER);
+
+		Object[] options = {AppLocal.getIntString("button.print"), AppLocal.getIntString("button.cancelselection")};
+		int result = JOptionPane.showOptionDialog(this, content, AppLocal.getIntString("button.giftreceipt"),
+				JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+		if (result != 0) {
+			return;
+		}
+
+		Set<Integer> selectedLines = new HashSet<Integer>();
+		for (int i = 0; i < lineSelections.size(); i++) {
+			if (lineSelections.get(i).isSelected()) {
+				selectedLines.add(selectedLineIndexes.get(i));
 			}
 		}
+		if (selectedLines.isEmpty()) {
+			JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_NOTICE,
+					AppLocal.getIntString("message.giftreceiptselectatleastone")));
+			return;
+		}
+
+		TicketInfo giftTicket = giftReceiptTicket(m_ticket, selectedLines);
+		String sresource = m_dlSystem.getResourceAsXML("Printer.TicketGift");
+		if (sresource == null) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprintticket")));
+			return;
+		}
+		try {
+			ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
+			script.put("ticket", giftTicket);
+			m_TTP2.printTicket(script.eval(sresource).toString());
+		} catch (ScriptException e) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprint"), e));
+		} catch (TicketPrinterException e) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotprint"), e));
+		}
+	}
+
+	static String truncateGiftReceiptLabel(String label) {
+		final int maxLength = 72;
+		return label.length() <= maxLength ? label : label.substring(0, maxLength - 3) + "...";
+	}
+
+	static TicketInfo giftReceiptTicket(TicketInfo ticket, Set<Integer> selectedLines) {
+		TicketInfo giftTicket = ticket.copyTicket();
+		for (int i = giftTicket.getLinesCount() - 1; i >= 0; i--) {
+			if (LoyaltyStamps.isRedemption(giftTicket.getLine(i)) || !selectedLines.contains(i)) {
+				giftTicket.removeLine(i);
+			}
+		}
+		return giftTicket;
 	}
 
 	private void m_jRefundActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_m_jRefundActionPerformed
