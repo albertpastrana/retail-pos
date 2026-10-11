@@ -191,6 +191,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		group.addChangePasswordAction();
 		group.addPanel("/com/openbravo/images/menu-configuration.png", "Menu.Configuration",
 				"com.openbravo.pos.config.JPanelConfiguration", com.openbravo.pos.config.JPanelConfiguration.class);
+		group.addPanel("/com/openbravo/images/menu-printer.png", "Menu.Printer",
+				"com.openbravo.pos.panels.JPanelPrinter", com.openbravo.pos.panels.JPanelPrinter.class);
 		group.addExitAction();
 
 		m_jMenuRail = menu.getRailMenu();
