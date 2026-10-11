@@ -75,6 +75,23 @@ public class CatalogFileImporterIT {
 	}
 
 	@Test
+	public void skipsImportWhenPublicKeyFileIsMissing() throws Exception {
+		String url = "jdbc:derby:memory:catalogFileImporterMissingKeyIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Path file = directory.resolve("products-missing-key.tsv");
+		Files.writeString(file, "barcode\tname\tcategory\n1\tIgnored\tgift-vouchers\n", StandardCharsets.UTF_8);
+
+		Session session = new Session(url, null, null);
+		try {
+			CatalogFileImporter.importAtStartup(session, properties(directory.resolve("missing.pem")));
+			assertEquals(0, queryInt(session, "SELECT COUNT(*) FROM PRODUCTS WHERE CODE = '1'"));
+		} finally {
+			session.close();
+		}
+		assertTrue(Files.isRegularFile(file));
+	}
+
+	@Test
 	public void importsSignedFallbackFileAndPriceOverlay() throws Exception {
 		String url = "jdbc:derby:memory:catalogFileImporterFallbackIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);
