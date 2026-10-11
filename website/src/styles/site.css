@@ -1,0 +1,16 @@
+@import '../../../design-system/tokens.css';
+
+:root {--sl-color-bg: var(--surface-0); --sl-color-bg-nav: var(--surface-100); --sl-color-bg-sidebar: var(--surface-100); --sl-color-text: var(--ink); --sl-color-text-accent: var(--brand); --sl-color-hairline: var(--border); font-family: var(--font-sans)}
+.sl-markdown-content {font-family: var(--font-sans)}
+
+.doc-actions {display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-block: 1rem 2rem}
+.doc-actions button {font: inherit; color: var(--sl-color-text-accent); background: transparent; border: 1px solid currentColor; border-radius: .3rem; padding: .4rem .8rem; cursor: pointer}
+.doc-actions :is(button, a):focus-visible {outline: 3px solid var(--sl-color-text-accent); outline-offset: 3px}
+@media print {
+  header, nav, aside, footer, .doc-actions, .right-sidebar, .sidebar-pane, .pagination-links, .mobile-menu-toggle, .starlight-aside__title {display: none !important}
+  body, main, .main-pane, .content-panel, .sl-markdown-content {color: black !important; background: white !important; box-shadow: none !important; max-width: none !important; margin: 0 !important; padding: 0 !important}
+  pre, table, img, blockquote, .starlight-aside {break-inside: avoid}
+  h1, h2, h3 {break-after: avoid}
+  a {color: black !important; text-decoration: underline}
+  @page {margin: 18mm}
+}

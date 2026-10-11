@@ -1,0 +1,41 @@
+---
+import '../../../design-system/tokens.css';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Retail POS: a point-of-sale application for retail shops with barcode scanning, stock and sales reporting." />
+    <link rel="icon" href={`${base}/favicon.svg`} />
+    <link rel="canonical" href={Astro.site} />
+    <meta property="og:title" content="Retail POS" />
+    <meta property="og:description" content="A point-of-sale application for retail shops." />
+    <script is:inline>document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';</script>
+    <title>Retail POS — Point of sale for retail shops</title>
+    <style>
+      :root {font: 18px/1.6 var(--font-sans)}
+      body {max-width: 55rem; margin: auto; padding: 2rem; color: var(--ink); background: var(--surface-0)}
+      header, nav, .actions {display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap}
+      header {justify-content: space-between}
+      a {color: var(--brand-strong)} a:focus-visible {outline: 3px solid var(--brand); outline-offset: 3px}
+      h1 {font-size: clamp(2.5rem, 7vw, 4.5rem); line-height: 1.1; margin-top: 4rem}
+      .button {display: inline-block; padding: .8rem 1.4rem; border-radius: var(--radius-md); background: var(--brand); color: var(--on-brand); text-decoration: none}
+      li {margin-bottom: .6rem} footer {margin-top: 5rem; border-top: 1px solid var(--border); padding-top: 1rem}
+    </style>
+  </head>
+  <body>
+    <header><strong>Retail POS</strong><nav aria-label="Main"><a href={`${base}/docs/`}>Documentation</a><a href="https://github.com/albertpastrana/retail-pos">GitHub</a></nav></header>
+    <main>
+      <h1>Retail POS</h1>
+      <p>Point-of-sale software for retail shops. Sell at the counter with barcode scanning, keep track of stock, and review sales.</p>
+      <div class="actions"><a class="button" href={`${base}/docs/`}>Get started</a><a href="https://github.com/albertpastrana/retail-pos">View on GitHub</a></div>
+      <h2>At the counter</h2>
+      <ul><li>Touch-friendly sales and barcode scanning</li><li>Receipts and ESC/POS printers</li><li>Product catalogue, inventory, and management reports</li></ul>
+      <h2>Operator guides</h2>
+      <p><a href={`${base}/docs/en/`}>English</a> · <a href={`${base}/docs/ca/`}>Català</a></p>
+    </main>
+    <footer>Retail POS · <a href="https://github.com/albertpastrana/retail-pos">Source code</a></footer>
+  </body>
+</html>

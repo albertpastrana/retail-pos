@@ -1,5 +1,12 @@
 build/
 /dist/
+/website/node_modules/
+/website/dist/
+/website/.astro/
+/website/src/content/docs/
+/website/src/generated-navigation.json
+/website/src/assets/logo.svg
+/website/public/favicon.svg
 /archive/openbravo-legacy/
 .gradle/
 .env.local
