@@ -18,7 +18,7 @@ Editing requires supervisor authorisation. If the action is not available, ask a
 1. In **Edit sales**, select the original receipt.
 2. Press **Refund**.
 3. On the refund screen, select a line and press **One unit**, **Line**, or **All** as appropriate. Check the quantities.
-4. Press **Equals**, check the amount, and choose the refund method in the payment window.
-5. Press **OK** to save the refund.
+4. Press **Equals** and check the amount. The payment window selects voucher as the default refund method.
+5. If needed, switch to cash or card, confirm the method, and press **OK** to save the refund.
 
 Refunding requires supervisor authorisation. The refund uses the original receipt as its reference rather than creating an unrelated new sale.
