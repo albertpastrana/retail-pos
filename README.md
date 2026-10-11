@@ -51,7 +51,7 @@ npm run dev
 
 For a production build, install Playwright's Chromium once (`npx playwright install chromium`; on Linux, `npx playwright install --with-deps chromium`) and run `npm run build`. This builds the site, Pagefind search index and English and Catalan complete-guide PDFs, then checks links, search and representative browser flows. The output is `website/dist/`; PDFs are at `downloads/documentation-en.pdf` and `downloads/documentation-ca.pdf`. `npm run build:pdf` regenerates only the PDFs after building the site. Each documentation page also offers browser printing of just that page.
 
-The default URL is `https://albertpastrana.github.io/retail-pos/`, with guides at `/retail-pos/docs/`. Set `SITE_URL` (origin) and `SITE_BASE` (path, e.g. `/` for a custom domain) when building for another host. `.github/workflows/website.yml` builds on relevant pull requests and deploys from `main` with GitHub Pages Actions; enable GitHub Pages with **GitHub Actions** as its source in repository settings before the first deployment.
+The default build URL is `https://albertpastrana.github.io/retail-pos/`, with guides at `/retail-pos/docs/`. Set `SITE_URL` (origin) and `SITE_BASE` (path, e.g. `/` for a custom domain) when building for another host. `.github/workflows/website.yml` builds on relevant pull requests and deploys from `main` with GitHub Pages Actions.
 
 ## Releases
 
