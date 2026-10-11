@@ -9,6 +9,7 @@ const navigation = [];
 await rm(destination, {recursive: true, force: true});
 await mkdir(destination, {recursive: true});
 const mark = resolve('..', 'design-system/assets/Logo/retail-pos-app-icon.svg');
+await mkdir(resolve('src/assets'), {recursive: true});
 await copyFile(mark, resolve('src/assets/logo.svg'));
 await copyFile(mark, resolve('public/favicon.svg'));
 
