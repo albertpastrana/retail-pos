@@ -18,3 +18,9 @@ The entry screen currently exposes About and Close application actions but no do
 - English, Spanish, and Catalan labels are present.
 - Focus and keyboard activation work for the new action.
 - Relevant Java formatting and tests pass.
+
+## Shipped
+
+- Added the Help action to `JRootApp` beside About.
+- Published documentation URL: `https://retail-pos-docs.netlify.app/`.
+- Verified with `./gradlew spotlessApply` and `./gradlew compileJava`.
