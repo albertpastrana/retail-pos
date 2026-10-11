@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.lang.management.ManagementFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
@@ -329,8 +331,7 @@ public final class UpdateChecker {
 				throw new IOException("Updater is not executable: " + updater.getAbsolutePath());
 			}
 			if (platform.equals("windows")) {
-				new ProcessBuilder("cmd", "/c", "start", "", updater.getAbsolutePath(), packageFile.getAbsolutePath(),
-						installDir.getAbsolutePath(), processId()).start();
+				new ProcessBuilder(windowsUpdaterCommand(updater, packageFile, installDir, processId())).start();
 			} else {
 				new ProcessBuilder(updater.getAbsolutePath(), packageFile.getAbsolutePath(),
 						installDir.getAbsolutePath(), processId()).start();
@@ -342,6 +343,11 @@ public final class UpdateChecker {
 			JOptionPane.showMessageDialog(parent, AppLocal.getIntString("update.startError"),
 					AppLocal.getIntString("update.title"), JOptionPane.WARNING_MESSAGE);
 		}
+	}
+
+	static List<String> windowsUpdaterCommand(File updater, File packageFile, File installDir, String pid) {
+		return Arrays.asList("cmd", "/d", "/c", "start", "", "/b", updater.getAbsolutePath(),
+				packageFile.getAbsolutePath(), installDir.getAbsolutePath(), pid);
 	}
 
 	private static String processId() {
