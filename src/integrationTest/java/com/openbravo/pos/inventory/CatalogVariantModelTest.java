@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.ticket.CategoryInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
 
 public class CatalogVariantModelTest {
@@ -82,6 +84,24 @@ public class CatalogVariantModelTest {
 		assertTrue(containsCode(family, "9990000000101"));
 		assertTrue(containsCode(family, "9990000000104"));
 		assertEquals("9990000000101", CatalogImportDialog.receivingVariant(family, "9990000000101").getCode());
+	}
+
+	@Test
+	public void doesNotOfferFallbackCategoryThatIsMissingLocally() {
+		ProductInfoExt product = new ProductInfoExt();
+		product.setCategoryID("missing");
+
+		assertEquals(null, CatalogImportDialog
+				.findImportCategory(Arrays.asList(new CategoryInfo("available", "Available", null)), product));
+	}
+
+	@Test
+	public void keepsFallbackCategoryWhenItExistsLocally() {
+		ProductInfoExt product = new ProductInfoExt();
+		product.setCategoryID("available");
+		CategoryInfo available = new CategoryInfo("available", "Available", null);
+
+		assertEquals(available, CatalogImportDialog.findImportCategory(Arrays.asList(available), product));
 	}
 
 	private boolean containsCode(List<ProductInfoExt> products, String code) {

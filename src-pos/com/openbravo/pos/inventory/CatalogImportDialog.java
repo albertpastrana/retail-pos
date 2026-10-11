@@ -954,21 +954,26 @@ public final class CatalogImportDialog {
 	private JComboBox<CategoryInfo> createImportCategoryCombo(ProductInfoExt catalogProduct) throws BasicException {
 		JComboBox<CategoryInfo> category = new JComboBox<CategoryInfo>();
 		category.addItem(null);
-		CategoryInfo selectedCategory = null;
-		for (CategoryInfo availableCategory : getImportCategories()) {
+		List<CategoryInfo> availableCategories = getImportCategories();
+		for (CategoryInfo availableCategory : availableCategories) {
 			category.addItem(availableCategory);
-			if (catalogProduct != null && availableCategory.getID().equals(catalogProduct.getCategoryID())) {
-				selectedCategory = availableCategory;
-			}
 		}
-		if (catalogProduct != null && catalogProduct.getCategoryID() != null
-				&& !catalogProduct.getCategoryID().isEmpty() && selectedCategory == null) {
-			selectedCategory = new CategoryInfo(catalogProduct.getCategoryID(),
-					catalogProduct.getProperty("catalog.category.name", catalogProduct.getCategoryID()), null);
-			category.addItem(selectedCategory);
-		}
+		CategoryInfo selectedCategory = findImportCategory(availableCategories, catalogProduct);
 		category.setSelectedItem(selectedCategory);
 		return category;
+	}
+
+	static CategoryInfo findImportCategory(List<CategoryInfo> availableCategories, ProductInfoExt catalogProduct) {
+		if (catalogProduct == null || catalogProduct.getCategoryID() == null
+				|| catalogProduct.getCategoryID().isEmpty()) {
+			return null;
+		}
+		for (CategoryInfo availableCategory : availableCategories) {
+			if (availableCategory.getID().equals(catalogProduct.getCategoryID())) {
+				return availableCategory;
+			}
+		}
+		return null;
 	}
 
 	private List<CategoryInfo> getImportCategories() throws BasicException {
