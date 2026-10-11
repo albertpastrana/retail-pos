@@ -1192,6 +1192,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		boolean resultok = false;
 		int originalType = ticket.getTicketType();
+		int originalNumber = ticket.getTicketId();
 
 		if (m_App.getAppUserView().getUser().hasPermission("sales.Total")) {
 
@@ -1311,6 +1312,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			m_oTicket.resetPayments();
 			if (!resultok) {
 				ticket.setTicketType(originalType);
+				ticket.setTicketId(originalNumber);
 			}
 		} else {
 			LOGGER.warning("event=ticket_close_denied ticket=" + ticket.getId() + " reason=missing_permission");
