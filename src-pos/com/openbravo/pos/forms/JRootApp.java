@@ -23,6 +23,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
 import java.awt.geom.Path2D;
+import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +56,7 @@ import java.util.logging.Logger;
 public class JRootApp extends JPanel implements AppView {
 
 	private static final Logger LOGGER = Logger.getLogger(JRootApp.class.getName());
+	private static final String DOCUMENTATION_URL = "https://retail-pos-docs.netlify.app/";
 
 	private static final int HEADER_HEIGHT = 64;
 	private static final int HEADER_LOGO_HEIGHT = 40;
@@ -965,6 +968,7 @@ public class JRootApp extends JPanel implements AppView {
 		jPanel2 = new javax.swing.JPanel();
 		jPanel8 = new javax.swing.JPanel();
 		m_jAbout = new JButton();
+		m_jHelp = new JButton();
 		m_jClose = new RoundedButton(false);
 
 		setPreferredSize(new java.awt.Dimension(1024, 768));
@@ -1161,6 +1165,15 @@ public class JRootApp extends JPanel implements AppView {
 		});
 		jPanel2.add(m_jAbout);
 
+		m_jHelp.setText(AppLocal.getIntString("Button.Help"));
+		m_jHelp.setForeground(RetailPOSColors.inkMuted());
+		m_jHelp.setOpaque(false);
+		m_jHelp.setContentAreaFilled(false);
+		m_jHelp.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+		focusRing(m_jHelp);
+		m_jHelp.addActionListener(event -> openDocumentation());
+		jPanel2.add(m_jHelp);
+
 		jPanel5.add(jPanel2, java.awt.BorderLayout.LINE_START);
 
 		jPanel8.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 0, 0));
@@ -1208,6 +1221,22 @@ public class JRootApp extends JPanel implements AppView {
 
 	}// GEN-LAST:event_m_jAboutActionPerformed
 
+	private void openDocumentation() {
+		if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.helpunavailable")));
+			return;
+		}
+
+		try {
+			Desktop.getDesktop().browse(URI.create(DOCUMENTATION_URL));
+		} catch (IOException | SecurityException | UnsupportedOperationException e) {
+			LOGGER.log(Level.WARNING, "event=documentation_open_failed", e);
+			JMessageDialog.showMessage(this,
+					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.helpunavailable"), e));
+		}
+	}
+
 	private void showAbout() {
 
 		JLabel about = new JLabel("<html><body style='width: 420px'>" + "<b>" + AppLocal.APP_NAME + "</b> "
@@ -1232,6 +1261,7 @@ public class JRootApp extends JPanel implements AppView {
 	private javax.swing.JPanel jPanel5;
 	private javax.swing.JPanel jPanel8;
 	private javax.swing.JButton m_jAbout;
+	private javax.swing.JButton m_jHelp;
 	private javax.swing.JButton m_jClose;
 	private javax.swing.JLabel m_jLblClock;
 	private javax.swing.JLabel m_jLblDemo;
