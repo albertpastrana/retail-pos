@@ -1,0 +1,19 @@
+{
+  "name": "retail-pos-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:docs": "node scripts/prepare-docs.mjs",
+    "dev": "npm run prepare:docs && astro dev",
+    "build": "npm run prepare:docs && astro build && npm run build:pdf && npm run check:site && npm run check:browser",
+    "build:pdf": "node scripts/build-pdf.mjs",
+    "check:site": "node scripts/check-site.mjs",
+    "check:browser": "node scripts/check-browser.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.6",
+    "astro": "^7.3.8",
+    "markdown-it": "^14.1.0",
+    "playwright": "^1.55.0"
+  }
+}

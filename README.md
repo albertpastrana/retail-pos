@@ -38,6 +38,21 @@ CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrati
 
 On Windows: `start.bat`. Configuration UI: `./configure.sh` or `configure.bat`.
 
+## Website & documentation
+
+The static project site uses Astro and Starlight and is published with GitHub Pages. Its operator guides come from [`docs/user/en/`](docs/user/en/index.md) and [`docs/user/ca/`](docs/user/ca/index.md); those Markdown files are the source of truth. The site builds its pages and ordered navigation from the guides' index files. There is no separate documentation copy to edit.
+
+From `website/` (Node.js 22+):
+
+```sh
+npm ci
+npm run dev
+```
+
+For a production build, install Playwright's Chromium once (`npx playwright install chromium`; on Linux, `npx playwright install --with-deps chromium`) and run `npm run build`. This builds the site, Pagefind search index and English and Catalan complete-guide PDFs, then checks links, search and representative browser flows. The output is `website/dist/`; PDFs are at `downloads/documentation-en.pdf` and `downloads/documentation-ca.pdf`. `npm run build:pdf` regenerates only the PDFs after building the site. Each documentation page also offers browser printing of just that page.
+
+The default URL is `https://albertpastrana.github.io/retail-pos/`, with guides at `/retail-pos/docs/`. Set `SITE_URL` (origin) and `SITE_BASE` (path, e.g. `/` for a custom domain) when building for another host. `.github/workflows/website.yml` builds on relevant pull requests and deploys from `main` with GitHub Pages Actions; enable GitHub Pages with **GitHub Actions** as its source in repository settings before the first deployment.
+
 ## Releases
 
 Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Every package includes a bundled Java 21 runtime. The workflow uses an Intel macOS runner for the current x86_64 package; Apple Silicon and native installers are follow-up work.
