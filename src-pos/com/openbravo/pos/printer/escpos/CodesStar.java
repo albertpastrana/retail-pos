@@ -151,15 +151,15 @@ public class CodesStar extends Codes {
 	public void printBarcode(PrinterWritter out, String type, String position, String code) {
 
 		if (DevicePrinter.BARCODE_CODE128.equals(type)) {
-			out.write(getNewLine());
-			out.write(ESCPOS.BAR_HEIGHT);
-			out.write(DevicePrinter.POSITION_NONE.equals(position) ? ESCPOS.BAR_POSITIONNONE : ESCPOS.BAR_POSITIONDOWN);
-			out.write(ESCPOS.BAR_HRIFONT1);
-			out.write(ESCPOS.BAR_CODE128);
+			out.write(new byte[]{0x1B, 0x1D, 0x61, 0x01}); // Align center
+			out.write(ESCPOS.STAR_BAR_CODE128);
+			out.write(DevicePrinter.POSITION_NONE.equals(position) ? new byte[]{0x01} : new byte[]{0x02});
+			out.write(new byte[]{0x02}); // dots
+			out.write(new byte[]{0x18}); // height
 			byte[] payload = code.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
-			out.write(new byte[]{(byte) (payload.length + 2), 0x7B, 0x42});
 			out.write(payload);
-			out.write(getNewLine());
+			out.write(new byte[]{0x1E}); // end char
+			out.write(new byte[]{0x1B, 0x1D, 0x61, 0x00}); // Align left
 		} else if (DevicePrinter.BARCODE_EAN13.equals(type)) {
 
 			// out.write(getNewLine());

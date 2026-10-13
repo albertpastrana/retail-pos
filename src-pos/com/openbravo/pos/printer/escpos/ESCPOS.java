@@ -43,6 +43,7 @@ public class ESCPOS {
 
 	public static final byte[] BAR_CODE02 = {0x1D, 0x6B, 0x02}; // 12 numeros fijos
 	public static final byte[] BAR_CODE128 = {0x1D, 0x6B, 0x49};
+	public static final byte[] STAR_BAR_CODE128 = {0x1B, 0x62, 0x06};
 
 	public static final byte[] VISOR_HIDE_CURSOR = {0x1F, 0x43, 0x00};
 	public static final byte[] VISOR_SHOW_CURSOR = {0x1F, 0x43, 0x01};

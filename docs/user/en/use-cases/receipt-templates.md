@@ -180,8 +180,9 @@ Open the drawer only for cash payments:
 
 1. Export or copy the current resources before editing them.
 2. Close the POS before changing an embedded Derby database.
-3. Edit the resource under **Administration -> Resources**, or edit the source
-   template.
+3. Edit the resource under **Administration -> Resources**. The files in
+   `src-pos/com/openbravo/pos/templates/` are format references only; editing
+   them does not update an existing installation.
 4. Save the resource and restart the POS.
 5. Print a preview and a test receipt.
 
