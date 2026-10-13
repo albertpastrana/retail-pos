@@ -395,7 +395,12 @@ public class JTicketsBagTicket extends JTicketsBag {
 		if (!ReceiptBarcode.isReceiptBarcode(barcode)) {
 			return;
 		}
-		readTicket(ReceiptBarcode.ticketId(barcode), ReceiptBarcode.type(barcode));
+		try {
+			readTicket(ReceiptBarcode.ticketId(barcode), ReceiptBarcode.type(barcode));
+		} catch (NumberFormatException e) {
+			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.notexiststicket"));
+			msg.show(this);
+		}
 	}
 
 	private void printTicket() {
