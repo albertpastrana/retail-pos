@@ -21,6 +21,7 @@ Aquesta guia està organitzada per situacions habituals al taulell. Obre el cas 
 15. [Estoc, catàleg, reposició i encàrrecs](use-cases/estoc-i-cataleg.md)
 16. [Tancar i consultar la caixa](use-cases/tancament-de-caixa.md)
 17. [Informes de gestió](use-cases/informes.md)
+18. [Configurar el contingut del tiquet](use-cases/configuracio-tiquet.md)
 
 Les pàgines d'operacions descriuen el flux validat de la botiga. Les captures de pantalla s'afegiran durant una propera revisió a peu de caixa.
 

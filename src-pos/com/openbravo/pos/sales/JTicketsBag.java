@@ -51,6 +51,10 @@ public abstract class JTicketsBag extends JPanel {
 		// Ticket modes without shared rows have no payment lock to release.
 	}
 
+	public void scanReceipt(String barcode) {
+		// Receipt lookup is only available in the completed-sales bag.
+	}
+
 	public void completePayment() throws com.openbravo.basic.BasicException {
 		// Ticket modes without shared rows have nothing to remove.
 	}

@@ -52,6 +52,7 @@ import com.openbravo.pos.scripting.ScriptFactory;
 import com.openbravo.pos.forms.DataLogicSystem;
 import com.openbravo.pos.panels.JTicketsFinder;
 import com.openbravo.pos.ticket.FindTicketsInfo;
+import com.openbravo.pos.ticket.ReceiptBarcode;
 import com.openbravo.beans.JNumberEvent;
 import com.openbravo.beans.JNumberEventListener;
 import com.openbravo.beans.JNumberKeys;
@@ -387,6 +388,14 @@ public class JTicketsBagTicket extends JTicketsBag {
 		LOGGER.log(Level.INFO,
 				"event=recent_sale_selected ticket_id={0} ticket_type={1} found={2} load_ms={3} total_ms={4}",
 				new Object[]{iTicketid, iTickettype, found, loadMillis, elapsedMillis(started)});
+	}
+
+	@Override
+	public void scanReceipt(String barcode) {
+		if (!ReceiptBarcode.isReceiptBarcode(barcode)) {
+			return;
+		}
+		readTicket(ReceiptBarcode.ticketId(barcode), ReceiptBarcode.type(barcode));
 	}
 
 	private void printTicket() {

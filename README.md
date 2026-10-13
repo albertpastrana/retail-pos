@@ -247,6 +247,8 @@ Example with a different Derby directory:
 
 Receipt content, shop name, logos, and other operator-customizable templates are database-backed resources. The stable sales actions Print and Open Drawer are code-owned in `JPanelButtons`; their role permissions (for example `button.print`) remain database-backed. Edit `src-pos/com/openbravo/pos/templates/` for receipt and branding resources and apply those resources to the database.
 
+See [`docs/user/ca/use-cases/configuracio-tiquet.md`](docs/user/ca/use-cases/configuracio-tiquet.md) for the Catalan XML and Velocity reference.
+
 ## Source layout
 
 | Path         | Contents                                             |
