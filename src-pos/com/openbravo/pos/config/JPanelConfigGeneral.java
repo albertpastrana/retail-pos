@@ -47,7 +47,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		String[] printernames = ReportUtils.getPrintNames();
 
-		jtxtMachineHostname.getDocument().addDocumentListener(dirty);
+		jtxtMachineHostname.setEditable(false);
 		jcboMachineScreenmode.addActionListener(dirty);
 		jcboTicketsBag.addActionListener(dirty);
 
@@ -160,7 +160,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 	public void loadProperties(AppConfig config) {
 
-		jtxtMachineHostname.setText(config.getProperty("machine.hostname"));
+		jtxtMachineHostname.setText(config.getHost());
 
 		jcboMachineScreenmode.setSelectedItem(config.getProperty("machine.screenmode"));
 		jcboTicketsBag.setSelectedItem(config.getProperty("machine.ticketsbag"));
@@ -232,8 +232,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 	}
 
 	public void saveProperties(AppConfig config) {
-
-		config.setProperty("machine.hostname", jtxtMachineHostname.getText());
 
 		config.setProperty("machine.screenmode", comboValue(jcboMachineScreenmode.getSelectedItem()));
 		config.setProperty("machine.ticketsbag", comboValue(jcboTicketsBag.getSelectedItem()));
@@ -357,7 +355,7 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		jPanel13.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("Label.CashMachine"))); // NOI18N
 
-		jLabel5.setText(AppLocal.getIntString("Label.MachineName")); // NOI18N
+		jLabel5.setText(AppLocal.getIntString("label.terminalid")); // NOI18N
 
 		jLabel6.setText(AppLocal.getIntString("Label.MachineScreen")); // NOI18N
 

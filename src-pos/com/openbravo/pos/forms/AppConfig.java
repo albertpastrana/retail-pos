@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  *
@@ -41,7 +42,7 @@ public class AppConfig implements AppProperties {
 	}
 
 	public String getHost() {
-		return getProperty("machine.hostname");
+		return getProperty("terminal.id");
 	}
 
 	public void setProperty(String sKey, String sValue) {
@@ -98,7 +99,29 @@ public class AppConfig implements AppProperties {
 	}
 
 	void store(OutputStream out) throws IOException {
+		Properties bootstrap = new Properties();
+		for (String key : m_propsconfig.stringPropertyNames()) {
+			if (key.equals("terminal.id") || key.startsWith("db.") || key.startsWith("demo.")
+					|| key.startsWith("production.db.") || key.equals("backup.dir") || key.equals("backup.pg_dump")
+					|| key.equals("update.dir") || key.startsWith("catalog.import.")
+					|| key.startsWith("machine.window.")) {
+				bootstrap.setProperty(key, m_propsconfig.getProperty(key));
+			}
+		}
+		bootstrap.store(out, AppLocal.APP_NAME + ". Bootstrap configuration file.");
+	}
+
+	void storeWithLegacySettings(OutputStream out) throws IOException {
 		m_propsconfig.store(out, AppLocal.APP_NAME + ". Configuration file.");
+	}
+
+	void ensureTerminalId() {
+		String value = getProperty("terminal.id");
+		if (value == null || value.trim().isEmpty()) {
+			setProperty("terminal.id", UUID.randomUUID().toString());
+		} else {
+			UUID.fromString(value);
+		}
 	}
 
 	private void loadDefault() {

@@ -21,14 +21,12 @@ package com.openbravo.pos.config;
 
 import java.awt.Component;
 import java.io.File;
-import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
-import com.openbravo.pos.forms.ConfigurationStore;
 import com.openbravo.pos.forms.DatabaseBackup;
 import com.openbravo.pos.util.AltEncrypter;
 import com.openbravo.pos.util.DirectoryEvent;
@@ -57,6 +55,9 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 
 		jtxtBackupDir.getDocument().addDocumentListener(dirty);
 		jchkBackupDaily.addActionListener(dirty);
+		jchkBackupCentral.addActionListener(dirty);
+		jBackupHour.addChangeListener(event -> dirty.setDirty(true));
+		jBackupRetention.addChangeListener(event -> dirty.setDirty(true));
 
 		jbtnBackupDir.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -108,6 +109,9 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jtxtDbPassword.setText(sDBPassword);
 
 		jchkBackupDaily.setSelected("true".equalsIgnoreCase(config.getProperty("backup.daily")));
+		jchkBackupCentral.setSelected("true".equalsIgnoreCase(config.getProperty("backup.central")));
+		jBackupHour.setValue(parse(config.getProperty("backup.hour"), 2));
+		jBackupRetention.setValue(parse(config.getProperty("backup.retention"), 30));
 		jtxtBackupDir.setText(config.getProperty("backup.dir"));
 
 		dirty.setDirty(false);
@@ -123,9 +127,20 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		config.setProperty("db.password", "crypt:" + cypher.encrypt(new String(jtxtDbPassword.getPassword())));
 
 		config.setProperty("backup.daily", Boolean.toString(jchkBackupDaily.isSelected()));
+		config.setProperty("backup.central", Boolean.toString(jchkBackupCentral.isSelected()));
+		config.setProperty("backup.hour", jBackupHour.getValue().toString());
+		config.setProperty("backup.retention", jBackupRetention.getValue().toString());
 		config.setProperty("backup.dir", jtxtBackupDir.getText());
 
 		dirty.setDirty(false);
+	}
+
+	private static int parse(String value, int fallback) {
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return fallback;
+		}
 	}
 
 	private void performBackupNow() {
@@ -142,10 +157,9 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 			saveProperties(config);
 
 			File backupFile = DatabaseBackup.backup(config);
-			ConfigurationStore.save(config);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupok", backupFile.getAbsolutePath()),
 					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
-		} catch (BasicException | IOException ex) {
+		} catch (BasicException ex) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupfailed", ex.getMessage()),
 					AppLocal.getIntString("message.title"), JOptionPane.ERROR_MESSAGE);
 		} finally {
@@ -177,6 +191,11 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 
 		jPanelBackup = new javax.swing.JPanel();
 		jchkBackupDaily = new javax.swing.JCheckBox();
+		jchkBackupCentral = new javax.swing.JCheckBox();
+		jBackupHour = new javax.swing.JSpinner(new javax.swing.SpinnerNumberModel(2, 0, 23, 1));
+		jBackupRetention = new javax.swing.JSpinner(new javax.swing.SpinnerNumberModel(30, 1, 3650, 1));
+		jLabelBackupHour = new javax.swing.JLabel();
+		jLabelBackupRetention = new javax.swing.JLabel();
 		jLabelBackupDir = new javax.swing.JLabel();
 		jtxtBackupDir = new javax.swing.JTextField();
 		jbtnBackupDir = new javax.swing.JButton();
@@ -256,6 +275,9 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jPanelBackup.setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("label.backup"))); // NOI18N
 
 		jchkBackupDaily.setText(AppLocal.getIntString("label.backupdaily")); // NOI18N
+		jchkBackupCentral.setText(AppLocal.getIntString("label.backupcentral"));
+		jLabelBackupHour.setText(AppLocal.getIntString("label.backuphour"));
+		jLabelBackupRetention.setText(AppLocal.getIntString("label.backupretention"));
 
 		jLabelBackupDir.setText(AppLocal.getIntString("label.backupdir")); // NOI18N
 
@@ -270,7 +292,16 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 				.addGroup(jPanelBackupLayout.createSequentialGroup().addContainerGap()
 						.addGroup(jPanelBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(jchkBackupDaily)
+								.addComponent(jchkBackupDaily).addComponent(jchkBackupCentral)
+								.addGroup(jPanelBackupLayout.createSequentialGroup().addComponent(jLabelBackupHour)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(jBackupHour, javax.swing.GroupLayout.PREFERRED_SIZE, 75,
+												javax.swing.GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+										.addComponent(jLabelBackupRetention)
+										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addComponent(jBackupRetention, javax.swing.GroupLayout.PREFERRED_SIZE, 75,
+												javax.swing.GroupLayout.PREFERRED_SIZE))
 								.addGroup(jPanelBackupLayout.createSequentialGroup()
 										.addComponent(jLabelBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE, 130,
 												javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -285,6 +316,12 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		jPanelBackupLayout.setVerticalGroup(jPanelBackupLayout
 				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 				.addGroup(jPanelBackupLayout.createSequentialGroup().addContainerGap().addComponent(jchkBackupDaily)
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addComponent(jchkBackupCentral)
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+						.addGroup(jPanelBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+								.addComponent(jLabelBackupHour).addComponent(jBackupHour)
+								.addComponent(jLabelBackupRetention).addComponent(jBackupRetention))
 						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 						.addGroup(jPanelBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
 								.addComponent(jLabelBackupDir)
@@ -329,6 +366,11 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 
 	private javax.swing.JPanel jPanelBackup;
 	private javax.swing.JCheckBox jchkBackupDaily;
+	private javax.swing.JCheckBox jchkBackupCentral;
+	private javax.swing.JSpinner jBackupHour;
+	private javax.swing.JSpinner jBackupRetention;
+	private javax.swing.JLabel jLabelBackupHour;
+	private javax.swing.JLabel jLabelBackupRetention;
 	private javax.swing.JLabel jLabelBackupDir;
 	private javax.swing.JTextField jtxtBackupDir;
 	private javax.swing.JButton jbtnBackupDir;

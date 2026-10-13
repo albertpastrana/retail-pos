@@ -539,6 +539,8 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 				// creamos la caja activa
 				m_dlSystem.execInsertCash(new Object[]{m_App.getActiveCashIndex(), m_App.getProperties().getHost(),
 						m_App.getActiveCashSequence(), m_App.getActiveCashDateStart(), m_App.getActiveCashDateEnd()});
+				com.openbravo.pos.forms.TerminalConfiguration.setActiveCash(m_App.getSession(),
+						m_App.getProperties().getHost(), m_App.getActiveCashIndex());
 
 				// ponemos la fecha de fin
 				m_PaymentsToClose.setDateEnd(dNow);
@@ -553,7 +555,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 				DatabaseBackup.runDailyBackupIfDue(m_App.getProperties());
 				LOGGER.info("event=cash_close_success cashId=" + m_App.getActiveCashIndex() + " sequence="
 						+ m_App.getActiveCashSequence());
-			} catch (BasicException e) {
+			} catch (BasicException | java.sql.SQLException e) {
 				LOGGER.log(Level.SEVERE, "event=cash_close_failed phase=create_next_cash", e);
 				MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"),
 						e);

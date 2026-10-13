@@ -21,6 +21,7 @@ package com.openbravo.pos.config;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -46,6 +47,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	private AppConfig config;
 	private DataLogicSystem loyaltyDataLogic;
 	private Session loyaltySession;
+	private Session settingsSession;
 
 	/** Creates new form JPanelConfiguration */
 	public JPanelConfiguration(AppView app) {
@@ -74,18 +76,34 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void restoreProperties() {
 
-		AppConfig reset = ConfigurationStore.reset();
-		if (reset != null) {
-			config = reset;
+		try {
+			if (settingsSession == null) {
+				throw new SQLException(AppLocal.getIntString("message.startupdatabase", ""));
+			}
+			TerminalConfiguration.restoreDefaults(config, settingsSession);
 			loadProperties();
-		} else {
+		} catch (SQLException e) {
 			JMessageDialog.showMessage(this,
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotdeleteconfig")));
+					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
 		}
 	}
 
 	private void loadProperties() {
 
+		try {
+			if (settingsSession == null) {
+				settingsSession = AppViewConnection.createSession(config);
+			}
+			TerminalConfiguration.load(config, settingsSession);
+			BackupPolicy policy = BackupPolicy.load(settingsSession);
+			config.setProperty("backup.daily", Boolean.toString(policy.isEnabled()));
+			config.setProperty("backup.hour", Integer.toString(policy.getHour()));
+			config.setProperty("backup.retention", Integer.toString(policy.getRetentionDays()));
+			config.setProperty("backup.central", Boolean.toString(config.getHost().equals(policy.getTerminalId())));
+		} catch (BasicException | SQLException e) {
+			JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_DANGER,
+					AppLocal.getIntString("message.startupdatabase", e.getMessage()), e));
+		}
 		loadLoyaltyDatabaseProperties();
 
 		// paneles auxiliares
@@ -107,10 +125,35 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		config.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, null);
 
 		try {
+			if (settingsSession == null) {
+				ConfigurationStore.saveForDatabaseRecovery(config);
+				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.restartchanges"),
+						AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
+				return;
+			}
+			BackupPolicy existing = BackupPolicy.load(settingsSession);
+			String owner = "true".equals(config.getProperty("backup.central"))
+					? config.getHost()
+					: config.getHost().equals(existing.getTerminalId()) ? null : existing.getTerminalId();
+			if ("true".equals(config.getProperty("backup.daily")) && owner == null) {
+				throw new SQLException(AppLocal.getIntString("message.backupowner"));
+			}
+			int hour = Integer.parseInt(config.getProperty("backup.hour"));
+			int retention = Integer.parseInt(config.getProperty("backup.retention"));
+			settingsSession.begin();
+			try {
+				TerminalConfiguration.save(config, settingsSession);
+				BackupPolicy.save(settingsSession, "true".equals(config.getProperty("backup.daily")), hour, retention,
+						owner);
+				settingsSession.commit();
+			} catch (SQLException e) {
+				settingsSession.rollback();
+				throw e;
+			}
 			ConfigurationStore.save(config);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.restartchanges"),
 					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
-		} catch (IOException e) {
+		} catch (IOException | SQLException | NumberFormatException e) {
 			JMessageDialog.showMessage(this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
 		}
@@ -180,6 +223,10 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	}
 
 	public void close() {
+		if (settingsSession != null) {
+			settingsSession.close();
+			settingsSession = null;
+		}
 		if (loyaltySession != null) {
 			loyaltySession.close();
 			loyaltySession = null;

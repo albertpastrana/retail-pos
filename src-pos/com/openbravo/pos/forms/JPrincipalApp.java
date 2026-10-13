@@ -23,7 +23,6 @@ import com.openbravo.basic.BasicException;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -243,7 +242,7 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 
 	private boolean isRailPreference() {
 		String state = m_appview.getProperties().getProperty(MENU_STATE_KEY);
-		return state == null ? getBounds().width <= 800 : "rail".equals(state);
+		return state == null || state.isEmpty() ? getBounds().width <= 800 : "rail".equals(state);
 	}
 
 	private void assignMenuButtonIcon() {
@@ -466,8 +465,8 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 			AppConfig config = (AppConfig) m_appview.getProperties();
 			config.setProperty(MENU_STATE_KEY, value ? "rail" : "full");
 			try {
-				ConfigurationStore.save(config);
-			} catch (IOException e) {
+				TerminalConfiguration.save(config, m_appview.getSession());
+			} catch (java.sql.SQLException e) {
 				logger.log(Level.WARNING, "Cannot save the menu state", e);
 			}
 		}
