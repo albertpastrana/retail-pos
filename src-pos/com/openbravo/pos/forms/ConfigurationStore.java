@@ -28,18 +28,50 @@ public final class ConfigurationStore {
 		} catch (IOException e) {
 			config.load(null);
 		}
+		if (config.getProperty("terminal.id") == null || config.getProperty("terminal.id").trim().isEmpty()) {
+			config.ensureTerminalId();
+			try {
+				saveWithLegacySettings(config);
+			} catch (IOException e) {
+				throw new IllegalStateException("Cannot save terminal identity to " + file, e);
+			}
+		} else {
+			config.ensureTerminalId();
+		}
 		return config;
 	}
 
 	public static AppConfig reset() {
+		String terminalId = load().getHost();
 		File file = resolveFile();
 		if (file.exists() && !file.delete()) {
 			return null;
 		}
-		return load();
+		AppConfig config = new AppConfig();
+		config.load(null);
+		config.setProperty("terminal.id", terminalId);
+		try {
+			save(config);
+		} catch (IOException e) {
+			return null;
+		}
+		return config;
 	}
 
 	public static void save(AppConfig config) throws IOException {
+		write(config, false);
+	}
+
+	/** Keep imported preferences until the first successful database connection. */
+	public static void saveForDatabaseRecovery(AppConfig config) throws IOException {
+		write(config, true);
+	}
+
+	private static void saveWithLegacySettings(AppConfig config) throws IOException {
+		write(config, true);
+	}
+
+	private static void write(AppConfig config, boolean preserveLegacySettings) throws IOException {
 		File target = resolveFile();
 		File parent = target.getParentFile();
 		if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
@@ -50,7 +82,11 @@ public final class ConfigurationStore {
 		Path temporary = Files.createTempFile(parent.toPath(), ".retail-pos-", ".tmp");
 		try {
 			try (OutputStream out = new FileOutputStream(temporary.toFile())) {
-				config.store(out);
+				if (preserveLegacySettings) {
+					config.storeWithLegacySettings(out);
+				} else {
+					config.store(out);
+				}
 			}
 			try {
 				Files.setPosixFilePermissions(temporary, ConfigurationPermissions.privateFile());

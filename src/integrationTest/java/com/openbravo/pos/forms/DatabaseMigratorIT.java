@@ -199,6 +199,10 @@ public class DatabaseMigratorIT {
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRODUCTS"));
 			assertEquals(0, count(connection, "CATALOG_FALLBACK_PRICES"));
 			assertEquals(1, count(connection, "LOYALTY_SETTINGS"));
+			assertEquals(0, count(connection, "TERMINALS"));
+			assertEquals(0, count(connection, "TERMINAL_SETTINGS"));
+			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM BACKUP_POLICY WHERE ID = '0' "
+					+ "AND ENABLED = 0 AND HOUR_OF_DAY = 2 AND RETENTION_DAYS = 30"));
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM LOYALTY_SETTINGS WHERE ID = '0' AND ENABLED = FALSE "
 							+ "AND NAME = '' AND ELIGIBLE_SPEND_PER_STAMP = 10.0 AND REDEMPTION_VALUE = 5.0"));

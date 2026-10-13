@@ -77,7 +77,6 @@ public class JRootApp extends JPanel implements AppView {
 	private Session session;
 	private DataLogicSystem m_dlSystem;
 
-	private Properties m_propsdb = null;
 	private String m_sActiveCashIndex;
 	private int m_iActiveCashSequence;
 	private Date m_dActiveCashDateStart;
@@ -194,8 +193,6 @@ public class JRootApp extends JPanel implements AppView {
 		m_dlSystem = getBean(DataLogicSystem.class);
 		CatalogFileImporter.importAtStartup(session, m_props);
 
-		// Cargamos las propiedades de base de datos
-		m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
 		if (m_props instanceof AppConfig) {
 			Properties localLoyalty = new Properties();
 			LoyaltyConfiguration.apply(localLoyalty, m_dlSystem.getLoyaltySettings());
@@ -209,7 +206,7 @@ public class JRootApp extends JPanel implements AppView {
 
 		// creamos la caja activa si esta no existe
 		try {
-			String sActiveCashIndex = m_propsdb.getProperty("activecash");
+			String sActiveCashIndex = TerminalConfiguration.activeCash(session, m_props.getHost());
 			Object[] valcash = sActiveCashIndex == null ? null : m_dlSystem.findActiveCash(sActiveCashIndex);
 			if (valcash == null || !m_props.getHost().equals(valcash[0])) {
 				// no la encuentro o no es de mi host por tanto creo una...
@@ -219,10 +216,11 @@ public class JRootApp extends JPanel implements AppView {
 				// creamos la caja activa
 				m_dlSystem.execInsertCash(new Object[]{getActiveCashIndex(), m_props.getHost(), getActiveCashSequence(),
 						getActiveCashDateStart(), getActiveCashDateEnd()});
+				TerminalConfiguration.setActiveCash(session, m_props.getHost(), getActiveCashIndex());
 			} else {
 				setActiveCash(sActiveCashIndex, (Integer) valcash[1], (Date) valcash[2], (Date) valcash[3]);
 			}
-		} catch (BasicException e) {
+		} catch (BasicException | java.sql.SQLException e) {
 			LOGGER.log(Level.SEVERE, "event=pos_initialization_cash_failed", e);
 			// Casco. Sin caja no hay pos
 			MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.cannotclosecash"), e);
@@ -232,11 +230,12 @@ public class JRootApp extends JPanel implements AppView {
 		}
 
 		// Leo la localizacion de la caja (Almacen).
-		m_sInventoryLocation = m_propsdb.getProperty("location");
-		if (m_sInventoryLocation == null) {
-			m_sInventoryLocation = "0";
-			m_propsdb.setProperty("location", m_sInventoryLocation);
-			m_dlSystem.setResourceAsProperties(m_props.getHost() + "/properties", m_propsdb);
+		try {
+			m_sInventoryLocation = TerminalConfiguration.location(session, m_props.getHost());
+		} catch (java.sql.SQLException e) {
+			LOGGER.log(Level.SEVERE, "event=pos_initialization_location_failed", e);
+			session.close();
+			return false;
 		}
 
 		// Inicializo la impresora...
@@ -321,8 +320,6 @@ public class JRootApp extends JPanel implements AppView {
 			updateCashStatus();
 		}
 
-		m_propsdb.setProperty("activecash", m_sActiveCashIndex);
-		m_dlSystem.setResourceAsProperties(m_props.getHost() + "/properties", m_propsdb);
 	}
 
 	public AppProperties getProperties() {
@@ -477,7 +474,8 @@ public class JRootApp extends JPanel implements AppView {
 		if (m_props == null || m_dActiveCashDateStart == null) {
 			return;
 		}
-		renderCashStatus(m_props.getHost(), m_dActiveCashDateEnd == null);
+		String terminalId = m_props.getHost();
+		renderCashStatus(terminalId.substring(0, Math.min(8, terminalId.length())), m_dActiveCashDateEnd == null);
 	}
 
 	void renderCashStatus(String till, boolean open) {
