@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -177,26 +178,60 @@ public final class DatabaseBackup {
 	}
 
 	public static void runDailyBackupIfDue(final AppProperties props) {
-		if (!isDailyBackupNeeded(props)) {
-			return;
-		}
-
 		Thread backupThread = new Thread(new Runnable() {
 			public void run() {
+				com.openbravo.data.loader.Session session = null;
+				String lease = null;
+				LocalDateTime now = LocalDateTime.now();
 				try (LogContext.Scope ignored = LogContext.beginOperation()) {
-					File target = backup(props);
-					if (props instanceof AppConfig) {
-						ConfigurationStore.save((AppConfig) props);
+					session = BackupPolicy.connect(props);
+					lease = BackupPolicy.claim(session, props.getHost(), now);
+					if (lease == null) {
+						return;
 					}
+					backup(props);
+					BackupPolicy policy = BackupPolicy.load(session);
+					pruneOldBackups(BackupConfiguration.from(props).getDirectory(), policy.getRetentionDays());
+					BackupPolicy.release(session, lease, now.toLocalDate(), true);
+					lease = null;
 					logger.info("event=backup_daily_success databaseType="
 							+ parseConnectionInfo(props.getProperty("db.URL")).getType());
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "event=backup_daily_failed", e);
+				} finally {
+					if (session != null) {
+						if (lease != null) {
+							try {
+								BackupPolicy.release(session, lease, now.toLocalDate(), false);
+							} catch (Exception e) {
+								logger.log(Level.WARNING, "event=backup_lease_release_failed", e);
+							}
+						}
+						session.close();
+					}
 				}
 			}
 		}, "DailyDatabaseBackupThread");
 		backupThread.setDaemon(true);
 		backupThread.start();
+	}
+
+	private static void pruneOldBackups(String path, int retentionDays) {
+		if (path == null || path.trim().isEmpty()) {
+			return;
+		}
+		File[] files = new File(path).listFiles();
+		if (files == null) {
+			return;
+		}
+		long cutoff = System.currentTimeMillis() - retentionDays * 86400000L;
+		for (File file : files) {
+			if (file.isFile() && file.getName().startsWith("backup-")
+					&& (file.getName().endsWith(".sql.gz") || file.getName().endsWith(".tar.gz"))
+					&& file.lastModified() < cutoff) {
+				deleteFile(file, "expired database backup");
+			}
+		}
 	}
 
 	public static ConnectionInfo parseConnectionInfo(String url) {

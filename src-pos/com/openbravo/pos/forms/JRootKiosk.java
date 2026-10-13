@@ -74,7 +74,7 @@ public class JRootKiosk extends javax.swing.JFrame implements AppMessage {
 
 			setVisible(true);
 		} else {
-			new JFrmConfig(props).setVisible(true); // Show the configuration window.
+			dispose();
 		}
 	}
 
