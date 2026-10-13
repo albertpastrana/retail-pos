@@ -27,7 +27,8 @@ class TerminalConfigurationUiTest {
 					JPanel backup = field(panel, "jPanelBackup", JPanel.class);
 					for (String name : new String[]{"jLabelBackupHour", "jLabelBackupRetention", "jLabelBackupDir"}) {
 						JLabel label = field(panel, name, JLabel.class);
-						assertTrue(label.getWidth() >= label.getPreferredSize().width, locale + ": " + name);
+						assertTrue(label.getWidth() >= label.getPreferredSize().width, locale + ": " + name + " width="
+								+ label.getWidth() + " preferred=" + label.getPreferredSize().width);
 						assertTrue(label.getX() + label.getWidth() <= backup.getWidth(), locale + ": " + name);
 					}
 					assertTrue(AppLocal.getIntString("message.startupdatabase", "Connection refused")
