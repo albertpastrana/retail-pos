@@ -302,9 +302,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 										.addComponent(jBackupRetention, javax.swing.GroupLayout.PREFERRED_SIZE, 75,
 												javax.swing.GroupLayout.PREFERRED_SIZE))
-								.addGroup(jPanelBackupLayout.createSequentialGroup()
-										.addComponent(jLabelBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE, 130,
-												javax.swing.GroupLayout.PREFERRED_SIZE)
+								.addGroup(jPanelBackupLayout.createSequentialGroup().addComponent(jLabelBackupDir)
 										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 										.addComponent(jtxtBackupDir, javax.swing.GroupLayout.PREFERRED_SIZE, 328,
 												javax.swing.GroupLayout.PREFERRED_SIZE)
