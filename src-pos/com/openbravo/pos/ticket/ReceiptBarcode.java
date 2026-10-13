@@ -12,7 +12,10 @@ public final class ReceiptBarcode {
 	}
 
 	public static String encode(TicketInfo ticket) {
-		return (ticket.getTicketType() == TYPE_REFUND ? "R" : "T") + ticket.printId();
+		if (ticket.getTicketId() <= 0) {
+			return "";
+		}
+		return (ticket.getTicketType() == TYPE_REFUND ? "R" : "T") + ticket.getTicketId();
 	}
 
 	public static boolean isReceiptBarcode(String value) {

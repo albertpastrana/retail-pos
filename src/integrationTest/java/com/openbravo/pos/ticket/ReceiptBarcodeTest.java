@@ -13,6 +13,7 @@ public class ReceiptBarcodeTest {
 		TicketInfo sale = new TicketInfo();
 		sale.setTicketId(123);
 		assertEquals("T123", ReceiptBarcode.encode(sale));
+		assertEquals("", ReceiptBarcode.encode(new TicketInfo()));
 
 		TicketInfo refund = new TicketInfo();
 		refund.setTicketType(TicketInfo.RECEIPT_REFUND);

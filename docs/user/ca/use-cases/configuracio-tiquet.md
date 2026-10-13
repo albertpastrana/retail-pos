@@ -290,8 +290,9 @@ Aquest exemple combina capçalera, línies, total, pagaments i codi de barres:
 
 1. Exporta o copia el contingut actual dels recursos abans d’editar-los.
 2. Tanca el POS abans de modificar una base de dades Derby.
-3. Edita els recursos des de **Administració → Recursos** o substitueix les
-   plantilles del projecte.
+3. Edita el recurs des de **Administració → Recursos**. Els fitxers de
+   `src-pos/com/openbravo/pos/templates/` són només la referència del format;
+   substituir-los no actualitza una instal·lació existent.
 4. Desa el recurs i reinicia el POS perquè la memòria cau de recursos es
    torni a carregar.
 5. Imprimeix primer una previsualització i després un tiquet de prova.
@@ -303,7 +304,7 @@ Aquest exemple combina capçalera, línies, total, pagaments i codi de barres:
 - **La previsualització és diferent del tiquet:** cal actualitzar també
   `Printer.TicketPreview`.
 - **El tiquet regal no té codi:** cal actualitzar `Printer.TicketGift`.
-- **S’imprimeix el text però no les barres:** comprova que la impressora està
+- **S’imprimeix el text, però no les barres:** comprova que la impressora està
   configurada com a `epson` o `tmu220`, no com a `printer`; consulta
   `escpos-printer.md`.
 - **El codi no s’obre com a tiquet:** comprova que el valor és `T<id>` o
