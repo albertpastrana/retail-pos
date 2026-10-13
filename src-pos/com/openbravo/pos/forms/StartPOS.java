@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import javax.swing.JOptionPane;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
@@ -119,6 +120,23 @@ public class StartPOS {
 				}
 
 				AppConfig config = ConfigurationStore.load();
+				// Preferences, locale and screen mode must come from the database before
+				// constructing any Swing screens or applying formatting defaults.
+				try {
+					com.openbravo.data.loader.Session session = AppViewConnection.createSession(config);
+					try {
+						TerminalConfiguration.load(config, session);
+					} finally {
+						session.close();
+					}
+					ConfigurationStore.save(config);
+				} catch (Exception e) {
+					logger.log(Level.SEVERE, "event=startup_database_failed", e);
+					JOptionPane.showMessageDialog(null,
+							AppLocal.getIntString("message.startupdatabase", e.getMessage()),
+							AppLocal.getIntString("message.title"), JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				logger.info("event=configuration_loaded source=" + ConfigurationStore.source() + " path="
 						+ LogSanitizer.field(ConfigurationStore.resolveFile().getAbsolutePath()) + " "
 						+ LogSanitizer.configuration(config));
