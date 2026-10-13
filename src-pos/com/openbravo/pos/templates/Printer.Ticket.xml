@@ -35,9 +35,11 @@
         <line></line>
         <line></line>
         <line>
-            <text align="left" length="21">Rebut: ${ticket.printId()}</text>
-            <text align="right" length="21">${ticket.printDateShort()}</text>
+            <text align="right" length="42">${ticket.printDateShort()}</text>
         </line>
+        #if ($ticket.printId() != "")
+        <barcode type="CODE128" position="bottom">${ticket.printBarcodeId()}</barcode>
+        #end
         <line>
             <text>L'ha atès: ${ticket.printUserFirstName()}</text>
         </line>

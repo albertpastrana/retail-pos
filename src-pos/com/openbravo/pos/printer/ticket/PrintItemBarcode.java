@@ -51,9 +51,9 @@ public class PrintItemBarcode implements PrintItem {
 
 		if (m_barcode != null) {
 			m_barcode.setModuleWidth(1.0);
-			m_barcode.setBarHeight(40.0);
-			m_barcode.setFontSize(10.0);
-			m_barcode.setQuietZone(10.0);
+			m_barcode.setBarHeight(18.0);
+			m_barcode.setFontSize(8.0);
+			m_barcode.setQuietZone(4.0);
 			m_barcode.doQuietZone(true);
 			if (DevicePrinter.POSITION_NONE.equals(position)) {
 				m_barcode.setMsgPosition(HumanReadablePlacement.HRP_NONE);

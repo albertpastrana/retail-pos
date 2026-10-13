@@ -21,6 +21,7 @@ This guide is organised by everyday situations at the counter. Open the use case
 15. [Stock, catalogue, replenishment and orders](use-cases/stock-and-catalogue.md)
 16. [Close and review cash](use-cases/cash-closing.md)
 17. [Management reports](use-cases/reports.md)
+18. [Configure receipt content](use-cases/receipt-templates.md)
 
 The operations pages describe the shop's validated flow. Screenshots will be added during a later shop-floor review.
 

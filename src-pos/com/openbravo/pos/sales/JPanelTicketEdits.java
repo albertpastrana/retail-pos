@@ -30,6 +30,7 @@ import java.awt.Dimension;
 public class JPanelTicketEdits extends JPanelTicket {
 
 	private JTicketCatalogLines m_catandlines;
+	private static String pendingReceiptBarcode;
 
 	/** Creates a new instance of JPanelTicketRefunds */
 	public JPanelTicketEdits() {
@@ -43,6 +44,20 @@ public class JPanelTicketEdits extends JPanelTicket {
 	public void activate() throws BasicException {
 		super.activate();
 		m_catandlines.loadCatalog();
+		String barcode = consumeReceiptBarcode();
+		if (barcode != null) {
+			scanReceipt(barcode);
+		}
+	}
+
+	public static synchronized void requestReceiptBarcode(String barcode) {
+		pendingReceiptBarcode = barcode;
+	}
+
+	private static synchronized String consumeReceiptBarcode() {
+		String barcode = pendingReceiptBarcode;
+		pendingReceiptBarcode = null;
+		return barcode;
 	}
 
 	public void showCatalog() {

@@ -49,7 +49,17 @@ public abstract class Codes {
 
 	public void printBarcode(PrinterWritter out, String type, String position, String code) {
 
-		if (DevicePrinter.BARCODE_EAN13.equals(type)) {
+		if (DevicePrinter.BARCODE_CODE128.equals(type)) {
+			out.write(getNewLine());
+			out.write(ESCPOS.BAR_HEIGHT);
+			out.write(DevicePrinter.POSITION_NONE.equals(position) ? ESCPOS.BAR_POSITIONNONE : ESCPOS.BAR_POSITIONDOWN);
+			out.write(ESCPOS.BAR_HRIFONT1);
+			out.write(ESCPOS.BAR_CODE128);
+			byte[] payload = code.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+			out.write(new byte[]{(byte) (payload.length + 2), 0x7B, 0x42});
+			out.write(payload);
+			out.write(getNewLine());
+		} else if (DevicePrinter.BARCODE_EAN13.equals(type)) {
 
 			out.write(getNewLine());
 

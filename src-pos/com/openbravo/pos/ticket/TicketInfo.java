@@ -479,6 +479,10 @@ public class TicketInfo implements SerializableRead, Externalizable {
 		}
 	}
 
+	public String printBarcodeId() {
+		return ReceiptBarcode.encode(this);
+	}
+
 	public String printDate() {
 		return Formats.TIMESTAMP.formatValue(m_dDate);
 	}

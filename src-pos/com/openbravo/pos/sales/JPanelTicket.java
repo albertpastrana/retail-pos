@@ -67,6 +67,7 @@ import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
+import com.openbravo.pos.ticket.ReceiptBarcode;
 import com.openbravo.pos.ticket.LoyaltyStamps;
 import com.openbravo.pos.util.TillButtons;
 import com.openbravo.pos.util.RoundUtils;
@@ -326,6 +327,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 		}
 
 		refreshTicket();
+	}
+
+	protected void scanReceipt(String barcode) {
+		m_ticketsbag.scanReceipt(barcode);
 	}
 
 	public TicketInfo getActiveTicket() {
@@ -975,7 +980,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			// Codigo de barras introducido
 			String sCode = m_jKeyFactory.getText();
 			if (sCode != null && sCode.length() > 0) {
-				if (sCode.length() == 13 && sCode.startsWith("250")) {
+				if (ReceiptBarcode.isReceiptBarcode(sCode) && (this instanceof JPanelTicketEdits || m_App
+						.getAppUserView().getUser().hasPermission("com.openbravo.pos.sales.JPanelTicketEdits"))) {
+					if (this instanceof JPanelTicketEdits) {
+						m_ticketsbag.scanReceipt(sCode);
+					} else {
+						JPanelTicketEdits.requestReceiptBarcode(sCode);
+						m_App.getAppUserView().showTask("com.openbravo.pos.sales.JPanelTicketEdits",
+								JPanelTicketEdits.class);
+					}
+				} else if (sCode.length() == 13 && sCode.startsWith("250")) {
 					// barcode of the other machine
 					ProductInfoExt oProduct = new ProductInfoExt(); // Es un ticket
 					oProduct.setReference(null); // para que no se grabe
