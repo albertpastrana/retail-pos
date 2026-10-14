@@ -89,9 +89,9 @@ dependencies {
     }
     implementation("com.formdev:flatlaf-extras:3.7.2")
     runtimeOnly("com.mysql:mysql-connector-j:8.4.0")
-    runtimeOnly("org.postgresql:postgresql:42.7.13")
+    runtimeOnly("org.postgresql:postgresql:42.7.14")
     "dataHelpersImplementation"("org.apache.derby:derby:10.17.1.0")
-    "dataHelpersImplementation"("org.postgresql:postgresql:42.7.13")
+    "dataHelpersImplementation"("org.postgresql:postgresql:42.7.14")
     "dataHelpersImplementation"("com.mysql:mysql-connector-j:8.4.0")
     "integrationTestImplementation"("org.junit.jupiter:junit-jupiter:6.1.3")
     "integrationTestImplementation"("org.assertj:assertj-core:3.27.7")
