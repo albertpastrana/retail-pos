@@ -69,7 +69,7 @@ dependencies {
     implementation("org.flywaydb:flyway-mysql:9.22.3")
     listOf(
         "net.sourceforge.barbecue:barbecue:1.5-beta1",
-        "commons-codec:commons-codec:1.22.1",
+        "commons-codec:commons-codec:1.23.0",
         "commons-collections:commons-collections:3.2.2",
         "commons-discovery:commons-discovery:0.5",
         "commons-lang:commons-lang:2.6",
