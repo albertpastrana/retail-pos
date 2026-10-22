@@ -496,9 +496,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		finder.search(null);
 		finder.setVisible(true);
 		formCustomer = finder.getSelectedCustomer();
-		selectedCustomer.setText(formCustomer == null || formCustomer.getName() == null
+		selectedCustomer.setText(formCustomer == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
-				: "<html><b>" + formCustomer.getName() + "</b></html>");
+				: "<html><b>" + customerDisplayName(formCustomer) + "</b></html>");
 	}
 	private void saveForm() {
 		if (formProduct == null && formCode.getText().trim().isEmpty() && formDescription.getText().trim().isEmpty()) {
@@ -521,7 +521,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		e.note = formNoteArea.getText().trim();
 		if (formCustomer != null) {
 			e.customerId = formCustomer.getId();
-			e.customerName = formCustomer.getName();
+			e.customerName = customerDisplayName(formCustomer);
 		} else {
 			e.customerId = null;
 			e.customerName = null;
@@ -563,9 +563,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		selectedProduct.setText(entry.productId == null
 				? AppLocal.getIntString("Replenishment.UnknownProduct")
 				: productHtml(entry.name, entry.reference, entry.ean));
-		selectedCustomer.setText(entry.customerName == null || entry.customerName.isBlank()
+		selectedCustomer.setText(entry.customerId == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
-				: "<html><b>" + entry.customerName + "</b></html>");
+				: "<html><b>" + customerDisplayName(formCustomer, entry.customerName) + "</b></html>");
 		showSelectedProduct();
 	}
 	private void clearForm() {
@@ -623,6 +623,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private static String valueOrEmpty(String value) {
 		return value == null ? "" : value;
+	}
+	private static String customerDisplayName(CustomerInfo customer) {
+		return customerDisplayName(customer, customer == null ? null : customer.getName());
+	}
+	private static String customerDisplayName(CustomerInfo customer, String name) {
+		if (name != null && !name.isBlank())
+			return name;
+		return valueOrEmpty(customer == null ? null : customer.getId());
 	}
 	private static String productHtml(String name, String reference, String ean) {
 		return "<html><b>" + valueOrEmpty(name) + "</b><br><font color='#777777'>" + valueOrEmpty(reference) + " · EAN "
