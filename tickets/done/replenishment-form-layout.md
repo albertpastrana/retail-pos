@@ -3,6 +3,8 @@
 Captured: 2026-10-22
 
 Related: `tickets/done/stock-orders.md`
+Related: `tickets/done/replenishment-customer-terminology.md`
+Related: `tickets/done/replenishment-row-status-colors.md`
 
 ## Goal
 
@@ -30,7 +32,4 @@ The list and detail labels also assembled database values directly.
 
 The form now scrolls vertically, derives a smaller minimum width, preserves
 stable field heights, and normalizes nullable display values in
-`ReplenishmentPanel`. Catalan replenishment labels now follow the existing
-`clienta/clientes` terminology consistently. Table rows now use one consistent
-status color instead of mixing type colors across the row with status colors in
-one cell.
+`ReplenishmentPanel`.
