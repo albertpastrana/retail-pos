@@ -149,23 +149,11 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 					boolean focused, int row, int column) {
 				java.awt.Component component = super.getTableCellRendererComponent(table, value, selected, focused, row,
 						column);
-				if (!selected)
-					component.setBackground(row < table.getRowCount()
-							&& AppLocal.getIntString("Replenishment.Orders").equals(table.getValueAt(row, 0))
-									? new java.awt.Color(255, 244, 214)
-									: new java.awt.Color(235, 245, 255));
-				if (!selected && column == 4) {
-					String state = String.valueOf(value);
-					component.setBackground(state.equals(AppLocal.getIntString("Replenishment.Received"))
-							? new java.awt.Color(230, 240, 230)
-							: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-									? new java.awt.Color(227, 237, 248)
-									: new java.awt.Color(253, 241, 216));
-					component.setForeground(state.equals(AppLocal.getIntString("Replenishment.Received"))
-							? new java.awt.Color(44, 110, 44)
-							: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-									? new java.awt.Color(10, 92, 158)
-									: new java.awt.Color(138, 90, 0));
+				if (!selected && row < table.getRowCount()) {
+					String state = String.valueOf(table.getValueAt(row, 4));
+					component.setBackground(statusBackground(state));
+					if (column == 4)
+						component.setForeground(statusForeground(state));
 				}
 				return component;
 			}
@@ -274,7 +262,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
 			return;
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(chooser.getSelectedFile()))) {
-			writer.write("producte\tnom client\ttelefon\tnota\tpersona");
+			writer.write("producte\tnom clienta\ttelefon\tnota\tpersona");
 			writer.newLine();
 			for (ReplenishmentEntry entry : entries) {
 				String phone = "";
@@ -315,7 +303,13 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private String creatorName(String creatorId) {
 		UserInfo seller = selectedSeller();
-		return seller != null && seller.getId().equals(creatorId) ? seller.getName() : creatorId;
+		return seller != null && seller.getId() != null && seller.getId().equals(creatorId)
+				? valueOrEmpty(seller.getName())
+				: valueOrEmpty(creatorId);
+	}
+	private String selectedSellerName() {
+		UserInfo seller = selectedSeller();
+		return seller == null ? "" : valueOrEmpty(seller.getName());
 	}
 	private void installPlaceholder(JTextField field, String key) {
 		final String hint = AppLocal.getIntString(key);
@@ -341,8 +335,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private JPanel createForm() {
 		JPanel form = new JPanel(new BorderLayout(5, 5));
 		form.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
-		form.setPreferredSize(new java.awt.Dimension(380, 0));
-		form.setMinimumSize(new java.awt.Dimension(320, 0));
+		form.setPreferredSize(new java.awt.Dimension(360, 0));
+		form.setMinimumSize(new java.awt.Dimension(280, 0));
 		JPanel fields = new JPanel(new GridBagLayout());
 		GridBagConstraints outer = new GridBagConstraints();
 		outer.gridx = 0;
@@ -365,6 +359,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		productGroup.add(new JLabel(AppLocal.getIntString("Replenishment.Scan")), c);
 		c.gridy = 1;
 		productGroup.add(formCode, c);
+		formCode.setMinimumSize(new java.awt.Dimension(0, 32));
+		formCode.setPreferredSize(new java.awt.Dimension(0, 32));
 		JPanel productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JButton findProduct = new JButton(AppLocal.getIntString("Replenishment.SearchProduct"));
 		findProduct.setMargin(new Insets(6, 10, 6, 10));
@@ -382,6 +378,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		c.gridy = 5;
 		productGroup.add(manualDescriptionLabel, c);
 		manualDescriptionScroll = new JScrollPane((JTextArea) formDescription);
+		manualDescriptionScroll.setMinimumSize(new java.awt.Dimension(0, 58));
+		manualDescriptionScroll.setPreferredSize(new java.awt.Dimension(0, 64));
 		c.gridy = 6;
 		productGroup.add(manualDescriptionScroll, c);
 		JPanel customerGroup = new JPanel(new BorderLayout(6, 0));
@@ -425,7 +423,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel statusSection = new JPanel(new BorderLayout(0, 2));
 		statusSection.add(formStatusLabel, BorderLayout.NORTH);
 		statusSection.add(statusButtons, BorderLayout.CENTER);
-		creatorLabel = new JLabel(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSeller().getName());
+		creatorLabel = new JLabel(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		outer.gridy = 0;
 		fields.add(new JLabel(AppLocal.getIntString("Replenishment.Product")), outer);
 		outer.gridy = 1;
@@ -451,7 +449,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formActions.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 		formActions.add(cancel);
 		formActions.add(save);
-		form.add(fields, BorderLayout.CENTER);
+		JScrollPane fieldsScroll = new JScrollPane(fields);
+		fieldsScroll.setBorder(BorderFactory.createEmptyBorder());
+		fieldsScroll.getVerticalScrollBar().setUnitIncrement(16);
+		form.add(fieldsScroll, BorderLayout.CENTER);
 		form.add(formActions, BorderLayout.SOUTH);
 		formCode.addActionListener(e -> findFormProduct());
 		findProduct.addActionListener(e -> {
@@ -479,9 +480,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			selectedProduct.setText(AppLocal.getIntString("Replenishment.UnknownProduct"));
 			formDescription.setEditable(true);
 		} else {
-			selectedProduct.setText("<html><b>" + formProduct.getName() + "</b><br><font color='#777777'>"
-					+ formProduct.getReference() + " · EAN " + formProduct.getCode() + "</font></html>");
-			formDescription.setText(formProduct.getName());
+			selectedProduct
+					.setText(productHtml(formProduct.getName(), formProduct.getReference(), formProduct.getCode()));
+			formDescription.setText(valueOrEmpty(formProduct.getName()));
 			formDescription.setEditable(false);
 		}
 		withoutCodeLabel.setVisible(manual);
@@ -495,7 +496,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		finder.search(null);
 		finder.setVisible(true);
 		formCustomer = finder.getSelectedCustomer();
-		selectedCustomer.setText(formCustomer == null
+		selectedCustomer.setText(formCustomer == null || formCustomer.getName() == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
 				: "<html><b>" + formCustomer.getName() + "</b></html>");
 	}
@@ -527,12 +528,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 		e.status = formStatus;
 		if (editingEntry == null)
-			e.createdBy = selectedSeller().getId();
+			e.createdBy = selectedSeller() == null ? null : selectedSeller().getId();
 		try {
 			if (editingEntry == null)
 				data.add(e);
 			else
-				data.update(e, selectedSeller().getId());
+				data.update(e, selectedSeller() == null ? null : selectedSeller().getId());
 			clearForm();
 			load("", false);
 		} catch (BasicException ex) {
@@ -542,7 +543,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private void loadEntry(ReplenishmentEntry entry) {
 		editingEntry = entry;
 		formStatus = entry.status;
-		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + entry.createdBy);
+		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + valueOrEmpty(entry.createdBy));
 		formCode.setText(entry.ean == null ? "" : entry.ean);
 		formProduct = entry.productId == null ? null : new ProductInfoExt();
 		if (formProduct != null) {
@@ -561,9 +562,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			formCustomer.setName(entry.customerName);
 		selectedProduct.setText(entry.productId == null
 				? AppLocal.getIntString("Replenishment.UnknownProduct")
-				: "<html><b>" + entry.name + "</b><br><font color='#777777'>" + entry.reference + " · EAN " + entry.ean
-						+ "</font></html>");
-		selectedCustomer.setText(entry.customerName == null
+				: productHtml(entry.name, entry.reference, entry.ean));
+		selectedCustomer.setText(entry.customerName == null || entry.customerName.isBlank()
 				? AppLocal.getIntString("Replenishment.NoCustomer")
 				: "<html><b>" + entry.customerName + "</b></html>");
 		showSelectedProduct();
@@ -571,7 +571,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private void clearForm() {
 		editingEntry = null;
 		formStatus = "PENDING";
-		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSeller().getName());
+		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		formCode.setText("");
 		formDescription.setText("");
 		formDescription.setEditable(true);
@@ -607,6 +607,27 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 						? AppLocal.getIntString("Replenishment.Ordered")
 						: AppLocal.getIntString("Replenishment.Pending");
 	}
+	private static java.awt.Color statusBackground(String state) {
+		return state.equals(AppLocal.getIntString("Replenishment.Received"))
+				? new java.awt.Color(230, 240, 230)
+				: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
+						? new java.awt.Color(227, 237, 248)
+						: new java.awt.Color(253, 241, 216);
+	}
+	private static java.awt.Color statusForeground(String state) {
+		return state.equals(AppLocal.getIntString("Replenishment.Received"))
+				? new java.awt.Color(44, 110, 44)
+				: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
+						? new java.awt.Color(10, 92, 158)
+						: new java.awt.Color(138, 90, 0);
+	}
+	private static String valueOrEmpty(String value) {
+		return value == null ? "" : value;
+	}
+	private static String productHtml(String name, String reference, String ean) {
+		return "<html><b>" + valueOrEmpty(name) + "</b><br><font color='#777777'>" + valueOrEmpty(reference) + " · EAN "
+				+ valueOrEmpty(ean) + "</font></html>";
+	}
 	private void change(String status) {
 		int row = table.getSelectedRow();
 		if (row < 0)
@@ -630,7 +651,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		queueFilterLabel.setText(" ");
 		allStatus.setSelected(true);
 		if (!hasDraftContent())
-			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSeller().getName());
+			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		load("", false);
 	}
 
