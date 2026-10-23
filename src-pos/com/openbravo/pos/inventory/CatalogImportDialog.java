@@ -19,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -138,7 +139,9 @@ public final class CatalogImportDialog {
 	public ProductInfoExt importIfAbsent(String code) throws BasicException {
 		cancelled = false;
 		unknown = false;
-		LOGGER.log(Level.INFO, "event=catalog_import_start copy={0} code=\"{1}\"", new Object[]{copy, code});
+		String importId = UUID.randomUUID().toString();
+		LOGGER.log(Level.INFO, "event=catalog_import_start import_id={0} copy={1} code=\"{2}\"",
+				new Object[]{importId, copy, code});
 		ProductInfoExt product = dlSales.getProductInfoByCode(code);
 		// An alias found by the sales lookup is not an unknown catalogue product.
 		// A receiving scan accepts only PRODUCTS.CODE and must not import it again.
@@ -147,39 +150,51 @@ public final class CatalogImportDialog {
 			return null;
 		}
 		if (product != null) {
-			LOGGER.log(Level.INFO, "event=catalog_import_existing_product code=\"{0}\"", code);
+			LOGGER.log(Level.INFO, "event=catalog_import_existing_product import_id={0} code=\"{1}\"",
+					new Object[]{importId, code});
 			return product;
 		}
 		ProductInfoExt catalogProduct = dlSales.getCatalogProductByCode(code, null, null);
 		if (catalogProduct == null && copy != Copy.STOCK) {
 			unknown = true;
-			LOGGER.log(Level.INFO, "event=catalog_fallback_miss code=\"{0}\"", code);
+			LOGGER.log(Level.INFO, "event=catalog_fallback_miss import_id={0} code=\"{1}\"",
+					new Object[]{importId, code});
 			return null;
 		}
 		if (catalogProduct == null) {
-			LOGGER.log(Level.INFO, "event=catalog_fallback_miss code=\"{0}\" mode=stock", code);
+			LOGGER.log(Level.INFO, "event=catalog_fallback_miss import_id={0} code=\"{1}\" mode=stock",
+					new Object[]{importId, code});
 		} else {
-			LOGGER.log(Level.INFO, "event=catalog_fallback_match code=\"{0}\" family=\"{1}\"",
-					new Object[]{code, catalogProduct.getFamily()});
+			LOGGER.log(Level.INFO, "event=catalog_fallback_match import_id={0} code=\"{1}\" family=\"{2}\"",
+					new Object[]{importId, code, catalogProduct.getFamily()});
 		}
 		// Receiving only adds the scanned product to the receipt. The selected
 		// family variants are still created in the catalogue for later scans.
 		List<ProductInfoExt> family = familyForImport(code, catalogProduct, dlSales);
 		if (family.size() > 1) {
-			LOGGER.log(Level.INFO, "event=catalog_fallback_family_match code=\"{0}\" family=\"{1}\" variants={2}",
-					new Object[]{code, catalogProduct.getFamily(), family.size()});
+			LOGGER.log(Level.INFO,
+					"event=catalog_fallback_family_match import_id={0} code=\"{1}\" family=\"{2}\" variants={3}",
+					new Object[]{importId, code, catalogProduct.getFamily(), family.size()});
 			List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family);
 			if (editedFamily == null) {
 				cancelled = true;
-				LOGGER.log(Level.INFO, "event=catalog_import_cancelled code=\"{0}\" reason=family_edit", code);
+				LOGGER.log(Level.INFO, "event=catalog_import_cancelled import_id={0} code=\"{1}\" reason=family_edit",
+						new Object[]{importId, code});
 				return null;
 			}
+			List<ProductInfoExt> existingFamily = new ArrayList<ProductInfoExt>();
+			for (ProductInfoExt variant : editedFamily)
+				existingFamily.add(dlSales.getProductInfoByCode(variant.getCode()));
 			dlSales.importProducts(editedFamily, null);
-			for (ProductInfoExt imported : editedFamily) {
+			for (int i = 0; i < editedFamily.size(); i++) {
+				ProductInfoExt imported = editedFamily.get(i);
+				ProductInfoExt localProduct = dlSales.getProductInfoByCode(imported.getCode());
+				logFallbackProductOperation(importId, code, localProduct,
+						existingFamily.get(i) == null ? "created" : "updated");
 				applyImportedStock(imported);
 			}
-			LOGGER.log(Level.INFO, "event=catalog_import_family_success code=\"{0}\" variants={1}",
-					new Object[]{code, editedFamily.size()});
+			LOGGER.log(Level.INFO, "event=catalog_import_family_success import_id={0} code=\"{1}\" variants={2}",
+					new Object[]{importId, code, editedFamily.size()});
 			if (copy == Copy.RECEIVING) {
 				ProductInfoExt scannedVariant = receivingVariant(editedFamily, code);
 				if (scannedVariant != null)
@@ -190,14 +205,25 @@ public final class CatalogImportDialog {
 		ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
 		if (editedProduct == null) {
 			cancelled = true;
-			LOGGER.log(Level.INFO, "event=catalog_import_cancelled code=\"{0}\" reason=product_edit", code);
+			LOGGER.log(Level.INFO, "event=catalog_import_cancelled import_id={0} code=\"{1}\" reason=product_edit",
+					new Object[]{importId, code});
 			return null;
 		}
 		product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), null);
+		logFallbackProductOperation(importId, code, product, "created");
 		applyImportedStock(editedProduct);
-		LOGGER.log(Level.INFO, "event=catalog_import_success code=\"{0}\" family=\"{1}\"",
-				new Object[]{code, editedProduct.getFamily()});
+		LOGGER.log(Level.INFO, "event=catalog_import_success import_id={0} code=\"{1}\" family=\"{2}\"",
+				new Object[]{importId, code, editedProduct.getFamily()});
 		return copy == Copy.RECEIVING ? importedByExactCode(editedProduct.getCode()) : product;
+	}
+
+	private void logFallbackProductOperation(String importId, String scannedCode, ProductInfoExt product,
+			String operation) {
+		if (product == null)
+			return;
+		LOGGER.log(Level.INFO,
+				"event=catalog_fallback_product_operation import_id={0} scanned_code=\"{1}\" product_id=\"{2}\" product_code=\"{3}\" operation={4}",
+				new Object[]{importId, scannedCode, product.getID(), product.getCode(), operation});
 	}
 
 	static List<ProductInfoExt> familyForImport(String code, ProductInfoExt catalogProduct, DataLogicSales dlSales)
