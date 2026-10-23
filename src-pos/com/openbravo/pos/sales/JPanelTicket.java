@@ -884,6 +884,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void closeCurrentTicket() {
+		long started = System.currentTimeMillis();
 		try (LogContext.Scope ignored = LogContext.beginOperation()) {
 			LOGGER.info("event=ticket_close_start ticket=" + m_oTicket.getId() + " type=" + ticketTypeName(m_oTicket)
 					+ " total=" + m_oTicket.getTotal() + " lines=" + m_oTicket.getLinesCount());
@@ -893,10 +894,15 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					return;
 				}
 				if (closeTicket(m_oTicket, m_oTicketExt)) {
-					LOGGER.info("event=ticket_close_success");
+					LOGGER.info("event=ticket_close_success ticket=" + m_oTicket.getId() + " type="
+							+ ticketTypeName(m_oTicket) + " total=" + m_oTicket.getTotal() + " lines="
+							+ m_oTicket.getLinesCount() + " duration_ms=" + (System.currentTimeMillis() - started));
 					m_ticketsbag.deleteTicket();
 				} else {
-					LOGGER.warning("event=ticket_close_failed");
+					LOGGER.warning("event=ticket_close_failed ticket=" + m_oTicket.getId() + " type="
+							+ ticketTypeName(m_oTicket) + " total=" + m_oTicket.getTotal() + " lines="
+							+ m_oTicket.getLinesCount() + " reason=close_ticket_returned_false duration_ms="
+							+ (System.currentTimeMillis() - started));
 					m_ticketsbag.cancelPayment();
 					refreshTicket();
 				}
@@ -1204,7 +1210,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private boolean closeTicket(TicketInfo ticket, Object ticketext) {
 
+		long started = System.currentTimeMillis();
 		boolean resultok = false;
+		String failureReason = "unknown";
 		int originalType = ticket.getTicketType();
 		int originalNumber = ticket.getTicketId();
 
@@ -1239,6 +1247,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				}
 				LOGGER.info("event=ticket_payment_result ticket=" + ticket.getId() + " type=" + ticketTypeName(ticket)
 						+ " accepted=" + paymentAccepted + " total=" + ticket.getTotal());
+				if (!paymentAccepted) {
+					failureReason = "payment_rejected";
+					LOGGER.warning("event=ticket_close_payment_rejected ticket=" + ticket.getId() + " type="
+							+ ticketTypeName(ticket) + " total=" + ticket.getTotal() + " lines="
+							+ ticket.getLinesCount());
+				}
 				if (refund) {
 					LOGGER.info("event=refund_payment_dialog_result ticket=" + ticket.getId() + " accepted="
 							+ paymentAccepted + " total=" + ticket.getTotal());
@@ -1284,6 +1298,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 							}
 						}.execute();
 					} catch (BasicException eData) {
+						failureReason = "persistence_failed";
 						LOGGER.log(Level.SEVERE, "event=" + (refund ? "refund" : "ticket")
 								+ "_persistence_failed ticket=" + ticket.getId() + " total=" + ticket.getTotal(),
 								eData);
@@ -1307,6 +1322,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					}
 				}
 			} catch (TaxesException e) {
+				failureReason = "tax_calculation_failed";
 				LOGGER.log(Level.SEVERE,
 						"event=ticket_close_tax_failed ticket=" + ticket.getId() + " type=" + ticketTypeName(ticket),
 						e);
@@ -1315,6 +1331,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				msg.show(this);
 				resultok = false;
 			} catch (RuntimeException e) {
+				failureReason = "unexpected_exception";
 				LOGGER.log(Level.SEVERE, "event=ticket_close_unexpected_failure ticket=" + ticket.getId() + " type="
 						+ ticketTypeName(ticket) + " total=" + ticket.getTotal(), e);
 				new MessageInf(MessageInf.SGN_NOTICE, AppLocal.getIntString("message.nosaveticket"), e).show(this);
@@ -1329,7 +1346,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				ticket.setTicketId(originalNumber);
 			}
 		} else {
+			failureReason = "missing_permission";
 			LOGGER.warning("event=ticket_close_denied ticket=" + ticket.getId() + " reason=missing_permission");
+		}
+
+		if (!resultok) {
+			LOGGER.warning("event=ticket_close_result result=failed ticket=" + ticket.getId() + " type="
+					+ ticketTypeName(ticket) + " total=" + ticket.getTotal() + " lines=" + ticket.getLinesCount()
+					+ " reason=" + failureReason + " duration_ms=" + (System.currentTimeMillis() - started));
 		}
 
 		return resultok;
