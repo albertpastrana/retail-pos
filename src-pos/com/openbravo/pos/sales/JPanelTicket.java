@@ -111,6 +111,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	private int m_iNumberStatusInput;
 	private int m_iNumberStatusPor;
 	private boolean m_bProductImportUnknown;
+	private double m_dLastCloseTotal;
 	private transient Runnable ticketChangeListener;
 
 	private JTicketsBag m_ticketsbag;
@@ -884,7 +885,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void closeCurrentTicket() {
-		long started = System.currentTimeMillis();
+		long started = System.nanoTime();
 		try (LogContext.Scope ignored = LogContext.beginOperation()) {
 			LOGGER.info("event=ticket_close_start ticket=" + m_oTicket.getId() + " type=" + ticketTypeName(m_oTicket)
 					+ " total=" + m_oTicket.getTotal() + " lines=" + m_oTicket.getLinesCount());
@@ -893,16 +894,17 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 					LOGGER.info("event=ticket_payment_cancelled reason=prepare_payment_rejected");
 					return;
 				}
+				m_dLastCloseTotal = m_oTicket.getTotal();
 				if (closeTicket(m_oTicket, m_oTicketExt)) {
 					LOGGER.info("event=ticket_close_success ticket=" + m_oTicket.getId() + " type="
-							+ ticketTypeName(m_oTicket) + " total=" + m_oTicket.getTotal() + " lines="
-							+ m_oTicket.getLinesCount() + " duration_ms=" + (System.currentTimeMillis() - started));
+							+ ticketTypeName(m_oTicket) + " total=" + m_dLastCloseTotal + " lines="
+							+ m_oTicket.getLinesCount() + " duration_ms=" + elapsedMillis(started));
 					m_ticketsbag.deleteTicket();
 				} else {
 					LOGGER.warning("event=ticket_close_failed ticket=" + m_oTicket.getId() + " type="
-							+ ticketTypeName(m_oTicket) + " total=" + m_oTicket.getTotal() + " lines="
+							+ ticketTypeName(m_oTicket) + " total=" + m_dLastCloseTotal + " lines="
 							+ m_oTicket.getLinesCount() + " reason=close_ticket_returned_false duration_ms="
-							+ (System.currentTimeMillis() - started));
+							+ elapsedMillis(started));
 					m_ticketsbag.cancelPayment();
 					refreshTicket();
 				}
@@ -1210,7 +1212,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 	private boolean closeTicket(TicketInfo ticket, Object ticketext) {
 
-		long started = System.currentTimeMillis();
+		long started = System.nanoTime();
 		boolean resultok = false;
 		String failureReason = "unknown";
 		int originalType = ticket.getTicketType();
@@ -1221,6 +1223,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 			try {
 				taxeslogic.calculateTaxes(ticket);
 				ticket.classifyExchangeByBalance();
+				m_dLastCloseTotal = ticket.getTotal();
 				boolean refund = ticket.getTicketType() == TicketInfo.RECEIPT_REFUND;
 				boolean noPayment = RoundUtils.compare(ticket.getTotal(), 0.0) == 0;
 				if (refund) {
@@ -1352,8 +1355,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
 		if (!resultok) {
 			LOGGER.warning("event=ticket_close_result result=failed ticket=" + ticket.getId() + " type="
-					+ ticketTypeName(ticket) + " total=" + ticket.getTotal() + " lines=" + ticket.getLinesCount()
-					+ " reason=" + failureReason + " duration_ms=" + (System.currentTimeMillis() - started));
+					+ ticketTypeName(ticket) + " total=" + m_dLastCloseTotal + " lines=" + ticket.getLinesCount()
+					+ " reason=" + failureReason + " duration_ms=" + elapsedMillis(started));
 		}
 
 		return resultok;
