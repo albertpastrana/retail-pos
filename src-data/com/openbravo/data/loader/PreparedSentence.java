@@ -131,10 +131,8 @@ public class PreparedSentence extends JDBCSentence {
 
 		closeExec();
 
+		long started = System.currentTimeMillis();
 		try {
-
-			logger.info("Executing prepared SQL: " + m_sentence);
-
 			m_Stmt = m_s.getConnection().prepareStatement(m_sentence);
 
 			if (m_SerWrite != null) {
@@ -153,6 +151,7 @@ public class PreparedSentence extends JDBCSentence {
 				}
 			}
 		} catch (SQLException eSQL) {
+			DatabaseLog.failure(logger, "prepared", m_sentence == null ? 0 : m_sentence.length(), started, eSQL);
 			throw new BasicException(eSQL);
 		}
 	}

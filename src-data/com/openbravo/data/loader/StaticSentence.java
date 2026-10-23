@@ -73,12 +73,13 @@ public class StaticSentence extends JDBCSentence {
 
 		closeExec();
 
+		long started = System.currentTimeMillis();
+		int sqlLength = 0;
 		try {
 			m_Stmt = m_s.getConnection().createStatement();
 
 			String sentence = m_sentence.getSQL(m_SerWrite, params);
-
-			logger.info("Executing static SQL: " + sentence);
+			sqlLength = sentence == null ? 0 : sentence.length();
 
 			if (m_Stmt.execute(sentence)) {
 				return new JDBCDataResultSet(m_Stmt.getResultSet(), m_SerRead);
@@ -91,6 +92,7 @@ public class StaticSentence extends JDBCSentence {
 				}
 			}
 		} catch (SQLException eSQL) {
+			DatabaseLog.failure(logger, "static", sqlLength, started, eSQL);
 			throw new BasicException(eSQL);
 		}
 	}
