@@ -613,6 +613,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 						statusLabel(e.status), f.format(e.createdAt) + " / " + e.createdBy});
 			displayedSearch = search;
 		} catch (BasicException e) {
+			table.clearSelection();
+			model.setRowCount(0);
+			entries = null;
 			JOptionPane.showMessageDialog(this, e.getMessage());
 		}
 	}
