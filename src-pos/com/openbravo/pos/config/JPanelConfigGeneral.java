@@ -231,6 +231,11 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 		dirty.setDirty(false);
 	}
 
+	@Override
+	public void markSaved() {
+		dirty.setDirty(false);
+	}
+
 	public void saveProperties(AppConfig config) {
 
 		config.setProperty("machine.screenmode", comboValue(jcboMachineScreenmode.getSelectedItem()));
@@ -284,7 +289,6 @@ public class JPanelConfigGeneral extends javax.swing.JPanel implements PanelConf
 
 		config.setProperty("machine.printername", comboValue(cboPrinters.getSelectedItem()));
 
-		dirty.setDirty(false);
 	}
 
 	private String comboValue(Object value) {

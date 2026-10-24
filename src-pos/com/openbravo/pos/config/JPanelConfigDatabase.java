@@ -132,6 +132,10 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		config.setProperty("backup.retention", jBackupRetention.getValue().toString());
 		config.setProperty("backup.dir", jtxtBackupDir.getText());
 
+	}
+
+	@Override
+	public void markSaved() {
 		dirty.setDirty(false);
 	}
 
@@ -154,7 +158,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 		java.awt.Cursor oldCursor = getCursor();
 		setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
 		try {
-			saveProperties(config);
+			config.setProperty("backup.dir", dir);
 
 			File backupFile = DatabaseBackup.backup(config);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.backupok", backupFile.getAbsolutePath()),

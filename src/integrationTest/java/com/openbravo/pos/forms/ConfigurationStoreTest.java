@@ -2,6 +2,7 @@ package com.openbravo.pos.forms;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -10,10 +11,24 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 public class ConfigurationStoreTest {
+	@Test
+	public void normalizesTerminalIdAndRejectsInvalidIdentity() {
+		AppConfig config = new AppConfig();
+		config.load(null);
+		String id = UUID.randomUUID().toString();
+		config.setProperty("terminal.id", " " + id + " ");
+		config.ensureTerminalId();
+		assertEquals(id, config.getHost());
+		config.setProperty("terminal.id", "not-a-uuid");
+		assertTrue(assertThrows(IllegalStateException.class, config::ensureTerminalId).getMessage()
+				.contains("terminal.id"));
+	}
+
 	@Test
 	public void migratesLegacyConfigurationToCanonicalFile() throws Exception {
 		String originalHome = System.getProperty("user.home");

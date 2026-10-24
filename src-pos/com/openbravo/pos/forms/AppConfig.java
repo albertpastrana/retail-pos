@@ -53,6 +53,17 @@ public class AppConfig implements AppProperties {
 		}
 	}
 
+	public AppConfig copy() {
+		AppConfig copy = new AppConfig();
+		copy.m_propsconfig.putAll(m_propsconfig);
+		return copy;
+	}
+
+	public void apply(AppConfig saved) {
+		m_propsconfig.clear();
+		m_propsconfig.putAll(saved.m_propsconfig);
+	}
+
 	private String getLocalHostName() {
 		try {
 			return java.net.InetAddress.getLocalHost().getHostName();
@@ -120,7 +131,11 @@ public class AppConfig implements AppProperties {
 		if (value == null || value.trim().isEmpty()) {
 			setProperty("terminal.id", UUID.randomUUID().toString());
 		} else {
-			UUID.fromString(value);
+			try {
+				setProperty("terminal.id", UUID.fromString(value.trim()).toString());
+			} catch (IllegalArgumentException e) {
+				throw new IllegalStateException("Invalid terminal.id in local configuration", e);
+			}
 		}
 	}
 
