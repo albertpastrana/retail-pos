@@ -26,10 +26,20 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 
 	public List<ReplenishmentEntry> list(String search, String type, String status) throws BasicException {
+		return list(search, type, status, false);
+	}
+
+	public List<ReplenishmentEntry> listForExport(String search, String type, String status) throws BasicException {
+		return list(search, type, status, true);
+	}
+
+	private List<ReplenishmentEntry> list(String search, String type, String status, boolean exportOrder)
+			throws BasicException {
 		List<ReplenishmentEntry> result = new ArrayList<ReplenishmentEntry>();
 		String term = search == null ? "" : search.trim();
 		String pattern = "%" + term + "%";
-		String sql = "SELECT * FROM REPLENISHMENT_ENTRIES WHERE ("
+		String sql = "SELECT R.* FROM REPLENISHMENT_ENTRIES R "
+				+ (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "") + "WHERE ("
 				+ "UPPER(COALESCE(PRODUCT_REFERENCE,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_NAME,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_EAN,'')) LIKE UPPER(?) "
@@ -45,7 +55,11 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 						: "PENDING".equals(status) || "ORDERED".equals(status) || "RECEIVED".equals(status)
 								? "AND STATUS = '" + status + "' "
 								: "")
-				+ "ORDER BY CREATED_AT DESC";
+				+ (exportOrder
+						? "ORDER BY CASE WHEN C.BRAND IS NULL OR TRIM(C.BRAND) = '' THEN 1 ELSE 0 END, "
+								+ "UPPER(C.BRAND), CASE WHEN C.FAMILY IS NULL OR TRIM(C.FAMILY) = '' THEN 1 ELSE 0 END, "
+								+ "UPPER(C.FAMILY), R.CREATED_AT DESC, R.ID"
+						: "ORDER BY R.CREATED_AT DESC");
 		try (PreparedStatement ps = connection().prepareStatement(sql)) {
 			for (int i = 1; i <= 7; i++)
 				ps.setString(i, pattern);
