@@ -60,14 +60,15 @@ notes, customer and status must be atomic.
   the EAN/reference is shown as read-only product information.
 - Changing a status refreshes the selected request and its form immediately.
 
-## Verification remaining
+## Verification
 
 An isolated task branch based on the latest `origin/main` contains only the
 delivered-status migration, persistence/form changes, and safe failure logging.
 It preserves the already-merged export-order/search behaviour. Its targeted
 status/logging tests and `docker compose up -d --wait` / `./gradlew ciCheck` /
-`docker compose down -v` pass; containers are stopped. Manual review of the
-live screen at supported sizes/scales and keyboard/scanner checks remain.
+`docker compose down -v` pass; containers are stopped. The user confirmed
+manual focus, keyboard, scanner and supported screen size/scale and theme
+checks on 2026-10-25.
 
 Failure investigation (2026-10-25): marking a received customer order delivered
 on PostgreSQL hit the old `replenishment_status` check even though Flyway
@@ -88,10 +89,8 @@ first verifies that delivery is rejected by the old check, then persists a
 safe-logging tests pass. `./gradlew spotlessApply`, the targeted integration
 tests, and `docker compose up -d --wait` / `./gradlew ciCheck` /
 `docker compose down -v` passed (Derby, MySQL, PostgreSQL; containers removed).
-No live/remote database was changed. Manual verification of the running screen
-and the actual installation where the screenshot was taken is still pending;
-the delivered-status and design-system changes remain interleaved in the
-pre-existing worktree, so no independent PR has been opened.
+No live/remote database was changed. The independent delivered-status PR is
+`https://github.com/albertpastrana/retail-pos/pull/130`.
 
 `./gradlew ciCheck` passed with Derby, MySQL and PostgreSQL after the edit-form
 changes; Compose containers were stopped. An automated Swing test checks
@@ -99,10 +98,14 @@ selection, wrapping, edit-mode product controls, status selection and export
 button margins in English, Spanish and Catalan, in both light and dark themes,
 at 980px and 1200px. A persistence test verifies that note, customer and
 status are saved atomically and the product remains unchanged.
-Manually inspect this screen at supported display scales and sizes, including
-keyboard focus, scanner entry, row selection and resizing, before shipping.
-Repeated `docker compose up -d --wait`, `./gradlew ciCheck`, and
-`docker compose down -v` on 2026-10-24; all passed and containers were removed.
-The migration and its worktree changes have not yet been committed or reviewed
-on a pull request. They must be integrated before the separate design-system
-commit (`tickets/todo/replenishment-screen-design-system-alignment.md`).
+The separate design-system change follows this PR; see
+`tickets/todo/replenishment-screen-design-system-alignment.md`.
+
+## Shipped
+
+Customer orders can be delivered after receipt; V52/V53 upgrade existing
+databases, the list and edit form preserve selection and product identity,
+and failed status updates log safe SQL diagnostics. Key paths:
+`src-pos/com/openbravo/pos/inventory/{DataLogicReplenishment,ReplenishmentPanel}.java`,
+`src-pos/db/migration/V52__customer_orders_delivered.java`, and
+`src-pos/db/migration/V53__repair_postgres_replenishment_status.java`.
