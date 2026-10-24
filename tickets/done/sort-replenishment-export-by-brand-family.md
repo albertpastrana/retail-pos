@@ -16,6 +16,8 @@ Use the linked catalogue product's BRAND and FAMILY, rather than guessing them
 from the request snapshot. Place entries with no brand or no catalogue product
 last; within each brand, entries without a family follow named families. Break
 ties by newest creation date and then entry ID.
+Export using the search actually applied to the displayed list; finish any
+pending search before exporting to keep the TSV and visible rows in sync.
 
 ## Done when
 

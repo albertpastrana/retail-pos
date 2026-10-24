@@ -86,6 +86,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private String formStatus = "PENDING";
 	private String selectedStatus = "ALL";
 	private String selectedType = "ALL";
+	private String displayedSearch = "";
+	private javax.swing.Timer filterTimer;
 	private final Map<String, JToggleButton> statusButtons = new HashMap<>();
 	private JLabel queueFilterLabel;
 
@@ -209,7 +211,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				e -> load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
 						? ""
 						: search.getText(), false));
-		javax.swing.Timer filterTimer = new javax.swing.Timer(250,
+		filterTimer = new javax.swing.Timer(250,
 				e -> load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
 						? ""
 						: search.getText(), false));
@@ -252,16 +254,19 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 	}
 	private void exportVisibleEntries() {
+		if (filterTimer.isRunning()) {
+			filterTimer.stop();
+			load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
+					? ""
+					: search.getText(), false);
+		}
 		if (entries == null || entries.isEmpty()) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.NothingToExport"));
 			return;
 		}
 		List<ReplenishmentEntry> exported;
 		try {
-			exported = data
-					.listForExport(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
-							? ""
-							: search.getText(), selectedType, selectedStatus);
+			exported = data.listForExport(displayedSearch, selectedType, selectedStatus);
 		} catch (BasicException ex) {
 			JOptionPane.showMessageDialog(this, ex.getMessage());
 			return;
@@ -606,6 +611,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 								: AppLocal.getIntString("Replenishment.Orders"),
 						e.displayName(), e.customerName == null ? "--" : e.customerName, e.note == null ? "--" : e.note,
 						statusLabel(e.status), f.format(e.createdAt) + " / " + e.createdBy});
+			displayedSearch = search;
 		} catch (BasicException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage());
 		}
