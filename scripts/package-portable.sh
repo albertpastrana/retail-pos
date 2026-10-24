@@ -42,6 +42,19 @@ esac
   --compress=2 \
   --output "$staging/runtime"
 
+if [ "$platform" != "windows" ]; then
+  jspawnhelper="$staging/runtime/lib/jspawnhelper"
+  if [ ! -f "$jspawnhelper" ]; then
+    echo "Bundled runtime is missing jspawnhelper: $jspawnhelper" >&2
+    exit 1
+  fi
+  chmod 755 "$jspawnhelper"
+  if [ ! -x "$jspawnhelper" ]; then
+    echo "Bundled runtime jspawnhelper is not executable: $jspawnhelper" >&2
+    exit 1
+  fi
+fi
+
 cat > "$staging/README.txt" <<EOF
 Retail POS ${version}
 
