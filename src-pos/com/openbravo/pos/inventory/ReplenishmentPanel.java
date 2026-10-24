@@ -256,9 +256,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private void exportVisibleEntries() {
 		if (filterTimer.isRunning()) {
 			filterTimer.stop();
-			load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
+			if (!load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
 					? ""
-					: search.getText(), false);
+					: search.getText(), false))
+				return;
 		}
 		if (entries == null || entries.isEmpty()) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.NothingToExport"));
@@ -599,7 +600,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		table.clearSelection();
 		formCode.requestFocusInWindow();
 	}
-	private void load(String search, boolean received) {
+	private boolean load(String search, boolean received) {
 		try {
 			entries = data.list(search, selectedType, selectedStatus);
 			model.setRowCount(0);
@@ -612,11 +613,13 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 						e.displayName(), e.customerName == null ? "--" : e.customerName, e.note == null ? "--" : e.note,
 						statusLabel(e.status), f.format(e.createdAt) + " / " + e.createdBy});
 			displayedSearch = search;
+			return true;
 		} catch (BasicException e) {
 			table.clearSelection();
 			model.setRowCount(0);
 			entries = null;
 			JOptionPane.showMessageDialog(this, e.getMessage());
+			return false;
 		}
 	}
 	private String statusLabel(String status) {
