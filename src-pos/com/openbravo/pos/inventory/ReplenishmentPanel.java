@@ -256,6 +256,16 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.NothingToExport"));
 			return;
 		}
+		List<ReplenishmentEntry> exported;
+		try {
+			exported = data
+					.listForExport(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
+							? ""
+							: search.getText(), selectedType, selectedStatus);
+		} catch (BasicException ex) {
+			JOptionPane.showMessageDialog(this, ex.getMessage());
+			return;
+		}
 		JFileChooser chooser = new JFileChooser();
 		chooser.setSelectedFile(new File(String.format(AppLocal.getIntString("Replenishment.ExportFileName"),
 				new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()))));
@@ -264,7 +274,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(chooser.getSelectedFile()))) {
 			writer.write("producte\tnom clienta\ttelefon\tnota\tpersona");
 			writer.newLine();
-			for (ReplenishmentEntry entry : entries) {
+			for (ReplenishmentEntry entry : exported) {
 				String phone = "";
 				if (entry.customerId != null) {
 					CustomerInfo customer = customers.getCustomer(entry.customerId);
