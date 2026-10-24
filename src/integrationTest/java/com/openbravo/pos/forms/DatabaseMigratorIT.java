@@ -12,8 +12,14 @@ import org.junit.jupiter.api.Test;
 
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.ticket.ProductInfoExt;
+import com.openbravo.pos.inventory.DataLogicReplenishment;
+import com.openbravo.pos.inventory.ReplenishmentEntry;
+import db.migration.V53__repair_postgres_replenishment_status;
+import java.util.UUID;
+import org.flywaydb.core.api.migration.Context;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DatabaseMigratorIT {
@@ -145,6 +151,73 @@ public class DatabaseMigratorIT {
 		waitFor(url, user, password).close();
 		assertFreshInstall(url, user, password);
 		assertIdempotent(url, user, password);
+	}
+
+	@Test
+	public void repairsOldPostgresReplenishmentCheck() throws Exception {
+		String baseUrl = System.getProperty("pos.postgres.url", "jdbc:postgresql://127.0.0.1:15432/pos");
+		String user = System.getProperty("pos.postgres.user", "pos");
+		String password = System.getProperty("pos.postgres.password", "pos");
+		String schema = "replenishment_repair_" + UUID.randomUUID().toString().replace("-", "");
+		try (Connection connection = waitFor(baseUrl, user, password);
+				Statement statement = connection.createStatement()) {
+			statement.executeUpdate("CREATE SCHEMA " + schema);
+		}
+		try {
+			String url = baseUrl + (baseUrl.contains("?") ? "&" : "?") + "currentSchema=" + schema;
+			DatabaseMigrator.migrate(url, user, password);
+			try (Connection connection = open(url, user, password);
+					Statement statement = connection.createStatement()) {
+				statement.executeUpdate("ALTER TABLE REPLENISHMENT_ENTRIES DROP CONSTRAINT REPLENISHMENT_STATUS");
+				statement.executeUpdate("ALTER TABLE REPLENISHMENT_ENTRIES ADD CONSTRAINT REPLENISHMENT_STATUS "
+						+ "CHECK (STATUS IN ('PENDING', 'ORDERED', 'RECEIVED'))");
+				statement.executeUpdate("INSERT INTO REPLENISHMENT_ENTRIES "
+						+ "(ID, STATUS, CREATED_AT, UPDATED_AT, CREATED_BY, UPDATED_BY) "
+						+ "VALUES ('old-order', 'RECEIVED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'user', 'user')");
+				assertEquals("23514",
+						assertThrows(SQLException.class,
+								() -> statement.executeUpdate(
+										"UPDATE REPLENISHMENT_ENTRIES SET STATUS='DELIVERED' WHERE ID='old-order'"))
+								.getSQLState());
+				V53__repair_postgres_replenishment_status repair = new V53__repair_postgres_replenishment_status();
+				Context context = new Context() {
+					@Override
+					public org.flywaydb.core.api.configuration.Configuration getConfiguration() {
+						return null;
+					}
+					@Override
+					public Connection getConnection() {
+						return connection;
+					}
+				};
+				repair.migrate(context);
+				repair.migrate(context);
+				assertEquals(1, statement
+						.executeUpdate("UPDATE REPLENISHMENT_ENTRIES SET STATUS='DELIVERED' WHERE ID='old-order'"));
+			}
+			DatabaseMigrator.migrate(url, user, password);
+			Session session = new Session(url, user, password);
+			try {
+				DataLogicReplenishment data = new DataLogicReplenishment();
+				data.init(session);
+				ReplenishmentEntry entry = new ReplenishmentEntry();
+				entry.manualDescription = "Repair test";
+				entry.customerId = "customer";
+				entry.customerName = "Customer";
+				entry.createdBy = "user";
+				data.add(entry);
+				data.updateStatus(entry.id, "RECEIVED", "user");
+				data.updateStatus(entry.id, "DELIVERED", "user");
+				assertEquals("DELIVERED", data.list("", "ALL", "DELIVERED").get(0).status);
+			} finally {
+				session.close();
+			}
+		} finally {
+			try (Connection connection = open(baseUrl, user, password);
+					Statement statement = connection.createStatement()) {
+				statement.executeUpdate("DROP SCHEMA " + schema + " CASCADE");
+			}
+		}
 	}
 
 	private static void assertFreshInstall(String url, String user, String password) throws SQLException {

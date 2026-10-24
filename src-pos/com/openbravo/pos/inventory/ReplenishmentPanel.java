@@ -53,8 +53,14 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
+import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
 public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactoryApp {
+	private static final Logger logger = Logger.getLogger(ReplenishmentPanel.class.getName());
+	private static final Pattern CONSTRAINT = Pattern.compile("(?i)constraint [\"']([a-z0-9_]+)[\"']");
 	private AppView app;
 	private DataLogicReplenishment data;
 	private DataLogicSales sales;
@@ -70,14 +76,18 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 	};
 	private final JTable table = new JTable(model);
+	private JButton delivered, findProduct;
+	private JPanel productButtons;
+	private JLabel scanLabel;
+	private boolean loading;
 	private List<ReplenishmentEntry> entries;
 	private JTextField formCode, formNote;
 	private JTextComponent formDescription;
 	private JTextArea formNoteArea;
-	private JLabel selectedProduct, selectedCustomer, formStatusLabel, withoutCodeLabel, manualDescriptionLabel,
-			creatorLabel;
+	private JLabel formStatusLabel, withoutCodeLabel, manualDescriptionLabel, creatorLabel;
+	private JTextArea selectedProduct, selectedCustomer;
 	private JScrollPane manualDescriptionScroll;
-	private JToggleButton formPending, formOrdered, formReceived;
+	private JToggleButton formPending, formOrdered, formReceived, formDelivered;
 	private JToggleButton allStatus;
 	private JTextField search;
 	private CustomerInfo formCustomer;
@@ -112,9 +122,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel filters = new JPanel(new BorderLayout(8, 4));
 		JPanel statusToggles = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
 		ButtonGroup group = new ButtonGroup();
-		String[] statuses = {"ALL", "PENDING", "ORDERED", "RECEIVED"};
+		String[] statuses = {"ALL", "PENDING", "ORDERED", "RECEIVED", "DELIVERED"};
 		String[] labels = {"Replenishment.All", "Replenishment.Pending", "Replenishment.Ordered",
-				"Replenishment.Received"};
+				"Replenishment.Received", "Replenishment.Delivered"};
 		for (int i = 0; i < statuses.length; i++) {
 			final String status = statuses[i];
 			JToggleButton button = new JToggleButton(AppLocal.getIntString(labels[i]));
@@ -142,8 +152,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		north.add(filters, BorderLayout.SOUTH);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.getSelectionModel().addListSelectionListener(e -> {
-			if (!e.getValueIsAdjusting() && table.getSelectedRow() >= 0)
+			if (!loading && !e.getValueIsAdjusting() && table.getSelectedRow() >= 0)
 				loadEntry(entries.get(table.getSelectedRow()));
+			if (!loading && !e.getValueIsAdjusting())
+				updateDeliveredEnabled();
 		});
 		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
@@ -170,10 +182,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JButton ordered = new JButton(AppLocal.getIntString("Replenishment.MarkOrdered")),
 				received = new JButton(AppLocal.getIntString("Replenishment.MarkReceived")),
 				reopen = new JButton(AppLocal.getIntString("Replenishment.Reopen"));
+		delivered = new JButton(AppLocal.getIntString("Replenishment.MarkDelivered"));
 		JButton delete = new JButton(AppLocal.getIntString("Replenishment.Delete"));
 		JButton export = new JButton(AppLocal.getIntString("Replenishment.Export"));
 		tableActions.add(ordered);
 		tableActions.add(received);
+		tableActions.add(delivered);
 		tableActions.add(reopen);
 		tableActions.add(delete);
 		actions.add(tableActions, BorderLayout.WEST);
@@ -181,7 +195,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		list.add(actions, BorderLayout.SOUTH);
 		ordered.setMargin(new Insets(6, 10, 6, 10));
 		received.setMargin(new Insets(6, 10, 6, 10));
+		delivered.setMargin(new Insets(6, 10, 6, 10));
 		reopen.setMargin(new Insets(6, 10, 6, 10));
+		delivered.setEnabled(false);
 		delete.setMargin(new Insets(6, 10, 6, 10));
 		javax.swing.table.TableColumnModel columns = table.getColumnModel();
 		columns.getColumn(0).setPreferredWidth(85);
@@ -230,6 +246,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		newRequest.addActionListener(e -> clearForm());
 		ordered.addActionListener(e -> change("ORDERED"));
 		received.addActionListener(e -> change("RECEIVED"));
+		delivered.addActionListener(e -> change("DELIVERED"));
 		reopen.addActionListener(e -> change("PENDING"));
 		delete.addActionListener(e -> deleteSelected());
 		export.addActionListener(e -> exportVisibleEntries());
@@ -352,8 +369,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel form = new JPanel(new BorderLayout(5, 5));
 		form.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
 		form.setPreferredSize(new java.awt.Dimension(360, 0));
-		form.setMinimumSize(new java.awt.Dimension(280, 0));
-		JPanel fields = new JPanel(new GridBagLayout());
+		form.setMinimumSize(new java.awt.Dimension(300, 0));
+		JPanel fields = new FormFields();
 		GridBagConstraints outer = new GridBagConstraints();
 		outer.gridx = 0;
 		outer.weightx = 1;
@@ -372,18 +389,19 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		((JTextArea) formDescription).setLineWrap(true);
 		((JTextArea) formDescription).setWrapStyleWord(true);
 		c.gridy = 0;
-		productGroup.add(new JLabel(AppLocal.getIntString("Replenishment.Scan")), c);
+		scanLabel = new JLabel(AppLocal.getIntString("Replenishment.Scan"));
+		productGroup.add(scanLabel, c);
 		c.gridy = 1;
 		productGroup.add(formCode, c);
 		formCode.setMinimumSize(new java.awt.Dimension(0, 32));
 		formCode.setPreferredSize(new java.awt.Dimension(0, 32));
-		JPanel productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JButton findProduct = new JButton(AppLocal.getIntString("Replenishment.SearchProduct"));
+		productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		findProduct = new JButton(AppLocal.getIntString("Replenishment.SearchProduct"));
 		findProduct.setMargin(new Insets(6, 10, 6, 10));
 		productButtons.add(findProduct);
 		c.gridy = 2;
 		productGroup.add(productButtons, c);
-		selectedProduct = new JLabel(AppLocal.getIntString("Replenishment.NoProductSelected"));
+		selectedProduct = wrappingText(AppLocal.getIntString("Replenishment.NoProductSelected"));
 		c.gridy = 3;
 		productGroup.add(selectedProduct, c);
 		withoutCodeLabel = new JLabel(AppLocal.getIntString("Replenishment.WithoutCode"), JLabel.CENTER);
@@ -399,7 +417,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		c.gridy = 6;
 		productGroup.add(manualDescriptionScroll, c);
 		JPanel customerGroup = new JPanel(new BorderLayout(6, 0));
-		selectedCustomer = new JLabel(AppLocal.getIntString("Replenishment.NoCustomer"));
+		selectedCustomer = wrappingText(AppLocal.getIntString("Replenishment.NoCustomer"));
 		JButton customer = new JButton(AppLocal.getIntString("Replenishment.Customer"));
 		customer.setMargin(new Insets(6, 10, 6, 10));
 		customerGroup.add(selectedCustomer, BorderLayout.CENTER);
@@ -412,24 +430,31 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel noteGroup = new JPanel(new BorderLayout());
 		noteGroup.add(noteScroll, BorderLayout.CENTER);
 		formStatusLabel = new JLabel(AppLocal.getIntString("Replenishment.Status"));
-		JPanel statusButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+		JPanel statusButtons = new JPanel(new GridLayout(0, 2, 4, 4));
 		ButtonGroup statusGroup = new ButtonGroup();
 		formPending = new JToggleButton(AppLocal.getIntString("Replenishment.FormPending"));
 		formOrdered = new JToggleButton(AppLocal.getIntString("Replenishment.FormOrdered"));
 		formReceived = new JToggleButton(AppLocal.getIntString("Replenishment.FormReceived"));
+		formDelivered = new JToggleButton(AppLocal.getIntString("Replenishment.FormDelivered"));
 		formPending.setMargin(new Insets(6, 10, 6, 10));
 		formOrdered.setMargin(new Insets(6, 10, 6, 10));
 		formReceived.setMargin(new Insets(6, 10, 6, 10));
+		formDelivered.setMargin(new Insets(6, 10, 6, 10));
 		formPending.setSelected(true);
+		formDelivered.setEnabled(false);
+		formDelivered.setToolTipText(AppLocal.getIntString("Replenishment.DeliveryHint"));
 		statusGroup.add(formPending);
 		statusGroup.add(formOrdered);
 		statusGroup.add(formReceived);
+		statusGroup.add(formDelivered);
 		statusButtons.add(formPending);
 		statusButtons.add(formOrdered);
 		statusButtons.add(formReceived);
+		statusButtons.add(formDelivered);
 		formPending.addActionListener(e -> formStatus = "PENDING");
 		formOrdered.addActionListener(e -> formStatus = "ORDERED");
 		formReceived.addActionListener(e -> formStatus = "RECEIVED");
+		formDelivered.addActionListener(e -> formStatus = "DELIVERED");
 		JPanel customerSection = new JPanel(new BorderLayout(0, 2));
 		customerSection.add(new JLabel(AppLocal.getIntString("Replenishment.CustomerColumn")), BorderLayout.NORTH);
 		customerSection.add(customerGroup, BorderLayout.CENTER);
@@ -467,11 +492,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formActions.add(save);
 		JScrollPane fieldsScroll = new JScrollPane(fields);
 		fieldsScroll.setBorder(BorderFactory.createEmptyBorder());
+		fieldsScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		fieldsScroll.getVerticalScrollBar().setUnitIncrement(16);
 		form.add(fieldsScroll, BorderLayout.CENTER);
 		form.add(formActions, BorderLayout.SOUTH);
 		formCode.addActionListener(e -> findFormProduct());
 		findProduct.addActionListener(e -> {
+			if (editingEntry != null)
+				return;
 			formProduct = JProductFinder.showMessage(this, sales);
 			showSelectedProduct();
 		});
@@ -481,6 +509,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		return form;
 	}
 	private void findFormProduct() {
+		if (editingEntry != null)
+			return;
 		try {
 			formProduct = sales.getProductInfoByCode(formCode.getText().trim());
 			if (formProduct == null)
@@ -497,13 +527,15 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			formDescription.setEditable(true);
 		} else {
 			selectedProduct
-					.setText(productHtml(formProduct.getName(), formProduct.getReference(), formProduct.getCode()));
+					.setText(productSummary(formProduct.getName(), formProduct.getReference(), formProduct.getCode()));
 			formDescription.setText(valueOrEmpty(formProduct.getName()));
 			formDescription.setEditable(false);
 		}
-		withoutCodeLabel.setVisible(manual);
-		manualDescriptionLabel.setVisible(manual);
-		manualDescriptionScroll.setVisible(manual);
+		if (editingEntry != null)
+			formDescription.setEditable(false);
+		withoutCodeLabel.setVisible(manual && editingEntry == null);
+		manualDescriptionLabel.setVisible(manual && editingEntry == null);
+		manualDescriptionScroll.setVisible(manual && editingEntry == null);
 		manualDescriptionScroll.getParent().revalidate();
 		manualDescriptionScroll.getParent().repaint();
 	}
@@ -514,53 +546,62 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formCustomer = finder.getSelectedCustomer();
 		selectedCustomer.setText(formCustomer == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
-				: "<html><b>" + customerDisplayName(formCustomer) + "</b></html>");
+				: customerDisplayName(formCustomer));
+		updateFormDeliveredEnabled();
 	}
 	private void saveForm() {
-		if (formProduct == null && formCode.getText().trim().isEmpty() && formDescription.getText().trim().isEmpty()) {
+		if (editingEntry == null && formProduct == null && formCode.getText().trim().isEmpty()
+				&& formDescription.getText().trim().isEmpty()) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.SelectProduct"));
 			return;
 		}
-		ReplenishmentEntry e = editingEntry == null ? new ReplenishmentEntry() : editingEntry;
-		if (formProduct != null) {
-			e.productId = formProduct.getID();
-			e.reference = formProduct.getReference();
-			e.name = formProduct.getName();
-			e.ean = formProduct.getCode();
-			e.manualDescription = null;
-			e.manualEan = null;
-		} else {
-			e.productId = null;
-			e.manualEan = formCode.getText().trim();
-			e.manualDescription = formDescription.getText().trim();
+		String customerId = formCustomer == null ? null : formCustomer.getId();
+		if (editingEntry != null && "DELIVERED".equals(formStatus) && customerId == null) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.KeepDeliveredCustomer"));
+			return;
 		}
-		e.note = formNoteArea.getText().trim();
-		if (formCustomer != null) {
-			e.customerId = formCustomer.getId();
-			e.customerName = customerDisplayName(formCustomer);
-		} else {
-			e.customerId = null;
-			e.customerName = null;
-		}
-		e.status = formStatus;
-		if (editingEntry == null)
-			e.createdBy = selectedSeller() == null ? null : selectedSeller().getId();
 		try {
-			if (editingEntry == null)
-				data.add(e);
-			else
-				data.update(e, selectedSeller() == null ? null : selectedSeller().getId());
-			clearForm();
-			load("", false);
+			if (editingEntry == null) {
+				ReplenishmentEntry e = new ReplenishmentEntry();
+				if (formProduct != null) {
+					e.productId = formProduct.getID();
+					e.reference = formProduct.getReference();
+					e.name = formProduct.getName();
+					e.ean = formProduct.getCode();
+				} else {
+					e.manualEan = formCode.getText().trim();
+					e.manualDescription = formDescription.getText().trim();
+				}
+				e.note = formNoteArea.getText().trim();
+				e.customerId = customerId;
+				e.customerName = formCustomer == null ? null : customerDisplayName(formCustomer);
+				e.createdBy = selectedSeller() == null ? null : selectedSeller().getId();
+				ReplenishmentEntry saved = data.add(e);
+				if (!"PENDING".equals(formStatus))
+					data.updateStatus(saved.id, formStatus, app.getAppUserView().getUser().getId());
+				clearForm();
+				load("", false);
+			} else {
+				String id = editingEntry.id;
+				data.updateDetailsAndStatus(id, formNoteArea.getText().trim(), customerId,
+						formCustomer == null ? null : customerDisplayName(formCustomer), formStatus,
+						app.getAppUserView().getUser().getId());
+				load("", false, id);
+			}
 		} catch (BasicException ex) {
-			JOptionPane.showMessageDialog(this, ex.getMessage());
+			logStatusFailure("save", formStatus, editingEntry == null ? null : editingEntry.id, ex);
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.StatusUpdateFailed"));
 		}
 	}
 	private void loadEntry(ReplenishmentEntry entry) {
 		editingEntry = entry;
 		formStatus = entry.status;
-		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + valueOrEmpty(entry.createdBy));
-		formCode.setText(entry.ean == null ? "" : entry.ean);
+		creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + creatorName(entry));
+		formCode.setText(entry.productId == null ? valueOrEmpty(entry.manualEan) : valueOrEmpty(entry.ean));
+		formCode.setEditable(false);
+		findProduct.setEnabled(false);
+		productButtons.setVisible(false);
+		scanLabel.setText(AppLocal.getIntString("Replenishment.Barcode"));
 		formProduct = entry.productId == null ? null : new ProductInfoExt();
 		if (formProduct != null) {
 			formProduct.setID(entry.productId);
@@ -571,18 +612,20 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formDescription.setText(entry.productId == null
 				? (entry.manualDescription == null ? "" : entry.manualDescription)
 				: entry.name);
-		formDescription.setEditable(entry.productId == null);
+		formDescription.setEditable(false);
 		formNoteArea.setText(entry.note == null ? "" : entry.note);
 		formCustomer = entry.customerId == null ? null : new CustomerInfo(entry.customerId);
 		if (formCustomer != null)
 			formCustomer.setName(entry.customerName);
-		selectedProduct.setText(entry.productId == null
-				? AppLocal.getIntString("Replenishment.UnknownProduct")
-				: productHtml(entry.name, entry.reference, entry.ean));
 		selectedCustomer.setText(entry.customerId == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
-				: "<html><b>" + customerDisplayName(formCustomer, entry.customerName) + "</b></html>");
+				: customerDisplayName(formCustomer, entry.customerName));
 		showSelectedProduct();
+		if (entry.productId == null)
+			selectedProduct.setText(valueOrEmpty(entry.manualDescription));
+		selectFormStatus();
+		updateFormDeliveredEnabled();
+		updateDeliveredEnabled();
 	}
 	private void clearForm() {
 		editingEntry = null;
@@ -594,27 +637,51 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formNoteArea.setText("");
 		formCustomer = null;
 		formProduct = null;
+		formCode.setEditable(true);
+		findProduct.setEnabled(true);
+		productButtons.setVisible(true);
+		scanLabel.setText(AppLocal.getIntString("Replenishment.Scan"));
+		selectFormStatus();
+		updateFormDeliveredEnabled();
 		showSelectedProduct();
 		selectedProduct.setText(AppLocal.getIntString("Replenishment.NoProductSelected"));
 		selectedCustomer.setText(AppLocal.getIntString("Replenishment.NoCustomer"));
 		table.clearSelection();
+		updateDeliveredEnabled();
 		formCode.requestFocusInWindow();
 	}
 	private boolean load(String search, boolean received) {
+		return load(search, received, null);
+	}
+	private boolean load(String search, boolean received, String selectId) {
 		try {
-			entries = data.list(search, selectedType, selectedStatus);
+			List<ReplenishmentEntry> refreshed = data.list(search, selectedType, selectedStatus);
+			loading = true;
+			table.clearSelection();
+			entries = refreshed;
 			model.setRowCount(0);
 			DateFormat f = new SimpleDateFormat("dd/MM/yy - HH:mm");
-			for (ReplenishmentEntry e : entries)
+			int selectedRow = -1;
+			for (ReplenishmentEntry e : entries) {
+				if (e.id.equals(selectId))
+					selectedRow = model.getRowCount();
 				model.addRow(new Object[]{
 						e.customerId == null
 								? AppLocal.getIntString("Replenishment.Replenishment")
 								: AppLocal.getIntString("Replenishment.Orders"),
 						e.displayName(), e.customerName == null ? "--" : e.customerName, e.note == null ? "--" : e.note,
-						statusLabel(e.status), f.format(e.createdAt) + " / " + e.createdBy});
+						statusLabel(e.status), f.format(e.createdAt) + " / " + creatorName(e)});
+			}
 			displayedSearch = search;
+			loading = false;
+			if (selectedRow >= 0)
+				table.setRowSelectionInterval(selectedRow, selectedRow);
+			else if (editingEntry != null)
+				clearForm();
+			updateDeliveredEnabled();
 			return true;
 		} catch (BasicException e) {
+			loading = false;
 			table.clearSelection();
 			model.setRowCount(0);
 			entries = null;
@@ -623,25 +690,31 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 	}
 	private String statusLabel(String status) {
-		return "RECEIVED".equals(status)
-				? AppLocal.getIntString("Replenishment.Received")
-				: "ORDERED".equals(status)
-						? AppLocal.getIntString("Replenishment.Ordered")
-						: AppLocal.getIntString("Replenishment.Pending");
+		return "DELIVERED".equals(status)
+				? AppLocal.getIntString("Replenishment.Delivered")
+				: "RECEIVED".equals(status)
+						? AppLocal.getIntString("Replenishment.Received")
+						: "ORDERED".equals(status)
+								? AppLocal.getIntString("Replenishment.Ordered")
+								: AppLocal.getIntString("Replenishment.Pending");
 	}
 	private static java.awt.Color statusBackground(String state) {
-		return state.equals(AppLocal.getIntString("Replenishment.Received"))
-				? new java.awt.Color(230, 240, 230)
-				: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-						? new java.awt.Color(227, 237, 248)
-						: new java.awt.Color(253, 241, 216);
+		return state.equals(AppLocal.getIntString("Replenishment.Delivered"))
+				? new java.awt.Color(228, 240, 232)
+				: state.equals(AppLocal.getIntString("Replenishment.Received"))
+						? new java.awt.Color(230, 240, 230)
+						: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
+								? new java.awt.Color(227, 237, 248)
+								: new java.awt.Color(253, 241, 216);
 	}
 	private static java.awt.Color statusForeground(String state) {
-		return state.equals(AppLocal.getIntString("Replenishment.Received"))
-				? new java.awt.Color(44, 110, 44)
-				: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-						? new java.awt.Color(10, 92, 158)
-						: new java.awt.Color(138, 90, 0);
+		return state.equals(AppLocal.getIntString("Replenishment.Delivered"))
+				? new java.awt.Color(38, 112, 58)
+				: state.equals(AppLocal.getIntString("Replenishment.Received"))
+						? new java.awt.Color(44, 110, 44)
+						: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
+								? new java.awt.Color(10, 92, 158)
+								: new java.awt.Color(138, 90, 0);
 	}
 	private static String valueOrEmpty(String value) {
 		return value == null ? "" : value;
@@ -654,20 +727,94 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			return name;
 		return valueOrEmpty(customer == null ? null : customer.getId());
 	}
-	private static String productHtml(String name, String reference, String ean) {
-		return "<html><b>" + valueOrEmpty(name) + "</b><br><font color='#777777'>" + valueOrEmpty(reference) + " · EAN "
-				+ valueOrEmpty(ean) + "</font></html>";
+	private static String productSummary(String name, String reference, String ean) {
+		return valueOrEmpty(name) + "\n" + valueOrEmpty(reference) + " · EAN " + valueOrEmpty(ean);
+	}
+	private static JTextArea wrappingText(String value) {
+		JTextArea text = new JTextArea(value);
+		text.setEditable(false);
+		text.setFocusable(false);
+		text.setLineWrap(true);
+		text.setWrapStyleWord(true);
+		text.setOpaque(false);
+		text.setColumns(1);
+		return text;
+	}
+	private void selectFormStatus() {
+		formPending.setSelected("PENDING".equals(formStatus));
+		formOrdered.setSelected("ORDERED".equals(formStatus));
+		formReceived.setSelected("RECEIVED".equals(formStatus));
+		formDelivered.setSelected("DELIVERED".equals(formStatus));
+	}
+	private void updateFormDeliveredEnabled() {
+		formDelivered.setEnabled(editingEntry != null && formCustomer != null
+				&& ("RECEIVED".equals(editingEntry.status) || "DELIVERED".equals(editingEntry.status)));
+	}
+	private String creatorName(ReplenishmentEntry entry) {
+		if (entry.creatorName != null && !entry.creatorName.isBlank())
+			return entry.creatorName;
+		UserInfo seller = selectedSeller();
+		return seller != null && seller.getId() != null && seller.getId().equals(entry.createdBy)
+				? seller.getName()
+				: "--";
+	}
+	private static class FormFields extends JPanel implements javax.swing.Scrollable {
+		FormFields() {
+			super(new GridBagLayout());
+		}
+		@Override
+		public java.awt.Dimension getPreferredScrollableViewportSize() {
+			return getPreferredSize();
+		}
+		@Override
+		public int getScrollableUnitIncrement(java.awt.Rectangle visibleRect, int orientation, int direction) {
+			return 16;
+		}
+		@Override
+		public int getScrollableBlockIncrement(java.awt.Rectangle visibleRect, int orientation, int direction) {
+			return visibleRect.height - 16;
+		}
+		@Override
+		public boolean getScrollableTracksViewportWidth() {
+			return true;
+		}
+		@Override
+		public boolean getScrollableTracksViewportHeight() {
+			return false;
+		}
 	}
 	private void change(String status) {
 		int row = table.getSelectedRow();
 		if (row < 0)
 			return;
 		try {
-			data.updateStatus(entries.get(row).id, status, app.getAppUserView().getUser().getId());
-			load("", false);
+			String id = entries.get(row).id;
+			data.updateStatus(id, status, app.getAppUserView().getUser().getId());
+			load("", false, id);
 		} catch (BasicException e) {
-			JOptionPane.showMessageDialog(this, e.getMessage());
+			logStatusFailure("change", status, entries.get(row).id, e);
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.StatusUpdateFailed"));
 		}
+	}
+	static void logStatusFailure(String action, String status, String id, BasicException failure) {
+		Throwable cause = failure;
+		while (cause.getCause() != null)
+			cause = cause.getCause();
+		String detail = "";
+		if (cause instanceof SQLException) {
+			SQLException sql = (SQLException) cause;
+			detail = " sqlState=" + sql.getSQLState() + " errorCode=" + sql.getErrorCode();
+			Matcher constraint = CONSTRAINT.matcher(sql.getMessage() == null ? "" : sql.getMessage());
+			if (constraint.find())
+				detail += " constraint=" + constraint.group(1);
+		}
+		logger.warning("event=replenishment_status_update_failed action=" + action + " status=" + status + " entryId="
+				+ id + " cause=" + cause.getClass().getSimpleName() + detail);
+	}
+	private void updateDeliveredEnabled() {
+		int row = table.getSelectedRow();
+		delivered.setEnabled(row >= 0 && entries != null && "RECEIVED".equals(entries.get(row).status)
+				&& entries.get(row).customerId != null);
 	}
 	@Override
 	public String getTitle() {

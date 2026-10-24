@@ -38,8 +38,9 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		List<ReplenishmentEntry> result = new ArrayList<ReplenishmentEntry>();
 		String term = search == null ? "" : search.trim();
 		String pattern = "%" + term + "%";
-		String sql = "SELECT R.* FROM REPLENISHMENT_ENTRIES R "
-				+ (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "") + "WHERE ("
+		String sql = "SELECT R.*, P.NAME AS CREATOR_NAME FROM REPLENISHMENT_ENTRIES R "
+				+ (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "")
+				+ "LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY WHERE ("
 				+ "UPPER(COALESCE(PRODUCT_REFERENCE,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_NAME,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_EAN,'')) LIKE UPPER(?) "
@@ -51,10 +52,9 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 						? "AND CUSTOMER_ID IS NULL "
 						: "ENCARGO".equals(type) ? "AND CUSTOMER_ID IS NOT NULL " : "")
 				+ ("OPEN".equals(status)
-						? "AND STATUS <> 'RECEIVED' "
+						? "AND STATUS NOT IN ('RECEIVED', 'DELIVERED') "
 						: "PENDING".equals(status) || "ORDERED".equals(status) || "RECEIVED".equals(status)
-								? "AND STATUS = '" + status + "' "
-								: "")
+								|| "DELIVERED".equals(status) ? "AND STATUS = '" + status + "' " : "")
 				+ (exportOrder
 						? "ORDER BY CASE WHEN C.BRAND IS NULL OR TRIM(C.BRAND) = '' THEN 1 ELSE 0 END, "
 								+ "UPPER(C.BRAND), CASE WHEN C.FAMILY IS NULL OR TRIM(C.FAMILY) = '' THEN 1 ELSE 0 END, "
@@ -130,24 +130,28 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 
 	public void updateStatus(String id, String status, String user) throws BasicException {
-		if (!"PENDING".equals(status) && !"ORDERED".equals(status) && !"RECEIVED".equals(status))
+		if (!isValidStatus(status))
 			throw new BasicException("Invalid replenishment status");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ?='RECEIVED' THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=?")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, status);
 			ps.setString(2, status);
 			ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
 			ps.setString(4, user);
 			ps.setString(5, id);
-			ps.executeUpdate();
+			ps.setString(6, status);
+			if (ps.executeUpdate() == 0 && "DELIVERED".equals(status))
+				throw new BasicException("Only customer orders can be delivered");
 		} catch (SQLException e) {
 			throw new BasicException(e);
 		}
 	}
 
 	public void update(ReplenishmentEntry e, String user) throws BasicException {
+		if (!isValidStatus(e.status) || ("DELIVERED".equals(e.status) && e.customerId == null))
+			throw new BasicException("Only customer orders can be delivered");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ?='RECEIVED' THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=?")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, e.productId);
 			ps.setString(2, e.reference);
 			ps.setString(3, e.name);
@@ -162,7 +166,55 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setTimestamp(12, new Timestamp(System.currentTimeMillis()));
 			ps.setString(13, user);
 			ps.setString(14, e.id);
+			ps.setString(15, e.status);
 			ps.executeUpdate();
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
+	/**
+	 * Saved requests keep their product and status; only customer and note can be
+	 * edited here.
+	 */
+	public void updateDetails(String id, String note, String customerId, String customerName, String user)
+			throws BasicException {
+		try (PreparedStatement ps = connection().prepareStatement(
+				"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (STATUS <> 'DELIVERED' OR ? IS NOT NULL)")) {
+			ps.setString(1, note);
+			ps.setString(2, customerId);
+			ps.setString(3, customerName);
+			ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+			ps.setString(5, user);
+			ps.setString(6, id);
+			ps.setString(7, customerId);
+			if (ps.executeUpdate() == 0)
+				throw new BasicException("Cannot remove the customer from a delivered order");
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
+	/**
+	 * Save the editable fields of an existing request without changing its product.
+	 */
+	public void updateDetailsAndStatus(String id, String note, String customerId, String customerName, String status,
+			String user) throws BasicException {
+		if (!isValidStatus(status) || ("DELIVERED".equals(status) && customerId == null))
+			throw new BasicException("Invalid customer order status");
+		try (PreparedStatement ps = connection().prepareStatement(
+				"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR STATUS IN ('RECEIVED', 'DELIVERED'))")) {
+			ps.setString(1, note);
+			ps.setString(2, customerId);
+			ps.setString(3, customerName);
+			ps.setString(4, status);
+			ps.setString(5, status);
+			ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+			ps.setString(7, user);
+			ps.setString(8, id);
+			ps.setString(9, status);
+			if (ps.executeUpdate() == 0)
+				throw new BasicException("Invalid customer order status");
 		} catch (SQLException ex) {
 			throw new BasicException(ex);
 		}
@@ -195,7 +247,8 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 	}
 	private ReplenishmentEntry get(String id) throws SQLException {
-		try (PreparedStatement ps = connection().prepareStatement("SELECT * FROM REPLENISHMENT_ENTRIES WHERE ID=?")) {
+		try (PreparedStatement ps = connection().prepareStatement(
+				"SELECT R.*, P.NAME AS CREATOR_NAME FROM REPLENISHMENT_ENTRIES R LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY WHERE R.ID=?")) {
 			ps.setString(1, id);
 			try (ResultSet rs = ps.executeQuery()) {
 				rs.next();
@@ -221,10 +274,16 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		e.createdAt = r.getTimestamp("CREATED_AT");
 		e.updatedAt = r.getTimestamp("UPDATED_AT");
 		e.createdBy = r.getString("CREATED_BY");
+		e.creatorName = r.getString("CREATOR_NAME");
 		e.updatedBy = r.getString("UPDATED_BY");
 		return e;
 	}
 	private Connection connection() throws SQLException {
 		return session.getConnection();
+	}
+
+	private boolean isValidStatus(String status) {
+		return "PENDING".equals(status) || "ORDERED".equals(status) || "RECEIVED".equals(status)
+				|| "DELIVERED".equals(status);
 	}
 }
