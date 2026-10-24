@@ -4,12 +4,96 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.openbravo.data.loader.Session;
+import com.openbravo.pos.customers.DataLogicCustomers;
 import com.openbravo.pos.inventory.DataLogicReplenishment;
 import com.openbravo.pos.inventory.ReplenishmentEntry;
+import com.openbravo.pos.inventory.ReplenishmentPanel;
+import java.awt.Component;
+import java.awt.Container;
+import java.lang.reflect.Proxy;
 import java.util.UUID;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 class ReplenishmentStatusTest {
+	@Test
+	void refreshingSelectedRequestKeepsUnsavedNote() throws Exception {
+		String url = "jdbc:derby:memory:replenishmentRefresh" + UUID.randomUUID() + ";create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicReplenishment data = new DataLogicReplenishment();
+			data.init(session);
+			ReplenishmentEntry request = entry(null);
+			data.add(request);
+			AppUser user = new AppUser("user", "Employee", null, null, "2", null);
+			AppUserView userView = (AppUserView) Proxy.newProxyInstance(getClass().getClassLoader(),
+					new Class<?>[]{AppUserView.class},
+					(proxy, method, args) -> "getUser".equals(method.getName()) ? user : null);
+			AppView app = (AppView) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{AppView.class},
+					(proxy, method, args) -> {
+						if ("getAppUserView".equals(method.getName()))
+							return userView;
+						if ("getBean".equals(method.getName())) {
+							if (args[0] == DataLogicReplenishment.class)
+								return data;
+							if (args[0] == DataLogicSales.class)
+								return new DataLogicSales();
+							if (args[0] == DataLogicCustomers.class)
+								return new DataLogicCustomers();
+							throw new BeanFactoryException();
+						}
+						return null;
+					});
+			SwingUtilities.invokeAndWait(() -> {
+				try {
+					ReplenishmentPanel panel = new ReplenishmentPanel();
+					panel.init(app);
+					panel.activate();
+					JTable table = first(panel, JTable.class);
+					table.setRowSelectionInterval(0, 0);
+					JTextArea note = editableArea(panel);
+					note.setText("Keep this note");
+					JTextField search = first(panel, JTextField.class);
+					search.setText("Test item");
+					search.postActionEvent();
+					assertEquals(0, table.getSelectedRow());
+					assertEquals("Keep this note", note.getText());
+				} catch (Exception e) {
+					throw new AssertionError(e);
+				}
+			});
+		} finally {
+			session.close();
+		}
+	}
+	private static <T extends Component> T first(Container root, Class<T> type) {
+		for (Component child : root.getComponents()) {
+			if (type.isInstance(child))
+				return type.cast(child);
+			if (child instanceof Container) {
+				T match = first((Container) child, type);
+				if (match != null)
+					return match;
+			}
+		}
+		return null;
+	}
+	private static JTextArea editableArea(Container root) {
+		for (Component child : root.getComponents()) {
+			if (child instanceof JTextArea && ((JTextArea) child).isEditable())
+				return (JTextArea) child;
+			if (child instanceof Container) {
+				JTextArea match = editableArea((Container) child);
+				if (match != null)
+					return match;
+			}
+		}
+		return null;
+	}
 	@Test
 	void onlyCustomerOrdersCanBeDelivered() throws Exception {
 		String url = "jdbc:derby:memory:replenishmentStatus" + UUID.randomUUID() + ";create=true";

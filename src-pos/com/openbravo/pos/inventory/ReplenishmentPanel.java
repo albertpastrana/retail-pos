@@ -312,7 +312,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				writer.write('\t');
 				writer.write(exportValue(entry.note));
 				writer.write('\t');
-				writer.write(exportValue(creatorName(entry.createdBy)));
+				writer.write(exportValue(creatorName(entry)));
 				writer.newLine();
 			}
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.ExportComplete"));
@@ -333,12 +333,6 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 		UserInfo fallback = app.getAppUserView().getUser().getTicketUserInfo();
 		return fallback == null ? app.getAppUserView().getUser().getUserInfo() : fallback;
-	}
-	private String creatorName(String creatorId) {
-		UserInfo seller = selectedSeller();
-		return seller != null && seller.getId() != null && seller.getId().equals(creatorId)
-				? valueOrEmpty(seller.getName())
-				: valueOrEmpty(creatorId);
 	}
 	private String selectedSellerName() {
 		UserInfo seller = selectedSeller();
@@ -651,9 +645,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formCode.requestFocusInWindow();
 	}
 	private boolean load(String search, boolean received) {
-		return load(search, received, null);
+		return load(search, received, editingEntry == null ? null : editingEntry.id, false);
 	}
 	private boolean load(String search, boolean received, String selectId) {
+		return load(search, received, selectId, true);
+	}
+	private boolean load(String search, boolean received, String selectId, boolean reloadForm) {
 		try {
 			List<ReplenishmentEntry> refreshed = data.list(search, selectedType, selectedStatus);
 			loading = true;
@@ -673,11 +670,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 						statusLabel(e.status), f.format(e.createdAt) + " / " + creatorName(e)});
 			}
 			displayedSearch = search;
-			loading = false;
-			if (selectedRow >= 0)
+			if (selectedRow >= 0) {
 				table.setRowSelectionInterval(selectedRow, selectedRow);
-			else if (editingEntry != null)
+				if (reloadForm)
+					loadEntry(entries.get(selectedRow));
+			} else if (editingEntry != null) {
 				clearForm();
+			}
+			loading = false;
 			updateDeliveredEnabled();
 			return true;
 		} catch (BasicException e) {
