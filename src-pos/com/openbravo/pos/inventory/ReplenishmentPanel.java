@@ -15,6 +15,9 @@ import com.openbravo.pos.sales.TicketsEditor;
 import com.openbravo.pos.sales.JPanelTicketSales;
 import com.openbravo.pos.ticket.UserInfo;
 import com.openbravo.pos.ticket.ProductInfoExt;
+import com.openbravo.pos.theme.RetailPOSColors;
+import com.openbravo.pos.theme.RetailPOSTheme;
+import com.openbravo.pos.util.PosIcons;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -26,6 +29,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.sql.SQLException;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import java.util.List;
 import java.util.HashMap;
@@ -53,10 +60,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
-import java.sql.SQLException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.logging.Logger;
 
 public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactoryApp {
 	private static final Logger logger = Logger.getLogger(ReplenishmentPanel.class.getName());
@@ -67,7 +70,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private DataLogicCustomers customers;
 	private final DefaultTableModel model = new DefaultTableModel(
 			new Object[]{AppLocal.getIntString("Replenishment.Type"), AppLocal.getIntString("Replenishment.Product"),
-					AppLocal.getIntString("Replenishment.CustomerColumn"), AppLocal.getIntString("Replenishment.Note"),
+					AppLocal.getIntString("Replenishment.CustomerColumn"),
 					AppLocal.getIntString("Replenishment.Status"), AppLocal.getIntString("Replenishment.Added")},
 			0) {
 		@Override
@@ -75,16 +78,42 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			return false;
 		}
 	};
-	private final JTable table = new JTable(model);
+	private final JTable table = new JTable(model) {
+		@Override
+		public void doLayout() {
+			super.doLayout();
+			resizeRows();
+		}
+		@Override
+		public String getToolTipText(java.awt.event.MouseEvent event) {
+			int row = rowAtPoint(event.getPoint());
+			int column = columnAtPoint(event.getPoint());
+			if (row >= 0 && entries != null && (column == 1 || column == 2)) {
+				ReplenishmentEntry entry = entries.get(convertRowIndexToModel(row));
+				return column == 1
+						? entry.productId == null
+								? entry.displayName()
+								: (displayReference(entry.name, entry.reference) + " "
+										+ displayProductName(entry.name, entry.reference)).trim()
+						: entry.customerName;
+			}
+			return super.getToolTipText(event);
+		}
+	};
 	private JButton delivered, findProduct;
+	private JButton customerButton;
 	private JPanel productButtons;
 	private JLabel scanLabel;
 	private boolean loading;
 	private List<ReplenishmentEntry> entries;
-	private JTextField formCode, formNote;
+	private JTextField formCode;
 	private JTextComponent formDescription;
 	private JTextArea formNoteArea;
 	private JLabel formStatusLabel, withoutCodeLabel, manualDescriptionLabel, creatorLabel;
+	private JLabel productCodes;
+	private JTextArea formDeliveryHint;
+	private JButton save;
+	private JPanel formStatusButtons;
 	private JTextArea selectedProduct, selectedCustomer;
 	private JScrollPane manualDescriptionScroll;
 	private JToggleButton formPending, formOrdered, formReceived, formDelivered;
@@ -114,13 +143,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 		JPanel header = new JPanel(new BorderLayout(8, 4));
 		queueFilterLabel = new JLabel(" ");
-		queueFilterLabel.setForeground(java.awt.Color.GRAY);
+		queueFilterLabel.setForeground(RetailPOSColors.inkMuted());
 		header.add(queueFilterLabel, BorderLayout.CENTER);
 		JButton newRequest = new JButton("+ " + AppLocal.getIntString("Replenishment.NewRequest"));
-		newRequest.setFont(newRequest.getFont().deriveFont(java.awt.Font.BOLD));
 		newRequest.setMargin(new Insets(6, 12, 6, 12));
 		JPanel filters = new JPanel(new BorderLayout(8, 4));
-		JPanel statusToggles = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		JPanel statusToggles = new JPanel(new GridLayout(1, 5, 4, 0));
 		ButtonGroup group = new ButtonGroup();
 		String[] statuses = {"ALL", "PENDING", "ORDERED", "RECEIVED", "DELIVERED"};
 		String[] labels = {"Replenishment.All", "Replenishment.Pending", "Replenishment.Ordered",
@@ -128,7 +156,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		for (int i = 0; i < statuses.length; i++) {
 			final String status = statuses[i];
 			JToggleButton button = new JToggleButton(AppLocal.getIntString(labels[i]));
-			button.setMargin(new Insets(6, 10, 6, 10));
+			styleFilterToggle(button);
+			button.setMargin(new Insets(6, 2, 6, 2));
 			button.setSelected(i == 0);
 			if (i == 0)
 				allStatus = button;
@@ -143,14 +172,34 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			});
 		}
 		search = new JTextField();
-		installPlaceholder(search, "Replenishment.SearchPlaceholder");
-		filters.add(statusToggles, BorderLayout.WEST);
-		filters.add(search, BorderLayout.CENTER);
-		filters.add(newRequest, BorderLayout.EAST);
+		search.putClientProperty("JTextField.placeholderText",
+				AppLocal.getIntString("Replenishment.SearchPlaceholder"));
+		search.putClientProperty("JTextField.leadingIcon", PosIcons.search());
+		styleInput(search);
+		JPanel searchRow = new JPanel(new BorderLayout(8, 0));
+		searchRow.add(search, BorderLayout.CENTER);
+		searchRow.add(newRequest, BorderLayout.EAST);
+		filters.add(statusToggles, BorderLayout.NORTH);
+		filters.add(searchRow, BorderLayout.CENTER);
 		JPanel north = new JPanel(new BorderLayout());
 		north.add(header, BorderLayout.NORTH);
 		north.add(filters, BorderLayout.SOUTH);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setRowHeight(48);
+		table.setShowHorizontalLines(true);
+		table.setShowVerticalLines(false);
+		table.setGridColor(RetailPOSColors.border());
+		table.setIntercellSpacing(new java.awt.Dimension(0, 1));
+		table.getTableHeader().setDefaultRenderer((t, value, selected, focused, row, column) -> {
+			JLabel headerLabel = new JLabel(valueOrEmpty((String) value));
+			headerLabel.setFont(t.getTableHeader().getFont());
+			headerLabel.setForeground(RetailPOSColors.ink());
+			headerLabel.setBackground(RetailPOSColors.surface100());
+			headerLabel.setOpaque(true);
+			headerLabel.setHorizontalAlignment(JLabel.LEFT);
+			headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+			return headerLabel;
+		});
 		table.getSelectionModel().addListSelectionListener(e -> {
 			if (!loading && !e.getValueIsAdjusting() && table.getSelectedRow() >= 0)
 				loadEntry(entries.get(table.getSelectedRow()));
@@ -158,57 +207,179 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				updateDeliveredEnabled();
 		});
 		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			{
+				setVerticalAlignment(JLabel.TOP);
+			}
 			@Override
 			public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
 					boolean focused, int row, int column) {
 				java.awt.Component component = super.getTableCellRendererComponent(table, value, selected, focused, row,
 						column);
-				if (!selected && row < table.getRowCount()) {
-					String state = String.valueOf(table.getValueAt(row, 4));
-					component.setBackground(statusBackground(state));
-					if (column == 4)
-						component.setForeground(statusForeground(state));
-				}
+				setFont(RetailPOSTheme.MANROPE_MEDIUM);
+				component.setBackground(selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100());
+				component.setForeground(RetailPOSColors.ink());
+				setBorder(
+						BorderFactory
+								.createCompoundBorder(
+										selected
+												? BorderFactory.createMatteBorder(1, 0, 1, 0,
+														RetailPOSColors.borderStrong())
+												: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+										BorderFactory.createEmptyBorder(8, 8, 0, 0)));
 				return component;
 			}
 		});
+		table.getColumnModel().getColumn(3).setCellRenderer(new StatusBadgeRenderer());
+		DefaultTableCellRenderer wrappingRenderer = new DefaultTableCellRenderer() {
+			@Override
+			public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				JTextArea name = new JTextArea(
+						preview(valueOrEmpty((String) value), table.getColumnModel().getColumn(column).getWidth()));
+				name.setFont(RetailPOSTheme.MANROPE_MEDIUM);
+				// The two-line preview already contains explicit line breaks.
+				name.setLineWrap(false);
+				name.setBackground(selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100());
+				name.setForeground(RetailPOSColors.ink());
+				name.setBorder(
+						BorderFactory
+								.createCompoundBorder(
+										selected
+												? BorderFactory.createMatteBorder(1, 0, 1, 0,
+														RetailPOSColors.borderStrong())
+												: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+										BorderFactory.createEmptyBorder(8, 8, 0, 4)));
+				return name;
+			}
+		};
+		table.getColumnModel().getColumn(1).setCellRenderer(new ProductRenderer());
+		table.getColumnModel().getColumn(2).setCellRenderer(wrappingRenderer);
 		JPanel list = new JPanel(new BorderLayout());
 		JScrollPane tableScroll = new JScrollPane(table);
 		tableScroll.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 		list.add(tableScroll, BorderLayout.CENTER);
-		JPanel actions = new JPanel(new BorderLayout());
+		JPanel actions = new JPanel(new GridBagLayout());
 		actions.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
-		JPanel tableActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JButton ordered = new JButton(AppLocal.getIntString("Replenishment.MarkOrdered")),
-				received = new JButton(AppLocal.getIntString("Replenishment.MarkReceived")),
-				reopen = new JButton(AppLocal.getIntString("Replenishment.Reopen"));
-		delivered = new JButton(AppLocal.getIntString("Replenishment.MarkDelivered"));
+		JButton pending = new JButton(AppLocal.getIntString("Replenishment.FormPending"));
+		JButton ordered = new JButton(AppLocal.getIntString("Replenishment.FormOrdered"));
+		JButton received = new JButton(AppLocal.getIntString("Replenishment.FormReceived"));
+		delivered = new JButton(AppLocal.getIntString("Replenishment.FormDelivered"));
 		JButton delete = new JButton(AppLocal.getIntString("Replenishment.Delete"));
+		delete.setBackground(RetailPOSColors.surface100());
+		delete.setForeground(RetailPOSColors.dangerText());
+		delete.putClientProperty("FlatLaf.style",
+				"background: " + RetailPOSColors.toHex(RetailPOSColors.surface100()) + "; foreground: "
+						+ RetailPOSColors.toHex(RetailPOSColors.dangerText()) + "; borderColor: "
+						+ RetailPOSColors.toHex(RetailPOSColors.danger()));
 		JButton export = new JButton(AppLocal.getIntString("Replenishment.Export"));
-		tableActions.add(ordered);
-		tableActions.add(received);
-		tableActions.add(delivered);
-		tableActions.add(reopen);
-		tableActions.add(delete);
-		actions.add(tableActions, BorderLayout.WEST);
-		actions.add(export, BorderLayout.EAST);
+		for (JButton button : new JButton[]{pending, ordered, received, delivered, delete, export}) {
+			button.setFont(button.getFont().deriveFont(13f));
+			button.setMargin(new Insets(6, 6, 6, 6));
+		}
+		GridBagConstraints actionCell = new GridBagConstraints();
+		actionCell.gridx = 0;
+		actionCell.gridy = 0;
+		actionCell.fill = GridBagConstraints.VERTICAL;
+		actionCell.insets = new Insets(0, 2, 0, 2);
+		for (java.awt.Component action : new java.awt.Component[]{
+				new JLabel(AppLocal.getIntString("Replenishment.MarkAs")), pending, ordered, received, delivered,
+				Box.createHorizontalStrut(8), delete}) {
+			actions.add(action, actionCell);
+			actionCell.gridx++;
+		}
+		actionCell.weightx = 1;
+		actionCell.fill = GridBagConstraints.HORIZONTAL;
+		actions.add(Box.createHorizontalGlue(), actionCell);
+		actionCell.gridx++;
+		actionCell.weightx = 0;
+		actionCell.fill = GridBagConstraints.VERTICAL;
+		actions.add(export, actionCell);
 		list.add(actions, BorderLayout.SOUTH);
-		ordered.setMargin(new Insets(6, 10, 6, 10));
-		received.setMargin(new Insets(6, 10, 6, 10));
-		delivered.setMargin(new Insets(6, 10, 6, 10));
-		reopen.setMargin(new Insets(6, 10, 6, 10));
 		delivered.setEnabled(false);
-		delete.setMargin(new Insets(6, 10, 6, 10));
+		delivered.setToolTipText(AppLocal.getIntString("Replenishment.DeliveryHint"));
 		javax.swing.table.TableColumnModel columns = table.getColumnModel();
-		columns.getColumn(0).setPreferredWidth(85);
-		columns.getColumn(0).setMaxWidth(105);
-		columns.getColumn(2).setPreferredWidth(120);
-		columns.getColumn(2).setMaxWidth(170);
-		columns.getColumn(4).setPreferredWidth(90);
-		columns.getColumn(4).setMaxWidth(110);
-		columns.getColumn(5).setPreferredWidth(170);
-		columns.getColumn(5).setMaxWidth(220);
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+		java.awt.FontMetrics typeMetrics = table.getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM);
+		int typeWidth = Math.max(typeMetrics.stringWidth(AppLocal.getIntString("Replenishment.Replenishment")),
+				typeMetrics.stringWidth(AppLocal.getIntString("Replenishment.Order"))) + 16;
+		columns.getColumn(0).setMinWidth(typeWidth);
+		columns.getColumn(0).setPreferredWidth(typeWidth);
+		columns.getColumn(0).setMaxWidth(typeWidth);
+		columns.getColumn(1).setPreferredWidth(260);
+		columns.getColumn(2).setMinWidth(180);
+		columns.getColumn(2).setPreferredWidth(200);
+		columns.getColumn(2).setMaxWidth(210);
+		columns.getColumn(3).setPreferredWidth(105);
+		columns.getColumn(3).setMinWidth(95);
+		columns.getColumn(3).setMaxWidth(125);
+		int dateWidth = tabularDateWidth(table.getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f)),
+				"00/00/00-00:00") + 16;
+		columns.getColumn(4).setMinWidth(dateWidth);
+		columns.getColumn(4).setPreferredWidth(dateWidth);
+		columns.getColumn(4).setMaxWidth(dateWidth);
+		table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				super.getTableCellRendererComponent(table, value, selected, focused, row, column);
+				setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
+				setVerticalAlignment(JLabel.TOP);
+				setBackground(selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100());
+				setForeground(RetailPOSColors.ink());
+				setBorder(
+						BorderFactory
+								.createCompoundBorder(
+										selected
+												? BorderFactory.createMatteBorder(1, 0, 1, 0,
+														RetailPOSColors.borderStrong())
+												: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+										BorderFactory.createEmptyBorder(8, 8, 0, 0)));
+				return this;
+			}
+			@Override
+			protected void paintComponent(java.awt.Graphics graphics) {
+				java.awt.Graphics2D g = (java.awt.Graphics2D) graphics.create();
+				g.setColor(getBackground());
+				g.fillRect(0, 0, getWidth(), getHeight());
+				g.setFont(getFont());
+				g.setColor(getForeground());
+				java.awt.FontMetrics metrics = g.getFontMetrics();
+				int digitWidth = widestDigit(metrics);
+				int x = getInsets().left;
+				int y = getInsets().top + metrics.getAscent();
+				for (char character : getText().toCharArray()) {
+					int width = metrics.charWidth(character);
+					int advance = Character.isDigit(character) ? digitWidth : width;
+					g.drawString(String.valueOf(character), x + (advance - width) / 2, y);
+					x += advance;
+				}
+				g.dispose();
+			}
+		});
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		table.getColumnModel().addColumnModelListener(new javax.swing.event.TableColumnModelListener() {
+			@Override
+			public void columnMarginChanged(javax.swing.event.ChangeEvent event) {
+				resizeRows();
+			}
+			@Override
+			public void columnAdded(javax.swing.event.TableColumnModelEvent event) {
+			}
+			@Override
+			public void columnRemoved(javax.swing.event.TableColumnModelEvent event) {
+			}
+			@Override
+			public void columnMoved(javax.swing.event.TableColumnModelEvent event) {
+			}
+			@Override
+			public void columnSelectionChanged(javax.swing.event.ListSelectionEvent event) {
+			}
+		});
+		table.addComponentListener(new java.awt.event.ComponentAdapter() {
+			@Override
+			public void componentResized(java.awt.event.ComponentEvent event) {
+				resizeRows();
+			}
+		});
 		JPanel left = new JPanel(new BorderLayout());
 		left.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
 		left.add(north, BorderLayout.NORTH);
@@ -220,17 +391,11 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		split.setBorder(null);
 		if (split.getUI() instanceof BasicSplitPaneUI) {
 			BasicSplitPaneUI splitUI = (BasicSplitPaneUI) split.getUI();
-			splitUI.getDivider().setBackground(new java.awt.Color(210, 210, 210));
+			splitUI.getDivider().setBackground(RetailPOSColors.border());
 		}
 		add(split, BorderLayout.CENTER);
-		search.addActionListener(
-				e -> load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
-						? ""
-						: search.getText(), false));
-		filterTimer = new javax.swing.Timer(250,
-				e -> load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
-						? ""
-						: search.getText(), false));
+		search.addActionListener(e -> load(search.getText(), false));
+		filterTimer = new javax.swing.Timer(250, e -> load(search.getText(), false));
 		filterTimer.setRepeats(false);
 		search.getDocument().addDocumentListener(new DocumentListener() {
 			public void insertUpdate(DocumentEvent e) {
@@ -246,8 +411,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		newRequest.addActionListener(e -> clearForm());
 		ordered.addActionListener(e -> change("ORDERED"));
 		received.addActionListener(e -> change("RECEIVED"));
+		pending.addActionListener(e -> change("PENDING"));
 		delivered.addActionListener(e -> change("DELIVERED"));
-		reopen.addActionListener(e -> change("PENDING"));
 		delete.addActionListener(e -> deleteSelected());
 		export.addActionListener(e -> exportVisibleEntries());
 		javax.swing.SwingUtilities.invokeLater(() -> formCode.requestFocusInWindow());
@@ -273,9 +438,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private void exportVisibleEntries() {
 		if (filterTimer.isRunning()) {
 			filterTimer.stop();
-			if (!load(search.getText().equals(AppLocal.getIntString("Replenishment.SearchPlaceholder"))
-					? ""
-					: search.getText(), false))
+			if (!load(search.getText(), false))
 				return;
 		}
 		if (entries == null || entries.isEmpty()) {
@@ -338,31 +501,71 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		UserInfo seller = selectedSeller();
 		return seller == null ? "" : valueOrEmpty(seller.getName());
 	}
-	private void installPlaceholder(JTextField field, String key) {
-		final String hint = AppLocal.getIntString(key);
-		field.setText(hint);
-		field.setForeground(java.awt.Color.GRAY);
-		field.addFocusListener(new java.awt.event.FocusAdapter() {
+	private static void styleInput(JTextComponent input) {
+		input.setBackground(RetailPOSColors.surface200());
+		input.setForeground(RetailPOSColors.ink());
+		if (input instanceof JTextField) {
+			input.putClientProperty("FlatLaf.style",
+					"arc: 6; borderColor: " + RetailPOSColors.toHex(RetailPOSColors.border()) + "; focusedBorderColor: "
+							+ RetailPOSColors.toHex(RetailPOSColors.borderStrong()));
+		}
+	}
+	private static void styleAreaScroll(JScrollPane scroll, JTextArea area) {
+		scroll.setBorder(BorderFactory.createLineBorder(RetailPOSColors.border()));
+		area.addFocusListener(new java.awt.event.FocusAdapter() {
 			@Override
-			public void focusGained(java.awt.event.FocusEvent e) {
-				if (hint.equals(field.getText())) {
-					field.setText("");
-					field.setForeground(java.awt.Color.BLACK);
-				}
+			public void focusGained(java.awt.event.FocusEvent event) {
+				scroll.setBorder(BorderFactory.createLineBorder(RetailPOSColors.borderStrong()));
 			}
 			@Override
-			public void focusLost(java.awt.event.FocusEvent e) {
-				if (field.getText().trim().isEmpty()) {
-					field.setText(hint);
-					field.setForeground(java.awt.Color.GRAY);
-				}
+			public void focusLost(java.awt.event.FocusEvent event) {
+				scroll.setBorder(BorderFactory.createLineBorder(RetailPOSColors.border()));
 			}
 		});
+	}
+	private static void styleStatusToggle(JToggleButton button) {
+		button.putClientProperty("FlatLaf.style",
+				"selectedBackground: " + RetailPOSColors.toHex(RetailPOSColors.surface200()) + "; selectedForeground: "
+						+ RetailPOSColors.toHex(RetailPOSColors.ink()) + "; selectedBorderColor: "
+						+ RetailPOSColors.toHex(RetailPOSColors.borderStrong()));
+	}
+	private static void styleFilterToggle(JToggleButton button) {
+		button.putClientProperty("FlatLaf.style",
+				"selectedBackground: " + RetailPOSColors.toHex(RetailPOSColors.brand()) + "; selectedForeground: "
+						+ RetailPOSColors.toHex(RetailPOSColors.onBrand()) + "; selectedBorderColor: "
+						+ RetailPOSColors.toHex(RetailPOSColors.brandStrong()));
+	}
+	private static int widestDigit(java.awt.FontMetrics metrics) {
+		int widest = 0;
+		for (char digit = '0'; digit <= '9'; digit++)
+			widest = Math.max(widest, metrics.charWidth(digit));
+		return widest;
+	}
+	private static int tabularDateWidth(java.awt.FontMetrics metrics, String date) {
+		int width = 0;
+		int digitWidth = widestDigit(metrics);
+		for (char character : date.toCharArray())
+			width += Character.isDigit(character) ? digitWidth : metrics.charWidth(character);
+		return width;
+	}
+	private static JTextArea hintArea() {
+		JTextArea hint = new JTextArea();
+		hint.setEditable(false);
+		hint.setFocusable(false);
+		hint.setLineWrap(true);
+		hint.setWrapStyleWord(true);
+		hint.setRows(2);
+		hint.setColumns(1);
+		hint.setOpaque(false);
+		hint.setForeground(RetailPOSColors.inkMuted());
+		return hint;
 	}
 	private JPanel createForm() {
 		JPanel form = new JPanel(new BorderLayout(5, 5));
 		form.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
-		form.setPreferredSize(new java.awt.Dimension(360, 0));
+		// Two status buttons per row fit translated labels without a horizontal
+		// scrollbar.
+		form.setPreferredSize(new java.awt.Dimension(320, 0));
 		form.setMinimumSize(new java.awt.Dimension(300, 0));
 		JPanel fields = new FormFields();
 		GridBagConstraints outer = new GridBagConstraints();
@@ -378,7 +581,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(2, 4, 2, 4);
 		formCode = new JTextField();
+		styleInput(formCode);
+		formCode.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 		formDescription = new JTextArea(3, 20);
+		styleInput(formDescription);
 		((JTextArea) formDescription).setRows(3);
 		((JTextArea) formDescription).setLineWrap(true);
 		((JTextArea) formDescription).setWrapStyleWord(true);
@@ -387,49 +593,74 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		productGroup.add(scanLabel, c);
 		c.gridy = 1;
 		productGroup.add(formCode, c);
-		formCode.setMinimumSize(new java.awt.Dimension(0, 32));
-		formCode.setPreferredSize(new java.awt.Dimension(0, 32));
-		productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		formCode.setMinimumSize(new java.awt.Dimension(0, 48));
+		formCode.setPreferredSize(new java.awt.Dimension(0, 48));
+		productButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		findProduct = new JButton(AppLocal.getIntString("Replenishment.SearchProduct"));
 		findProduct.setMargin(new Insets(6, 10, 6, 10));
 		productButtons.add(findProduct);
 		c.gridy = 2;
 		productGroup.add(productButtons, c);
-		selectedProduct = wrappingText(AppLocal.getIntString("Replenishment.NoProductSelected"));
+		selectedProduct = new JTextArea(AppLocal.getIntString("Replenishment.NoProductSelected"));
+		selectedProduct.setEditable(false);
+		selectedProduct.setFocusable(false);
+		selectedProduct.setLineWrap(true);
+		selectedProduct.setWrapStyleWord(true);
+		selectedProduct.setOpaque(false);
+		selectedProduct.setColumns(1);
 		c.gridy = 3;
 		productGroup.add(selectedProduct, c);
-		withoutCodeLabel = new JLabel(AppLocal.getIntString("Replenishment.WithoutCode"), JLabel.CENTER);
-		withoutCodeLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+		productCodes = new JLabel();
+		productCodes.setForeground(RetailPOSColors.inkMuted());
+		productCodes.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 		c.gridy = 4;
+		productGroup.add(productCodes, c);
+		withoutCodeLabel = new JLabel(AppLocal.getIntString("Replenishment.WithoutCode"), JLabel.CENTER);
+		withoutCodeLabel.setForeground(RetailPOSColors.inkMuted());
+		withoutCodeLabel.setBorder(BorderFactory.createCompoundBorder(
+				BorderFactory.createMatteBorder(1, 0, 0, 0, RetailPOSColors.border()),
+				BorderFactory.createEmptyBorder(8, 0, 8, 0)));
+		c.gridy = 5;
 		productGroup.add(withoutCodeLabel, c);
 		manualDescriptionLabel = new JLabel(AppLocal.getIntString("Replenishment.Description"));
-		c.gridy = 5;
+		c.gridy = 6;
 		productGroup.add(manualDescriptionLabel, c);
 		manualDescriptionScroll = new JScrollPane((JTextArea) formDescription);
+		styleAreaScroll(manualDescriptionScroll, (JTextArea) formDescription);
 		manualDescriptionScroll.setMinimumSize(new java.awt.Dimension(0, 58));
 		manualDescriptionScroll.setPreferredSize(new java.awt.Dimension(0, 64));
-		c.gridy = 6;
+		c.gridy = 7;
 		productGroup.add(manualDescriptionScroll, c);
 		JPanel customerGroup = new JPanel(new BorderLayout(6, 0));
-		selectedCustomer = wrappingText(AppLocal.getIntString("Replenishment.NoCustomer"));
-		JButton customer = new JButton(AppLocal.getIntString("Replenishment.Customer"));
-		customer.setMargin(new Insets(6, 10, 6, 10));
+		selectedCustomer = new JTextArea(AppLocal.getIntString("Replenishment.NoCustomer"));
+		selectedCustomer.setEditable(false);
+		selectedCustomer.setFocusable(false);
+		selectedCustomer.setLineWrap(true);
+		selectedCustomer.setWrapStyleWord(true);
+		selectedCustomer.setOpaque(false);
+		selectedCustomer.setColumns(1);
+		customerButton = new JButton(AppLocal.getIntString("Replenishment.Customer"));
+		customerButton.setMargin(new Insets(6, 10, 6, 10));
 		customerGroup.add(selectedCustomer, BorderLayout.CENTER);
-		customerGroup.add(customer, BorderLayout.EAST);
+		customerGroup.add(customerButton, BorderLayout.EAST);
 		formNoteArea = new JTextArea(4, 20);
+		styleInput(formNoteArea);
 		formNoteArea.setLineWrap(true);
 		formNoteArea.setWrapStyleWord(true);
 		JScrollPane noteScroll = new JScrollPane(formNoteArea);
+		styleAreaScroll(noteScroll, formNoteArea);
 		noteScroll.setPreferredSize(new java.awt.Dimension(260, 100));
 		JPanel noteGroup = new JPanel(new BorderLayout());
 		noteGroup.add(noteScroll, BorderLayout.CENTER);
-		formStatusLabel = new JLabel(AppLocal.getIntString("Replenishment.Status"));
-		JPanel statusButtons = new JPanel(new GridLayout(0, 2, 4, 4));
+		formStatusLabel = sectionLabel("Replenishment.Status");
+		formStatusButtons = new JPanel(new GridLayout(0, 2, 4, 4));
 		ButtonGroup statusGroup = new ButtonGroup();
 		formPending = new JToggleButton(AppLocal.getIntString("Replenishment.FormPending"));
 		formOrdered = new JToggleButton(AppLocal.getIntString("Replenishment.FormOrdered"));
 		formReceived = new JToggleButton(AppLocal.getIntString("Replenishment.FormReceived"));
 		formDelivered = new JToggleButton(AppLocal.getIntString("Replenishment.FormDelivered"));
+		for (JToggleButton button : new JToggleButton[]{formPending, formOrdered, formReceived, formDelivered})
+			styleStatusToggle(button);
 		formPending.setMargin(new Insets(6, 10, 6, 10));
 		formOrdered.setMargin(new Insets(6, 10, 6, 10));
 		formReceived.setMargin(new Insets(6, 10, 6, 10));
@@ -437,30 +668,37 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formPending.setSelected(true);
 		formDelivered.setEnabled(false);
 		formDelivered.setToolTipText(AppLocal.getIntString("Replenishment.DeliveryHint"));
+		selectFormStatus();
 		statusGroup.add(formPending);
 		statusGroup.add(formOrdered);
 		statusGroup.add(formReceived);
 		statusGroup.add(formDelivered);
-		statusButtons.add(formPending);
-		statusButtons.add(formOrdered);
-		statusButtons.add(formReceived);
-		statusButtons.add(formDelivered);
-		formPending.addActionListener(e -> formStatus = "PENDING");
-		formOrdered.addActionListener(e -> formStatus = "ORDERED");
-		formReceived.addActionListener(e -> formStatus = "RECEIVED");
-		formDelivered.addActionListener(e -> formStatus = "DELIVERED");
+		formStatusButtons.add(formPending);
+		formStatusButtons.add(formOrdered);
+		formStatusButtons.add(formReceived);
+		formStatusButtons.add(formDelivered);
+		formDeliveryHint = hintArea();
+		formDeliveryHint.setText(AppLocal.getIntString("Replenishment.DeliveryHint"));
+		formDeliveryHint.setVisible(false);
+		formPending.addActionListener(e -> setFormStatus("PENDING"));
+		formOrdered.addActionListener(e -> setFormStatus("ORDERED"));
+		formReceived.addActionListener(e -> setFormStatus("RECEIVED"));
+		formDelivered.addActionListener(e -> setFormStatus("DELIVERED"));
 		JPanel customerSection = new JPanel(new BorderLayout(0, 2));
-		customerSection.add(new JLabel(AppLocal.getIntString("Replenishment.CustomerColumn")), BorderLayout.NORTH);
+		customerSection.add(sectionLabel("Replenishment.CustomerColumn"), BorderLayout.NORTH);
 		customerSection.add(customerGroup, BorderLayout.CENTER);
 		JPanel noteSection = new JPanel(new BorderLayout(0, 2));
-		noteSection.add(new JLabel(AppLocal.getIntString("Replenishment.Note")), BorderLayout.NORTH);
+		noteSection.add(sectionLabel("Replenishment.Note"), BorderLayout.NORTH);
 		noteSection.add(noteGroup, BorderLayout.CENTER);
 		JPanel statusSection = new JPanel(new BorderLayout(0, 2));
 		statusSection.add(formStatusLabel, BorderLayout.NORTH);
-		statusSection.add(statusButtons, BorderLayout.CENTER);
+		JPanel statusControls = new JPanel(new BorderLayout(0, 4));
+		statusControls.add(formStatusButtons, BorderLayout.NORTH);
+		statusControls.add(formDeliveryHint, BorderLayout.CENTER);
+		statusSection.add(statusControls, BorderLayout.CENTER);
 		creatorLabel = new JLabel(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		outer.gridy = 0;
-		fields.add(new JLabel(AppLocal.getIntString("Replenishment.Product")), outer);
+		fields.add(sectionLabel("Replenishment.Product"), outer);
 		outer.gridy = 1;
 		fields.add(productGroup, outer);
 		outer.gridy = 2;
@@ -475,8 +713,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		fields.add(statusSection, outer);
 		outer.gridy = 5;
 		fields.add(creatorLabel, outer);
-		JButton save = new JButton(AppLocal.getIntString("Replenishment.Save"));
-		save.setFont(save.getFont().deriveFont(java.awt.Font.BOLD, 16f));
+		save = new JButton(AppLocal.getIntString("Replenishment.Save"));
+		RetailPOSColors.primaryButton(save);
+		save.setPreferredSize(new java.awt.Dimension(save.getPreferredSize().width + 24, 48));
 		save.setMargin(new Insets(6, 12, 6, 12));
 		JButton cancel = new JButton(AppLocal.getIntString("Button.Cancel"));
 		cancel.setMargin(new Insets(6, 12, 6, 12));
@@ -491,16 +730,34 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		form.add(fieldsScroll, BorderLayout.CENTER);
 		form.add(formActions, BorderLayout.SOUTH);
 		formCode.addActionListener(e -> findFormProduct());
+		formNoteArea.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				updateSaveState();
+			}
+			public void removeUpdate(DocumentEvent e) {
+				updateSaveState();
+			}
+			public void changedUpdate(DocumentEvent e) {
+				updateSaveState();
+			}
+		});
 		findProduct.addActionListener(e -> {
 			if (editingEntry != null)
 				return;
 			formProduct = JProductFinder.showMessage(this, sales);
 			showSelectedProduct();
 		});
-		customer.addActionListener(e -> chooseFormCustomer());
+		customerButton.addActionListener(e -> chooseFormCustomer());
 		save.addActionListener(e -> saveForm());
 		cancel.addActionListener(e -> clearForm());
+		updateFormDeliveredEnabled();
+		updateSaveState();
 		return form;
+	}
+	private static JLabel sectionLabel(String key) {
+		JLabel label = new JLabel(AppLocal.getIntString(key));
+		label.setFont(label.getFont().deriveFont(java.awt.Font.BOLD, 13f));
+		return label;
 	}
 	private void findFormProduct() {
 		if (editingEntry != null)
@@ -518,10 +775,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		boolean manual = formProduct == null;
 		if (manual) {
 			selectedProduct.setText(AppLocal.getIntString("Replenishment.UnknownProduct"));
+			productCodes.setText("");
 			formDescription.setEditable(true);
 		} else {
-			selectedProduct
-					.setText(productSummary(formProduct.getName(), formProduct.getReference(), formProduct.getCode()));
+			selectedProduct.setText(displayProductName(formProduct.getName(), formProduct.getReference()));
+			productCodes.setText(displayReference(formProduct.getName(), formProduct.getReference()) + " · EAN "
+					+ valueOrEmpty(formProduct.getCode()));
 			formDescription.setText(valueOrEmpty(formProduct.getName()));
 			formDescription.setEditable(false);
 		}
@@ -541,7 +800,30 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		selectedCustomer.setText(formCustomer == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
 				: customerDisplayName(formCustomer));
+		updateCustomerButton();
 		updateFormDeliveredEnabled();
+		updateSaveState();
+	}
+	private void updateSaveState() {
+		if (save == null)
+			return;
+		boolean dirty = editingEntry == null
+				|| !formNoteArea.getText().trim().equals(valueOrEmpty(editingEntry.note)) || !java.util.Objects
+						.equals(formCustomer == null ? null : formCustomer.getId(), editingEntry.customerId)
+				|| !formStatus.equals(editingEntry.status);
+		save.setEnabled(dirty);
+		if (dirty) {
+			RetailPOSColors.primaryButton(save);
+		} else {
+			save.putClientProperty("FlatLaf.style", null);
+			save.setOpaque(false);
+			save.setBackground(RetailPOSColors.surface100());
+			save.setForeground(RetailPOSColors.ink());
+		}
+	}
+	private void updateCustomerButton() {
+		customerButton.setText(AppLocal
+				.getIntString(formCustomer == null ? "Replenishment.Customer" : "Replenishment.ChangeCustomer"));
 	}
 	private void saveForm() {
 		if (editingEntry == null && formProduct == null && formCode.getText().trim().isEmpty()
@@ -595,7 +877,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formCode.setEditable(false);
 		findProduct.setEnabled(false);
 		productButtons.setVisible(false);
-		scanLabel.setText(AppLocal.getIntString("Replenishment.Barcode"));
+		scanLabel.setVisible(false);
+		formCode.setVisible(false);
 		formProduct = entry.productId == null ? null : new ProductInfoExt();
 		if (formProduct != null) {
 			formProduct.setID(entry.productId);
@@ -606,7 +889,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formDescription.setText(entry.productId == null
 				? (entry.manualDescription == null ? "" : entry.manualDescription)
 				: entry.name);
-		formDescription.setEditable(false);
+		formDescription.setEditable(entry.productId == null);
 		formNoteArea.setText(entry.note == null ? "" : entry.note);
 		formCustomer = entry.customerId == null ? null : new CustomerInfo(entry.customerId);
 		if (formCustomer != null)
@@ -614,12 +897,16 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		selectedCustomer.setText(entry.customerId == null
 				? AppLocal.getIntString("Replenishment.NoCustomer")
 				: customerDisplayName(formCustomer, entry.customerName));
+		updateCustomerButton();
 		showSelectedProduct();
 		if (entry.productId == null)
 			selectedProduct.setText(valueOrEmpty(entry.manualDescription));
+		if (entry.productId == null)
+			productCodes.setText(valueOrEmpty(entry.manualEan));
 		selectFormStatus();
 		updateFormDeliveredEnabled();
 		updateDeliveredEnabled();
+		updateSaveState();
 	}
 	private void clearForm() {
 		editingEntry = null;
@@ -632,16 +919,19 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		formCustomer = null;
 		formProduct = null;
 		formCode.setEditable(true);
+		formCode.setVisible(true);
 		findProduct.setEnabled(true);
 		productButtons.setVisible(true);
-		scanLabel.setText(AppLocal.getIntString("Replenishment.Scan"));
+		scanLabel.setVisible(true);
 		selectFormStatus();
 		updateFormDeliveredEnabled();
 		showSelectedProduct();
 		selectedProduct.setText(AppLocal.getIntString("Replenishment.NoProductSelected"));
 		selectedCustomer.setText(AppLocal.getIntString("Replenishment.NoCustomer"));
+		updateCustomerButton();
 		table.clearSelection();
 		updateDeliveredEnabled();
+		updateSaveState();
 		formCode.requestFocusInWindow();
 	}
 	private boolean load(String search, boolean received) {
@@ -653,11 +943,22 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private boolean load(String search, boolean received, String selectId, boolean reloadForm) {
 		try {
 			List<ReplenishmentEntry> refreshed = data.list(search, selectedType, selectedStatus);
+			List<ReplenishmentEntry> all = "ALL".equals(selectedStatus)
+					? refreshed
+					: data.list(search, selectedType, "ALL");
+			for (Map.Entry<String, JToggleButton> filter : statusButtons.entrySet()) {
+				String key = filter.getKey();
+				String labelKey = "ALL".equals(key)
+						? "Replenishment.All"
+						: "Replenishment." + key.charAt(0) + key.substring(1).toLowerCase(java.util.Locale.ROOT);
+				long count = all.stream().filter(e -> "ALL".equals(key) || key.equals(e.status)).count();
+				filter.getValue().setText(AppLocal.getIntString(labelKey) + " (" + count + ")");
+			}
 			loading = true;
 			table.clearSelection();
 			entries = refreshed;
 			model.setRowCount(0);
-			DateFormat f = new SimpleDateFormat("dd/MM/yy - HH:mm");
+			DateFormat f = new SimpleDateFormat("dd/MM/yy-HH:mm");
 			int selectedRow = -1;
 			for (ReplenishmentEntry e : entries) {
 				if (e.id.equals(selectId))
@@ -665,17 +966,18 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				model.addRow(new Object[]{
 						e.customerId == null
 								? AppLocal.getIntString("Replenishment.Replenishment")
-								: AppLocal.getIntString("Replenishment.Orders"),
-						e.displayName(), e.customerName == null ? "--" : e.customerName, e.note == null ? "--" : e.note,
-						statusLabel(e.status), f.format(e.createdAt) + " / " + creatorName(e)});
+								: AppLocal.getIntString("Replenishment.Order"),
+						e.displayName(), valueOrEmpty(e.customerName), statusLabel(e.status), f.format(e.createdAt)});
 			}
+			resizeRows();
 			displayedSearch = search;
 			if (selectedRow >= 0) {
 				table.setRowSelectionInterval(selectedRow, selectedRow);
 				if (reloadForm)
 					loadEntry(entries.get(selectedRow));
-			} else if (editingEntry != null) {
-				clearForm();
+			} else {
+				if (editingEntry != null)
+					clearForm();
 			}
 			loading = false;
 			updateDeliveredEnabled();
@@ -691,33 +993,205 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private String statusLabel(String status) {
 		return "DELIVERED".equals(status)
-				? AppLocal.getIntString("Replenishment.Delivered")
+				? AppLocal.getIntString("Replenishment.FormDelivered")
 				: "RECEIVED".equals(status)
-						? AppLocal.getIntString("Replenishment.Received")
+						? AppLocal.getIntString("Replenishment.FormReceived")
 						: "ORDERED".equals(status)
-								? AppLocal.getIntString("Replenishment.Ordered")
-								: AppLocal.getIntString("Replenishment.Pending");
+								? AppLocal.getIntString("Replenishment.FormOrdered")
+								: AppLocal.getIntString("Replenishment.FormPending");
 	}
-	private static java.awt.Color statusBackground(String state) {
-		return state.equals(AppLocal.getIntString("Replenishment.Delivered"))
-				? new java.awt.Color(228, 240, 232)
-				: state.equals(AppLocal.getIntString("Replenishment.Received"))
-						? new java.awt.Color(230, 240, 230)
-						: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-								? new java.awt.Color(227, 237, 248)
-								: new java.awt.Color(253, 241, 216);
+	private static java.awt.Color statusColor(String state) {
+		return "DELIVERED".equals(state)
+				? RetailPOSColors.surface200()
+				: "RECEIVED".equals(state)
+						? RetailPOSColors.success()
+						: "ORDERED".equals(state) ? RetailPOSColors.info() : RetailPOSColors.warning();
 	}
-	private static java.awt.Color statusForeground(String state) {
-		return state.equals(AppLocal.getIntString("Replenishment.Delivered"))
-				? new java.awt.Color(38, 112, 58)
-				: state.equals(AppLocal.getIntString("Replenishment.Received"))
-						? new java.awt.Color(44, 110, 44)
-						: state.equals(AppLocal.getIntString("Replenishment.Ordered"))
-								? new java.awt.Color(10, 92, 158)
-								: new java.awt.Color(138, 90, 0);
+	private static java.awt.Color badgeFill(String state) {
+		java.awt.Color surface = RetailPOSColors.surface100();
+		java.awt.Color accent = statusColor(state);
+		return new java.awt.Color((surface.getRed() * 3 + accent.getRed()) / 4,
+				(surface.getGreen() * 3 + accent.getGreen()) / 4, (surface.getBlue() * 3 + accent.getBlue()) / 4);
+	}
+	private void setFormStatus(String status) {
+		formStatus = status;
+		selectFormStatus();
+		updateSaveState();
+	}
+	private void resizeRows() {
+		int productWidth = table.getColumnModel().getColumn(1).getWidth();
+		int customerWidth = table.getColumnModel().getColumn(2).getWidth();
+		if (productWidth <= 0 || customerWidth <= 0 || entries == null)
+			return;
+		for (int row = 0; row < table.getRowCount(); row++) {
+			ReplenishmentEntry entry = entries.get(table.convertRowIndexToModel(row));
+			String productName = entry.productId == null
+					? entry.displayName()
+					: displayProductName(entry.name, entry.reference);
+			int productHeight = wrappedHeight(productName, productWidth);
+			if (entry.productId != null && !displayReference(entry.name, entry.reference).isBlank())
+				productHeight += table.getFontMetrics(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f)).getHeight();
+			int height = Math.max(48, Math.max(productHeight, wrappedHeight(entry.customerName, customerWidth)) + 16);
+			if (table.getRowHeight(row) != height)
+				table.setRowHeight(row, height);
+		}
+	}
+	private static String displayProductName(String name, String reference) {
+		String text = valueOrEmpty(name).trim();
+		String code = valueOrEmpty(reference).trim();
+		if (!code.isEmpty() && text.endsWith(" [" + code + "]"))
+			return text.substring(0, text.length() - code.length() - 3).stripTrailing();
+		return text;
+	}
+	private static String displayReference(String name, String reference) {
+		String code = valueOrEmpty(reference).trim();
+		String displayName = displayProductName(name, reference);
+		int separator = displayName.lastIndexOf(" — ");
+		if (separator >= 0) {
+			String variant = displayName.substring(separator + 3).trim();
+			if (!variant.isEmpty() && code.endsWith(" " + variant))
+				return code.substring(0, code.length() - variant.length() - 1);
+		}
+		return code;
+	}
+	private static int wrappedHeight(String text, int columnWidth) {
+		String visible = preview(text, columnWidth);
+		int lines = (int) visible.chars().filter(ch -> ch == '\n').count() + 1;
+		return lines * new JLabel().getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM).getHeight();
+	}
+	private static String preview(String text, int columnWidth) {
+		java.awt.FontMetrics metrics = new JLabel().getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM);
+		int width = Math.max(1, columnWidth - 20);
+		StringBuilder visible = new StringBuilder();
+		StringBuilder line = new StringBuilder();
+		int lines = 1;
+		for (String word : valueOrEmpty(text).trim().split("\\s+")) {
+			if (line.length() == 0 && metrics.stringWidth(word) > width) {
+				StringBuilder shortened = new StringBuilder(word);
+				while (shortened.length() > 0 && metrics.stringWidth(shortened + "…") > width)
+					shortened.deleteCharAt(shortened.length() - 1);
+				return visible.append(shortened).append('…').toString();
+			}
+			String candidate = line.length() == 0 ? word : line + " " + word;
+			if (line.length() > 0 && metrics.stringWidth(candidate) > width) {
+				if (lines == 2) {
+					while (line.length() > 0 && metrics.stringWidth(line + "…") > width)
+						line.deleteCharAt(line.length() - 1);
+					return visible.append(line).append('…').toString();
+				}
+				visible.append(line).append('\n');
+				line.setLength(0);
+				lines++;
+			}
+			line.append(line.length() == 0 ? word : " " + word);
+		}
+		return visible.append(line).toString();
+	}
+	private final class ProductRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
+		private final JLabel reference = new JLabel();
+		private final JTextArea name = new JTextArea();
+		ProductRenderer() {
+			super(new BorderLayout());
+			reference.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
+			name.setFont(RetailPOSTheme.MANROPE_MEDIUM);
+			name.setLineWrap(false);
+			// The renderer panel provides the cell padding for both lines.
+			name.setMargin(new Insets(0, 0, 0, 0));
+			name.setBorder(BorderFactory.createEmptyBorder());
+			name.setEditable(false);
+			name.setFocusable(false);
+			add(reference, BorderLayout.NORTH);
+			add(name, BorderLayout.CENTER);
+		}
+		@Override
+		public void paint(java.awt.Graphics graphics) {
+			doLayout();
+			super.paint(graphics);
+		}
+		@Override
+		public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
+				boolean focused, int row, int column) {
+			ReplenishmentEntry entry = entries.get(table.convertRowIndexToModel(row));
+			java.awt.Color background = selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100();
+			setBackground(background);
+			name.setBackground(background);
+			name.setForeground(RetailPOSColors.ink());
+			reference.setBackground(background);
+			reference.setForeground(RetailPOSColors.inkMuted());
+			reference.setText(displayReference(entry.name, entry.reference));
+			reference.setVisible(entry.productId != null && !reference.getText().isBlank());
+			name.setText(preview(
+					entry.productId == null ? entry.displayName() : displayProductName(entry.name, entry.reference),
+					table.getColumnModel().getColumn(column).getWidth()));
+			setBorder(
+					BorderFactory
+							.createCompoundBorder(
+									selected
+											? BorderFactory.createMatteBorder(1, 0, 1, 0,
+													RetailPOSColors.borderStrong())
+											: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+									BorderFactory.createEmptyBorder(8, 8, 0, 4)));
+			return this;
+		}
+	}
+	private final class StatusBadgeRenderer extends DefaultTableCellRenderer {
+		private java.awt.Color badgeColor;
+		private java.awt.Color fillColor;
+		@Override
+		public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
+				boolean focused, int row, int column) {
+			super.getTableCellRendererComponent(table, value, selected, focused, row, column);
+			String state = entries.get(table.convertRowIndexToModel(row)).status;
+			badgeColor = statusColor(state);
+			fillColor = badgeFill(state);
+			setBackground(selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100());
+			setForeground("DELIVERED".equals(state) ? RetailPOSColors.inkMuted() : RetailPOSColors.ink());
+			setVerticalAlignment(JLabel.TOP);
+			setBorder(
+					BorderFactory
+							.createCompoundBorder(
+									selected
+											? BorderFactory.createMatteBorder(1, 0, 1, 0,
+													RetailPOSColors.borderStrong())
+											: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+									BorderFactory.createEmptyBorder(0, 12, 0, 4)));
+			setOpaque(false);
+			return this;
+		}
+		@Override
+		protected void paintComponent(java.awt.Graphics graphics) {
+			java.awt.Graphics2D g = (java.awt.Graphics2D) graphics.create();
+			g.setColor(getBackground());
+			g.fillRect(0, 0, getWidth(), getHeight());
+			g.setColor(fillColor);
+			int badgeWidth = Math.min(getWidth() - 8, getFontMetrics(getFont()).stringWidth(getText()) + 24);
+			int badgeHeight = 28;
+			int badgeY = 4;
+			g.fillRoundRect(4, badgeY, badgeWidth, badgeHeight, badgeHeight, badgeHeight);
+			g.setColor(badgeColor);
+			g.drawRoundRect(4, badgeY, badgeWidth, badgeHeight, badgeHeight, badgeHeight);
+			g.setColor(getForeground());
+			java.awt.FontMetrics metrics = g.getFontMetrics(getFont());
+			g.drawString(getText(), 16, badgeY + (badgeHeight - metrics.getHeight()) / 2 + metrics.getAscent());
+			g.dispose();
+		}
 	}
 	private static String valueOrEmpty(String value) {
 		return value == null ? "" : value;
+	}
+	private void selectFormStatus() {
+		formPending.setSelected("PENDING".equals(formStatus));
+		formOrdered.setSelected("ORDERED".equals(formStatus));
+		formReceived.setSelected("RECEIVED".equals(formStatus));
+		formDelivered.setSelected("DELIVERED".equals(formStatus));
+	}
+	private void updateFormDeliveredEnabled() {
+		formDelivered.setVisible(editingEntry != null);
+		formDelivered.setEnabled(editingEntry != null && formCustomer != null
+				&& ("RECEIVED".equals(editingEntry.status) || "DELIVERED".equals(editingEntry.status)));
+		formDeliveryHint.setVisible(
+				editingEntry != null && !formDelivered.isEnabled() && !"DELIVERED".equals(editingEntry.status));
+		formStatusButtons.revalidate();
 	}
 	private static String customerDisplayName(CustomerInfo customer) {
 		return customerDisplayName(customer, customer == null ? null : customer.getName());
@@ -727,29 +1201,6 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			return name;
 		return valueOrEmpty(customer == null ? null : customer.getId());
 	}
-	private static String productSummary(String name, String reference, String ean) {
-		return valueOrEmpty(name) + "\n" + valueOrEmpty(reference) + " · EAN " + valueOrEmpty(ean);
-	}
-	private static JTextArea wrappingText(String value) {
-		JTextArea text = new JTextArea(value);
-		text.setEditable(false);
-		text.setFocusable(false);
-		text.setLineWrap(true);
-		text.setWrapStyleWord(true);
-		text.setOpaque(false);
-		text.setColumns(1);
-		return text;
-	}
-	private void selectFormStatus() {
-		formPending.setSelected("PENDING".equals(formStatus));
-		formOrdered.setSelected("ORDERED".equals(formStatus));
-		formReceived.setSelected("RECEIVED".equals(formStatus));
-		formDelivered.setSelected("DELIVERED".equals(formStatus));
-	}
-	private void updateFormDeliveredEnabled() {
-		formDelivered.setEnabled(editingEntry != null && formCustomer != null
-				&& ("RECEIVED".equals(editingEntry.status) || "DELIVERED".equals(editingEntry.status)));
-	}
 	private String creatorName(ReplenishmentEntry entry) {
 		if (entry.creatorName != null && !entry.creatorName.isBlank())
 			return entry.creatorName;
@@ -758,6 +1209,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				? seller.getName()
 				: "--";
 	}
+	/**
+	 * Follow the viewport width while allowing the right form to scroll vertically.
+	 */
 	private static class FormFields extends JPanel implements javax.swing.Scrollable {
 		FormFields() {
 			super(new GridBagLayout());
@@ -782,6 +1236,11 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		public boolean getScrollableTracksViewportHeight() {
 			return false;
 		}
+	}
+	private void updateDeliveredEnabled() {
+		int row = table.getSelectedRow();
+		delivered.setEnabled(row >= 0 && entries != null && "RECEIVED".equals(entries.get(row).status)
+				&& entries.get(row).customerId != null);
 	}
 	private void change(String status) {
 		int row = table.getSelectedRow();
@@ -810,11 +1269,6 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 		logger.warning("event=replenishment_status_update_failed action=" + action + " status=" + status + " entryId="
 				+ id + " cause=" + cause.getClass().getSimpleName() + detail);
-	}
-	private void updateDeliveredEnabled() {
-		int row = table.getSelectedRow();
-		delivered.setEnabled(row >= 0 && entries != null && "RECEIVED".equals(entries.get(row).status)
-				&& entries.get(row).customerId != null);
 	}
 	@Override
 	public String getTitle() {
