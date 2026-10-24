@@ -112,50 +112,65 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		}
 	}
 
-	private void saveProperties() {
+	private boolean saveProperties() {
+		AppConfig pending = config.copy();
 
 		// paneles auxiliares
 		for (PanelConfig c : m_panelconfig) {
-			c.saveProperties(config);
+			c.saveProperties(pending);
 		}
-		saveLoyaltyDatabaseProperties();
-		config.setProperty(LoyaltyStamps.ENABLED_KEY, null);
-		config.setProperty(LoyaltyStamps.NAME_KEY, null);
-		config.setProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY, null);
-		config.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, null);
 
 		try {
 			if (settingsSession == null) {
-				ConfigurationStore.saveForDatabaseRecovery(config);
+				ConfigurationStore.saveForDatabaseRecovery(pending);
+				config.apply(pending);
+				for (PanelConfig c : m_panelconfig) {
+					c.markSaved();
+				}
 				JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.restartchanges"),
 						AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
-				return;
+				return true;
 			}
 			BackupPolicy existing = BackupPolicy.load(settingsSession);
-			String owner = "true".equals(config.getProperty("backup.central"))
-					? config.getHost()
-					: config.getHost().equals(existing.getTerminalId()) ? null : existing.getTerminalId();
-			if ("true".equals(config.getProperty("backup.daily")) && owner == null) {
+			String owner = "true".equals(pending.getProperty("backup.central"))
+					? pending.getHost()
+					: pending.getHost().equals(existing.getTerminalId()) ? null : existing.getTerminalId();
+			if ("true".equals(pending.getProperty("backup.daily")) && owner == null) {
 				throw new SQLException(AppLocal.getIntString("message.backupowner"));
 			}
-			int hour = Integer.parseInt(config.getProperty("backup.hour"));
-			int retention = Integer.parseInt(config.getProperty("backup.retention"));
+			int hour = Integer.parseInt(pending.getProperty("backup.hour"));
+			int retention = Integer.parseInt(pending.getProperty("backup.retention"));
 			settingsSession.begin();
 			try {
-				TerminalConfiguration.save(config, settingsSession);
-				BackupPolicy.save(settingsSession, "true".equals(config.getProperty("backup.daily")), hour, retention,
+				TerminalConfiguration.save(pending, settingsSession);
+				BackupPolicy.save(settingsSession, "true".equals(pending.getProperty("backup.daily")), hour, retention,
 						owner);
+				if (loyaltyDataLogic != null) {
+					DataLogicSystem logic = new DataLogicSystem();
+					logic.init(settingsSession);
+					saveLoyaltyDatabaseProperties(logic, pending);
+				}
 				settingsSession.commit();
-			} catch (SQLException e) {
+			} catch (SQLException | BasicException e) {
 				settingsSession.rollback();
 				throw e;
 			}
-			ConfigurationStore.save(config);
+			pending.setProperty(LoyaltyStamps.ENABLED_KEY, null);
+			pending.setProperty(LoyaltyStamps.NAME_KEY, null);
+			pending.setProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY, null);
+			pending.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, null);
+			ConfigurationStore.save(pending);
+			config.apply(pending);
+			for (PanelConfig c : m_panelconfig) {
+				c.markSaved();
+			}
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.restartchanges"),
 					AppLocal.getIntString("message.title"), JOptionPane.INFORMATION_MESSAGE);
-		} catch (IOException | SQLException | NumberFormatException e) {
+			return true;
+		} catch (IOException | SQLException | BasicException | NumberFormatException e) {
 			JMessageDialog.showMessage(this,
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
+			return false;
 		}
 	}
 
@@ -181,22 +196,14 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		}
 	}
 
-	private void saveLoyaltyDatabaseProperties() {
-		if (loyaltyDataLogic == null) {
-			return;
-		}
-		try {
-			loyaltyDataLogic.setLoyaltySettings(
-					new LoyaltySettings(LoyaltyStamps.isEnabled(config.getProperty(LoyaltyStamps.ENABLED_KEY)),
-							LoyaltyStamps.name(config.getProperty(LoyaltyStamps.NAME_KEY)),
-							parse(config.getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
-									LoyaltySettings.DEFAULT_ELIGIBLE_SPEND_PER_STAMP),
-							parse(config.getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY),
-									LoyaltySettings.DEFAULT_REDEMPTION_VALUE)));
-		} catch (BasicException e) {
-			JMessageDialog.showMessage(this,
-					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotsaveconfig"), e));
-		}
+	private void saveLoyaltyDatabaseProperties(DataLogicSystem logic, AppConfig pending) throws BasicException {
+		logic.setLoyaltySettings(
+				new LoyaltySettings(LoyaltyStamps.isEnabled(pending.getProperty(LoyaltyStamps.ENABLED_KEY)),
+						LoyaltyStamps.name(pending.getProperty(LoyaltyStamps.NAME_KEY)),
+						parse(pending.getProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY),
+								LoyaltySettings.DEFAULT_ELIGIBLE_SPEND_PER_STAMP),
+						parse(pending.getProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY),
+								LoyaltySettings.DEFAULT_REDEMPTION_VALUE)));
 	}
 
 	private static double parse(String value, double defaultValue) {
@@ -259,8 +266,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 					AppLocal.getIntString("title.editor"), AppLocal.getIntString("confirm.cancel"),
 					AppLocal.getIntString("confirm.discard"), AppLocal.getIntString("confirm.save"), false);
 			if (res == JOptionPane.YES_OPTION) {
-				saveProperties();
-				return true;
+				return saveProperties();
 			} else {
 				return res == JOptionPane.NO_OPTION;
 			}

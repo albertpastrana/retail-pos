@@ -1,5 +1,6 @@
 package com.openbravo.pos.forms;
 
+import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Session;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Properties;
 
 /** Database-owned terminal identity and operational preferences. */
@@ -231,6 +233,20 @@ public final class TerminalConfiguration {
 			if (statement.executeUpdate() != 1) {
 				throw new SQLException("Terminal is not registered");
 			}
+		}
+	}
+
+	/** Insert the next cash and publish it as active in one transaction. */
+	public static void createCash(Session session, DataLogicSystem logic, String terminalId, String cashId,
+			int sequence, Date start) throws SQLException, BasicException {
+		session.begin();
+		try {
+			logic.execInsertCash(new Object[]{cashId, terminalId, sequence, start, null});
+			setActiveCash(session, terminalId, cashId);
+			session.commit();
+		} catch (SQLException | BasicException e) {
+			session.rollback();
+			throw e;
 		}
 	}
 

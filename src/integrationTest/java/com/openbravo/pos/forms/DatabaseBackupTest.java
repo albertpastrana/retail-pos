@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.openbravo.pos.forms.DatabaseBackup.ConnectionInfo;
 import com.openbravo.pos.forms.DatabaseBackup.DatabaseType;
+import com.openbravo.data.loader.Session;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,6 +68,24 @@ public class DatabaseBackupTest {
 
 		assertThat(cmd).containsExactly("/usr/bin/pg_dump", "-h", "dbhost", "-p", "5432", "-U", "posuser", "-f",
 				target.getAbsolutePath(), "posdb");
+	}
+
+	@Test
+	public void retentionOnlyDeletesArchivesOwnedByCurrentDatabase() throws Exception {
+		File current = new File(temp, "backup-postgresql-db-a-5432-pos-20250101-120000.sql.gz");
+		File otherHost = new File(temp, "backup-postgresql-db-b-5432-pos-20250101-120000.sql.gz");
+		File otherType = new File(temp, "backup-mysql-db-a-5432-pos-20250101-120000.sql.gz");
+		File legacy = new File(temp, "backup-pos-20250101-120000.sql.gz");
+		for (File file : new File[]{current, otherHost, otherType, legacy}) {
+			assertThat(file.createNewFile()).isTrue();
+			assertThat(file.setLastModified(0L)).isTrue();
+		}
+		DatabaseBackup.pruneOldBackups(temp.getAbsolutePath(), 30,
+				new ConnectionInfo(DatabaseType.POSTGRESQL, "db-a", 5432, "pos"));
+		assertThat(current).doesNotExist();
+		assertThat(otherHost).exists();
+		assertThat(otherType).exists();
+		assertThat(legacy).exists();
 	}
 
 	@Test
@@ -138,5 +159,33 @@ public class DatabaseBackupTest {
 
 		// After backup, daily backup is no longer needed
 		assertThat(DatabaseBackup.isDailyBackupNeeded(appProps)).isFalse();
+	}
+
+	@Test
+	public void derbyBackupCompletesWhileClaimTransactionIsOpen() throws Exception {
+		String url = "jdbc:derby:" + new File(temp, "locked-derby-db").getAbsolutePath() + ";create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		AppConfig config = new AppConfig();
+		config.load(null);
+		config.setProperty("terminal.id", UUID.randomUUID().toString());
+		config.setProperty("db.URL", url);
+		config.setProperty("db.user", null);
+		config.setProperty("db.password", null);
+		config.setProperty("backup.dir", new File(temp, "locked-backups").getAbsolutePath());
+		Session session = new Session(url, null, null);
+		try {
+			TerminalConfiguration.load(config, session);
+			BackupPolicy.save(session, true, 0, 30, config.getHost());
+			LocalDateTime now = LocalDateTime.now();
+			session.begin();
+			String claim = BackupPolicy.claim(session, config.getHost(), now);
+			assertThat(claim).isNotNull();
+			assertThat(DatabaseBackup.backup(config)).exists();
+			BackupPolicy.release(session, claim, now.toLocalDate(), true);
+			session.commit();
+			assertThat(BackupPolicy.claim(session, config.getHost(), now)).isNull();
+		} finally {
+			session.close();
+		}
 	}
 }

@@ -11,10 +11,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-/** Single shared schedule and atomic, expiring claim for scheduled backups. */
+/** Single shared schedule and atomic claim for scheduled backups. */
 public final class BackupPolicy {
 	private static final DateTimeFormatter DATE = DateTimeFormatter.BASIC_ISO_DATE;
-	private static final int LEASE_HOURS = 24;
 	private final boolean enabled;
 	private final int hour;
 	private final int retentionDays;
@@ -71,20 +70,17 @@ public final class BackupPolicy {
 		}
 	}
 
-	/** Returns a token only if this terminal won today's lease. */
+	/** Hold the session transaction open until archive work has finished. */
 	public static String claim(Session session, String terminalId, LocalDateTime now) throws SQLException {
 		String token = UUID.randomUUID().toString();
 		try (PreparedStatement statement = session.getConnection()
-				.prepareStatement("UPDATE BACKUP_POLICY SET LEASE_OWNER = ?, LEASE_UNTIL = ? "
+				.prepareStatement("UPDATE BACKUP_POLICY SET LEASE_OWNER = ? "
 						+ "WHERE ID = '0' AND ENABLED = 1 AND TERMINAL_ID = ? AND HOUR_OF_DAY <= ? "
-						+ "AND (LAST_DATE IS NULL OR LAST_DATE <> ?) "
-						+ "AND (LEASE_UNTIL IS NULL OR LEASE_UNTIL < ?)")) {
+						+ "AND (LAST_DATE IS NULL OR LAST_DATE <> ?) " + "AND LEASE_OWNER IS NULL")) {
 			statement.setString(1, token);
-			statement.setTimestamp(2, Timestamp.valueOf(now.plusHours(LEASE_HOURS)));
-			statement.setString(3, terminalId);
-			statement.setInt(4, now.getHour());
-			statement.setString(5, now.toLocalDate().format(DATE));
-			statement.setTimestamp(6, Timestamp.valueOf(now));
+			statement.setString(2, terminalId);
+			statement.setInt(3, now.getHour());
+			statement.setString(4, now.toLocalDate().format(DATE));
 			return statement.executeUpdate() == 1 ? token : null;
 		}
 	}

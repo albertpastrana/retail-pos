@@ -9,11 +9,57 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Properties;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class TerminalConfigurationIT {
+	@Test
+	void failedCashCreationRollsBackAndClaimCanBeRetried() throws Exception {
+		String url = "jdbc:derby:memory:terminalAtomicIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		String id = UUID.randomUUID().toString();
+		AppConfig config = new AppConfig();
+		config.load(null);
+		config.setProperty("terminal.id", id);
+		String cash = UUID.randomUUID().toString();
+		try (Connection connection = open(url, null, null)) {
+			Session session = new Session(url, null, null);
+			try {
+				DataLogicSystem logic = new DataLogicSystem();
+				logic.init(session);
+				assertThrows(java.sql.SQLException.class,
+						() -> TerminalConfiguration.createCash(session, logic, id, cash, 1, new Date()));
+				assertEquals(0, count(connection, "SELECT COUNT(*) FROM CLOSEDCASH WHERE MONEY = '" + cash + "'"));
+				TerminalConfiguration.load(config, session);
+				TerminalConfiguration.createCash(session, logic, id, cash, 1, new Date());
+				assertEquals(cash, TerminalConfiguration.activeCash(session, id));
+				BackupPolicy.save(session, true, 0, 7, id);
+				LocalDateTime now = LocalDateTime.of(2026, 10, 14, 12, 0);
+				session.begin();
+				assertNotNull(BackupPolicy.claim(session, id, now));
+				session.rollback();
+				session.begin();
+				String claim = BackupPolicy.claim(session, id, now);
+				assertNotNull(claim);
+				BackupPolicy.release(session, claim, now.toLocalDate(), true);
+				session.commit();
+				assertNull(BackupPolicy.claim(session, id, now));
+			} finally {
+				session.close();
+			}
+		}
+	}
+
+	private int count(Connection connection, String sql) throws Exception {
+		try (PreparedStatement statement = connection.prepareStatement(sql);
+				ResultSet result = statement.executeQuery()) {
+			result.next();
+			return result.getInt(1);
+		}
+	}
+
 	@Test
 	void derby() throws Exception {
 		verify("jdbc:derby:memory:terminalConfigIT;create=true", null, null);
@@ -46,7 +92,7 @@ class TerminalConfigurationIT {
 			try (PreparedStatement statement = connection
 					.prepareStatement("INSERT INTO LOCATIONS(ID, NAME) VALUES (?, ?)")) {
 				statement.setString(1, location);
-				statement.setString(2, "Legacy stockroom");
+				statement.setString(2, "Legacy stockroom " + id);
 				statement.executeUpdate();
 			}
 			try (PreparedStatement statement = connection.prepareStatement(

@@ -533,14 +533,11 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 			}
 
 			try {
-				// Creamos una nueva caja
-				m_App.setActiveCash(UUID.randomUUID().toString(), m_App.getActiveCashSequence() + 1, dNow, null);
-
-				// creamos la caja activa
-				m_dlSystem.execInsertCash(new Object[]{m_App.getActiveCashIndex(), m_App.getProperties().getHost(),
-						m_App.getActiveCashSequence(), m_App.getActiveCashDateStart(), m_App.getActiveCashDateEnd()});
-				com.openbravo.pos.forms.TerminalConfiguration.setActiveCash(m_App.getSession(),
-						m_App.getProperties().getHost(), m_App.getActiveCashIndex());
+				String cashId = UUID.randomUUID().toString();
+				int sequence = m_App.getActiveCashSequence() + 1;
+				com.openbravo.pos.forms.TerminalConfiguration.createCash(m_App.getSession(), m_dlSystem,
+						m_App.getProperties().getHost(), cashId, sequence, dNow);
+				m_App.setActiveCash(cashId, sequence, dNow, null);
 
 				// ponemos la fecha de fin
 				m_PaymentsToClose.setDateEnd(dNow);

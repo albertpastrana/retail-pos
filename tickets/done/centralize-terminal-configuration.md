@@ -38,7 +38,11 @@ terminal settings, and enforce uniqueness of the terminal ID.
 Backups must have one shared policy and one designated central terminal. The
 shared database stores whether backups are enabled, scheduling, retention, and
 the responsible terminal. The central terminal stores its local backup path.
-Prevent duplicate execution with a database lock or lease.
+Prevent duplicate execution with a database transaction that holds the backup
+policy row locked until archive creation and pruning finish. A crashed
+connection releases the lock automatically; a fixed-duration lease could expire
+while a slow dump still writes. Limit retention to this database's named
+archives when the directory is shared.
 
 ## Done when
 
@@ -67,7 +71,7 @@ Prevent duplicate execution with a database lock or lease.
   preferences remain intact until they have been imported. The legacy hostname
   is recorded for diagnosis, while a single claimant imports the old resource,
   active cash, and location. Subsequent till state is keyed by UUID.
-- `V52__terminal_configuration.sql` adds separate terminal identity, typed
+- `V54__terminal_configuration.sql` adds separate terminal identity, typed
   settings, and shared backup policy tables. The migration leaves historic
   resource rows untouched and validates legacy location and open cash before
   adopting them; partial pre-existing schemas also remain migratable. Legacy
@@ -78,9 +82,18 @@ Prevent duplicate execution with a database lock or lease.
   translated, actionable error. Configuration can still edit connection
   settings while the database is unavailable.
 - Scheduled backups run only on the central terminal after the configured hour,
-  using an atomic 24-hour lease and shared last-run date. Retention is shared;
-  the backup directory and executable path stay on the terminal.
-- Verification: `./gradlew spotlessApply`, `./gradlew ciCheck` with Derby,
-  MySQL and PostgreSQL (including repeat migrations), and automated
-  configuration-label visibility and error-text checks in English, Spanish
-  and Catalan. Database containers were removed with `docker compose down -v`.
+  using a transaction-held claim and shared last-run date. Retention is shared;
+  the backup directory and executable path stay on the terminal. New archive
+  names identify the database type, host, port and name; older archives are
+  deliberately excluded from automatic retention cleanup.
+- The terminal migration is V54 because V52 and V53 already reached main.
+  Configuration saves keep edits pending until validation and coordinated
+  database writes succeed; the manual backup action keeps unsaved edits pending.
+  Cash creation and the terminal pointer update commit together.
+- Verification after rebasing: `./gradlew spotlessApply` and `./gradlew ciCheck`
+  passed on fresh Derby, MySQL and PostgreSQL databases, including repeat
+  migrations, atomic cash creation, locked Derby backup, archive ownership and
+  configuration identity. Automated checks cover database/backup labels at
+  900 px and translated error text in English, Spanish and Catalan. Database
+  containers were removed with `docker compose down -v`. A manual counter-screen
+  walkthrough was not performed.

@@ -210,13 +210,11 @@ public class JRootApp extends JPanel implements AppView {
 			Object[] valcash = sActiveCashIndex == null ? null : m_dlSystem.findActiveCash(sActiveCashIndex);
 			if (valcash == null || !m_props.getHost().equals(valcash[0])) {
 				// no la encuentro o no es de mi host por tanto creo una...
-				setActiveCash(UUID.randomUUID().toString(), m_dlSystem.getSequenceCash(m_props.getHost()) + 1,
-						new Date(), null);
-
-				// creamos la caja activa
-				m_dlSystem.execInsertCash(new Object[]{getActiveCashIndex(), m_props.getHost(), getActiveCashSequence(),
-						getActiveCashDateStart(), getActiveCashDateEnd()});
-				TerminalConfiguration.setActiveCash(session, m_props.getHost(), getActiveCashIndex());
+				String cashId = UUID.randomUUID().toString();
+				int sequence = m_dlSystem.getSequenceCash(m_props.getHost()) + 1;
+				Date start = new Date();
+				TerminalConfiguration.createCash(session, m_dlSystem, m_props.getHost(), cashId, sequence, start);
+				setActiveCash(cashId, sequence, start, null);
 			} else {
 				setActiveCash(sActiveCashIndex, (Integer) valcash[1], (Date) valcash[2], (Date) valcash[3]);
 			}
@@ -234,6 +232,8 @@ public class JRootApp extends JPanel implements AppView {
 			m_sInventoryLocation = TerminalConfiguration.location(session, m_props.getHost());
 		} catch (java.sql.SQLException e) {
 			LOGGER.log(Level.SEVERE, "event=pos_initialization_location_failed", e);
+			JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_DANGER,
+					AppLocal.getIntString("message.startupdatabase", e.getMessage()), e));
 			session.close();
 			return false;
 		}

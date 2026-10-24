@@ -154,6 +154,10 @@ public class JPanelConfigLocale extends javax.swing.JPanel implements PanelConfi
 		config.setProperty("format.time", readWithDefault(jcboTime.getSelectedItem()));
 		config.setProperty("format.datetime", readWithDefault(jcboDatetime.getSelectedItem()));
 
+	}
+
+	@Override
+	public void markSaved() {
 		dirty.setDirty(false);
 	}
 

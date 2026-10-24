@@ -132,6 +132,10 @@ public class JPanelConfigLoyalty extends JPanel implements PanelConfig {
 		config.setProperty(LoyaltyStamps.NAME_KEY, LoyaltyStamps.name(name.getText()));
 		config.setProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY, eligibleSpendPerStamp.getText().trim());
 		config.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, redemptionValue.getText().trim());
+	}
+
+	@Override
+	public void markSaved() {
 		dirty.setDirty(false);
 	}
 

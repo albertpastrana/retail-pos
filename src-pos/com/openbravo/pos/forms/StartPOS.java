@@ -119,10 +119,11 @@ public class StartPOS {
 					System.exit(1);
 				}
 
-				AppConfig config = ConfigurationStore.load();
 				// Preferences, locale and screen mode must come from the database before
 				// constructing any Swing screens or applying formatting defaults.
+				AppConfig config;
 				try {
+					config = ConfigurationStore.load();
 					com.openbravo.data.loader.Session session = AppViewConnection.createSession(config);
 					try {
 						TerminalConfiguration.load(config, session);

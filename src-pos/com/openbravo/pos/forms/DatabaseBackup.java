@@ -185,14 +185,18 @@ public final class DatabaseBackup {
 				LocalDateTime now = LocalDateTime.now();
 				try (LogContext.Scope ignored = LogContext.beginOperation()) {
 					session = BackupPolicy.connect(props);
+					session.begin();
 					lease = BackupPolicy.claim(session, props.getHost(), now);
 					if (lease == null) {
+						session.rollback();
 						return;
 					}
 					backup(props);
 					BackupPolicy policy = BackupPolicy.load(session);
-					pruneOldBackups(BackupConfiguration.from(props).getDirectory(), policy.getRetentionDays());
+					pruneOldBackups(BackupConfiguration.from(props).getDirectory(), policy.getRetentionDays(),
+							parseConnectionInfo(props.getProperty("db.URL")));
 					BackupPolicy.release(session, lease, now.toLocalDate(), true);
+					session.commit();
 					lease = null;
 					logger.info("event=backup_daily_success databaseType="
 							+ parseConnectionInfo(props.getProperty("db.URL")).getType());
@@ -200,11 +204,11 @@ public final class DatabaseBackup {
 					logger.log(Level.WARNING, "event=backup_daily_failed", e);
 				} finally {
 					if (session != null) {
-						if (lease != null) {
+						if (session.isTransaction()) {
 							try {
-								BackupPolicy.release(session, lease, now.toLocalDate(), false);
+								session.rollback();
 							} catch (Exception e) {
-								logger.log(Level.WARNING, "event=backup_lease_release_failed", e);
+								logger.log(Level.WARNING, "event=backup_transaction_rollback_failed", e);
 							}
 						}
 						session.close();
@@ -216,7 +220,7 @@ public final class DatabaseBackup {
 		backupThread.start();
 	}
 
-	private static void pruneOldBackups(String path, int retentionDays) {
+	static void pruneOldBackups(String path, int retentionDays, ConnectionInfo info) {
 		if (path == null || path.trim().isEmpty()) {
 			return;
 		}
@@ -225,13 +229,20 @@ public final class DatabaseBackup {
 			return;
 		}
 		long cutoff = System.currentTimeMillis() - retentionDays * 86400000L;
+		String prefix = archivePrefix(info);
+		String suffix = info.getType() == DatabaseType.DERBY ? ".tar.gz" : ".sql.gz";
 		for (File file : files) {
-			if (file.isFile() && file.getName().startsWith("backup-")
-					&& (file.getName().endsWith(".sql.gz") || file.getName().endsWith(".tar.gz"))
+			if (file.isFile() && file.getName().startsWith(prefix) && file.getName().endsWith(suffix) && file.getName()
+					.substring(prefix.length(), file.getName().length() - suffix.length()).matches("[0-9]{8}-[0-9]{6}")
 					&& file.lastModified() < cutoff) {
 				deleteFile(file, "expired database backup");
 			}
 		}
+	}
+
+	private static String archivePrefix(ConnectionInfo info) {
+		return "backup-" + info.getType().name().toLowerCase(java.util.Locale.ROOT) + "-" + info.getHost() + "-"
+				+ info.getPort() + "-" + info.getDatabaseName() + "-";
 	}
 
 	public static ConnectionInfo parseConnectionInfo(String url) {
@@ -331,7 +342,7 @@ public final class DatabaseBackup {
 					"Cannot find pg_dump executable in PATH or standard locations. Please install PostgreSQL client tools or set backup.pg_dump.");
 		}
 
-		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql.gz");
+		File targetFile = new File(dir, archivePrefix(info) + timestamp + ".sql.gz");
 		File sqlFile = new File(dir, targetFile.getName().substring(0, targetFile.getName().length() - 3));
 		try {
 			List<String> cmd = buildPgDumpCommand(pgDump, info, user, sqlFile);
@@ -361,7 +372,7 @@ public final class DatabaseBackup {
 					"Cannot find mysqldump executable in PATH or standard locations. Please install MySQL client tools.");
 		}
 
-		File targetFile = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp + ".sql.gz");
+		File targetFile = new File(dir, archivePrefix(info) + timestamp + ".sql.gz");
 		File sqlFile = new File(dir, targetFile.getName().substring(0, targetFile.getName().length() - 3));
 		List<String> cmd = new ArrayList<String>();
 		cmd.add(mysqldump);
@@ -393,7 +404,7 @@ public final class DatabaseBackup {
 
 	private static File backupDerby(String url, String user, String password, ConnectionInfo info, File dir,
 			String timestamp) throws BasicException {
-		File targetDir = new File(dir, "backup-" + info.getDatabaseName() + "-" + timestamp);
+		File targetDir = new File(dir, archivePrefix(info) + timestamp);
 		File targetFile = new File(dir, targetDir.getName() + ".tar.gz");
 		try {
 			Connection conn;
