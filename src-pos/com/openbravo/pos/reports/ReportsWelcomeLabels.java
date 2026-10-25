@@ -88,7 +88,11 @@ final class ReportsWelcomeLabels {
 							.format(baseline.getStartInclusive()),
 					DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault()).format(end.getTime()));
 		}
-		String baselineName = lowerFirst(title(period, baseline.getStartInclusive()));
+		String baselineTitle = title(period, baseline.getStartInclusive());
+		String language = Locale.getDefault().getLanguage();
+		String baselineName = period == ReportsWelcomePeriod.MONTH && !"es".equals(language) && !"ca".equals(language)
+				? baselineTitle
+				: lowerFirst(baselineTitle);
 		if (period == ReportsWelcomePeriod.WEEK) {
 			String year = Integer.toString(start.get(Calendar.YEAR));
 			if (current(period, focus, asOf)) {
