@@ -18,31 +18,19 @@ final class ReportsWelcomeLabels {
 	}
 
 	static String month(Date date) {
-		return new SimpleDateFormat("MMMM", Locale.getDefault()).format(date);
+		return new SimpleDateFormat("LLLL", Locale.getDefault()).format(date);
 	}
 
 	static String monthYear(Date date) {
-		return new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date);
+		return new SimpleDateFormat("LLLL yyyy", Locale.getDefault()).format(date);
 	}
 
-	static String focusRange(ReportsWelcomePeriod period, Date focus) {
-		Calendar start = Calendar.getInstance();
-		start.setTime(period.current(focus).getStartInclusive());
-		Calendar end = Calendar.getInstance();
-		end.setTime(period.current(focus).getEndExclusive());
-		end.add(Calendar.DAY_OF_MONTH, -1);
-		String year = String.format(Locale.ROOT, "%02d", end.get(Calendar.YEAR) % 100);
-		if (start.get(Calendar.YEAR) != end.get(Calendar.YEAR)) {
-			return AppLocal.getIntString("reports.welcome.rangeYears", start.get(Calendar.DAY_OF_MONTH),
-					start.get(Calendar.MONTH) + 1, String.format(Locale.ROOT, "%02d", start.get(Calendar.YEAR) % 100),
-					end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
-		}
-		if (start.get(Calendar.MONTH) == end.get(Calendar.MONTH)) {
-			return AppLocal.getIntString("reports.welcome.rangeMonth", start.get(Calendar.DAY_OF_MONTH),
-					end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
-		}
-		return AppLocal.getIntString("reports.welcome.rangeMonths", start.get(Calendar.DAY_OF_MONTH),
-				start.get(Calendar.MONTH) + 1, end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
+	static String partialMonthLegend(Date focus) {
+		Calendar previous = Calendar.getInstance();
+		previous.setTime(focus);
+		previous.add(Calendar.YEAR, -1);
+		return AppLocal.getIntString("reports.welcome.partialMonthLegend", capitalize(monthYear(previous.getTime())),
+				previous.get(Calendar.DAY_OF_MONTH));
 	}
 
 	static String title(ReportsWelcomePeriod period, Date focus) {

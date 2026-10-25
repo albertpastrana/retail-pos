@@ -98,10 +98,13 @@ Observed on 24 Oct 2026, month card selected, after pressing `<` once:
      resets the offset to 0.
    - The last 12 months has no navigation. In its place goes one `caption` line:
      "Aquest període sempre acaba avui; no té anterior ni següent."
-5. **The detail figures row** gains a first cell, on a `surface-200` fill:
+5. **The detail figures row** gains a first, wider cell (two columns), with no
+   fill: a `surface-200` fill reads as disabled. It stands out by size instead:
+   the total in `display-lg` size in IBM Plex Mono (40px), and the four other
+   indicators drop to 24px. The cell holds:
    - "TOTAL" label
    - the focus range in `price-sm`
-   - the focus total in `price-lg`
+   - the focus total, 40px
    - the change badge
    - the baseline label and amount
 
@@ -112,10 +115,18 @@ Observed on 24 Oct 2026, month card selected, after pressing `<` once:
    "Vendes per mes · 2026", "Vendes per mes · de nov. 2025 a oct. 2026".
    - Replace the single legend line with one entry per series that names the
      period: "Setembre 2026" filled, "Setembre 2025" outlined.
-    - Every bar through the last closed day is complete and fully opaque. Days
-      after it show only last year's dashed bar. Only the current instance
+    - Every day bar through the last closed day is complete and fully opaque.
+      Days after it show only last year's dashed bar. Only the current instance
       shows the "future days (last year only)" note; there is no partial-today
       legend entry.
+    - Month bars can be partial (decided 2026-10-25). In Year and Last 12
+      months, the current month only has data up to the last closed day. Its
+      last-year bar is split: solid up to the same elapsed day (1–24 Oct 2025),
+      dashed for the rest of that month. The x label says so ("oct. (1–24)"),
+      and a legend entry explains the split. Never draw a partial month against
+      a full one.
+    - Label every daily bar in the Month chart with its day number, including
+      all 28–31 days at the minimum window width (clarified 2026-10-25).
    - Keep the existing elapsed-comparison note only for the current instance.
 7. **Remove "Coses a mirar"** (the notice card and its loading/empty states).
    The chart then takes the full width.
@@ -135,8 +146,10 @@ Observed on 24 Oct 2026, month card selected, after pressing `<` once:
 
 ### Not in scope
 
-- No change to how periods, baselines or the last closed day are computed
-  (`ReportsWelcomePeriod`, `SalesSummaryRepository`, `SalesTrendRepository`).
+- No change to how periods, summary baselines or the last closed day are computed
+  (`ReportsWelcomePeriod`, `SalesSummaryRepository`). `SalesTrendRepository`
+  additionally loads the elapsed prior-year bucket for the current month so
+  the monthly chart can distinguish it from the full-month target.
 - The four cards' content and queries stay as they are.
 - No new figures for week/year beyond what `showDetail` already loads for any
   period.
@@ -257,6 +270,33 @@ Verification, in order:
 
 ## Implementation status
 
+### Second visual review (2026-10-25)
+
+The owner asked for a split solid/dashed previous-year bar on the unfinished
+month in Year/Last 12 months, a neutral wider TOTAL cell, standalone month
+names, thousands separators on chart values, grammatical refund counts, and
+the same full date range in TOTAL as on the cards. Day bars remain fully
+opaque. Request Catalan screenshots for Year, Last 12 months and a previous
+month before asking for further visual confirmation. The example-data images
+(not a live POS check) are generated under
+`build/reports/reports-welcome/screenshots/`: `reports-any-ca.png`,
+`reports-darrers-12-mesos-ca.png` and `reports-mes-anterior-ca.png`.
+The current month's previous-year bucket is tested on Derby; each Month day
+bar is labelled at the minimum width. The owner approved the example-data
+screenshots for updating and merging PR #132 on 2026-10-25. A live POS check
+in both themes and all three languages remains outstanding; keep this ticket
+in `todo/` until its observable manual checks have been confirmed.
+
+Verified locally in order: `./gradlew spotlessApply`,
+`./gradlew integrationTest --tests 'com.openbravo.pos.reports.*'`, and
+`./gradlew check`. The Catalan screenshots use a synthetic Derby fixture and
+render at 1000px; they are for the owner's visual review, not proof that a
+running POS has been checked with real data or in dark mode. The minimum-width
+paint check exposed a clipped chart caused by four cards' preferred widths;
+reducing those widths to fit 1000px restored the complete chart. The header's
+month preposition was also verified in all three languages. Live POS and dark
+theme validation remain open.
+
 ### Feedback after the first visual review (2026-10-25)
 
 - Put comparison directly below the left-aligned title and the navigation on
@@ -283,10 +323,9 @@ Verification, in order:
 The follow-up implementation now places the comparison directly under the
 title, lets the navigation and chart legend wrap only when they do not fit,
 uses one painted segmented track, removes the nested chart card and partial
-bar styling, and makes the last-closed-day and future bars explicit. Week
+day-bar styling, and makes the last-closed-day and future bars explicit. Week
 ticks include day numbers; month/year captions name the prior year's cutoff.
-The TOTAL and card-tag styles now match their intended tokens, and the compact
-TOTAL range keeps its complete dates in a tooltip. Automated Swing layout,
+The TOTAL and card-tag styles now match their intended tokens. Automated Swing layout,
 paint, period-label and synthetic previous-month/week checks cover English,
 Spanish and Catalan at 1000px, 1600px and resizing back. `SalesTrendChartTest`
 checks that the last closed day is fully opaque and future days have no

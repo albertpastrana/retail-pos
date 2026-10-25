@@ -167,9 +167,26 @@ public class ReportsWelcomeLayoutTest {
 							+ 8 > titleRow.getWidth(), navigation.getY() > titleBlock.getY(), locale.toString());
 					JPanel figures = (JPanel) aboveChart.getComponent(2);
 					assertEquals(5, figures.getComponentCount());
+					assertEquals(detail.getWidth() - detail.getInsets().left - detail.getInsets().right,
+							figures.getWidth(), locale.toString());
+					for (Component cell : figures.getComponents()) {
+						assertTrue(cell.getWidth() > 0 && cell.getX() >= 0
+								&& cell.getX() + cell.getWidth() <= figures.getWidth(), locale.toString());
+					}
 					assertTrue(figures.getY() - (top.getY() + top.getHeight()) <= 8);
 					JPanel totalCell = (JPanel) figures.getComponent(0);
 					assertEquals(16, totalCell.getInsets().left);
+					assertFalse(totalCell.isOpaque());
+					assertTrue(totalCell.getWidth() > figures.getComponent(1).getWidth());
+					assertEquals(40f, ((JLabel) totalCell.getComponent(3)).getFont().getSize2D());
+					for (int cell : new int[]{1, 2, 4}) {
+						assertEquals(24f,
+								((JLabel) ((JPanel) figures.getComponent(cell)).getComponent(2)).getFont().getSize2D(),
+								locale.toString());
+					}
+					JPanel stamps = (JPanel) figures.getComponent(3);
+					assertEquals(24f,
+							((JLabel) ((JPanel) stamps.getComponent(2)).getComponent(0)).getFont().getSize2D());
 					assertEquals("DeltaBadge", totalCell.getComponent(4).getClass().getSimpleName());
 					assertEquals(RetailPOSTheme.PLEX_MONO_REGULAR,
 							((JLabel) totalCell.getComponent(6)).getFont().deriveFont(15f));
@@ -218,7 +235,7 @@ public class ReportsWelcomeLayoutTest {
 									period == ReportsWelcomePeriod.MONTH ? 30 : 18));
 							refresh.invoke(view);
 							SalesSummaryComparison comparison = new SalesSummaryComparison(
-									new SalesSummary(10, period == ReportsWelcomePeriod.MONTH ? 1234 : 789, 0, 0),
+									new SalesSummary(10, period == ReportsWelcomePeriod.MONTH ? 1234 : 789, 0, 0, 1),
 									new SalesSummary(9, 1000, 0, 0));
 							showDetail.invoke(view, comparison);
 							for (int width : new int[]{1600, 1000, 1600}) {
@@ -232,8 +249,11 @@ public class ReportsWelcomeLayoutTest {
 								layoutTree(total);
 								assertEquals(Formats.CURRENCY.formatValue(comparison.getCurrent().getNetSales()),
 										((JLabel) total.getComponent(3)).getText());
-								assertEquals(ReportsWelcomeLabels.focusRange(period, (Date) focus.get(view)),
+								assertEquals(period.rangeLabel((Date) focus.get(view)),
 										((JLabel) total.getComponent(2)).getText());
+								JPanel refunds = (JPanel) figures.getComponent(4);
+								assertEquals(AppLocal.getIntString("reports.welcome.refundCountOne", 1),
+										((JLabel) refunds.getComponent(3)).getText());
 								for (int index : new int[]{2, 3, 4, 5, 6}) {
 									JLabel label = (JLabel) total.getComponent(index);
 									assertTrue(label.getPreferredSize().width <= label.getWidth(),
@@ -326,6 +346,43 @@ public class ReportsWelcomeLayoutTest {
 					for (int index : new int[]{1, 3}) {
 						JLabel label = (JLabel) legend.getComponent(index);
 						assertTrue(label.getPreferredSize().width <= label.getWidth(), locale.toString());
+					}
+				});
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
+	public void dateHeadingUsesOneLocalizedMonthPreposition() throws Exception {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es", "ES"), new Locale("ca", "ES")}) {
+				AppLocal.setLocale(locale);
+				SwingUtilities.invokeAndWait(() -> {
+					try {
+						JPanelReportsWelcome view = new JPanelReportsWelcome(null,
+								new MenuDefinition("Menu.SalesManagement"));
+						Field asOf = JPanelReportsWelcome.class.getDeclaredField("asOf");
+						asOf.setAccessible(true);
+						asOf.set(view, date(2026, 10, 24));
+						Method update = JPanelReportsWelcome.class.getDeclaredMethod("updateDates");
+						update.setAccessible(true);
+						update.invoke(view);
+						JPanel header = (JPanel) view.getComponent(0);
+						JPanel heading = (JPanel) header.getComponent(0);
+						String title = ((JLabel) heading.getComponent(2)).getText();
+						if ("ca".equals(locale.getLanguage())) {
+							assertTrue(title.contains("d’octubre"), title);
+							assertFalse(title.contains("de d’octubre"), title);
+						} else if ("es".equals(locale.getLanguage())) {
+							assertTrue(title.contains("de octubre"), title);
+						} else {
+							assertTrue(title.contains("October"), title);
+						}
+					} catch (ReflectiveOperationException ex) {
+						throw new AssertionError(ex);
 					}
 				});
 			}
