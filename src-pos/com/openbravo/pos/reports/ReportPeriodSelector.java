@@ -8,6 +8,7 @@ import com.openbravo.pos.theme.RetailPOSTheme;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.util.Calendar;
 import java.util.Date;
 import javax.swing.BorderFactory;
@@ -16,6 +17,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ButtonGroup;
+import javax.swing.JToggleButton;
 
 /** Shared date-only period selector for management reports. */
 final class ReportPeriodSelector extends JPanel {
@@ -24,19 +27,80 @@ final class ReportPeriodSelector extends JPanel {
 	private Date endDate;
 	private JTextField startField;
 	private JTextField endField;
+	private final Runnable onChange;
+	private JPanel customDates;
+	private JPanel weekNavigation;
+	private JLabel validation;
+	private JLabel range;
+	private JToggleButton[] presets;
+	private int selectedPreset = 3;
 
 	ReportPeriodSelector() {
+		this(null);
+	}
+
+	/**
+	 * Preset mode is opt-in; existing report screens retain their date pickers and
+	 * Load buttons.
+	 */
+	ReportPeriodSelector(Runnable onChange) {
+		this.onChange = onChange;
 		setLayout(new BorderLayout(0, 12));
 		setBackground(RetailPOSColors.surface100());
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
 				BorderFactory.createEmptyBorder(16, 16, 16, 16)));
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-		controls.setOpaque(false);
-		controls.add(new JLabel(AppLocal.getIntString("label.reportstart")));
-		controls.add(createDatePicker(true));
-		controls.add(new JLabel(AppLocal.getIntString("label.reportend")));
-		controls.add(createDatePicker(false));
-		add(controls, BorderLayout.CENTER);
+		customDates = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		customDates.setOpaque(false);
+		customDates.add(new JLabel(AppLocal.getIntString("label.reportstart")));
+		customDates.add(createDatePicker(true));
+		customDates.add(new JLabel(AppLocal.getIntString("label.reportend")));
+		customDates.add(createDatePicker(false));
+		if (onChange == null) {
+			add(customDates, BorderLayout.CENTER);
+		} else {
+			JPanel top = new JPanel(new GridLayout(2, 3, 8, 8));
+			top.setOpaque(false);
+			String[] names = {"today", "yesterday", "week", "month", "previousMonth", "custom"};
+			ButtonGroup buttons = new ButtonGroup();
+			presets = new JToggleButton[names.length];
+			for (int i = 0; i < names.length; i++) {
+				final int index = i;
+				JToggleButton button = new JToggleButton(AppLocal.getIntString("reports.product.period." + names[i]));
+				button.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(14f));
+				button.setPreferredSize(new Dimension(130, 48));
+				button.addActionListener(e -> choose(index));
+				buttons.add(button);
+				top.add(button);
+				presets[i] = button;
+			}
+			JPanel detail = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+			detail.setOpaque(false);
+			weekNavigation = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+			weekNavigation.setOpaque(false);
+			for (int delta : new int[]{-7, 7}) {
+				JButton button = new JButton(
+						AppLocal.getIntString(delta < 0 ? "reports.product.previousWeek" : "reports.product.nextWeek"));
+				button.setPreferredSize(new Dimension(150, 48));
+				button.addActionListener(e -> {
+					startDate = shift(startDate, Calendar.DAY_OF_MONTH, delta);
+					endDate = shift(endDate, Calendar.DAY_OF_MONTH, delta);
+					showRange();
+					onChange.run();
+				});
+				weekNavigation.add(button);
+			}
+			validation = new JLabel(AppLocal.getIntString("message.reportperiod"));
+			validation.setForeground(RetailPOSColors.warning());
+			validation.setVisible(false);
+			range = new JLabel();
+			range.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
+			detail.add(range);
+			detail.add(customDates);
+			detail.add(weekNavigation);
+			detail.add(validation);
+			add(top, BorderLayout.NORTH);
+			add(detail, BorderLayout.CENTER);
+		}
 		reset();
 	}
 
@@ -48,6 +112,68 @@ final class ReportPeriodSelector extends JPanel {
 		startDate = startOfDay(yesterday.getTime());
 		startField.setText(Formats.DATE.formatValue(startDate));
 		endField.setText(Formats.DATE.formatValue(endDate));
+		if (onChange != null) {
+			choose(3, false);
+		}
+	}
+
+	private void choose(int preset) {
+		choose(preset, true);
+	}
+
+	private void choose(int preset, boolean notify) {
+		selectedPreset = preset;
+		presets[preset].setSelected(true);
+		customDates.setVisible(preset == 5);
+		weekNavigation.setVisible(preset == 2);
+		validation.setVisible(false);
+		if (preset != 5) {
+			Calendar today = Calendar.getInstance();
+			startDate = startOfDay(today.getTime());
+			endDate = startDate;
+			switch (preset) {
+				case 1 :
+					startDate = shift(startDate, Calendar.DAY_OF_MONTH, -1);
+					endDate = startDate;
+					break;
+				case 2 :
+					startDate = shift(startDate, Calendar.DAY_OF_MONTH, -(today.get(Calendar.DAY_OF_WEEK) + 5) % 7);
+					break;
+				case 3 :
+					today.set(Calendar.DAY_OF_MONTH, 1);
+					startDate = startOfDay(today.getTime());
+					break;
+				case 4 :
+					today.set(Calendar.DAY_OF_MONTH, 1);
+					endDate = shift(startOfDay(today.getTime()), Calendar.DAY_OF_MONTH, -1);
+					today.add(Calendar.MONTH, -1);
+					startDate = startOfDay(today.getTime());
+					break;
+				default :
+					break;
+			}
+		} else {
+			startField.setText(Formats.DATE.formatValue(startDate));
+			endField.setText(Formats.DATE.formatValue(endDate));
+		}
+		revalidate();
+		showRange();
+		if (notify && !startDate.after(endDate)) {
+			onChange.run();
+		}
+	}
+
+	private void showRange() {
+		if (range != null) {
+			range.setText(Formats.DATE.formatValue(startDate) + " – " + Formats.DATE.formatValue(endDate));
+		}
+	}
+
+	private static Date shift(Date date, int field, int amount) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.add(field, amount);
+		return calendar.getTime();
 	}
 
 	void addActionButton(JButton button) {
@@ -90,6 +216,13 @@ final class ReportPeriodSelector extends JPanel {
 				} else {
 					endDate = selected;
 					endField.setText(Formats.DATE.formatValue(endDate));
+				}
+				if (onChange != null && selectedPreset == 5) {
+					showRange();
+					validation.setVisible(startDate.after(endDate));
+					if (!startDate.after(endDate)) {
+						onChange.run();
+					}
 				}
 			}
 		});
