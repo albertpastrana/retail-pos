@@ -2,6 +2,7 @@ package com.openbravo.pos.forms;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
 
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.customers.DataLogicCustomers;
@@ -19,6 +20,42 @@ import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 class ReplenishmentStatusTest {
+	@Test
+	void bulkStatusIsAtomicAndRespectsDeliveryRules() throws Exception {
+		String url = "jdbc:derby:memory:replenishmentBulk" + UUID.randomUUID() + ";create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicReplenishment data = new DataLogicReplenishment();
+			data.init(session);
+			ReplenishmentEntry first = entry("customer");
+			ReplenishmentEntry second = entry(null);
+			first.productId = "bulk-product-one";
+			second.productId = "bulk-product-two";
+			data.add(first);
+			data.add(second);
+			data.updateStatuses(List.of(first.id, second.id), "ORDERED", "user");
+			assertEquals(2, data.list("", "ALL", "ORDERED").size());
+			data.updateStatuses(List.of(first.id, second.id), "RECEIVED", "user");
+			assertEquals(2, data.list("", "ALL", "RECEIVED").size());
+			assertThrows(com.openbravo.basic.BasicException.class,
+					() -> data.updateStatuses(List.of(first.id, second.id), "DELIVERED", "user"));
+			assertEquals(2, data.list("", "ALL", "RECEIVED").size(), "the first delivery must roll back");
+			assertThrows(com.openbravo.basic.BasicException.class,
+					() -> data.updateStatuses(List.of(first.id, "missing-id"), "PENDING", "user"));
+			assertEquals(2, data.list("", "ALL", "RECEIVED").size());
+			data.updateStatuses(List.of(first.id), "DELIVERED", "user");
+			data.updateStatuses(List.of(first.id, second.id), "RECEIVED", "user");
+			assertEquals(2, data.list("", "ALL", "RECEIVED").size(), "mixed statuses can be marked received");
+			assertThrows(com.openbravo.basic.BasicException.class,
+					() -> data.deleteAll(List.of(first.id, "missing-id")));
+			assertEquals(2, data.list("", "ALL", "ALL").size(), "delete must roll back");
+			data.deleteAll(List.of(first.id, second.id));
+			assertEquals(0, data.list("", "ALL", "ALL").size());
+		} finally {
+			session.close();
+		}
+	}
 	@Test
 	void refreshingSelectedRequestKeepsUnsavedNote() throws Exception {
 		String url = "jdbc:derby:memory:replenishmentRefresh" + UUID.randomUUID() + ";create=true";

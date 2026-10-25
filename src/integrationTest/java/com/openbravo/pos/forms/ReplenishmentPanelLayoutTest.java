@@ -21,6 +21,7 @@ import java.lang.reflect.Proxy;
 import java.util.Locale;
 import java.util.UUID;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -110,18 +111,18 @@ class ReplenishmentPanelLayoutTest {
 											action.getText()) + action.getInsets().left + action.getInsets().right,
 											key + " must show its entire label");
 								}
-								assertFalse(sizedTable.getValueAt(0, 4).toString().contains(" - "));
+								assertFalse(sizedTable.getValueAt(0, 5).toString().contains(" - "));
 								assertTrue(sizedTable.getRowHeight(0) >= 48);
-								assertTrue(sizedTable.getColumnModel().getColumn(1).getWidth() > sizedTable
-										.getColumnModel().getColumn(3).getWidth());
-								assertEquals(5, sizedTable.getColumnCount());
-								assertTrue(sizedTable.getColumnModel().getColumn(2).getWidth() >= 155);
+								assertTrue(sizedTable.getColumnModel().getColumn(2).getWidth() > sizedTable
+										.getColumnModel().getColumn(4).getWidth());
+								assertEquals(6, sizedTable.getColumnCount());
+								assertTrue(sizedTable.getColumnModel().getColumn(3).getWidth() >= 155);
 								int dateWidth = sizedTable.getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f))
-										.stringWidth(sizedTable.getValueAt(0, 4).toString()) + 8;
-								assertTrue(sizedTable.getColumnModel().getColumn(4).getWidth() >= dateWidth);
+										.stringWidth(sizedTable.getValueAt(0, 5).toString()) + 8;
+								assertTrue(sizedTable.getColumnModel().getColumn(5).getWidth() >= dateWidth);
 								JLabel heading = (JLabel) sizedTable.getTableHeader().getDefaultRenderer()
-										.getTableCellRendererComponent(sizedTable, sizedTable.getColumnName(0), false,
-												false, -1, 0);
+										.getTableCellRendererComponent(sizedTable, sizedTable.getColumnName(1), false,
+												false, -1, 1);
 								assertEquals(JLabel.LEFT, heading.getHorizontalAlignment());
 								assertEquals(8, heading.getBorder().getBorderInsets(heading).left);
 							}
@@ -130,15 +131,20 @@ class ReplenishmentPanelLayoutTest {
 							layout(panel);
 							assertTrue(
 									hasLabel(panel, AppLocal.getIntString("Replenishment.CreatedBy") + ": Employee"));
-							assertEquals(RetailPOSColors.ink(), table.getCellRenderer(0, 0)
-									.getTableCellRendererComponent(table, table.getValueAt(0, 0), true, false, 0, 0)
+							assertEquals(RetailPOSColors.ink(), table.getCellRenderer(0, 1)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 1), true, false, 0, 1)
 									.getForeground());
-							assertEquals(RetailPOSColors.surface200(), table.getCellRenderer(0, 0)
-									.getTableCellRendererComponent(table, table.getValueAt(0, 0), true, false, 0, 0)
+							assertEquals(RetailPOSColors.surface200(), table.getCellRenderer(0, 1)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 1), true, false, 0, 1)
 									.getBackground());
+							JCheckBox selectedCheck = (JCheckBox) table.getCellRenderer(0, 0)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 0), true, false, 0, 0);
+							assertTrue(selectedCheck.isOpaque());
+							assertEquals(RetailPOSColors.surface200(), selectedCheck.getBackground());
+							assertEquals(1, selectedCheck.getBorder().getBorderInsets(selectedCheck).top);
 							assertTrue(table.getRowHeight() >= 48);
-							assertEquals(AppLocal.getIntString("Replenishment.Order"), table.getValueAt(0, 0));
-							assertEquals(AppLocal.getIntString("Replenishment.FormReceived"), table.getValueAt(0, 3));
+							assertEquals(AppLocal.getIntString("Replenishment.Order"), table.getValueAt(0, 1));
+							assertEquals(AppLocal.getIntString("Replenishment.FormReceived"), table.getValueAt(0, 4));
 							assertTrue(toggle(panel, AppLocal.getIntString("Replenishment.Received") + " (1)")
 									.isVisible());
 							assertFalse(RetailPOSColors.brand().equals(
@@ -150,9 +156,12 @@ class ReplenishmentPanelLayoutTest {
 							assertFalse(RetailPOSColors.brand()
 									.equals(button(panel, "+ " + AppLocal.getIntString("Replenishment.NewRequest"))
 											.getBackground()));
-							assertEquals(RetailPOSColors.ink(), table.getCellRenderer(0, 0)
-									.getTableCellRendererComponent(table, table.getValueAt(0, 0), false, false, 0, 0)
+							assertEquals(RetailPOSColors.ink(), table.getCellRenderer(0, 1)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 1), false, false, 0, 1)
 									.getForeground());
+							assertEquals(RetailPOSColors.surface100(), table.getCellRenderer(0, 0)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 0), false, false, 0, 0)
+									.getBackground());
 							JScrollPane formScroll = formScroll(panel);
 							Container form = (Container) formScroll.getViewport().getView();
 							JTextField barcode = first(form, JTextField.class);
@@ -192,10 +201,10 @@ class ReplenishmentPanelLayoutTest {
 								first(panel, JTable.class).doLayout();
 								assertTrue(table.getRowHeight(0) >= 48 && table.getRowHeight(0) <= 80);
 								if (width == 980) {
-									Component cell = table.getCellRenderer(0, 1).getTableCellRendererComponent(table,
-											table.getValueAt(0, 1), true, false, 0, 1);
+									Component cell = table.getCellRenderer(0, 2).getTableCellRendererComponent(table,
+											table.getValueAt(0, 2), true, false, 0, 2);
 									assertTrue(first((Container) cell, JTextArea.class).getText().contains("…"));
-									java.awt.Rectangle bounds = table.getCellRect(0, 1, true);
+									java.awt.Rectangle bounds = table.getCellRect(0, 2, true);
 									java.awt.event.MouseEvent hover = new java.awt.event.MouseEvent(table,
 											java.awt.event.MouseEvent.MOUSE_MOVED, 0, 0, bounds.x + 8, bounds.y + 8, 0,
 											false);
@@ -217,7 +226,7 @@ class ReplenishmentPanelLayoutTest {
 							assertTrue(button(panel, AppLocal.getIntString("Replenishment.Save")).isEnabled());
 							button(panel, AppLocal.getIntString("Replenishment.Save")).doClick();
 							assertEquals(0, table.getSelectedRow());
-							assertEquals(AppLocal.getIntString("Replenishment.FormDelivered"), table.getValueAt(0, 3));
+							assertEquals(AppLocal.getIntString("Replenishment.FormDelivered"), table.getValueAt(0, 4));
 							assertTrue(formDelivery.isSelected());
 							button(panel, "+ " + AppLocal.getIntString("Replenishment.NewRequest")).doClick();
 							assertTrue(button(panel, AppLocal.getIntString("Replenishment.SearchProduct")).getParent()
@@ -286,9 +295,20 @@ class ReplenishmentPanelLayoutTest {
 							layout(panel);
 							table.doLayout();
 							assertEquals(9, table.getRowCount());
-							JPanel productCell = (JPanel) table.getCellRenderer(0, 1)
-									.getTableCellRendererComponent(table, table.getValueAt(0, 1), false, false, 0, 1);
-							productCell.setSize(table.getColumnModel().getColumn(1).getWidth(), table.getRowHeight(0));
+							table.setRowSelectionInterval(0, 1);
+							assertEquals(2, table.getSelectedRowCount());
+							assertEquals(Boolean.TRUE, table.getValueAt(0, 0));
+							assertEquals(Boolean.TRUE, table.getValueAt(1, 0));
+							assertTrue(button(panel, AppLocal.getIntString("Replenishment.FormReceived") + " (2)")
+									.isVisible());
+							search.setText("Item");
+							search.postActionEvent();
+							assertEquals(0, table.getSelectedRowCount());
+							search.setText("");
+							search.postActionEvent();
+							JPanel productCell = (JPanel) table.getCellRenderer(0, 2)
+									.getTableCellRendererComponent(table, table.getValueAt(0, 2), false, false, 0, 2);
+							productCell.setSize(table.getColumnModel().getColumn(2).getWidth(), table.getRowHeight(0));
 							productCell.doLayout();
 							JLabel reference = first(productCell, JLabel.class);
 							JTextArea productName = first(productCell, JTextArea.class);
@@ -296,10 +316,10 @@ class ReplenishmentPanelLayoutTest {
 							assertEquals(reference.getX() + reference.getInsets().left,
 									productName.getX() + productName.getInsets().left);
 							for (int row = 0; row < table.getRowCount(); row++) {
-								String raw = String.valueOf(table.getValueAt(row, 1));
+								String raw = String.valueOf(table.getValueAt(row, 2));
 								if (raw.contains("[31UUUL63A00]") || raw.contains(" — M/48")) {
-									JPanel cell = (JPanel) table.getCellRenderer(row, 1).getTableCellRendererComponent(
-											table, table.getValueAt(row, 1), false, false, row, 1);
+									JPanel cell = (JPanel) table.getCellRenderer(row, 2).getTableCellRendererComponent(
+											table, table.getValueAt(row, 2), false, false, row, 2);
 									assertEquals(raw.contains("[31UUUL63A00]") ? "31UUUL63A00" : "31UUUL63A01",
 											first(cell, JLabel.class).getText());
 									assertFalse(first(cell, JTextArea.class).getText().contains("[31UUUL63A00]"));
@@ -311,8 +331,8 @@ class ReplenishmentPanelLayoutTest {
 								assertTrue(table.getRowHeight(row) >= 48 && table.getRowHeight(row) <= 80);
 							for (int row = 0; row < table.getRowCount(); row++)
 								if (AppLocal.getIntString("Replenishment.Replenishment")
-										.equals(table.getValueAt(row, 0))
-										&& !String.valueOf(table.getValueAt(row, 1)).contains(" — M/48"))
+										.equals(table.getValueAt(row, 1))
+										&& !String.valueOf(table.getValueAt(row, 2)).contains(" — M/48"))
 									assertTrue(table.getRowHeight(row) <= 64);
 							int contentHeight = 0;
 							for (int row = 0; row < table.getRowCount(); row++)

@@ -133,15 +133,98 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (!isValidStatus(status))
 			throw new BasicException("Invalid replenishment status");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+						+ openKeyExpression()
+						+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, status);
 			ps.setString(2, status);
-			ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
-			ps.setString(4, user);
-			ps.setString(5, id);
-			ps.setString(6, status);
+			ps.setString(3, status);
+			ps.setString(4, "I:" + id);
+			ps.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+			ps.setString(6, user);
+			ps.setString(7, id);
+			ps.setString(8, status);
 			if (ps.executeUpdate() == 0 && "DELIVERED".equals(status))
 				throw new BasicException("Only customer orders can be delivered");
+		} catch (SQLException e) {
+			throw new BasicException(e);
+		}
+	}
+
+	/**
+	 * Apply a status to every selected request, or leave every request unchanged.
+	 */
+	public void updateStatuses(List<String> ids, String status, String user) throws BasicException {
+		if (!isValidStatus(status))
+			throw new BasicException("Invalid replenishment status");
+		if (ids.isEmpty())
+			return;
+		Connection c;
+		try {
+			c = connection();
+			boolean autoCommit = c.getAutoCommit();
+			try {
+				c.setAutoCommit(false);
+				try (PreparedStatement ps = c.prepareStatement(
+						"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+								+ openKeyExpression()
+								+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
+					Timestamp now = new Timestamp(System.currentTimeMillis());
+					for (String id : ids) {
+						ps.setString(1, status);
+						ps.setString(2, status);
+						ps.setString(3, status);
+						ps.setString(4, "I:" + id);
+						ps.setTimestamp(5, now);
+						ps.setString(6, user);
+						ps.setString(7, id);
+						ps.setString(8, status);
+						if (ps.executeUpdate() != 1)
+							throw new SQLException("Selected request changed or is no longer eligible");
+					}
+				}
+				c.commit();
+			} catch (SQLException | RuntimeException failure) {
+				try {
+					c.rollback();
+				} catch (SQLException rollbackFailure) {
+					failure.addSuppressed(rollbackFailure);
+				}
+				throw failure;
+			} finally {
+				c.setAutoCommit(autoCommit);
+			}
+		} catch (SQLException e) {
+			throw new BasicException(e);
+		}
+	}
+
+	public void deleteAll(List<String> ids) throws BasicException {
+		if (ids.isEmpty())
+			return;
+		try {
+			Connection c = connection();
+			boolean autoCommit = c.getAutoCommit();
+			try {
+				c.setAutoCommit(false);
+				try (PreparedStatement ps = c.prepareStatement("DELETE FROM REPLENISHMENT_ENTRIES WHERE ID=?")) {
+					for (String id : ids) {
+						ps.setString(1, id);
+						if (ps.executeUpdate() != 1)
+							throw new SQLException("Selected request no longer exists");
+					}
+				}
+				c.commit();
+			} catch (SQLException | RuntimeException failure) {
+				try {
+					c.rollback();
+				} catch (SQLException rollbackFailure) {
+					failure.addSuppressed(rollbackFailure);
+				}
+				throw failure;
+			} finally {
+				c.setAutoCommit(autoCommit);
+			}
 		} catch (SQLException e) {
 			throw new BasicException(e);
 		}
@@ -151,7 +234,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (!isValidStatus(e.status) || ("DELIVERED".equals(e.status) && e.customerId == null))
 			throw new BasicException("Only customer orders can be delivered");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=?, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, e.productId);
 			ps.setString(2, e.reference);
 			ps.setString(3, e.name);
@@ -163,10 +246,14 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setString(9, e.customerName);
 			ps.setString(10, e.status);
 			ps.setString(11, e.status);
-			ps.setTimestamp(12, new Timestamp(System.currentTimeMillis()));
-			ps.setString(13, user);
-			ps.setString(14, e.id);
-			ps.setString(15, e.status);
+			ps.setString(12,
+					"RECEIVED".equals(e.status) || "DELIVERED".equals(e.status) || e.productId == null
+							? "I:" + e.id
+							: "P:" + e.productId);
+			ps.setTimestamp(13, new Timestamp(System.currentTimeMillis()));
+			ps.setString(14, user);
+			ps.setString(15, e.id);
+			ps.setString(16, e.status);
 			ps.executeUpdate();
 		} catch (SQLException ex) {
 			throw new BasicException(ex);
@@ -203,16 +290,20 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (!isValidStatus(status) || ("DELIVERED".equals(status) && customerId == null))
 			throw new BasicException("Invalid customer order status");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR STATUS IN ('RECEIVED', 'DELIVERED'))")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+						+ openKeyExpression()
+						+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR STATUS IN ('RECEIVED', 'DELIVERED'))")) {
 			ps.setString(1, note);
 			ps.setString(2, customerId);
 			ps.setString(3, customerName);
 			ps.setString(4, status);
 			ps.setString(5, status);
-			ps.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-			ps.setString(7, user);
-			ps.setString(8, id);
-			ps.setString(9, status);
+			ps.setString(6, status);
+			ps.setString(7, "I:" + id);
+			ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
+			ps.setString(9, user);
+			ps.setString(10, id);
+			ps.setString(11, status);
 			if (ps.executeUpdate() == 0)
 				throw new BasicException("Invalid customer order status");
 		} catch (SQLException ex) {
@@ -232,7 +323,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 
 	private void insert(Connection c, ReplenishmentEntry e) throws SQLException {
-		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY,OPEN_UNIQUE_KEY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			String[] values = {e.id, e.productId, e.reference, e.name, e.ean, e.size, e.colour, e.manualDescription,
 					e.manualEan, e.note, e.customerId, e.customerName, e.status, e.openProductId, e.createdBy,
@@ -243,6 +334,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setTimestamp(16, new Timestamp(e.updatedAt.getTime()));
 			ps.setString(17, e.createdBy);
 			ps.setString(18, e.updatedBy);
+			ps.setString(19, e.productId == null ? "I:" + e.id : "P:" + e.productId);
 			ps.executeUpdate();
 		}
 	}
@@ -280,6 +372,11 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 	private Connection connection() throws SQLException {
 		return session.getConnection();
+	}
+	private String openKeyExpression() throws SQLException {
+		return connection().getMetaData().getDatabaseProductName().equalsIgnoreCase("MySQL")
+				? "CASE WHEN PRODUCT_ID IS NULL THEN CONCAT('I:', ID) ELSE CONCAT('P:', PRODUCT_ID) END"
+				: "CASE WHEN PRODUCT_ID IS NULL THEN 'I:' || ID ELSE 'P:' || PRODUCT_ID END";
 	}
 
 	private boolean isValidStatus(String status) {
