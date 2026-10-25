@@ -67,6 +67,10 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private JLabel periodTitle;
 	private JLabel periodStatus;
 	private JLabel periodComparison;
+	private JPanel detailHeading;
+	private JPanel detailTitleBlock;
+	private JPanel detailNavigation;
+	private boolean navigationWrapped = true;
 	private JLabel totalRange;
 	private JLabel totalValue;
 	private JLabel totalDelta;
@@ -74,6 +78,9 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private JLabel totalBaselineValue;
 	private JLabel seriesCurrent;
 	private JLabel seriesPrevious;
+	private JPanel chartHeading;
+	private JPanel chartLegend;
+	private boolean legendWrapped = true;
 	private JLabel today;
 	private JLabel updated;
 	private JLabel receipts;
@@ -95,7 +102,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private int focusGeneration;
 	private JScrollPane scroll;
 	private AppView app;
-	private ReportsWelcomePeriod selected = ReportsWelcomePeriod.WEEK;
+	private ReportsWelcomePeriod selected = ReportsWelcomePeriod.MONTH;
 
 	public JPanelReportsWelcome(AppView app, MenuDefinition reportsMenu) {
 		this.reportsMenu = reportsMenu;
@@ -129,6 +136,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		asOf = lastClosedDay(currentDate);
 		focusAsOf = asOf;
 		updateDates();
+		updatePeriodNavigation();
 		javax.swing.SwingUtilities.invokeLater(() -> scroll.getVerticalScrollBar().setValue(0));
 		loadData();
 	}
@@ -262,10 +270,11 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 			label.setForeground(RetailPOSColors.inkMuted());
 			JPanel cardHeader = new JPanel(new BorderLayout());
 			cardHeader.setOpaque(false);
+			cardHeader.setBorder(BorderFactory.createEmptyBorder(10, 8, 0, 8));
 			cardHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
 			cardHeader.add(label, BorderLayout.CENTER);
-			selectedTags[index] = new JLabel(AppLocal.getIntString("reports.welcome.selectedTag"));
-			selectedTags[index].setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(10f));
+			selectedTags[index] = new ChipLabel(AppLocal.getIntString("reports.welcome.selectedTag"));
+			selectedTags[index].setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(11f));
 			cardHeader.add(selectedTags[index], BorderLayout.EAST);
 			content.add(cardRanges[index]);
 			content.add(Box.createVerticalStrut(7));
@@ -291,32 +300,40 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		JPanel top = new JPanel(new BorderLayout(0, 12));
 		top.setOpaque(false);
 		JPanel track = new RoundedPanel(12, RetailPOSColors.surface200());
-		track.setLayout(new GridLayout(1, 0, 4, 0));
+		track.setLayout(new GridLayout(1, 0));
+		track.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 		ButtonGroup group = new ButtonGroup();
 		for (ReportsWelcomePeriod period : ReportsWelcomePeriod.values()) {
-			JToggleButton segment = new JToggleButton(
+			JToggleButton segment = new SegmentButton(
 					AppLocal.getIntString("reports.welcome.segment." + period.name().toLowerCase(Locale.ROOT)));
-			segment.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(14f));
+			segment.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(14f));
 			segment.setPreferredSize(new Dimension(0, 44));
-			segment.setFocusPainted(true);
+			segment.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 			segment.addActionListener(e -> selectPeriod(period));
 			segments[period.ordinal()] = segment;
 			group.add(segment);
 			track.add(segment);
 		}
 		top.add(track, BorderLayout.NORTH);
-		JPanel heading = new JPanel(new GridBagLayout());
-		heading.setOpaque(false);
+		detailHeading = new JPanel(new GridBagLayout()) {
+			@Override
+			public void doLayout() {
+				updateHeaderLayout();
+				super.doLayout();
+			}
+		};
+		detailHeading.setOpaque(false);
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.WEST;
 		c.fill = GridBagConstraints.HORIZONTAL;
-		JPanel titleBlock = new JPanel();
-		titleBlock.setOpaque(false);
-		titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
+		detailTitleBlock = new JPanel();
+		detailTitleBlock.setOpaque(false);
+		detailTitleBlock.setLayout(new BoxLayout(detailTitleBlock, BoxLayout.Y_AXIS));
 		JPanel titleRow = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 8, 0));
 		titleRow.setOpaque(false);
+		titleRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 		periodTitle = new JLabel();
 		periodTitle.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
 		periodStatus = new JLabel();
@@ -330,11 +347,12 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		periodComparison = new JLabel();
 		periodComparison.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 		periodComparison.setForeground(RetailPOSColors.inkMuted());
-		titleBlock.add(titleRow);
-		titleBlock.add(periodComparison);
-		heading.add(titleBlock, c);
-		JPanel navigation = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 6, 0));
-		navigation.setOpaque(false);
+		periodComparison.setAlignmentX(Component.LEFT_ALIGNMENT);
+		detailTitleBlock.add(titleRow);
+		detailTitleBlock.add(periodComparison);
+		detailHeading.add(detailTitleBlock, c);
+		detailNavigation = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 6, 0));
+		detailNavigation.setOpaque(false);
 		back = periodButton();
 		previous = periodButton();
 		next = periodButton();
@@ -347,27 +365,32 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		next.addActionListener(e -> changePeriod(selected, 1));
 		rollingNavigation = new JLabel(AppLocal.getIntString("reports.welcome.rollingNavigation"));
 		rollingNavigation.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
-		navigation.add(back);
-		navigation.add(previous);
-		navigation.add(next);
-		navigation.add(rollingNavigation);
+		detailNavigation.add(back);
+		detailNavigation.add(previous);
+		detailNavigation.add(next);
+		detailNavigation.add(rollingNavigation);
 		c.gridx = 0;
 		c.gridy = 1;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.EAST;
-		heading.add(navigation, c);
-		top.add(heading, BorderLayout.CENTER);
-		panel.add(top, BorderLayout.NORTH);
+		detailHeading.add(detailNavigation, c);
+		top.add(detailHeading, BorderLayout.CENTER);
 		JPanel figures = new JPanel(new GridLayout(1, 5));
 		figures.setOpaque(false);
 		JPanel totalCell = detailCell("reports.welcome.total", false);
 		totalCell.setOpaque(true);
 		totalCell.setBackground(RetailPOSColors.surface200());
+		totalCell.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 		totalRange = detailHint(totalCell);
+		totalRange.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 		totalValue = detailNumber(totalCell);
-		totalDelta = detailHint(totalCell);
+		totalDelta = new DeltaBadge();
+		totalDelta.setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD.deriveFont(13f));
+		totalCell.add(totalDelta);
 		totalBaseline = detailHint(totalCell);
+		totalBaseline.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 		totalBaselineValue = detailHint(totalCell);
+		totalBaselineValue.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 		figures.add(totalCell);
 		JPanel receiptsCell = detailCell("label.reportreceipts", false);
 		receipts = detailNumber(receiptsCell);
@@ -397,8 +420,16 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		refunds = detailNumber(refundsCell);
 		refundCount = detailHint(refundsCell);
 		figures.add(refundsCell);
-		panel.add(figures, BorderLayout.CENTER);
-		panel.add(createOverview(), BorderLayout.SOUTH);
+		JPanel aboveChart = new JPanel();
+		aboveChart.setOpaque(false);
+		aboveChart.setLayout(new BoxLayout(aboveChart, BoxLayout.Y_AXIS));
+		top.setAlignmentX(Component.LEFT_ALIGNMENT);
+		figures.setAlignmentX(Component.LEFT_ALIGNMENT);
+		aboveChart.add(top);
+		aboveChart.add(Box.createVerticalStrut(8));
+		aboveChart.add(figures);
+		panel.add(aboveChart, BorderLayout.NORTH);
+		panel.add(createOverview(), BorderLayout.CENTER);
 		selectPeriod(selected);
 		return panel;
 	}
@@ -409,7 +440,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		cell.setLayout(new BoxLayout(cell, BoxLayout.Y_AXIS));
 		cell.setBorder(BorderFactory.createCompoundBorder(
 				BorderFactory.createMatteBorder(0, divider ? 1 : 0, 0, 0, RetailPOSColors.border()),
-				BorderFactory.createEmptyBorder(0, divider ? 16 : 4, 0, 8)));
+				BorderFactory.createEmptyBorder(16, 16, 16, 8)));
 		JLabel caption = new JLabel(AppLocal.getIntString(key).toUpperCase(Locale.getDefault()));
 		caption.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(12f));
 		caption.setForeground(RetailPOSColors.inkMuted());
@@ -464,19 +495,38 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private JPanel createOverview() {
 		JPanel overview = new JPanel(new BorderLayout());
 		overview.setOpaque(false);
-		JPanel chartCard = new RoundedPanel(16, RetailPOSColors.surface100());
-		chartCard.setLayout(new BorderLayout(0, 8));
-		chartCard.setBorder(BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.border(), 16),
-				BorderFactory.createEmptyBorder(16, 18, 16, 18)));
+		overview.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 		chartTitle = new JLabel();
 		chartTitle.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(16f));
 		chart = new SalesTrendChart();
 		seriesCurrent = new JLabel();
 		seriesPrevious = new JLabel();
+		chartLegend = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 8, 0));
+		chartLegend.setOpaque(false);
 		for (JLabel series : new JLabel[]{seriesCurrent, seriesPrevious}) {
 			series.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 			series.setForeground(RetailPOSColors.inkMuted());
 		}
+		chartLegend.add(new LegendMarker(true));
+		chartLegend.add(seriesCurrent);
+		chartLegend.add(new LegendMarker(false));
+		chartLegend.add(seriesPrevious);
+		chartHeading = new JPanel(new GridBagLayout()) {
+			@Override
+			public void doLayout() {
+				updateChartHeaderLayout();
+				super.doLayout();
+			}
+		};
+		chartHeading.setOpaque(false);
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.weightx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		chartHeading.add(chartTitle, c);
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.EAST;
+		chartHeading.add(chartLegend, c);
 		chartComparisonNote = new JLabel(AppLocal.getIntString("reports.welcome.elapsedNote"));
 		chartComparisonNote.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 		chartComparisonNote.setForeground(RetailPOSColors.inkMuted());
@@ -486,14 +536,13 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		JPanel caption = new JPanel();
 		caption.setOpaque(false);
 		caption.setLayout(new BoxLayout(caption, BoxLayout.Y_AXIS));
-		caption.add(seriesCurrent);
-		caption.add(seriesPrevious);
+		chartComparisonNote.setAlignmentX(Component.LEFT_ALIGNMENT);
+		chartTargetNote.setAlignmentX(Component.LEFT_ALIGNMENT);
 		caption.add(chartComparisonNote);
 		caption.add(chartTargetNote);
-		chartCard.add(chartTitle, BorderLayout.NORTH);
-		chartCard.add(chart, BorderLayout.CENTER);
-		chartCard.add(caption, BorderLayout.SOUTH);
-		overview.add(chartCard, BorderLayout.CENTER);
+		overview.add(chartHeading, BorderLayout.NORTH);
+		overview.add(chart, BorderLayout.CENTER);
+		overview.add(caption, BorderLayout.SOUTH);
 		return overview;
 	}
 
@@ -512,11 +561,12 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		if (periodTitle != null) {
 			for (int i = 0; i < segments.length; i++) {
 				segments[i].setSelected(i == period.ordinal());
-				segments[i].setBackground(
-						i == period.ordinal() ? RetailPOSColors.surface100() : RetailPOSColors.surface200());
-				segments[i].setBorder(new RoundedLineBorder(
-						i == period.ordinal() ? RetailPOSColors.borderStrong() : RetailPOSColors.border(), 12,
-						i == period.ordinal()));
+				segments[i]
+						.setFont((i == period.ordinal() ? RetailPOSTheme.MANROPE_BOLD : RetailPOSTheme.MANROPE_MEDIUM)
+								.deriveFont(14f));
+				segments[i].setBorder(i == period.ordinal()
+						? new RoundedLineBorder(RetailPOSColors.borderStrong(), 12, true)
+						: BorderFactory.createEmptyBorder(2, 2, 2, 2));
 			}
 			updatePeriodNavigation();
 		}
@@ -631,6 +681,69 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		periodTitle.setText(ReportsWelcomeLabels.title(selected, focusAsOf));
 		periodStatus.setText(ReportsWelcomeLabels.status(selected, focusAsOf, asOf));
 		periodComparison.setText(ReportsWelcomeLabels.comparison(selected, focusAsOf, asOf));
+		updateChartLabels();
+		detailHeading.revalidate();
+	}
+
+	private void updateChartLabels() {
+		ReportsWelcomePeriod period = selected;
+		Date snapshot = focusAsOf;
+		String focusName = ReportsWelcomeLabels.chartPeriod(period, snapshot);
+		Calendar baselineEnd = Calendar.getInstance();
+		baselineEnd.setTime(period.previous(snapshot).getEndExclusive());
+		baselineEnd.add(Calendar.DAY_OF_MONTH, -1);
+		String previousName = ReportsWelcomeLabels.chartPeriod(period, baselineEnd.getTime());
+		chartTitle.setText(AppLocal.getIntString("reports.welcome.chartTitle",
+				AppLocal.getIntString(period == ReportsWelcomePeriod.WEEK || period == ReportsWelcomePeriod.MONTH
+						? "reports.welcome.chartDays"
+						: "reports.welcome.chartMonths"),
+				focusName));
+		seriesCurrent.setText(ReportsWelcomeLabels.seriesCurrent(period, snapshot, asOf));
+		seriesPrevious.setText(ReportsWelcomeLabels.seriesPrevious(period, previousName, snapshot));
+		chartHeading.revalidate();
+		chartComparisonNote.setVisible(ReportsWelcomeLabels.current(period, snapshot, asOf));
+		chartTargetNote.setVisible(
+				ReportsWelcomeLabels.current(period, snapshot, asOf) && period != ReportsWelcomePeriod.ROLLING_YEAR);
+	}
+
+	private void updateHeaderLayout() {
+		if (detailHeading.getWidth() == 0) {
+			return;
+		}
+		boolean wrap = detailTitleBlock.getPreferredSize().width + detailNavigation.getPreferredSize().width
+				+ 8 > detailHeading.getWidth();
+		if (wrap == navigationWrapped) {
+			return;
+		}
+		navigationWrapped = wrap;
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = wrap ? 0 : 1;
+		c.gridy = wrap ? 1 : 0;
+		c.weightx = wrap ? 1 : 0;
+		c.anchor = GridBagConstraints.EAST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		((GridBagLayout) detailHeading.getLayout()).setConstraints(detailNavigation, c);
+		detailHeading.revalidate();
+	}
+
+	private void updateChartHeaderLayout() {
+		if (chartHeading.getWidth() == 0) {
+			return;
+		}
+		boolean wrap = chartTitle.getPreferredSize().width + chartLegend.getPreferredSize().width + 8 > chartHeading
+				.getWidth();
+		if (wrap == legendWrapped) {
+			return;
+		}
+		legendWrapped = wrap;
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = wrap ? 0 : 1;
+		c.gridy = wrap ? 1 : 0;
+		c.weightx = wrap ? 1 : 0;
+		c.anchor = GridBagConstraints.EAST;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		((GridBagLayout) chartHeading.getLayout()).setConstraints(chartLegend, c);
+		chartHeading.revalidate();
 	}
 
 	private void setNavigationLabel(JButton button, String label) {
@@ -655,12 +768,13 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 
 	private void showDetail(SalesSummaryComparison value) {
 		SalesSummary current = value.getCurrent();
-		totalRange.setText(selected.rangeLabel(focusAsOf));
+		totalRange.setText(ReportsWelcomeLabels.focusRange(selected, focusAsOf));
+		totalRange.setToolTipText(selected.rangeLabel(focusAsOf));
 		totalValue.setText(Formats.CURRENCY.formatValue(current.getNetSales()));
 		totalDelta.setText(value.hasPreviousSales()
 				? delta(value.netDeltaPercent())
 				: AppLocal.getIntString("reports.welcome.noPrevious"));
-		setDeltaColor(totalDelta, current.getNetSales() - value.getPrevious().getNetSales());
+		((DeltaBadge) totalDelta).setTrend(value.hasPreviousSales() ? value.netDeltaPercent() : null);
 		totalBaseline.setText(value.hasPreviousSales() ? selected.baselineLabel() : " ");
 		totalBaselineValue.setText(
 				value.hasPreviousSales() ? Formats.CURRENCY.formatValue(value.getPrevious().getNetSales()) : " ");
@@ -690,27 +804,11 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		final ReportsWelcomePeriod period = selected;
 		final Date snapshot = focusAsOf;
 		updatePeriodNavigation();
-		String focusName = ReportsWelcomeLabels.chartPeriod(period, snapshot);
-		Calendar baselineEnd = Calendar.getInstance();
-		baselineEnd.setTime(period.previous(snapshot).getEndExclusive());
-		baselineEnd.add(Calendar.DAY_OF_MONTH, -1);
-		String previousName = ReportsWelcomeLabels.chartPeriod(period, baselineEnd.getTime());
-		chartTitle.setText(AppLocal.getIntString("reports.welcome.chartTitle",
-				AppLocal.getIntString(period == ReportsWelcomePeriod.WEEK || period == ReportsWelcomePeriod.MONTH
-						? "reports.welcome.chartDays"
-						: "reports.welcome.chartMonths"),
-				focusName));
-		seriesCurrent.setText(AppLocal.getIntString("reports.welcome.seriesCurrent", focusName));
-		seriesPrevious.setText(AppLocal.getIntString("reports.welcome.seriesPrevious", previousName));
-		chartComparisonNote.setVisible(ReportsWelcomeLabels.current(period, snapshot, asOf));
-		chartTargetNote.setVisible(
-				ReportsWelcomeLabels.current(period, snapshot, asOf) && period != ReportsWelcomePeriod.ROLLING_YEAR);
 		chart.setTrend(null);
 		for (JLabel label : new JLabel[]{totalValue, totalDelta, totalBaseline, totalBaselineValue, receipts,
 				receiptsDelta, average, averageDelta, loyaltyCount, loyaltyValue, loyaltyDelta, refunds, refundCount}) {
 			label.setText("…");
 		}
-		chart.setCurrentInstance(ReportsWelcomeLabels.current(period, snapshot, asOf));
 		new SwingWorker<FocusData, Void>() {
 			@Override
 			protected FocusData doInBackground() throws Exception {
@@ -878,6 +976,24 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		}
 	}
 
+	private static final class ChipLabel extends JLabel {
+		private ChipLabel(String text) {
+			super(text);
+			setForeground(RetailPOSColors.surface100());
+			setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g2 = (Graphics2D) graphics.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setColor(RetailPOSColors.ink());
+			g2.fillRoundRect(0, 0, getWidth(), getHeight(), getHeight(), getHeight());
+			g2.dispose();
+			super.paintComponent(graphics);
+		}
+	}
+
 	private static final class RoundedButton extends JButton {
 		private final int radius;
 
@@ -893,6 +1009,49 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 			g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, radius, radius);
 			g2.clip(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), radius, radius));
 			super.paintComponent(g2);
+			g2.dispose();
+		}
+	}
+
+	private static final class SegmentButton extends JToggleButton {
+		private SegmentButton(String text) {
+			super(text);
+			setOpaque(false);
+			setContentAreaFilled(false);
+			setForeground(RetailPOSColors.ink());
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			if (isSelected()) {
+				Graphics2D g2 = (Graphics2D) graphics.create();
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2.setColor(RetailPOSColors.surface100());
+				g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+				g2.dispose();
+			}
+			super.paintComponent(graphics);
+		}
+	}
+
+	private static final class LegendMarker extends javax.swing.JComponent {
+		private final boolean filled;
+
+		private LegendMarker(boolean filled) {
+			this.filled = filled;
+			setPreferredSize(new Dimension(12, 16));
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g2 = (Graphics2D) graphics.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setColor(filled ? RetailPOSColors.brand() : RetailPOSColors.borderStrong());
+			if (filled) {
+				g2.fillRoundRect(1, 3, 10, 10, 3, 3);
+			} else {
+				g2.drawRoundRect(1, 3, 10, 10, 3, 3);
+			}
 			g2.dispose();
 		}
 	}

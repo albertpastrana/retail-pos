@@ -25,6 +25,26 @@ final class ReportsWelcomeLabels {
 		return new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(date);
 	}
 
+	static String focusRange(ReportsWelcomePeriod period, Date focus) {
+		Calendar start = Calendar.getInstance();
+		start.setTime(period.current(focus).getStartInclusive());
+		Calendar end = Calendar.getInstance();
+		end.setTime(period.current(focus).getEndExclusive());
+		end.add(Calendar.DAY_OF_MONTH, -1);
+		String year = String.format(Locale.ROOT, "%02d", end.get(Calendar.YEAR) % 100);
+		if (start.get(Calendar.YEAR) != end.get(Calendar.YEAR)) {
+			return AppLocal.getIntString("reports.welcome.rangeYears", start.get(Calendar.DAY_OF_MONTH),
+					start.get(Calendar.MONTH) + 1, String.format(Locale.ROOT, "%02d", start.get(Calendar.YEAR) % 100),
+					end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
+		}
+		if (start.get(Calendar.MONTH) == end.get(Calendar.MONTH)) {
+			return AppLocal.getIntString("reports.welcome.rangeMonth", start.get(Calendar.DAY_OF_MONTH),
+					end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
+		}
+		return AppLocal.getIntString("reports.welcome.rangeMonths", start.get(Calendar.DAY_OF_MONTH),
+				start.get(Calendar.MONTH) + 1, end.get(Calendar.DAY_OF_MONTH), end.get(Calendar.MONTH) + 1, year);
+	}
+
 	static String title(ReportsWelcomePeriod period, Date focus) {
 		Calendar start = Calendar.getInstance();
 		start.setTime(period.current(focus).getStartInclusive());
@@ -69,6 +89,8 @@ final class ReportsWelcomeLabels {
 
 	static String comparison(ReportsWelcomePeriod period, Date focus, Date asOf) {
 		SalesSummaryParameters baseline = period.previous(focus);
+		Calendar start = Calendar.getInstance();
+		start.setTime(baseline.getStartInclusive());
 		Calendar end = Calendar.getInstance();
 		end.setTime(baseline.getEndExclusive());
 		end.add(Calendar.DAY_OF_MONTH, -1);
@@ -78,17 +100,53 @@ final class ReportsWelcomeLabels {
 							.format(baseline.getStartInclusive()),
 					DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault()).format(end.getTime()));
 		}
-		String baselineName = title(period, baseline.getStartInclusive());
+		String baselineName = lowerFirst(title(period, baseline.getStartInclusive()));
 		if (period == ReportsWelcomePeriod.WEEK) {
-			Calendar year = Calendar.getInstance();
-			year.setTime(baseline.getStartInclusive());
-			baselineName += " " + year.get(Calendar.YEAR);
+			String year = Integer.toString(start.get(Calendar.YEAR));
+			if (current(period, focus, asOf)) {
+				return AppLocal.getIntString("reports.welcome.compareWeekElapsed", baselineName, year,
+						new SimpleDateFormat("EEEE", Locale.getDefault()).format(start.getTime()),
+						new SimpleDateFormat("EEEE", Locale.getDefault()).format(end.getTime()));
+			}
+			return AppLocal.getIntString("reports.welcome.compareWeekClosed", baselineName, year);
 		}
 		if (current(period, focus, asOf)) {
-			return AppLocal.getIntString("reports.welcome.compareElapsed", baselineName,
-					end.get(Calendar.DAY_OF_MONTH));
+			if (period == ReportsWelcomePeriod.MONTH) {
+				return AppLocal.getIntString("reports.welcome.compareMonthElapsed", baselineName,
+						Integer.toString(end.get(Calendar.DAY_OF_MONTH)), monthOfYear(end.getTime()));
+			}
+			return AppLocal.getIntString("reports.welcome.compareYearElapsed", baselineName,
+					new SimpleDateFormat("MMM", Locale.getDefault()).format(start.getTime()),
+					Integer.toString(end.get(Calendar.DAY_OF_MONTH)), monthOfYear(end.getTime()));
 		}
-		return AppLocal.getIntString("reports.welcome.compareClosed", baselineName);
+		DateFormat date = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+		return AppLocal.getIntString("reports.welcome.compareClosed", baselineName, date.format(start.getTime()),
+				date.format(end.getTime()));
+	}
+
+	private static String monthOfYear(Date date) {
+		String month = new SimpleDateFormat("MMM", Locale.getDefault()).format(date);
+		String key = "reports.welcome.monthOfYear";
+		if ("ca".equals(Locale.getDefault().getLanguage())
+				&& (month.toLowerCase(Locale.ROOT).startsWith("a") || month.toLowerCase(Locale.ROOT).startsWith("o"))) {
+			key += "Vowel";
+		}
+		return AppLocal.getIntString(key, month, new SimpleDateFormat("yyyy", Locale.getDefault()).format(date));
+	}
+
+	static String seriesCurrent(ReportsWelcomePeriod period, Date focus, Date asOf) {
+		return period == ReportsWelcomePeriod.WEEK && current(period, focus, asOf)
+				? AppLocal.getIntString("reports.welcome.thisWeekSeries")
+				: chartPeriod(period, focus);
+	}
+
+	static String seriesPrevious(ReportsWelcomePeriod period, String periodName, Date focus) {
+		if (period == ReportsWelcomePeriod.WEEK) {
+			return AppLocal.getIntString("reports.welcome.previousWeekSeries",
+					new SimpleDateFormat("yyyy", Locale.getDefault())
+							.format(period.previous(focus).getStartInclusive()));
+		}
+		return periodName;
 	}
 
 	static String navigation(ReportsWelcomePeriod period, Date focus, Date asOf, int direction) {
@@ -132,5 +190,9 @@ final class ReportsWelcomeLabels {
 
 	private static String capitalize(String text) {
 		return text.isEmpty() ? text : text.substring(0, 1).toUpperCase(Locale.getDefault()) + text.substring(1);
+	}
+
+	private static String lowerFirst(String text) {
+		return text.isEmpty() ? text : text.substring(0, 1).toLowerCase(Locale.getDefault()) + text.substring(1);
 	}
 }
