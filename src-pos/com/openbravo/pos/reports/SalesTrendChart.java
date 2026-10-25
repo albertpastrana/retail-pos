@@ -14,6 +14,11 @@ import javax.swing.JComponent;
  */
 final class SalesTrendChart extends JComponent {
 	private SalesTrend trend;
+	private boolean currentInstance = true;
+
+	void setCurrentInstance(boolean currentInstance) {
+		this.currentInstance = currentInstance;
+	}
 
 	SalesTrendChart() {
 		setPreferredSize(new Dimension(400, 188));
@@ -65,7 +70,7 @@ final class SalesTrendChart extends JComponent {
 			if (trend.reached[i]) {
 				int currentHeight = (int) Math.round(height * Math.max(0, trend.current[i]) / maximum);
 				java.awt.Color brand = RetailPOSColors.brand();
-				g.setColor(i == lastReached()
+				g.setColor(currentInstance && i == lastReached()
 						? new java.awt.Color(brand.getRed(), brand.getGreen(), brand.getBlue(), 140)
 						: brand);
 				g.fillRoundRect(x - bar - 1, bottom - currentHeight, bar, currentHeight, 4, 4);

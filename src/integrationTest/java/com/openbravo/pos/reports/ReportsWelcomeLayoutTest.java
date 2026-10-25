@@ -1,6 +1,7 @@
 package com.openbravo.pos.reports;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.JToggleButton;
 import org.junit.jupiter.api.Test;
 
 public class ReportsWelcomeLayoutTest {
@@ -44,38 +46,31 @@ public class ReportsWelcomeLayoutTest {
 				JPanel header = (JPanel) view.getComponent(0);
 				header.doLayout();
 				Component heading = header.getComponent(0);
-				Component explanation = header.getComponent(2);
+				Component updated = header.getComponent(2);
 				Component detailedReports = header.getComponent(4);
-				assertTrue(heading.getX() + heading.getWidth() <= explanation.getX());
-				assertTrue(explanation.getX() + explanation.getWidth() <= detailedReports.getX());
+				assertTrue(heading.getX() + heading.getWidth() <= updated.getX());
+				assertTrue(updated.getX() + updated.getWidth() <= detailedReports.getX());
 				assertTrue(detailedReports.getX() + detailedReports.getWidth() <= header.getWidth());
 				JScrollPane scroll = (JScrollPane) view.getComponent(1);
 				scroll.doLayout();
 				scroll.getViewport().doLayout();
 				JPanel body = (JPanel) scroll.getViewport().getView();
 				body.doLayout();
-				JPanel cards = (JPanel) body.getComponent(0);
+				JPanel cardsSection = (JPanel) body.getComponent(0);
+				JPanel cards = (JPanel) cardsSection.getComponent(1);
 				JPanel detail = (JPanel) body.getComponent(1);
-				JPanel overview = (JPanel) body.getComponent(2);
-				JPanel reports = (JPanel) body.getComponent(3);
-				assertEquals(0, cards.getX());
+				JPanel reports = (JPanel) body.getComponent(2);
+				assertEquals(0, cardsSection.getX());
 				assertEquals(0, detail.getX());
 				assertEquals(0, reports.getX());
-				assertEquals(0, overview.getX());
-				assertEquals(body.getWidth(), cards.getWidth());
+				assertEquals(body.getWidth(), cardsSection.getWidth());
 				assertEquals(body.getWidth(), detail.getWidth());
 				assertEquals(body.getWidth(), reports.getWidth());
-				assertEquals(body.getWidth(), overview.getWidth());
-				assertEquals(0, cards.getY());
-				assertTrue(detail.getY() <= cards.getHeight() + 16);
-				assertTrue(overview.getY() > detail.getY());
-				assertTrue(reports.getY() > overview.getY());
-				overview.doLayout();
-				assertEquals(2, overview.getComponentCount());
-				assertEquals(0, overview.getComponent(0).getX());
-				assertTrue(overview.getComponent(1).getX() > overview.getComponent(0).getWidth());
-				assertTrue(
-						overview.getComponent(1).getX() + overview.getComponent(1).getWidth() <= overview.getWidth());
+				assertEquals(0, cardsSection.getY());
+				assertTrue(detail.getY() <= cardsSection.getHeight() + 16);
+				assertTrue(reports.getY() > detail.getY());
+				assertEquals(3, detail.getComponentCount());
+				cardsSection.doLayout();
 				cards.doLayout();
 				assertTrue(cards.getComponent(0).getWidth() >= 200);
 				assertEquals(4, cards.getComponentCount());
@@ -96,15 +91,17 @@ public class ReportsWelcomeLayoutTest {
 					layoutTree(view);
 					JPanel header = (JPanel) view.getComponent(0);
 					Component heading = header.getComponent(0);
-					Component explanation = header.getComponent(2);
+					Component updated = header.getComponent(2);
 					Component reportsButton = header.getComponent(4);
-					assertTrue(heading.getX() + heading.getWidth() <= explanation.getX(), locale.toString());
-					assertTrue(explanation.getX() + explanation.getWidth() <= reportsButton.getX(), locale.toString());
+					assertTrue(heading.getX() + heading.getWidth() <= updated.getX(), locale.toString());
+					assertTrue(updated.getX() + updated.getWidth() <= reportsButton.getX(), locale.toString());
 					JScrollPane scroll = (JScrollPane) view.getComponent(1);
 					JPanel body = (JPanel) scroll.getViewport().getView();
-					JPanel cards = (JPanel) body.getComponent(0);
+					JPanel cards = (JPanel) ((JPanel) body.getComponent(0)).getComponent(1);
 					for (Component button : cards.getComponents()) {
-						Container content = (Container) ((Container) button).getComponent(0);
+						assertEquals(2, ((Container) button).getComponentCount());
+						assertFalse(containsButton((Container) button));
+						Container content = (Container) ((Container) button).getComponent(1);
 						for (Component label : content.getComponents()) {
 							if (label instanceof JLabel && !((JLabel) label).getText().isBlank()) {
 								assertTrue(label.getPreferredSize().width <= label.getWidth(),
@@ -112,6 +109,31 @@ public class ReportsWelcomeLayoutTest {
 							}
 						}
 					}
+					JPanel detail = (JPanel) body.getComponent(1);
+					JPanel top = (JPanel) detail.getComponent(0);
+					JPanel track = (JPanel) top.getComponent(0);
+					assertEquals(4, track.getComponentCount());
+					for (Component segment : track.getComponents()) {
+						assertTrue(segment instanceof JToggleButton);
+						assertTrue(segment.getHeight() >= 44);
+						assertTrue(((JToggleButton) segment).getText().length() > 0);
+					}
+					JPanel titleRow = (JPanel) top.getComponent(1);
+					JPanel navigation = (JPanel) titleRow.getComponent(1);
+					JPanel titleBlock = (JPanel) titleRow.getComponent(0);
+					JPanel titleAndStatus = (JPanel) titleBlock.getComponent(0);
+					for (Component label : titleAndStatus.getComponents()) {
+						assertTrue(((JLabel) label).getText().length() > 0, locale.toString());
+						assertTrue(label.getX() + label.getWidth() <= titleAndStatus.getWidth(), locale.toString());
+					}
+					assertTrue(navigation.getWidth() >= navigation.getPreferredSize().width, locale.toString());
+					assertTrue(navigation.getComponent(1).getHeight() >= 48);
+					assertTrue(navigation.getComponent(2).getHeight() >= 48);
+					assertTrue(navigation.getComponent(1).getX() + navigation.getComponent(1).getWidth() <= navigation
+							.getComponent(2).getX(), locale.toString());
+					assertTrue(navigation.getComponent(2).getX() + navigation.getComponent(2).getWidth() <= navigation
+							.getWidth(), locale.toString());
+					assertEquals(1, ((JPanel) detail.getComponent(2)).getComponentCount());
 				});
 			}
 		} finally {
@@ -129,6 +151,15 @@ public class ReportsWelcomeLayoutTest {
 				layoutTree(child);
 			}
 		}
+	}
+
+	private static boolean containsButton(Container container) {
+		for (Component child : container.getComponents()) {
+			if (child instanceof JButton || child instanceof Container && containsButton((Container) child)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Test
@@ -154,7 +185,8 @@ public class ReportsWelcomeLayoutTest {
 					layoutTree(view);
 					JPanel body = (JPanel) ((JScrollPane) view.getComponent(1)).getViewport().getView();
 					JPanel detail = (JPanel) body.getComponent(1);
-					JPanel loyalty = (JPanel) detail.getComponent(2);
+					JPanel figures = (JPanel) detail.getComponent(1);
+					JPanel loyalty = (JPanel) figures.getComponent(3);
 					JPanel amount = (JPanel) loyalty.getComponent(2);
 					JLabel count = (JLabel) amount.getComponent(0);
 					JLabel description = (JLabel) amount.getComponent(1);
@@ -162,12 +194,16 @@ public class ReportsWelcomeLayoutTest {
 					description.setText(Formats.CURRENCY.formatValue(37.19) + " "
 							+ AppLocal.getIntString("reports.welcome.loyaltyValue"));
 					layoutTree(detail);
-					assertTrue(count.getX() + count.getWidth() <= description.getX(), locale.toString());
+					assertTrue(count.getX() + count.getWidth() <= description.getX(),
+							locale + " body=" + body.getWidth() + " detail=" + detail.getWidth() + " figures="
+									+ figures.getWidth() + " loyalty=" + loyalty.getWidth() + " amount="
+									+ amount.getWidth() + " count=" + count.getBounds() + " description="
+									+ description.getBounds());
 					assertTrue(description.getPreferredSize().width <= description.getWidth(),
 							() -> locale + ": " + description.getText() + " preferred="
 									+ description.getPreferredSize().width + " actual=" + description.getWidth()
 									+ " row=" + amount.getWidth());
-					JPanel reports = (JPanel) body.getComponent(3);
+					JPanel reports = (JPanel) body.getComponent(2);
 					JPanel entries = (JPanel) reports.getComponent(1);
 					JButton button = (JButton) entries.getComponent(0);
 					assertNotNull(button.getIcon());
