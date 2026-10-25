@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.DateFormatSymbols;
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -49,14 +49,14 @@ final class SalesTrendRepository {
 				throw new IllegalStateException("Unknown chart period");
 		}
 		String[] labels = new String[size];
-		String[] weekdays = new DateFormatSymbols(Locale.getDefault()).getShortWeekdays();
-		String[] months = new DateFormatSymbols(Locale.getDefault()).getShortMonths();
+		DateTimeFormatter weekdays = DateTimeFormatter.ofPattern("EEE", Locale.getDefault());
+		DateTimeFormatter months = DateTimeFormatter.ofPattern("LLL", Locale.getDefault());
 		for (int i = 0; i < size; i++) {
 			LocalDate bucket = monthly ? start.plusMonths(i) : start.plusDays(i);
 			labels[i] = monthly
-					? months[bucket.getMonthValue() - 1]
+					? months.format(bucket)
 					: period == ReportsWelcomePeriod.WEEK
-							? weekdays[bucket.getDayOfWeek().getValue() % 7 + 1] + " " + bucket.getDayOfMonth()
+							? weekdays.format(bucket) + " " + bucket.getDayOfMonth()
 							: Integer.toString(bucket.getDayOfMonth());
 		}
 		SalesTrend trend = new SalesTrend(labels);
@@ -65,6 +65,16 @@ final class SalesTrendRepository {
 				? previousStart.plusMonths(size)
 				: period == ReportsWelcomePeriod.WEEK ? previousStart.plusDays(7) : previousStart.plusMonths(1);
 		read(connection, previousStart, previousEnd, previousStart, monthly, trend.previous);
+		if (monthly && today.getDayOfMonth() < today.lengthOfMonth()) {
+			int index = period == ReportsWelcomePeriod.YEAR ? today.getMonthValue() - 1 : size - 1;
+			LocalDate sameMonthLastYear = start.plusMonths(index).minusYears(1);
+			LocalDate elapsedEnd = sameMonthLastYear
+					.plusDays(Math.min(today.getDayOfMonth(), sameMonthLastYear.lengthOfMonth()));
+			read(connection, sameMonthLastYear, elapsedEnd, previousStart, true, trend.previousElapsed);
+			trend.partialMonthIndex = index;
+			trend.labels[index] = com.openbravo.pos.forms.AppLocal.getIntString("reports.welcome.partialMonthAxis",
+					trend.labels[index], today.getDayOfMonth());
+		}
 		read(connection, start, today.plusDays(1), start, monthly, trend.current);
 		for (int i = 0; i < size; i++) {
 			trend.reached[i] = !(monthly ? start.plusMonths(i).isAfter(today) : start.plusDays(i).isAfter(today));

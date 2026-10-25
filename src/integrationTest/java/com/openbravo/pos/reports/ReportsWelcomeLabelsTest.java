@@ -117,18 +117,17 @@ class ReportsWelcomeLabelsTest {
 	}
 
 	@Test
-	void compactTotalRangeKeepsDatesReadableAcrossMonthAndYearBoundaries() {
+	void standaloneMonthsAndPartialLegendUseTheRequestedLocale() {
 		Locale original = Locale.getDefault();
 		try {
-			AppLocal.setLocale(Locale.ENGLISH);
-			assertEquals("10/12–18/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 10, 18)));
-			assertEquals("12/29/25–1/4/26",
-					ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 1, 4)));
-			assertEquals("1/1–24/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.MONTH, date(2026, 1, 24)));
-			assertEquals("10/24/25–10/24/26",
-					ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.ROLLING_YEAR, date(2026, 10, 24)));
 			AppLocal.setLocale(new Locale("ca", "ES"));
-			assertEquals("12–18/10/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 10, 18)));
+			assertEquals("Octubre 2026", ReportsWelcomeLabels.title(ReportsWelcomePeriod.MONTH, date(2026, 10, 24)));
+			assertTrue(ReportsWelcomeLabels.partialMonthLegend(date(2026, 10, 24))
+					.contains("Octubre 2025: sòlid fins al 24, discontinu la resta del mes"));
+			AppLocal.setLocale(new Locale("es", "ES"));
+			assertEquals("Octubre 2026", ReportsWelcomeLabels.title(ReportsWelcomePeriod.MONTH, date(2026, 10, 24)));
+			assertTrue(ReportsWelcomeLabels.partialMonthLegend(date(2026, 10, 24))
+					.contains("Octubre 2025: sólido hasta el día 24, discontinuo el resto del mes"));
 		} finally {
 			AppLocal.setLocale(original);
 		}
