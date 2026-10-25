@@ -187,6 +187,8 @@ tasks.named("spotlessJava") {
 val integrationTest by tasks.registering(Test::class) {
     group = "verification"
     description = "Apply Flyway to Derby, MySQL, and PostgreSQL. Start Compose first: docker compose up -d --wait"
+    // The full suite retains in-memory Derby databases across test classes.
+    maxHeapSize = "1g"
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath + files("locales")
     useJUnitPlatform()
