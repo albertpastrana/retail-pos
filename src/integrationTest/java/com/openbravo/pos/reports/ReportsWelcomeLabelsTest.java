@@ -72,7 +72,7 @@ class ReportsWelcomeLabelsTest {
 			assertEquals("September 2026", ReportsWelcomeLabels.title(ReportsWelcomePeriod.MONTH, september));
 			assertEquals("MONTH CLOSED", ReportsWelcomeLabels.status(ReportsWelcomePeriod.MONTH, september, asOf));
 			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.MONTH, september, asOf)
-					.contains("september 2025"));
+					.contains("September 2025"));
 			assertTrue(ReportsWelcomeLabels.title(ReportsWelcomePeriod.WEEK, lastWeek).contains("12–18 Oct"));
 			assertEquals("WEEK CLOSED", ReportsWelcomeLabels.status(ReportsWelcomePeriod.WEEK, lastWeek, asOf));
 			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.WEEK, lastWeek, asOf).contains("2025"));
@@ -128,6 +128,9 @@ class ReportsWelcomeLabelsTest {
 			assertEquals("Octubre 2026", ReportsWelcomeLabels.title(ReportsWelcomePeriod.MONTH, date(2026, 10, 24)));
 			assertTrue(ReportsWelcomeLabels.partialMonthLegend(date(2026, 10, 24))
 					.contains("Octubre 2025: sólido hasta el día 24, discontinuo el resto del mes"));
+			assertTrue(
+					ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.MONTH, date(2026, 10, 24), date(2026, 10, 24))
+							.contains("del 1 al 24 de oct de 2025"));
 		} finally {
 			AppLocal.setLocale(original);
 		}
