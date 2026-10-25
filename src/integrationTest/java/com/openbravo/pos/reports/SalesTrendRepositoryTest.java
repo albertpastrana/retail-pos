@@ -10,6 +10,8 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Locale;
+import com.openbravo.pos.forms.AppLocal;
 import org.junit.jupiter.api.Test;
 
 public class SalesTrendRepositoryTest {
@@ -27,10 +29,21 @@ public class SalesTrendRepositoryTest {
 			Date today = Date.from(LocalDate.of(2026, 9, 25).atStartOfDay(ZoneId.systemDefault()).toInstant());
 			SalesTrend trend = new SalesTrendRepository().load(connection, ReportsWelcomePeriod.WEEK, today);
 			assertEquals(7, trend.labels.length);
+			assertTrue(trend.labels[0].endsWith(" 21"), trend.labels[0]);
+			assertTrue(trend.labels[6].endsWith(" 27"), trend.labels[6]);
 			assertEquals(25.0, trend.current[4], 0.001);
 			assertEquals(15.0, trend.previous[4], 0.001);
 			assertTrue(trend.reached[4]);
 			assertFalse(trend.reached[5]);
+			Locale original = Locale.getDefault();
+			try {
+				AppLocal.setLocale(new Locale("ca", "ES"));
+				SalesTrend catalan = new SalesTrendRepository().load(connection, ReportsWelcomePeriod.WEEK, today);
+				assertTrue(catalan.labels[0].startsWith("dl."), catalan.labels[0]);
+				assertTrue(catalan.labels[6].startsWith("dg."), catalan.labels[6]);
+			} finally {
+				AppLocal.setLocale(original);
+			}
 		}
 	}
 }

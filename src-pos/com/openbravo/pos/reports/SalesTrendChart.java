@@ -9,16 +9,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import javax.swing.JComponent;
 
-/**
- * Token-coloured paired bars; the current unfinished day/month is translucent.
- */
+/** Token-coloured paired bars through the last closed day. */
 final class SalesTrendChart extends JComponent {
 	private SalesTrend trend;
-	private boolean currentInstance = true;
-
-	void setCurrentInstance(boolean currentInstance) {
-		this.currentInstance = currentInstance;
-	}
 
 	SalesTrendChart() {
 		setPreferredSize(new Dimension(400, 188));
@@ -61,7 +54,7 @@ final class SalesTrendChart extends JComponent {
 		for (int i = 0; i < trend.labels.length; i++) {
 			int x = left + cell * i + cell / 2;
 			int previousHeight = (int) Math.round(height * Math.max(0, trend.previous[i]) / maximum);
-			g.setColor(RetailPOSColors.border());
+			g.setColor(RetailPOSColors.borderStrong());
 			g.setStroke(trend.reached[i]
 					? new BasicStroke(1f)
 					: new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[]{3f, 3f}, 0f));
@@ -69,10 +62,7 @@ final class SalesTrendChart extends JComponent {
 			g.setStroke(new BasicStroke(1f));
 			if (trend.reached[i]) {
 				int currentHeight = (int) Math.round(height * Math.max(0, trend.current[i]) / maximum);
-				java.awt.Color brand = RetailPOSColors.brand();
-				g.setColor(currentInstance && i == lastReached()
-						? new java.awt.Color(brand.getRed(), brand.getGreen(), brand.getBlue(), 140)
-						: brand);
+				g.setColor(RetailPOSColors.brand());
 				g.fillRoundRect(x - bar - 1, bottom - currentHeight, bar, currentHeight, 4, 4);
 			}
 			if (i % labelEvery == 0 || i == trend.labels.length - 1) {
@@ -84,12 +74,4 @@ final class SalesTrendChart extends JComponent {
 		g.dispose();
 	}
 
-	private int lastReached() {
-		for (int i = trend.reached.length - 1; i >= 0; i--) {
-			if (trend.reached[i]) {
-				return i;
-			}
-		}
-		return -1;
-	}
 }

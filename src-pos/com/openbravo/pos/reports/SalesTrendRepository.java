@@ -56,7 +56,7 @@ final class SalesTrendRepository {
 			labels[i] = monthly
 					? months[bucket.getMonthValue() - 1]
 					: period == ReportsWelcomePeriod.WEEK
-							? weekdays[bucket.getDayOfWeek().getValue() % 7 + 1]
+							? weekdays[bucket.getDayOfWeek().getValue() % 7 + 1] + " " + bucket.getDayOfMonth()
 							: Integer.toString(bucket.getDayOfMonth());
 		}
 		SalesTrend trend = new SalesTrend(labels);

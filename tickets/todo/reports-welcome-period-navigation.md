@@ -76,10 +76,12 @@ Observed on 24 Oct 2026, month card selected, after pressing `<` once:
    - past instance: "MES TANCAT", "SETMANA TANCADA" or "ANY TANCAT"
    - rolling: "SEMPRE FINS AVUI"
 
-   Below the title, one `caption` line names the comparison, for example
-   "Comparat amb setembre 2025, mes sencer." or "Comparat amb octubre 2025,
-   mateixos dies (1–24)." Base "fins al N" on the last closed day used by the
-   data, not on the calendar day.
+   Below the title, one left-aligned `caption` line names the baseline's
+   actual dates and year, for example "Comparat amb la setmana del 20 al 26
+   d’oct. de 2025, de dilluns a dissabte." or "Comparat amb octubre 2025,
+   de l’1 al 24 d’oct. de 2025." Base the cutoff on the last closed day used
+   by the data, not on the calendar day; do not use an ambiguous "fins al N"
+   referring to last year's date.
 4. **Navigation moves into the detail header, at the right**, and only for
    week, month and year:
    - Two buttons, at least 48px tall, labelled with where they go:
@@ -110,8 +112,10 @@ Observed on 24 Oct 2026, month card selected, after pressing `<` once:
    "Vendes per mes · 2026", "Vendes per mes · de nov. 2025 a oct. 2026".
    - Replace the single legend line with one entry per series that names the
      period: "Setembre 2026" filled, "Setembre 2025" outlined.
-   - Show the "avui/today (partial)" and "future days (last year only)" entries
-     only when the focus is the current instance.
+    - Every bar through the last closed day is complete and fully opaque. Days
+      after it show only last year's dashed bar. Only the current instance
+      shows the "future days (last year only)" note; there is no partial-today
+      legend entry.
    - Keep the existing elapsed-comparison note only for the current instance.
 7. **Remove "Coses a mirar"** (the notice card and its loading/empty states).
    The chart then takes the full width.
@@ -252,6 +256,42 @@ Verification, in order:
   the manual flows above are verified in light and dark theme.
 
 ## Implementation status
+
+### Feedback after the first visual review (2026-10-25)
+
+- Put comparison directly below the left-aligned title and the navigation on
+  the same row at the right, wrapping only if there is not enough width; remove
+  extra space above the figures.
+- Make the four segments one `surface-200` track: transparent unselected
+  segments without borders, and a `surface-100`, `border-strong` selected
+  segment. Do not use a default Swing selection fill.
+- Since all periods end at the last closed day, remove translucent bars. Show
+  future days as dashed last-year bars only. Give week chart ticks a weekday
+  **and** day number, and ensure both named series are visible.
+- Comparison captions name the baseline's actual dates unambiguously: for
+  example, Catalan week "Comparat amb la setmana del 20 al 26 d’oct. de 2025,
+  de dilluns a dissabte." Month and year captions likewise name the dates and
+  year of the baseline in English, Spanish and Catalan.
+- Add 16px padding, a card-style delta badge and mono price-sm baseline amount
+  to the TOTAL cell. Remove the nested chart card. The selected-card tag is an
+  ink/surface-100 radius-full chip; its heading uses the same inset as the
+  amounts below.
+- Recheck minimum-width layout in three languages, then the previous-week and
+  previous-month flows in both themes; title, status, TOTAL and chart title
+  must change together and the return button must appear.
+
+The follow-up implementation now places the comparison directly under the
+title, lets the navigation and chart legend wrap only when they do not fit,
+uses one painted segmented track, removes the nested chart card and partial
+bar styling, and makes the last-closed-day and future bars explicit. Week
+ticks include day numbers; month/year captions name the prior year's cutoff.
+The TOTAL and card-tag styles now match their intended tokens, and the compact
+TOTAL range keeps its complete dates in a tooltip. Automated Swing layout,
+paint, period-label and synthetic previous-month/week checks cover English,
+Spanish and Catalan at 1000px, 1600px and resizing back. `SalesTrendChartTest`
+checks that the last closed day is fully opaque and future days have no
+current-period bar. A real POS walk-through in both themes is still required
+before this ticket can be marked done.
 
 The two-zone layout, synchronized card/segment selection, named focus periods,
 TOTAL cell, detail navigation, period-specific chart labels, and removal of the

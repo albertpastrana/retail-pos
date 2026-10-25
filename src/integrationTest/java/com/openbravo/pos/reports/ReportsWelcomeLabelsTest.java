@@ -72,7 +72,7 @@ class ReportsWelcomeLabelsTest {
 			assertEquals("September 2026", ReportsWelcomeLabels.title(ReportsWelcomePeriod.MONTH, september));
 			assertEquals("MONTH CLOSED", ReportsWelcomeLabels.status(ReportsWelcomePeriod.MONTH, september, asOf));
 			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.MONTH, september, asOf)
-					.contains("September 2025"));
+					.contains("september 2025"));
 			assertTrue(ReportsWelcomeLabels.title(ReportsWelcomePeriod.WEEK, lastWeek).contains("12–18 Oct"));
 			assertEquals("WEEK CLOSED", ReportsWelcomeLabels.status(ReportsWelcomePeriod.WEEK, lastWeek, asOf));
 			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.WEEK, lastWeek, asOf).contains("2025"));
@@ -80,6 +80,55 @@ class ReportsWelcomeLabelsTest {
 			assertEquals("YEAR CLOSED", ReportsWelcomeLabels.status(ReportsWelcomePeriod.YEAR, lastYear, asOf));
 			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.YEAR, lastYear, asOf).contains("2024"));
 			assertTrue(ReportsWelcomeLabels.status(ReportsWelcomePeriod.MONTH, asOf, asOf).contains("24"));
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
+	void elapsedCaptionsNameBaselineYearAndExactWeekdaysWithoutAmbiguousDayNumber() {
+		Locale original = Locale.getDefault();
+		try {
+			Date lastClosedDay = date(2026, 10, 24);
+			AppLocal.setLocale(new Locale("ca", "ES"));
+			assertEquals("Comparat amb la setmana del 20 al 26 d’oct. de 2025, de dilluns a dissabte.",
+					ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.WEEK, lastClosedDay, lastClosedDay));
+			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.MONTH, lastClosedDay, lastClosedDay)
+					.contains("de l’1 al 24 d’oct. de 2025"));
+			assertTrue(ReportsWelcomeLabels.comparison(ReportsWelcomePeriod.YEAR, lastClosedDay, lastClosedDay)
+					.contains("al 24 d’oct. de 2025"));
+			assertEquals("Aquesta setmana",
+					ReportsWelcomeLabels.seriesCurrent(ReportsWelcomePeriod.WEEK, lastClosedDay, lastClosedDay));
+			assertEquals("Mateixa setmana de 2025",
+					ReportsWelcomeLabels.seriesPrevious(ReportsWelcomePeriod.WEEK, "", lastClosedDay));
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es", "ES")}) {
+				AppLocal.setLocale(locale);
+				for (ReportsWelcomePeriod period : new ReportsWelcomePeriod[]{ReportsWelcomePeriod.WEEK,
+						ReportsWelcomePeriod.MONTH, ReportsWelcomePeriod.YEAR}) {
+					String caption = ReportsWelcomeLabels.comparison(period, lastClosedDay, lastClosedDay);
+					assertTrue(caption.contains("2025"), caption);
+					assertTrue(caption.contains("24") || period == ReportsWelcomePeriod.WEEK, caption);
+					assertFalse(caption.contains("(through 25)"), caption);
+				}
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
+	void compactTotalRangeKeepsDatesReadableAcrossMonthAndYearBoundaries() {
+		Locale original = Locale.getDefault();
+		try {
+			AppLocal.setLocale(Locale.ENGLISH);
+			assertEquals("10/12–18/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 10, 18)));
+			assertEquals("12/29/25–1/4/26",
+					ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 1, 4)));
+			assertEquals("1/1–24/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.MONTH, date(2026, 1, 24)));
+			assertEquals("10/24/25–10/24/26",
+					ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.ROLLING_YEAR, date(2026, 10, 24)));
+			AppLocal.setLocale(new Locale("ca", "ES"));
+			assertEquals("12–18/10/26", ReportsWelcomeLabels.focusRange(ReportsWelcomePeriod.WEEK, date(2026, 10, 18)));
 		} finally {
 			AppLocal.setLocale(original);
 		}
