@@ -479,9 +479,12 @@ final class StockSessionRepository {
 					diary.setString(8, session);
 					diary.executeUpdate();
 				}
-				try (PreparedStatement ordered = connection.prepareStatement("UPDATE REPLENISHMENT_ENTRIES "
-						+ "SET STATUS='RECEIVED',OPEN_PRODUCT_ID=NULL,UPDATED_AT=?,UPDATED_BY=? "
-						+ "WHERE OPEN_PRODUCT_ID=? AND STATUS='ORDERED'")) {
+				try (PreparedStatement ordered = connection.prepareStatement(
+						"UPDATE REPLENISHMENT_ENTRIES " + "SET STATUS='RECEIVED',OPEN_PRODUCT_ID=NULL,OPEN_UNIQUE_KEY="
+								+ (connection.getMetaData().getDatabaseProductName().equalsIgnoreCase("MySQL")
+										? "CONCAT('I:', ID)"
+										: "'I:' || ID")
+								+ ",UPDATED_AT=?,UPDATED_BY=? " + "WHERE OPEN_PRODUCT_ID=? AND STATUS='ORDERED'")) {
 					ordered.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
 					ordered.setString(2, user);
 					ordered.setString(3, line.product);

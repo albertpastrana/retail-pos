@@ -285,7 +285,7 @@ public class DatabaseMigratorIT {
 		}
 	}
 
-	private static void assertIdempotent(String url, String user, String password) throws SQLException {
+	private static void assertIdempotent(String url, String user, String password) throws Exception {
 		DatabaseMigrator.migrate(url, user, password);
 		Connection connection = open(url, user, password);
 		try {
@@ -295,6 +295,36 @@ public class DatabaseMigratorIT {
 			assertEquals(0, tableCount(connection, "APPLICATIONS"));
 		} finally {
 			connection.close();
+		}
+		Session session = new Session(url, user, password);
+		try {
+			DataLogicReplenishment data = new DataLogicReplenishment();
+			data.init(session);
+			ReplenishmentEntry first = new ReplenishmentEntry();
+			first.productId = "bulk-first-" + UUID.randomUUID();
+			first.createdBy = "user";
+			first.customerId = "customer";
+			first.customerName = "Customer";
+			ReplenishmentEntry second = new ReplenishmentEntry();
+			second.productId = "bulk-second-" + UUID.randomUUID();
+			second.createdBy = "user";
+			data.add(first);
+			data.add(second);
+			try {
+				data.updateStatuses(java.util.List.of(first.id, second.id), "RECEIVED", "user");
+				assertEquals(2, data.list("", "ALL", "RECEIVED").stream()
+						.filter(entry -> first.id.equals(entry.id) || second.id.equals(entry.id)).count());
+				assertThrows(com.openbravo.basic.BasicException.class,
+						() -> data.updateStatuses(java.util.List.of(first.id, second.id), "DELIVERED", "user"));
+				assertEquals("RECEIVED", data.list("", "ALL", "ALL").stream().filter(entry -> first.id.equals(entry.id))
+						.findFirst().orElseThrow().status);
+				DatabaseMigrator.migrate(url, user, password);
+				assertTrue(indexExists(session.getConnection(), "REPLENISHMENT_ENTRIES", "REPLENISHMENT_OPEN_KEY_INX"));
+			} finally {
+				data.deleteAll(java.util.List.of(first.id, second.id));
+			}
+		} finally {
+			session.close();
 		}
 	}
 

@@ -19,6 +19,7 @@ import com.openbravo.pos.theme.RetailPOSColors;
 import com.openbravo.pos.theme.RetailPOSTheme;
 import com.openbravo.pos.util.PosIcons;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.GridBagConstraints;
@@ -35,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.BorderFactory;
@@ -44,6 +46,7 @@ import javax.swing.Box;
 import javax.swing.JList;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import com.openbravo.data.gui.JConfirmationDialog;
 import javax.swing.JPanel;
@@ -55,6 +58,8 @@ import javax.swing.text.JTextComponent;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.KeyStroke;
+import javax.swing.AbstractAction;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.event.DocumentEvent;
@@ -68,17 +73,37 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private DataLogicReplenishment data;
 	private DataLogicSales sales;
 	private DataLogicCustomers customers;
-	private final DefaultTableModel model = new DefaultTableModel(
-			new Object[]{AppLocal.getIntString("Replenishment.Type"), AppLocal.getIntString("Replenishment.Product"),
-					AppLocal.getIntString("Replenishment.CustomerColumn"),
-					AppLocal.getIntString("Replenishment.Status"), AppLocal.getIntString("Replenishment.Added")},
-			0) {
+	private final DefaultTableModel model = new DefaultTableModel(new Object[]{"",
+			AppLocal.getIntString("Replenishment.Type"), AppLocal.getIntString("Replenishment.Product"),
+			AppLocal.getIntString("Replenishment.CustomerColumn"), AppLocal.getIntString("Replenishment.Status"),
+			AppLocal.getIntString("Replenishment.Added")}, 0) {
 		@Override
 		public boolean isCellEditable(int row, int column) {
 			return false;
 		}
+		@Override
+		public Class<?> getColumnClass(int column) {
+			return column == 0 ? Boolean.class : String.class;
+		}
 	};
 	private final JTable table = new JTable(model) {
+		@Override
+		protected void processMouseEvent(java.awt.event.MouseEvent event) {
+			if (event.getID() == java.awt.event.MouseEvent.MOUSE_PRESSED && columnAtPoint(event.getPoint()) == 0) {
+				int row = rowAtPoint(event.getPoint());
+				if (row >= 0) {
+					if (isRowSelected(row))
+						removeRowSelectionInterval(row, row);
+					else
+						addRowSelectionInterval(row, row);
+					requestFocusInWindow();
+				}
+				return;
+			}
+			if (event.getID() == java.awt.event.MouseEvent.MOUSE_RELEASED && columnAtPoint(event.getPoint()) == 0)
+				return;
+			super.processMouseEvent(event);
+		}
 		@Override
 		public void doLayout() {
 			super.doLayout();
@@ -88,9 +113,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		public String getToolTipText(java.awt.event.MouseEvent event) {
 			int row = rowAtPoint(event.getPoint());
 			int column = columnAtPoint(event.getPoint());
-			if (row >= 0 && entries != null && (column == 1 || column == 2)) {
+			if (row >= 0 && entries != null && (column == 2 || column == 3)) {
 				ReplenishmentEntry entry = entries.get(convertRowIndexToModel(row));
-				return column == 1
+				return column == 2
 						? entry.productId == null
 								? entry.displayName()
 								: (displayReference(entry.name, entry.reference) + " "
@@ -129,6 +154,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private javax.swing.Timer filterTimer;
 	private final Map<String, JToggleButton> statusButtons = new HashMap<>();
 	private JLabel queueFilterLabel;
+	private JPanel detailCards;
+	private JLabel selectionSummary;
+	private JButton pendingAction, orderedAction, receivedAction, deleteAction;
 
 	@Override
 	public void init(AppView app) throws BeanFactoryException {
@@ -168,6 +196,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				selectedStatus = status;
 				selectedType = "ALL";
 				queueFilterLabel.setText(" ");
+				clearSelectionForFilter();
 				load("", false);
 			});
 		}
@@ -184,14 +213,16 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel north = new JPanel(new BorderLayout());
 		north.add(header, BorderLayout.NORTH);
 		north.add(filters, BorderLayout.SOUTH);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		table.setRowHeight(48);
 		table.setShowHorizontalLines(true);
 		table.setShowVerticalLines(false);
 		table.setGridColor(RetailPOSColors.border());
 		table.setIntercellSpacing(new java.awt.Dimension(0, 1));
 		table.getTableHeader().setDefaultRenderer((t, value, selected, focused, row, column) -> {
-			JLabel headerLabel = new JLabel(valueOrEmpty((String) value));
+			JLabel headerLabel = new JLabel(column == 0
+					? table.getRowCount() > 0 && table.getSelectedRowCount() == table.getRowCount() ? "☑" : "☐"
+					: valueOrEmpty((String) value));
 			headerLabel.setFont(t.getTableHeader().getFont());
 			headerLabel.setForeground(RetailPOSColors.ink());
 			headerLabel.setBackground(RetailPOSColors.surface100());
@@ -200,11 +231,50 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
 			return headerLabel;
 		});
+		table.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent event) {
+				if (table.columnAtPoint(event.getPoint()) != 0)
+					return;
+				if (table.getSelectedRowCount() == table.getRowCount())
+					clearSelectedRows();
+				else if (table.getRowCount() > 0)
+					table.setRowSelectionInterval(0, table.getRowCount() - 1);
+			}
+		});
+		table.getInputMap().put(KeyStroke.getKeyStroke("SPACE"), "toggleRequest");
+		table.getActionMap().put("toggleRequest", new AbstractAction() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent event) {
+				int row = table.getSelectionModel().getLeadSelectionIndex();
+				if (row >= 0 && row < table.getRowCount()) {
+					if (table.isRowSelected(row))
+						table.removeRowSelectionInterval(row, row);
+					else
+						table.addRowSelectionInterval(row, row);
+				}
+			}
+		});
+		table.getInputMap().put(KeyStroke.getKeyStroke("ESCAPE"), "clearRequests");
+		table.getActionMap().put("clearRequests", new AbstractAction() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent event) {
+				clearSelectedRows();
+			}
+		});
 		table.getSelectionModel().addListSelectionListener(e -> {
-			if (!loading && !e.getValueIsAdjusting() && table.getSelectedRow() >= 0)
-				loadEntry(entries.get(table.getSelectedRow()));
-			if (!loading && !e.getValueIsAdjusting())
-				updateDeliveredEnabled();
+			if (!loading && !e.getValueIsAdjusting()) {
+				for (int row = 0; row < model.getRowCount(); row++)
+					model.setValueAt(table.isRowSelected(row), row, 0);
+				table.getTableHeader().repaint();
+				if (table.getSelectedRowCount() == 1 && entries != null) {
+					ReplenishmentEntry selectedEntry = entries
+							.get(table.convertRowIndexToModel(table.getSelectedRow()));
+					if (editingEntry == null || !editingEntry.id.equals(selectedEntry.id))
+						loadEntry(selectedEntry);
+				}
+				updateSelectionView();
+			}
 		});
 		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			{
@@ -229,7 +299,25 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				return component;
 			}
 		});
-		table.getColumnModel().getColumn(3).setCellRenderer(new StatusBadgeRenderer());
+		table.getColumnModel().getColumn(0).setCellRenderer((grid, value, selected, focused, row, column) -> {
+			JCheckBox check = new JCheckBox();
+			check.setHorizontalAlignment(JLabel.CENTER);
+			check.setSelected(Boolean.TRUE.equals(value));
+			check.setOpaque(true);
+			check.setBackground(selected ? RetailPOSColors.surface200() : RetailPOSColors.surface100());
+			check.setForeground(RetailPOSColors.ink());
+			check.setBorderPainted(true);
+			check.setBorder(
+					BorderFactory
+							.createCompoundBorder(
+									selected
+											? BorderFactory.createMatteBorder(1, 0, 1, 0,
+													RetailPOSColors.borderStrong())
+											: BorderFactory.createEmptyBorder(1, 0, 1, 0),
+									BorderFactory.createEmptyBorder(0, 4, 0, 4)));
+			return check;
+		});
+		table.getColumnModel().getColumn(4).setCellRenderer(new StatusBadgeRenderer());
 		DefaultTableCellRenderer wrappingRenderer = new DefaultTableCellRenderer() {
 			@Override
 			public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
@@ -252,8 +340,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				return name;
 			}
 		};
-		table.getColumnModel().getColumn(1).setCellRenderer(new ProductRenderer());
-		table.getColumnModel().getColumn(2).setCellRenderer(wrappingRenderer);
+		table.getColumnModel().getColumn(2).setCellRenderer(new ProductRenderer());
+		table.getColumnModel().getColumn(3).setCellRenderer(wrappingRenderer);
 		JPanel list = new JPanel(new BorderLayout());
 		JScrollPane tableScroll = new JScrollPane(table);
 		tableScroll.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
@@ -265,6 +353,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JButton received = new JButton(AppLocal.getIntString("Replenishment.FormReceived"));
 		delivered = new JButton(AppLocal.getIntString("Replenishment.FormDelivered"));
 		JButton delete = new JButton(AppLocal.getIntString("Replenishment.Delete"));
+		pendingAction = pending;
+		orderedAction = ordered;
+		receivedAction = received;
+		deleteAction = delete;
 		delete.setBackground(RetailPOSColors.surface100());
 		delete.setForeground(RetailPOSColors.dangerText());
 		delete.putClientProperty("FlatLaf.style",
@@ -298,25 +390,29 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		delivered.setEnabled(false);
 		delivered.setToolTipText(AppLocal.getIntString("Replenishment.DeliveryHint"));
 		javax.swing.table.TableColumnModel columns = table.getColumnModel();
+		columns.getColumn(0).setMinWidth(48);
+		columns.getColumn(0).setPreferredWidth(48);
+		columns.getColumn(0).setMaxWidth(48);
 		java.awt.FontMetrics typeMetrics = table.getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM);
 		int typeWidth = Math.max(typeMetrics.stringWidth(AppLocal.getIntString("Replenishment.Replenishment")),
 				typeMetrics.stringWidth(AppLocal.getIntString("Replenishment.Order"))) + 16;
-		columns.getColumn(0).setMinWidth(typeWidth);
-		columns.getColumn(0).setPreferredWidth(typeWidth);
-		columns.getColumn(0).setMaxWidth(typeWidth);
-		columns.getColumn(1).setPreferredWidth(260);
-		columns.getColumn(2).setMinWidth(180);
-		columns.getColumn(2).setPreferredWidth(200);
-		columns.getColumn(2).setMaxWidth(210);
-		columns.getColumn(3).setPreferredWidth(105);
-		columns.getColumn(3).setMinWidth(95);
-		columns.getColumn(3).setMaxWidth(125);
+		columns.getColumn(1).setMinWidth(typeWidth);
+		columns.getColumn(1).setPreferredWidth(typeWidth);
+		columns.getColumn(1).setMaxWidth(typeWidth);
+		columns.getColumn(2).setMinWidth(115);
+		columns.getColumn(2).setPreferredWidth(260);
+		columns.getColumn(3).setMinWidth(155);
+		columns.getColumn(3).setPreferredWidth(200);
+		columns.getColumn(3).setMaxWidth(210);
+		columns.getColumn(4).setPreferredWidth(105);
+		columns.getColumn(4).setMinWidth(95);
+		columns.getColumn(4).setMaxWidth(125);
 		int dateWidth = tabularDateWidth(table.getFontMetrics(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f)),
 				"00/00/00-00:00") + 16;
-		columns.getColumn(4).setMinWidth(dateWidth);
-		columns.getColumn(4).setPreferredWidth(dateWidth);
-		columns.getColumn(4).setMaxWidth(dateWidth);
-		table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+		columns.getColumn(5).setMinWidth(dateWidth);
+		columns.getColumn(5).setPreferredWidth(dateWidth);
+		columns.getColumn(5).setMaxWidth(dateWidth);
+		table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
 			@Override
 			public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
 					boolean focused, int row, int column) {
@@ -384,7 +480,17 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		left.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
 		left.add(north, BorderLayout.NORTH);
 		left.add(list, BorderLayout.CENTER);
-		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, createForm());
+		detailCards = new JPanel(new CardLayout());
+		detailCards.add(createForm(), "form");
+		JPanel selectionPanel = new JPanel(new BorderLayout(8, 8));
+		selectionPanel.setBorder(BorderFactory.createEmptyBorder(20, 16, 20, 16));
+		selectionSummary = new JLabel();
+		selectionPanel.add(selectionSummary, BorderLayout.NORTH);
+		JButton clearSelection = new JButton(AppLocal.getIntString("Replenishment.ClearSelection"));
+		clearSelection.addActionListener(e -> clearSelectedRows());
+		selectionPanel.add(clearSelection, BorderLayout.SOUTH);
+		detailCards.add(selectionPanel, "selection");
+		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, detailCards);
 		split.setResizeWeight(1.0);
 		split.setDividerLocation(0.72);
 		split.setDividerSize(2);
@@ -394,8 +500,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			splitUI.getDivider().setBackground(RetailPOSColors.border());
 		}
 		add(split, BorderLayout.CENTER);
-		search.addActionListener(e -> load(search.getText(), false));
-		filterTimer = new javax.swing.Timer(250, e -> load(search.getText(), false));
+		search.addActionListener(e -> {
+			clearSelectionForFilter();
+			load(search.getText(), false);
+		});
+		filterTimer = new javax.swing.Timer(250, e -> {
+			clearSelectionForFilter();
+			load(search.getText(), false);
+		});
 		filterTimer.setRepeats(false);
 		search.getDocument().addDocumentListener(new DocumentListener() {
 			public void insertUpdate(DocumentEvent e) {
@@ -418,19 +530,25 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		javax.swing.SwingUtilities.invokeLater(() -> formCode.requestFocusInWindow());
 	}
 	private void deleteSelected() {
-		int row = table.getSelectedRow();
-		if (row < 0)
+		List<String> ids = selectedIds();
+		if (ids.isEmpty())
 			return;
-		ReplenishmentEntry entry = entries.get(row);
-		int answer = JConfirmationDialog.show(this, AppLocal.getIntString("Replenishment.ConfirmDelete"),
+		if (ids.size() > 1 && save.isEnabled()) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.UnsavedBulkEdits"));
+			return;
+		}
+		int answer = JConfirmationDialog.show(this,
+				ids.size() == 1
+						? AppLocal.getIntString("Replenishment.ConfirmDelete")
+						: String.format(AppLocal.getIntString("Replenishment.ConfirmDeleteMultiple"), ids.size()),
 				AppLocal.getIntString("Replenishment.Delete"), AppLocal.getIntString("Button.Cancel"),
 				AppLocal.getIntString("Replenishment.Delete"), true);
 		if (answer != JOptionPane.YES_OPTION)
 			return;
 		try {
-			data.delete(entry.id);
+			data.deleteAll(ids);
 			clearForm();
-			load("", false);
+			load(search.getText(), false);
 		} catch (BasicException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage());
 		}
@@ -963,7 +1081,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			for (ReplenishmentEntry e : entries) {
 				if (e.id.equals(selectId))
 					selectedRow = model.getRowCount();
-				model.addRow(new Object[]{
+				model.addRow(new Object[]{false,
 						e.customerId == null
 								? AppLocal.getIntString("Replenishment.Replenishment")
 								: AppLocal.getIntString("Replenishment.Order"),
@@ -980,7 +1098,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 					clearForm();
 			}
 			loading = false;
-			updateDeliveredEnabled();
+			updateSelectionView();
 			return true;
 		} catch (BasicException e) {
 			loading = false;
@@ -1019,8 +1137,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		updateSaveState();
 	}
 	private void resizeRows() {
-		int productWidth = table.getColumnModel().getColumn(1).getWidth();
-		int customerWidth = table.getColumnModel().getColumn(2).getWidth();
+		int productWidth = table.getColumnModel().getColumn(2).getWidth();
+		int customerWidth = table.getColumnModel().getColumn(3).getWidth();
 		if (productWidth <= 0 || customerWidth <= 0 || entries == null)
 			return;
 		for (int row = 0; row < table.getRowCount(); row++) {
@@ -1238,22 +1356,84 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 	}
 	private void updateDeliveredEnabled() {
-		int row = table.getSelectedRow();
-		delivered.setEnabled(row >= 0 && entries != null && "RECEIVED".equals(entries.get(row).status)
-				&& entries.get(row).customerId != null);
+		if (delivered != null)
+			delivered.setEnabled(
+					selectedEntries().stream().anyMatch(e -> "RECEIVED".equals(e.status) && e.customerId != null));
 	}
 	private void change(String status) {
-		int row = table.getSelectedRow();
-		if (row < 0)
+		List<ReplenishmentEntry> selected = selectedEntries();
+		if (selected.isEmpty())
 			return;
+		if (selected.size() > 1 && save.isEnabled()) {
+			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.UnsavedBulkEdits"));
+			return;
+		}
+		List<String> ids = new ArrayList<>();
+		for (ReplenishmentEntry entry : selected)
+			if (!"DELIVERED".equals(status) || ("RECEIVED".equals(entry.status) && entry.customerId != null))
+				ids.add(entry.id);
+		int skipped = selected.size() - ids.size();
+		if (ids.isEmpty()) {
+			JOptionPane.showMessageDialog(this,
+					String.format(AppLocal.getIntString("Replenishment.SkippedDelivery"), skipped));
+			return;
+		}
 		try {
-			String id = entries.get(row).id;
-			data.updateStatus(id, status, app.getAppUserView().getUser().getId());
-			load("", false, id);
+			data.updateStatuses(ids, status, app.getAppUserView().getUser().getId());
+			load(search.getText(), false, selected.size() == 1 ? ids.get(0) : null);
+			if (selected.size() > 1 || skipped > 0)
+				JOptionPane.showMessageDialog(this, String.format(AppLocal.getIntString("Replenishment.BulkResult"),
+						ids.size(), statusLabel(status), skipped));
 		} catch (BasicException e) {
-			logStatusFailure("change", status, entries.get(row).id, e);
+			logStatusFailure("change", status, null, e);
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.StatusUpdateFailed"));
 		}
+	}
+	private List<ReplenishmentEntry> selectedEntries() {
+		List<ReplenishmentEntry> selected = new ArrayList<>();
+		if (entries != null)
+			for (int row : table.getSelectedRows())
+				selected.add(entries.get(table.convertRowIndexToModel(row)));
+		return selected;
+	}
+	private List<String> selectedIds() {
+		List<String> ids = new ArrayList<>();
+		for (ReplenishmentEntry entry : selectedEntries())
+			ids.add(entry.id);
+		return ids;
+	}
+	private void clearSelectedRows() {
+		table.clearSelection();
+	}
+	private void clearSelectionForFilter() {
+		if (table.getSelectedRowCount() > 1 && !save.isEnabled()) {
+			clearForm();
+			return;
+		}
+		clearSelectedRows();
+	}
+	private void updateSelectionView() {
+		int count = table.getSelectedRowCount();
+		if (detailCards == null)
+			return;
+		((CardLayout) detailCards.getLayout()).show(detailCards, count > 1 ? "selection" : "form");
+		selectionSummary.setText(String.format(AppLocal.getIntString("Replenishment.SelectedCount"), count));
+		pendingAction.setText(count > 1
+				? AppLocal.getIntString("Replenishment.FormPending") + " (" + count + ")"
+				: AppLocal.getIntString("Replenishment.FormPending"));
+		orderedAction.setText(count > 1
+				? AppLocal.getIntString("Replenishment.FormOrdered") + " (" + count + ")"
+				: AppLocal.getIntString("Replenishment.FormOrdered"));
+		receivedAction.setText(count > 1
+				? AppLocal.getIntString("Replenishment.FormReceived") + " (" + count + ")"
+				: AppLocal.getIntString("Replenishment.FormReceived"));
+		deleteAction.setText(count > 1
+				? AppLocal.getIntString("Replenishment.Delete") + " (" + count + ")"
+				: AppLocal.getIntString("Replenishment.Delete"));
+		delivered.setText(count > 1
+				? AppLocal.getIntString("Replenishment.FormDelivered") + " (" + count + ")"
+				: AppLocal.getIntString("Replenishment.FormDelivered"));
+		updateDeliveredEnabled();
 	}
 	static void logStatusFailure(String action, String status, String id, BasicException failure) {
 		Throwable cause = failure;
