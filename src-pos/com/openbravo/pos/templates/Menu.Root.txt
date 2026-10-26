@@ -24,7 +24,6 @@
         submenu.addPanel("/com.openbravo/images/menu-stock-movement.png", "Menu.StockMovement", "com.openbravo.pos.inventory.StockManagement");
     submenu = group.addSubmenu("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesManagement", "com.openbravo.pos.forms.MenuSalesManagement");
         submenu.addTitle("Menu.SalesManagement.Reports");
-        submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesSummary", "com.openbravo.pos.reports.JPanelSalesSummary");
         submenu.addPanel("/com/openbravo/images/menu-product-sales.png", "Menu.ProductSalesSummary", "com.openbravo.pos.reports.JPanelProductSales");
         submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.PaymentSalesSummary", "com.openbravo.pos.reports.JPanelPaymentSales");
         submenu.addPanel("/com/openbravo/images/menu-inventory-current.png", "Menu.LowStockSummary", "com.openbravo.pos.reports.JPanelLowStock");

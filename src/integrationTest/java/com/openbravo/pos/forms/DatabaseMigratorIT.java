@@ -19,6 +19,7 @@ import java.util.UUID;
 import org.flywaydb.core.api.migration.Context;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -245,14 +246,14 @@ public class DatabaseMigratorIT {
 			assertTrue(resourceContains(connection, "Printer.Ticket", "printChange()"));
 			assertTrue(resourceContains(connection, "Printer.TicketPreview", "Entregat:"));
 			assertTrue(resourceContains(connection, "Printer.TicketPreview", "printChange()"));
-			assertTrue(roleContains(connection, "0", "JPanelSalesSummary"));
+			assertFalse(roleContains(connection, "0", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "0", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "0", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "0", "JPanelLowStock"));
 			assertTrue(roleContains(connection, "0", "JPanelTaxSummary"));
 			assertTrue(roleContains(connection, "0", "JPanelCashClosing"));
 			assertTrue(roleContains(connection, "0", "JPanelCustomerDebt"));
-			assertTrue(roleContains(connection, "1", "JPanelSalesSummary"));
+			assertFalse(roleContains(connection, "1", "JPanelSalesSummary"));
 			assertTrue(roleContains(connection, "1", "JPanelProductSales"));
 			assertTrue(roleContains(connection, "1", "JPanelPaymentSales"));
 			assertTrue(roleContains(connection, "1", "JPanelLowStock"));

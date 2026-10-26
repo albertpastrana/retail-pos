@@ -155,8 +155,6 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		submenu = group.addSubmenu("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesManagement",
 				"com.openbravo.pos.forms.MenuSalesManagement");
 		submenu.addTitle("Menu.SalesManagement.Reports");
-		submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.SalesSummary",
-				"com.openbravo.pos.reports.JPanelSalesSummary", com.openbravo.pos.reports.JPanelSalesSummary.class);
 		submenu.addPanel("/com/openbravo/images/menu-product-sales.png", "Menu.ProductSalesSummary",
 				"com.openbravo.pos.reports.JPanelProductSales", com.openbravo.pos.reports.JPanelProductSales.class);
 		submenu.addPanel("/com/openbravo/images/menu-sales-reports.png", "Menu.PaymentSalesSummary",

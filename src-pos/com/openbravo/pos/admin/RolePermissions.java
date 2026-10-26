@@ -114,7 +114,6 @@ final class RolePermissions {
 			case "com.openbravo.pos.inventory.ReplenishmentPanel" -> "Menu.Replenishment";
 			case "com.openbravo.pos.inventory.StockManagement" -> "Menu.StockMovement";
 			case "com.openbravo.pos.forms.MenuSalesManagement" -> "Menu.SalesManagement";
-			case "com.openbravo.pos.reports.JPanelSalesSummary" -> "Menu.SalesSummary";
 			case "com.openbravo.pos.reports.JPanelProductSales" -> "Menu.ProductSalesSummary";
 			case "com.openbravo.pos.reports.JPanelPaymentSales" -> "Menu.PaymentSalesSummary";
 			case "com.openbravo.pos.reports.JPanelLowStock" -> "Menu.LowStockSummary";
