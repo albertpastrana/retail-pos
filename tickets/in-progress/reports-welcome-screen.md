@@ -118,7 +118,6 @@ with its number:
 - Cash not closed for N days (`CLOSEDCASH.DATEEND IS NULL`) → Close cash
 - Best sellers below their stock minimum (`STOCKCURRENT` vs `STOCKLEVEL.STOCKSECURITY`, as `LowStockRepository` already joins them, restricted to the period's top sellers) → Low stock report
 - Customer debt outstanding and the oldest one (`CUSTOMERS.CURDEBT`) → Customer debt report
-- A record worth knowing: best weekday of the year, first week over X, a category up N points
 
 A shop owner does not open a POS to browse data; they open it to find out
 whether anything needs them today. This block is the difference between a
@@ -126,7 +125,7 @@ screen they visit and one they check.
 
 **5. Below the fold: products, categories, payment mix, hours.**
 
-- Top 5 products by takings, each with its year-ago delta — the movers matter more than the ranking, which barely changes.
+- Top products by units sold, each with its year-ago delta — the movers matter more than the ranking, which barely changes.
 - Category share, with the points gained or lost against last year — where the mix is drifting.
 - Payment mix (cash / card / voucher-debt) — drives how much change to keep and what the card fees really cost.
 - Average sales per hour of day over the last 30 days — the only view that answers opening hours and staffing, and it is not derivable from any current report.
@@ -176,6 +175,27 @@ Follows `design-system/README.md`; every value is a token, nothing screen-local.
 3. Things to look at (cash, low stock, debt), each linking to its screen.
 4. Products, categories, payment mix.
 5. Sales per hour.
+
+### Slice 4 decisions
+
+- Category share is by top-level category only. Walk `CATEGORIES.PARENTID` to
+  the root and add subcategory sales to that root. Tapping a category expands
+  its direct subcategories in place; their percentage is of the parent.
+- There is no record notice on this screen.
+- The product and category blocks link to `Vendes per producte`
+  (`JPanelProductSales`). Category opens it grouped by category by default.
+  The payment block links to `Vendes per mètode de pagament`.
+- The product block shows the top 6 products. The category block shows the top
+  5 categories plus one `Altres` row for the remaining categories.
+- Top products are ranked by units sold, not by euro takings.
+- A later slice, not part of this implementation, adds the fourth card
+  `Reposició i encàrrecs` and the per-hour section. Its definitions are:
+  customer orders delivered are `STATUS='DELIVERED'` with a customer and
+  `UPDATED_AT` in the period; show their average `CREATED_AT` to `UPDATED_AT`
+  days; and count entries created in the period. The now block shows
+  customer-linked `RECEIVED` orders waiting for pickup, `ORDERED` orders, and
+  `PENDING` orders with the oldest age. The per-hour section uses the last 30
+  closed days and does not follow the selected period.
 
 ## Done when
 
@@ -251,7 +271,7 @@ The landing view is being implemented on the task branch:
   controls.
 
 The ticket remains open. The products/categories/payment/hour blocks,
-the optional record notice, and manual
+the per-hour section, and manual
 visual checks in all three languages, both themes and the smallest supported
 window are still outstanding. No `Shipped` section is added until all
 `Done when` checks are observable.
@@ -269,6 +289,12 @@ landing view and leaves the remaining slices tracked here.
 
 ## Open questions
 
+- Top products are currently ranked per variant, so the same product can appear
+  once per colour or size. Should the top 5 group variants under their parent
+  product?
+- Payment refunds are classified by their tender family: `cashrefund` counts
+  as cash, `magcardrefund` as card, and other refund suffixes stay with their
+  stored payment family rather than falling into an unrelated category.
 - Week start: Monday as in the mockup; the last-year baseline starts 364 days
   earlier so its seven bars use the same weekdays.
 - 29 February and month lengths: a year-ago baseline is cut at the same day-of-year. Confirm that day-of-year (not same weekday) is the right alignment for month and year totals; the week card aligns by weekday.

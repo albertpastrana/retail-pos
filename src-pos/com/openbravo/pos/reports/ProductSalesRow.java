@@ -4,6 +4,7 @@ package com.openbravo.pos.reports;
 public final class ProductSalesRow {
 
 	private final String reference;
+	private final String productId;
 	private final String productName;
 	private final String categoryName;
 	private final String categoryId;
@@ -14,16 +15,22 @@ public final class ProductSalesRow {
 	private final double amount;
 
 	public ProductSalesRow(String reference, String productName, String categoryName, double units, double amount) {
-		this(reference, productName, categoryName, null, "", false, units, amount);
+		this(null, reference, productName, categoryName, null, "", false, units, amount, 1);
 	}
 
 	public ProductSalesRow(String reference, String productName, String categoryName, String categoryId, String brand,
 			boolean manual, double units, double amount) {
-		this(reference, productName, categoryName, categoryId, brand, manual, units, amount, 1);
+		this(null, reference, productName, categoryName, categoryId, brand, manual, units, amount, 1);
 	}
 
 	public ProductSalesRow(String reference, String productName, String categoryName, String categoryId, String brand,
 			boolean manual, double units, double amount, long lineCount) {
+		this(null, reference, productName, categoryName, categoryId, brand, manual, units, amount, lineCount);
+	}
+
+	ProductSalesRow(String productId, String reference, String productName, String categoryName, String categoryId,
+			String brand, boolean manual, double units, double amount, long lineCount) {
+		this.productId = productId;
 		this.reference = reference;
 		this.productName = productName;
 		this.categoryName = categoryName;
@@ -37,6 +44,10 @@ public final class ProductSalesRow {
 
 	public String getReference() {
 		return reference;
+	}
+
+	public String getProductId() {
+		return productId;
 	}
 
 	public String getProductName() {

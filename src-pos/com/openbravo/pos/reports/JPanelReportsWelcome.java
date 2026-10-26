@@ -18,18 +18,23 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.FontMetrics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.List;
+import javax.swing.Action;
 import javax.swing.border.AbstractBorder;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -52,6 +57,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private final MenuDefinition reportsMenu;
 	private final SalesSummaryRepository repository = new SalesSummaryRepository();
 	private final SalesTrendRepository trends = new SalesTrendRepository();
+	private final WelcomeSalesRepository whatSoldRepository = new WelcomeSalesRepository();
 	private final JButton[] periodButtons = new JButton[ReportsWelcomePeriod.values().length];
 	private final JLabel[] selectedTags = new JLabel[ReportsWelcomePeriod.values().length];
 	private final JToggleButton[] segments = new JToggleButton[ReportsWelcomePeriod.values().length];
@@ -95,6 +101,9 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private JPanel chartPartialLegend;
 	private JLabel chartPartialLabel;
 	private SalesTrendChart chart;
+	private JPanel whatSold;
+	private WelcomeSalesRepository.WelcomeSalesData whatSoldData;
+	private int expandedCategory = -1;
 	private JLabel loyaltyCount;
 	private JLabel loyaltyValue;
 	private JLabel loyaltyDelta;
@@ -231,6 +240,7 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		JLabel caption = new JLabel(AppLocal.getIntString("reports.welcome.cardsCaption"));
 		caption.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
 		caption.setForeground(RetailPOSColors.inkMuted());
+		caption.setAlignmentX(Component.LEFT_ALIGNMENT);
 		heading.add(title);
 		heading.add(caption);
 		section.add(heading, BorderLayout.NORTH);
@@ -432,7 +442,9 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		aboveChart.add(Box.createVerticalStrut(8));
 		aboveChart.add(figures);
 		panel.add(aboveChart, BorderLayout.NORTH);
-		panel.add(createOverview(), BorderLayout.CENTER);
+		whatSold = createWhatSold();
+		JPanel overview = createOverview();
+		panel.add(overview, BorderLayout.CENTER);
 		selectPeriod(selected);
 		return panel;
 	}
@@ -505,6 +517,452 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		return panel;
 	}
 
+	private JPanel createWhatSold() {
+		JPanel panel = new JPanel(new BorderLayout(0, 10));
+		panel.setOpaque(false);
+		JPanel heading = new JPanel();
+		heading.setOpaque(false);
+		heading.setLayout(new BoxLayout(heading, BoxLayout.Y_AXIS));
+		JPanel title = new JPanel(new FlowLayout(FlowLayout.LEADING, 8, 0));
+		title.setOpaque(false);
+		title.setAlignmentX(Component.LEFT_ALIGNMENT);
+		JLabel label = new JLabel();
+		label.setName("whatSoldTitle");
+		label.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(20f));
+		JLabel chip = new JLabel(AppLocal.getIntString("reports.welcome.followPeriod"));
+		chip.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(11f));
+		chip.setForeground(RetailPOSColors.ink());
+		chip.setOpaque(true);
+		chip.setBackground(RetailPOSColors.surface200());
+		chip.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+		title.add(label);
+		title.add(chip);
+		heading.add(title);
+		JLabel caption = new JLabel();
+		caption.setName("whatSoldCaption");
+		caption.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(12f));
+		caption.setForeground(RetailPOSColors.inkMuted());
+		caption.setAlignmentX(Component.LEFT_ALIGNMENT);
+		heading.add(caption);
+		label.setText(AppLocal.getIntString("reports.welcome.whatSold") + " · "
+				+ ReportsWelcomeLabels.title(selected, focusAsOf));
+		caption.setText(
+				selected.rangeLabel(focusAsOf) + " · " + AppLocal.getIntString("reports.welcome.whatSoldBaseline"));
+		panel.add(heading, BorderLayout.NORTH);
+		WhatSoldGrid cards = new WhatSoldGrid();
+		cards.setOpaque(false);
+		cards.setName("whatSoldCards");
+		panel.setName("whatSold");
+		cards.addCard(new RoundedPanel(16, RetailPOSColors.surface100()), 0, 0);
+		cards.addCard(new RoundedPanel(16, RetailPOSColors.surface100()), 1, 0);
+		cards.addCard(new RoundedPanel(16, RetailPOSColors.surface100()), 0, 1);
+		cards.addCard(Box.createGlue(), 1, 1);
+		panel.add(cards, BorderLayout.CENTER);
+		return panel;
+	}
+
+	private void showWhatSold() {
+		if (whatSold == null || whatSoldData == null) {
+			return;
+		}
+		JPanel heading = (JPanel) whatSold.getComponent(0);
+		JPanel title = (JPanel) heading.getComponent(0);
+		((JLabel) title.getComponent(0)).setText(AppLocal.getIntString("reports.welcome.whatSold") + " · "
+				+ ReportsWelcomeLabels.title(selected, focusAsOf));
+		((JLabel) heading.getComponent(1)).setText(selected.rangeLabel(focusAsOf) + " · "
+				+ (ReportsWelcomeLabels.current(selected, focusAsOf, asOf)
+						? AppLocal.getIntString("reports.welcome.whatSoldBaseline")
+						: selected.baselineLabel()));
+		WhatSoldGrid cards = (WhatSoldGrid) whatSold.getComponent(1);
+		cards.removeAll();
+		cards.addCard(productCard(), 0, 0);
+		cards.addCard(categoryCard(), 1, 0);
+		cards.addCard(paymentCard(), 0, 1);
+		cards.addCard(Box.createGlue(), 1, 1);
+		cards.revalidate();
+		cards.repaint();
+		whatSold.revalidate();
+	}
+
+	private JPanel productCard() {
+		JPanel card = blockPanel(AppLocal.getIntString("reports.welcome.topProducts"), "Menu.ProductSalesSummary",
+				"reports.welcome.viewProducts");
+		JPanel rows = (JPanel) card.getClientProperty("rows");
+		int amountWidth = widestNumberWidth(whatSoldData.getProducts().stream()
+				.map(insight -> Formats.CURRENCY.formatValue(insight.getRow().getAmount()))
+				.collect(java.util.stream.Collectors.toList()), 70);
+		List<String> productDeltas = whatSoldData.getProducts().stream()
+				.map(insight -> insight.getPrevious() == null
+						? AppLocal.getIntString("reports.welcome.noPreviousShort")
+						: delta(percent(insight.getRow().getAmount(), insight.getPrevious())))
+				.collect(java.util.stream.Collectors.toList());
+		int deltaWidth = widestNumberWidth(productDeltas, 70);
+		int rank = 1;
+		for (WelcomeSalesRepository.ProductInsight insight : whatSoldData.getProducts()) {
+			ProductSalesRow row = insight.getRow();
+			SharedRow line = new SharedRow();
+			JLabel number = mono(Integer.toString(rank++));
+			number.setForeground(RetailPOSColors.inkMuted());
+			line.addFixed(number, 28);
+			JPanel names = new JPanel();
+			names.setOpaque(false);
+			names.setLayout(new BoxLayout(names, BoxLayout.Y_AXIS));
+			EllipsisLabel name = new EllipsisLabel(row.getProductName());
+			name.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(14f));
+			name.setForeground(RetailPOSColors.ink());
+			name.setToolTipText(row.getProductName());
+			JLabel detail = label(insight.getCategoryPath() + " · " + formatUnits(row.getUnits()), 11,
+					RetailPOSColors.inkMuted());
+			names.add(name);
+			names.add(detail);
+			JLabel value = mono(Formats.CURRENCY.formatValue(row.getAmount()));
+			JLabel delta = deltaLabel(
+					insight.getPrevious() == null ? null : percent(row.getAmount(), insight.getPrevious()), true);
+			line.addFlexible(names);
+			line.addFixed(rightLabel(value, amountWidth), amountWidth);
+			line.addFixed(rightLabel(delta, deltaWidth), deltaWidth);
+			rows.add(line);
+		}
+		finishRows(rows);
+		return card;
+	}
+
+	private JPanel categoryCard() {
+		JPanel card = blockPanel(AppLocal.getIntString("reports.welcome.categoryShare"), "Menu.ProductSalesSummary",
+				"reports.welcome.viewProductsByCategory");
+		JPanel rows = (JPanel) card.getClientProperty("rows");
+		double total = 0;
+		for (WelcomeSalesRepository.CategoryInsight row : whatSoldData.getCategories())
+			total += row.getAmount();
+		final double categoryTotal = total;
+		List<WelcomeSalesRepository.CategoryInsight> visible = whatSoldData.getCategories().subList(0,
+				Math.min(5, whatSoldData.getCategories().size()));
+		if (whatSoldData.getCategories().size() > 5) {
+			double other = 0;
+			double previousOther = 0;
+			for (WelcomeSalesRepository.CategoryInsight row : whatSoldData.getCategories().subList(5,
+					whatSoldData.getCategories().size())) {
+				other += row.getAmount();
+				previousOther += row.getPrevious();
+			}
+			visible = new java.util.ArrayList<>(visible);
+			visible.add(new WelcomeSalesRepository.CategoryInsight(
+					AppLocal.getIntString("reports.welcome.otherCategories", whatSoldData.getCategories().size() - 5),
+					other, previousOther, java.util.Collections.emptyList(),
+					whatSoldData.getCategories().subList(5, whatSoldData.getCategories().size()).stream()
+							.allMatch(WelcomeSalesRepository.CategoryInsight::hasComparablePeriods)));
+		}
+		boolean showPoints = whatSoldData.getCategories().stream()
+				.anyMatch(WelcomeSalesRepository.CategoryInsight::hasComparablePeriods);
+		int nameWidth = categoryNameWidth(visible);
+		int shareWidth = widestNumberWidth(
+				visible.stream().map(row -> formatShare(share(row.getAmount(), categoryTotal)))
+						.collect(java.util.stream.Collectors.toList()),
+				55);
+		int amountWidth = widestNumberWidth(visible.stream().map(row -> Formats.CURRENCY.formatValue(row.getAmount()))
+				.collect(java.util.stream.Collectors.toList()), 75);
+		int pointsWidth = widestNumberWidth(visible.stream()
+				.map(row -> Double.isNaN(points(row, categoryTotal, previousCategoryTotal()))
+						? AppLocal.getIntString("reports.welcome.noPreviousShort")
+						: pointsLabel(points(row, categoryTotal, previousCategoryTotal())).getText())
+				.collect(java.util.stream.Collectors.toList()), 70);
+		for (int i = 0; i < visible.size(); i++) {
+			WelcomeSalesRepository.CategoryInsight row = visible.get(i);
+			final int index = i;
+			JButton button = new JButton();
+			button.setLayout(new BorderLayout(8, 0));
+			button.setHorizontalAlignment(SwingConstants.LEADING);
+			button.setOpaque(false);
+			button.setContentAreaFilled(false);
+			button.setMinimumSize(new Dimension(0, 48));
+			button.setPreferredSize(new Dimension(0, 48));
+			button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+			button.setBorder(index == expandedCategory
+					? BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.borderStrong(), 8, true),
+							BorderFactory.createEmptyBorder())
+					: (i + 1 < visible.size()
+							? BorderFactory.createCompoundBorder(
+									BorderFactory.createMatteBorder(0, 0, 1, 0, RetailPOSColors.border()),
+									BorderFactory.createEmptyBorder())
+							: BorderFactory.createEmptyBorder()));
+			addCategoryGrid(button, row, total, previousCategoryTotal(), nameWidth, index == expandedCategory,
+					showPoints, shareWidth, amountWidth, pointsWidth);
+			if (i < 5) {
+				button.addActionListener(e -> {
+					expandedCategory = expandedCategory == index ? -1 : index;
+					showWhatSold();
+				});
+			}
+			rows.add(button);
+			if (i < 5 && index == expandedCategory) {
+				for (WelcomeSalesRepository.CategoryInsight child : row.getChildren()) {
+					JButton childLabel = new JButton();
+					childLabel.setOpaque(false);
+					childLabel.setContentAreaFilled(false);
+					childLabel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, RetailPOSColors.border()));
+					childLabel.setPreferredSize(new Dimension(0, 48));
+					childLabel.setMinimumSize(new Dimension(0, 48));
+					addCategoryGrid(childLabel, child, row.getAmount(), row.getPrevious(), nameWidth, false, showPoints,
+							shareWidth, amountWidth, pointsWidth);
+					rows.add(childLabel);
+				}
+			}
+		}
+		rows.add(label(
+				AppLocal.getIntString(
+						showPoints ? "reports.welcome.categoryHint" : "reports.welcome.categoryNoPrevious"),
+				11, RetailPOSColors.inkMuted()));
+		finishRows(rows);
+		return card;
+	}
+
+	private JPanel paymentCard() {
+		JPanel card = blockPanel(AppLocal.getIntString("reports.welcome.payments"), "Menu.PaymentSalesSummary",
+				"reports.welcome.viewPayments");
+		JPanel rows = (JPanel) card.getClientProperty("rows");
+		double total = 0;
+		for (WelcomeSalesRepository.PaymentInsight row : whatSoldData.getPayments())
+			total += row.getAmount();
+		final double paymentTotal = total;
+		javax.swing.JComponent stack = new PaymentStackBar(whatSoldData.getPayments());
+		rows.add(stack);
+		List<WelcomeSalesRepository.PaymentInsight> visiblePayments = whatSoldData.getPayments().stream()
+				.filter(row -> row.getAmount() != 0 || row.getPrevious() != 0)
+				.collect(java.util.stream.Collectors.toList());
+		int shareWidth = widestNumberWidth(
+				visiblePayments.stream().map(row -> formatShare(share(row.getAmount(), paymentTotal)))
+						.collect(java.util.stream.Collectors.toList()),
+				55);
+		int amountWidth = widestNumberWidth(
+				visiblePayments.stream().map(row -> Formats.CURRENCY.formatValue(row.getAmount()))
+						.collect(java.util.stream.Collectors.toList()),
+				75);
+		int pointsWidth = widestNumberWidth(visiblePayments.stream().map(row -> {
+			Double points = row.getPrevious() == 0 || paymentTotal == 0 || previousTotal() == 0
+					? null
+					: (row.getAmount() / paymentTotal - row.getPrevious() / previousTotal()) * 100;
+			return pointsLabel(points).getText();
+		}).collect(java.util.stream.Collectors.toList()), 70);
+		for (WelcomeSalesRepository.PaymentInsight row : visiblePayments) {
+			SharedRow line = new SharedRow();
+			JPanel swatch = new JPanel();
+			swatch.setPreferredSize(new Dimension(14, 14));
+			swatch.setBackground(paymentColor(row.getCategory()));
+			line.addFixed(swatch, 14);
+			line.addFlexible(label(paymentLabel(row.getCategory()), 13, RetailPOSColors.ink()));
+			line.addFixed(rightMono(formatShare(share(row.getAmount(), total)), shareWidth), shareWidth);
+			line.addFixed(rightMono(Formats.CURRENCY.formatValue(row.getAmount()), amountWidth), amountWidth);
+			Double points = row.getPrevious() == 0 || paymentTotal == 0 || previousTotal() == 0
+					? null
+					: (row.getAmount() / paymentTotal - row.getPrevious() / previousTotal()) * 100;
+			line.addFixed(rightLabel(pointsLabel(points), pointsWidth), pointsWidth);
+			rows.add(line);
+		}
+		finishRows(rows);
+		return card;
+	}
+
+	private int categoryNameWidth(List<WelcomeSalesRepository.CategoryInsight> rows) {
+		java.awt.Font font = RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f);
+		int width = 0;
+		for (WelcomeSalesRepository.CategoryInsight row : rows) {
+			String affordance = row.getChildren().isEmpty() ? "" : " ›";
+			width = Math.max(width, getFontMetrics(font).stringWidth(row.getName() + affordance));
+		}
+		return width + 12;
+	}
+
+	private void addCategoryGrid(JButton rowButton, WelcomeSalesRepository.CategoryInsight row, double total,
+			double previousTotal, int nameWidth, boolean expanded, boolean showPoints, int shareWidth, int amountWidth,
+			int pointsWidth) {
+		SharedRow rowLayout = new SharedRow();
+		String affordance = row.getChildren().isEmpty() ? "" : expanded ? " ⌄" : " ›";
+		JLabel name = label(row.getName() + affordance, 13, RetailPOSColors.ink());
+		name.setPreferredSize(new Dimension(nameWidth, 30));
+		name.setMaximumSize(new Dimension(nameWidth, 30));
+		javax.swing.JComponent bar = new ShareBar(share(row.getAmount(), total));
+		bar.setPreferredSize(new Dimension(0, 8));
+		JLabel amount = mono(Formats.CURRENCY.formatValue(row.getAmount()));
+		amount.setForeground(RetailPOSColors.inkMuted());
+		rowLayout.addFixed(name, nameWidth);
+		rowLayout.addFlexible(bar);
+		rowLayout.addFixed(rightMono(formatShare(share(row.getAmount(), total)), shareWidth), shareWidth);
+		rowLayout.addFixed(rightLabel(amount, amountWidth), amountWidth);
+		if (showPoints) {
+			rowLayout.addFixed(rightLabel(pointsLabel(points(row, total, previousTotal)), pointsWidth), pointsWidth);
+		}
+		rowButton.setLayout(new BorderLayout());
+		rowButton.add(rowLayout, BorderLayout.CENTER);
+	}
+
+	private JLabel rightMono(String text, int width) {
+		JLabel result = mono(text);
+		return rightLabel(result, width);
+	}
+
+	private int widestNumberWidth(List<String> values, int minimum) {
+		int width = minimum;
+		for (String value : values)
+			width = Math.max(width,
+					getFontMetrics(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(12f)).stringWidth(value) + 8);
+		return width;
+	}
+
+	private JLabel rightLabel(JLabel label, int width) {
+		label.setHorizontalAlignment(SwingConstants.RIGHT);
+		label.setPreferredSize(new Dimension(width, label.getPreferredSize().height));
+		label.setMinimumSize(new Dimension(width, label.getMinimumSize().height));
+		label.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
+		return label;
+	}
+
+	private void finishRows(JPanel rows) {
+		rows.setMaximumSize(new Dimension(Integer.MAX_VALUE, rows.getPreferredSize().height));
+		List<SharedRow> sharedRows = new java.util.ArrayList<>();
+		for (Component component : rows.getComponents()) {
+			if (component instanceof SharedRow)
+				sharedRows.add((SharedRow) component);
+		}
+		for (int i = 0; i < sharedRows.size(); i++) {
+			sharedRows.get(i)
+					.setBorder(i + 1 < sharedRows.size()
+							? BorderFactory.createMatteBorder(0, 0, 1, 0, RetailPOSColors.border())
+							: BorderFactory.createEmptyBorder());
+		}
+	}
+
+	private JPanel blockPanel(String title, String reportKey, String reportLabelKey) {
+		JPanel card = new RoundedPanel(16, RetailPOSColors.surface100());
+		card.setLayout(new BorderLayout(0, 12));
+		card.setBorder(BorderFactory.createCompoundBorder(new RoundedLineBorder(RetailPOSColors.border(), 16),
+				BorderFactory.createEmptyBorder(20, 20, 20, 20)));
+		JPanel content = new JPanel();
+		content.setOpaque(false);
+		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+		JLabel heading = label(title, 17, RetailPOSColors.ink());
+		heading.setFont(RetailPOSTheme.MANROPE_BOLD.deriveFont(17f));
+		heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+		content.add(heading);
+		javax.swing.JComponent titleGap = (javax.swing.JComponent) Box.createVerticalStrut(12);
+		titleGap.setAlignmentX(Component.LEFT_ALIGNMENT);
+		content.add(titleGap);
+		JPanel rows = new JPanel();
+		rows.setOpaque(false);
+		rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+		rows.setAlignmentX(Component.LEFT_ALIGNMENT);
+		content.add(rows);
+		javax.swing.JComponent glue = (javax.swing.JComponent) Box.createVerticalGlue();
+		glue.setAlignmentX(Component.LEFT_ALIGNMENT);
+		content.add(glue);
+		card.putClientProperty("rows", rows);
+		card.add(content, BorderLayout.CENTER);
+		JButton link = reportLink(reportKey, reportLabelKey);
+		if (link != null)
+			card.add(link, BorderLayout.SOUTH);
+		return card;
+	}
+
+	private JButton reportLink(String key, String labelKey) {
+		String target = AppLocal.getIntString(key);
+		for (int i = 0; i < reportsMenu.countMenuElements(); i++) {
+			MenuElement element = reportsMenu.getMenuElement(i);
+			if (element instanceof MenuItemDefinition) {
+				Action action = ((MenuItemDefinition) element).getAction();
+				if (target.equals(action.getValue(Action.NAME))) {
+					JButton button = new JButton(action);
+					button.setText(AppLocal.getIntString(labelKey));
+					button.setHorizontalAlignment(SwingConstants.LEADING);
+					button.setFont(RetailPOSTheme.MANROPE_SEMIBOLD.deriveFont(12f));
+					return button;
+				}
+			}
+		}
+		return null;
+	}
+
+	private JLabel label(String text, float size, java.awt.Color color) {
+		JLabel result = new JLabel(text);
+		result.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(size));
+		result.setForeground(color);
+		return result;
+	}
+
+	private JLabel mono(String text) {
+		JLabel result = label(text, 12, RetailPOSColors.ink());
+		result.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(12f));
+		return result;
+	}
+
+	private JLabel deltaLabel(Double value, boolean shortNoData) {
+		JLabel result = label(value == null || value.isNaN()
+				? AppLocal.getIntString(shortNoData ? "reports.welcome.noPreviousShort" : "reports.welcome.noPrevious")
+				: delta(value), 11, RetailPOSColors.inkMuted());
+		if (value != null && !value.isNaN())
+			setDeltaColor(result, value);
+		return result;
+	}
+
+	private JLabel pointsLabel(Double value) {
+		JLabel result = label(value == null || value.isNaN()
+				? AppLocal.getIntString("reports.welcome.noPreviousShort")
+				: String.format(Locale.getDefault(), "%s%+.1f pt", value > 0 ? "↑ " : value < 0 ? "↓ " : "→ ", value),
+				11, RetailPOSColors.inkMuted());
+		if (value != null && !value.isNaN())
+			setDeltaColor(result, value);
+		return result;
+	}
+
+	private double percent(double current, double previous) {
+		return previous == 0 ? 0 : (current - previous) * 100 / previous;
+	}
+	private double share(double value, double total) {
+		return total == 0 ? 0 : value / total;
+	}
+	private double points(WelcomeSalesRepository.CategoryInsight row, double total, double oldTotal) {
+		return !row.hasComparablePeriods() || total == 0 || oldTotal == 0
+				? Double.NaN
+				: share(row.getAmount(), total) * 100 - share(row.getPrevious(), oldTotal) * 100;
+	}
+	private double previousCategoryTotal() {
+		double total = 0;
+		for (WelcomeSalesRepository.CategoryInsight row : whatSoldData.getCategories())
+			total += row.getPrevious();
+		return total;
+	}
+	private double previousTotal() {
+		double total = 0;
+		for (WelcomeSalesRepository.PaymentInsight row : whatSoldData.getPayments())
+			total += row.getPrevious();
+		return total;
+	}
+	private String paymentLabel(String key) {
+		return AppLocal.getIntString("reports.welcome.payment." + key);
+	}
+
+	private java.awt.Color paymentColor(String key) {
+		return PaymentSalesRepository.CARD.equals(key)
+				? RetailPOSColors.brand()
+				: PaymentSalesRepository.CASH.equals(key)
+						? RetailPOSColors.brandSubtle()
+						: RetailPOSColors.surface200();
+	}
+
+	static String formatUnits(double units) {
+		NumberFormat format = NumberFormat.getNumberInstance(Locale.getDefault());
+		format.setGroupingUsed(false);
+		format.setMaximumFractionDigits(2);
+		format.setMinimumFractionDigits(Math.rint(units) == units ? 0 : 1);
+		return format.format(units) + " u.";
+	}
+
+	static String formatShare(double fraction) {
+		NumberFormat format = NumberFormat.getNumberInstance(Locale.getDefault());
+		format.setGroupingUsed(false);
+		format.setMinimumFractionDigits(1);
+		format.setMaximumFractionDigits(1);
+		return format.format(fraction * 100) + " %";
+	}
+
 	private JPanel createOverview() {
 		JPanel overview = new JPanel(new BorderLayout());
 		overview.setOpaque(false);
@@ -564,8 +1022,18 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		caption.add(chartComparisonNote);
 		caption.add(chartTargetNote);
 		overview.add(chartHeading, BorderLayout.NORTH);
-		overview.add(chart, BorderLayout.CENTER);
-		overview.add(caption, BorderLayout.SOUTH);
+		JPanel chartContent = new JPanel();
+		chartContent.setOpaque(false);
+		chartContent.setLayout(new BoxLayout(chartContent, BoxLayout.Y_AXIS));
+		chartContent.add(chart);
+		chartContent.add(caption);
+		chartContent.add(Box.createVerticalStrut(20));
+		chartContent.add(whatSold);
+		overview.add(chartContent, BorderLayout.CENTER);
+		JPanel footerSpacer = new JPanel();
+		footerSpacer.setOpaque(false);
+		footerSpacer.setPreferredSize(new Dimension(0, 0));
+		overview.add(footerSpacer, BorderLayout.SOUTH);
 		return overview;
 	}
 
@@ -704,6 +1172,14 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		periodTitle.setText(ReportsWelcomeLabels.title(selected, focusAsOf));
 		periodStatus.setText(ReportsWelcomeLabels.status(selected, focusAsOf, asOf));
 		periodComparison.setText(ReportsWelcomeLabels.comparison(selected, focusAsOf, asOf));
+		if (whatSold != null) {
+			JPanel heading = (JPanel) whatSold.getComponent(0);
+			JPanel title = (JPanel) heading.getComponent(0);
+			((JLabel) title.getComponent(0)).setText(AppLocal.getIntString("reports.welcome.whatSold") + " · "
+					+ ReportsWelcomeLabels.title(selected, focusAsOf));
+			((JLabel) heading.getComponent(1)).setText(
+					selected.rangeLabel(focusAsOf) + " · " + AppLocal.getIntString("reports.welcome.whatSoldBaseline"));
+		}
 		updateChartLabels();
 		detailHeading.revalidate();
 	}
@@ -841,7 +1317,8 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 				return new FocusData(
 						repository.loadComparison(app.getSession().getConnection(), period.current(snapshot),
 								period.previous(snapshot)),
-						trends.load(app.getSession().getConnection(), period, snapshot));
+						trends.load(app.getSession().getConnection(), period, snapshot), whatSoldRepository.load(
+								app.getSession().getConnection(), period.current(snapshot), period.previous(snapshot)));
 			}
 
 			@Override
@@ -853,6 +1330,8 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 					FocusData focus = get();
 					showDetail(focus.comparison);
 					showTrend(focus.trend, snapshot);
+					whatSoldData = focus.whatSold;
+					showWhatSold();
 				} catch (Exception e) {
 					new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadreport"), e)
 							.show(JPanelReportsWelcome.this);
@@ -872,10 +1351,13 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	private static final class FocusData {
 		private final SalesSummaryComparison comparison;
 		private final SalesTrend trend;
+		private final WelcomeSalesRepository.WelcomeSalesData whatSold;
 
-		private FocusData(SalesSummaryComparison comparison, SalesTrend trend) {
+		private FocusData(SalesSummaryComparison comparison, SalesTrend trend,
+				WelcomeSalesRepository.WelcomeSalesData whatSold) {
 			this.comparison = comparison;
 			this.trend = trend;
+			this.whatSold = whatSold;
 		}
 	}
 
@@ -959,6 +1441,187 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		@Override
 		public boolean getScrollableTracksViewportHeight() {
 			return false;
+		}
+	}
+
+	private static final class ResponsiveCards extends JPanel {
+		private ResponsiveCards() {
+			setOpaque(false);
+			setLayout(new GridLayout(0, 2, 12, 12));
+		}
+
+		@Override
+		public void doLayout() {
+			int columns = getWidth() < 700 ? 1 : 2;
+			GridLayout layout = (GridLayout) getLayout();
+			if (layout.getColumns() != columns) {
+				layout.setColumns(columns);
+			}
+			super.doLayout();
+		}
+	}
+
+	private static final class WhatSoldGrid extends JPanel {
+		private WhatSoldGrid() {
+			setLayout(new GridBagLayout());
+		}
+
+		private void addCard(Component component, int column, int row) {
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.gridx = column;
+			constraints.gridy = row;
+			constraints.weightx = 1;
+			constraints.weighty = 0;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.anchor = GridBagConstraints.NORTHWEST;
+			constraints.insets = new Insets(0, column == 0 ? 0 : 6, 12, column == 0 ? 6 : 0);
+			add(component, constraints);
+		}
+	}
+
+	private static final class SharedRow extends JPanel {
+		private int column;
+
+		private SharedRow() {
+			setOpaque(false);
+			setLayout(new GridBagLayout());
+			setPreferredSize(new Dimension(300, 48));
+			setMinimumSize(new Dimension(0, 48));
+			setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+		}
+
+		private void addFixed(Component component, int width) {
+			GridBagConstraints constraints = constraints();
+			constraints.weightx = 0;
+			constraints.fill = GridBagConstraints.NONE;
+			constraints.insets = new Insets(0, column == 0 ? 0 : 8, 0, 0);
+			component.setPreferredSize(new Dimension(width, component.getPreferredSize().height));
+			component.setMinimumSize(new Dimension(width, component.getMinimumSize().height));
+			component.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
+			add(component, constraints);
+			column++;
+		}
+
+		private void addFlexible(Component component) {
+			GridBagConstraints constraints = constraints();
+			constraints.weightx = 1;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.insets = new Insets(0, column == 0 ? 0 : 8, 0, 0);
+			add(component, constraints);
+			column++;
+		}
+
+		private GridBagConstraints constraints() {
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.gridx = column;
+			constraints.gridy = 0;
+			constraints.anchor = GridBagConstraints.CENTER;
+			return constraints;
+		}
+	}
+
+	private static final class ShareBar extends javax.swing.JComponent {
+		private final double share;
+
+		private ShareBar(double share) {
+			this.share = share;
+			setOpaque(false);
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g2 = (Graphics2D) graphics.create();
+			g2.setColor(RetailPOSColors.surface200());
+			g2.fillRect(0, 0, getWidth(), getHeight());
+			g2.setColor(RetailPOSColors.brand());
+			g2.fillRect(0, 0, (int) Math.round(getWidth() * share), getHeight());
+			g2.setColor(RetailPOSColors.border());
+			g2.drawRect(0, 0, Math.max(0, getWidth() - 1), Math.max(0, getHeight() - 1));
+			g2.dispose();
+		}
+	}
+
+	private static final class EllipsisLabel extends JLabel {
+		private EllipsisLabel(String text) {
+			super(text == null ? "" : text);
+		}
+
+		@Override
+		public Dimension getPreferredSize() {
+			Dimension preferred = super.getPreferredSize();
+			return new Dimension(Math.min(preferred.width, 240), preferred.height);
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			FontMetrics metrics = graphics.getFontMetrics(getFont());
+			int available = getWidth() - getInsets().left - getInsets().right;
+			if (metrics.stringWidth(getText()) <= available) {
+				super.paintComponent(graphics);
+				return;
+			}
+			String suffix = "...";
+			int end = getText().length();
+			while (end > 0 && metrics.stringWidth(getText().substring(0, end) + suffix) > available)
+				end--;
+			Graphics2D g2 = (Graphics2D) graphics.create();
+			g2.setColor(getForeground());
+			g2.drawString(getText().substring(0, end) + suffix, getInsets().left,
+					(getHeight() - metrics.getHeight()) / 2 + metrics.getAscent());
+			g2.dispose();
+		}
+	}
+
+	private final class PaymentStackBar extends javax.swing.JComponent {
+		private final List<WelcomeSalesRepository.PaymentInsight> rows;
+
+		private PaymentStackBar(List<WelcomeSalesRepository.PaymentInsight> payments) {
+			rows = new java.util.ArrayList<>();
+			for (WelcomeSalesRepository.PaymentInsight payment : payments) {
+				if (payment.getAmount() > 0)
+					rows.add(payment);
+			}
+			setToolTipText(AppLocal.getIntString("reports.welcome.payments"));
+			setPreferredSize(new Dimension(100, 12));
+			setMinimumSize(new Dimension(0, 12));
+		}
+
+		@Override
+		protected void paintComponent(Graphics graphics) {
+			Graphics2D g2 = (Graphics2D) graphics.create();
+			g2.setColor(RetailPOSColors.surface200());
+			g2.fillRect(0, 0, getWidth(), getHeight());
+			int x = 0;
+			int[] widths = segmentWidths(getWidth());
+			for (int i = 0; i < rows.size(); i++) {
+				WelcomeSalesRepository.PaymentInsight row = rows.get(i);
+				int end = x + widths[i];
+				g2.setColor(PaymentSalesRepository.CARD.equals(row.getCategory())
+						? RetailPOSColors.brand()
+						: PaymentSalesRepository.CASH.equals(row.getCategory())
+								? RetailPOSColors.brandSubtle()
+								: RetailPOSColors.surface200());
+				g2.fillRect(x, 0, Math.max(0, end - x), getHeight());
+				x = end;
+			}
+			g2.setColor(RetailPOSColors.border());
+			g2.drawRect(0, 0, Math.max(0, getWidth() - 1), Math.max(0, getHeight() - 1));
+			g2.dispose();
+		}
+
+		int[] segmentWidths(int width) {
+			int[] result = new int[rows.size()];
+			double total = 0;
+			for (WelcomeSalesRepository.PaymentInsight row : rows)
+				total += row.getAmount();
+			int used = 0;
+			for (int i = 0; i < rows.size(); i++) {
+				result[i] = i == rows.size() - 1
+						? Math.max(0, width - used)
+						: (int) Math.round(width * rows.get(i).getAmount() / total);
+				used += result[i];
+			}
+			return result;
 		}
 	}
 

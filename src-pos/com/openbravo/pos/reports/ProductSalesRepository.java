@@ -63,9 +63,10 @@ public final class ProductSalesRepository {
 			statement.setTimestamp(2, new java.sql.Timestamp(parameters.getEndExclusive().getTime()));
 			try (ResultSet result = statement.executeQuery()) {
 				while (result.next()) {
-					rows.add(new ProductSalesRow(valueOrEmpty(result.getString(2)), valueOrEmpty(result.getString(3)),
-							"", result.getString(4), valueOrEmpty(result.getString(5)), result.getString(1) == null,
-							result.getDouble(6), result.getDouble(7), result.getLong(8)));
+					rows.add(new ProductSalesRow(result.getString(1), valueOrEmpty(result.getString(2)),
+							valueOrEmpty(result.getString(3)), "", result.getString(4),
+							valueOrEmpty(result.getString(5)), result.getString(1) == null, result.getDouble(6),
+							result.getDouble(7), result.getLong(8)));
 				}
 			}
 		}
