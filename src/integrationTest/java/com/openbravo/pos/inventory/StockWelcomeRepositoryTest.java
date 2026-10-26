@@ -25,7 +25,7 @@ class StockWelcomeRepositoryTest {
 			sql.executeUpdate("CREATE TABLE STOCKCURRENT (PRODUCT VARCHAR(40), UNITS DOUBLE)");
 			sql.executeUpdate("CREATE TABLE STOCKDIARY (PRODUCT VARCHAR(40), DATENEW TIMESTAMP)");
 			sql.executeUpdate(
-					"CREATE TABLE REPLENISHMENT_ENTRIES (OPEN_PRODUCT_ID VARCHAR(40), STATUS VARCHAR(20), CUSTOMER_ID VARCHAR(40), CUSTOMER_NAME VARCHAR(80), CREATED_AT TIMESTAMP)");
+					"CREATE TABLE REPLENISHMENT_ENTRIES (ID VARCHAR(40), OPEN_PRODUCT_ID VARCHAR(40), STATUS VARCHAR(20), CUSTOMER_ID VARCHAR(40), CUSTOMER_NAME VARCHAR(80), CREATED_AT TIMESTAMP)");
 			sql.executeUpdate(
 					"INSERT INTO CATEGORIES VALUES ('food', 'Food', NULL), ('c', 'Dairy', 'food'), ('gift-vouchers', 'Vouchers', NULL)");
 			sql.executeUpdate("INSERT INTO TAXCATEGORIES VALUES ('t', 'Reduced')");
@@ -39,7 +39,7 @@ class StockWelcomeRepositoryTest {
 			sql.executeUpdate("INSERT INTO STOCKCURRENT VALUES ('milk', 3), ('milk', -5)");
 			sql.executeUpdate("INSERT INTO STOCKDIARY VALUES ('milk', '2026-09-20 12:00:00')");
 			sql.executeUpdate(
-					"INSERT INTO REPLENISHMENT_ENTRIES VALUES ('milk', 'PENDING', 'customer', 'Ana', '2026-09-18 12:00:00')");
+					"INSERT INTO REPLENISHMENT_ENTRIES (ID, OPEN_PRODUCT_ID, STATUS, CUSTOMER_ID, CUSTOMER_NAME, CREATED_AT) VALUES ('pending-customer', 'milk', 'PENDING', 'customer', 'Ana', '2026-09-18 12:00:00')");
 			StockWelcomeRepository repository = new StockWelcomeRepository(connection);
 			assertFalse(repository.emptyCatalogue());
 			for (String term : new String[]{"12345678", "REF1", "REF", "mil"}) {
@@ -68,13 +68,18 @@ class StockWelcomeRepositoryTest {
 			assertEquals(1, queue.customers);
 			assertEquals("2026-09-18 12:00:00.0", queue.oldest.toString());
 			sql.executeUpdate(
-					"INSERT INTO REPLENISHMENT_ENTRIES VALUES (NULL, 'ORDERED', NULL, NULL, '2026-09-19 12:00:00')");
-			sql.executeUpdate(
-					"INSERT INTO REPLENISHMENT_ENTRIES VALUES (NULL, 'RECEIVED', 'closed', 'Closed', '2026-09-19 12:00:00')");
+					"INSERT INTO REPLENISHMENT_ENTRIES (ID, STATUS, CUSTOMER_ID, CUSTOMER_NAME, CREATED_AT) VALUES "
+							+ "('pending-no-customer', 'PENDING', NULL, NULL, '2026-09-19 12:00:00'), "
+							+ "('ordered-no-customer', 'ORDERED', NULL, NULL, '2026-09-20 12:00:00'), "
+							+ "('ordered-customer', 'ORDERED', 'waiting', 'Waiting', '2026-09-21 12:00:00'), "
+							+ "('received-customer', 'RECEIVED', 'closed', 'Closed', '2026-09-22 12:00:00'), "
+							+ "('received-no-customer', 'RECEIVED', NULL, NULL, '2026-09-23 12:00:00'), "
+							+ "('delivered-customer', 'DELIVERED', 'delivered', 'Delivered', '2026-09-24 12:00:00'), "
+							+ "('delivered-no-customer', 'DELIVERED', NULL, NULL, '2026-09-25 12:00:00')");
 			queue = repository.queue();
-			assertEquals(1, queue.pending);
-			assertEquals(1, queue.ordered);
-			assertEquals(1, queue.customers);
+			assertEquals(2, queue.pending);
+			assertEquals(2, queue.ordered);
+			assertEquals(2, queue.customers);
 			sql.executeUpdate("DELETE FROM REPLENISHMENT_ENTRIES");
 			assertEquals(0, repository.queue().pending + repository.queue().ordered + repository.queue().customers);
 			sql.executeUpdate("DELETE FROM PRODUCTS");

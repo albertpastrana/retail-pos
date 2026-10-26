@@ -120,20 +120,18 @@ final class StockWelcomeRepository {
 
 	Queue queue() throws SQLException {
 		Queue queue = new Queue();
-		try (PreparedStatement statement = connection.prepareStatement("SELECT STATUS, COUNT(*), MIN(CREATED_AT), "
-				+ "SUM(CASE WHEN CUSTOMER_ID IS NOT NULL THEN 1 ELSE 0 END) "
-				+ "FROM REPLENISHMENT_ENTRIES WHERE STATUS <> 'RECEIVED' GROUP BY STATUS");
+		try (PreparedStatement statement = connection
+				.prepareStatement("SELECT " + "SUM(CASE WHEN STATUS = 'PENDING' THEN 1 ELSE 0 END), "
+						+ "SUM(CASE WHEN STATUS = 'ORDERED' THEN 1 ELSE 0 END), "
+						+ "MIN(CASE WHEN STATUS = 'PENDING' THEN CREATED_AT ELSE NULL END), "
+						+ "SUM(CASE WHEN CUSTOMER_ID IS NOT NULL AND STATUS NOT IN ('RECEIVED', 'DELIVERED') "
+						+ "THEN 1 ELSE 0 END) FROM REPLENISHMENT_ENTRIES");
 				ResultSet rows = statement.executeQuery()) {
-			while (rows.next()) {
-				if ("PENDING".equals(rows.getString(1))) {
-					queue.pending = rows.getInt(2);
-					Timestamp created = rows.getTimestamp(3);
-					queue.oldest = created;
-				} else {
-					queue.ordered = rows.getInt(2);
-				}
-				queue.customers += rows.getInt(4);
-			}
+			rows.next();
+			queue.pending = rows.getInt(1);
+			queue.ordered = rows.getInt(2);
+			queue.oldest = rows.getTimestamp(3);
+			queue.customers = rows.getInt(4);
 		}
 		return queue;
 	}
