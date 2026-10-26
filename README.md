@@ -55,7 +55,7 @@ The default build URL is `https://albertpastrana.github.io/retail-pos/`, with gu
 
 ## Releases
 
-Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS and publishes them with SHA256 checksums to the GitHub Release. Every package includes a bundled Java 21 runtime. The workflow uses an Intel macOS runner for the current x86_64 package; Apple Silicon and native installers are follow-up work.
+Pushing a tag such as `v3.0.0-RC3` starts the GitHub Actions release workflow. It builds portable x86_64 packages for Linux, Windows, and macOS, plus an arm64 package for Apple Silicon macOS, and publishes them with SHA256 checksums to the GitHub Release. Every package includes a bundled Java 21 runtime. Native installers remain follow-up work.
 
 ## Configuration
 

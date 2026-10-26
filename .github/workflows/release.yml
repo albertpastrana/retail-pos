@@ -48,12 +48,19 @@ jobs:
           - platform: linux
             runner: ubuntu-latest
             gradle_args: ""
+            architecture: x86_64
           - platform: windows
             runner: windows-latest
             gradle_args: "-x checkMigrationChecksums"
+            architecture: x86_64
           - platform: macos
             runner: macos-15-intel
             gradle_args: ""
+            architecture: x86_64
+          - platform: macos
+            runner: macos-15
+            gradle_args: ""
+            architecture: arm64
 
     steps:
       - uses: actions/checkout@v7
@@ -72,11 +79,11 @@ jobs:
 
       - name: Create portable package
         shell: bash
-        run: bash scripts/package-portable.sh "${{ matrix.platform }}" "$GITHUB_REF_NAME"
+        run: bash scripts/package-portable.sh "${{ matrix.platform }}" "$GITHUB_REF_NAME" "${{ matrix.architecture }}"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: package-${{ matrix.platform }}
+          name: package-${{ matrix.platform }}-${{ matrix.architecture }}
           path: dist/*
           if-no-files-found: error
 

@@ -3,7 +3,13 @@ set -euo pipefail
 
 platform="${1:?platform is required: linux, windows, or macos}"
 version="${2:-${GITHUB_REF_NAME:-local}}"
+architecture="${3:-x86_64}"
 version="${version#v}"
+
+case "$architecture" in
+  x86_64|arm64) ;;
+  *) echo "Unsupported architecture: $architecture" >&2; exit 2 ;;
+esac
 
 case "$platform" in
   linux) archive_suffix="tar.gz" ;;
@@ -16,7 +22,7 @@ runtime_note="This package includes its Java 21 runtime."
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dist="$root/dist"
-staging="$dist/RetailPOS-${platform}-x86_64"
+staging="$dist/RetailPOS-${platform}-${architecture}"
 rm -rf "$staging"
 mkdir -p "$staging/runtime-libs" "$dist"
 
@@ -65,7 +71,7 @@ EOF
 chmod +x "$staging/start.sh"
 chmod +x "$staging/update.sh"
 
-archive="$dist/RetailPOS-${version}-${platform}-x86_64.${archive_suffix}"
+archive="$dist/RetailPOS-${version}-${platform}-${architecture}.${archive_suffix}"
 if [ "$archive_suffix" = "tar.gz" ]; then
   tar -czf "$archive" -C "$dist" "$(basename "$staging")"
 else
