@@ -584,6 +584,18 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		whatSold.revalidate();
 	}
 
+	private void clearWhatSold() {
+		if (whatSold == null) {
+			return;
+		}
+		WhatSoldGrid cards = (WhatSoldGrid) whatSold.getComponent(1);
+		cards.removeAll();
+		cards.addCard(label(AppLocal.getIntString("reports.welcome.loading"), 11, RetailPOSColors.inkMuted()), 0, 0);
+		cards.addCard(Box.createGlue(), 1, 0);
+		cards.revalidate();
+		cards.repaint();
+	}
+
 	private JPanel productCard() {
 		JPanel card = blockPanel(AppLocal.getIntString("reports.welcome.topProducts"), "Menu.ProductSalesSummary",
 				"reports.welcome.viewProducts");
@@ -916,10 +928,10 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		return previous == 0 ? 0 : (current - previous) * 100 / previous;
 	}
 	private double share(double value, double total) {
-		return total == 0 ? 0 : value / total;
+		return total <= 0 ? Double.NaN : value / total;
 	}
 	private double points(WelcomeSalesRepository.CategoryInsight row, double total, double oldTotal) {
-		return !row.hasComparablePeriods() || total == 0 || oldTotal == 0
+		return !row.hasComparablePeriods() || total <= 0 || oldTotal <= 0
 				? Double.NaN
 				: share(row.getAmount(), total) * 100 - share(row.getPrevious(), oldTotal) * 100;
 	}
@@ -956,6 +968,9 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 	}
 
 	static String formatShare(double fraction) {
+		if (Double.isNaN(fraction)) {
+			return "-";
+		}
 		NumberFormat format = NumberFormat.getNumberInstance(Locale.getDefault());
 		format.setGroupingUsed(false);
 		format.setMinimumFractionDigits(1);
@@ -1306,6 +1321,8 @@ public final class JPanelReportsWelcome extends JPanel implements JPanelView, Be
 		final Date snapshot = focusAsOf;
 		updatePeriodNavigation();
 		chart.setTrend(null);
+		whatSoldData = null;
+		clearWhatSold();
 		chartPartialLegend.setVisible(false);
 		for (JLabel label : new JLabel[]{totalValue, totalDelta, totalBaseline, totalBaselineValue, receipts,
 				receiptsDelta, average, averageDelta, loyaltyCount, loyaltyValue, loyaltyDelta, refunds, refundCount}) {

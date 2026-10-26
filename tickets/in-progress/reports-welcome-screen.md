@@ -287,6 +287,11 @@ visual check against the mockup is still required; compilation/layout
 assertions are not a screenshot review. This partial PR delivered the implemented
 landing view and leaves the remaining slices tracked here.
 
+Follow-up after the merged Slice 4 PR: nested category sales now roll up into
+their direct top-level child, and the What sold cards clear while a new period
+is loading so old values cannot appear under a new period heading. Shares are
+shown as unavailable when net totals cannot produce a meaningful proportion.
+
 ## Open questions
 
 - Top products are currently ranked per variant, so the same product can appear
