@@ -15,8 +15,9 @@ picks any report. Today it opens a `JPanelMenu` list of seven report entries,
 which answers nothing on its own: every question costs a click, a date range and
 a read of a table.
 
-The new panel is the landing view for that submenu. The seven existing reports
-stay reachable from it, at the bottom, unchanged.
+The new panel is the landing view for that submenu. The remaining six reports
+stay reachable from it at the bottom; the separate sales summary is retired in
+`tickets/done/remove-sales-summary-screen.md`.
 
 ## What goes on it, and why
 
@@ -137,7 +138,7 @@ scrolling:
 - a secondary **Informes detallats** button in the header, always visible, which
   jumps to the list (in Swing: scrolls the list into view, or drops a menu — decide
   once the panel is built);
-- the seven existing entries at the foot of the page as 48px targets in a grid,
+- the six remaining entries at the foot of the page as 48px targets in a grid,
   with their current labels and behaviour.
 
 Each block also links into its own report ("Veure l'informe de vendes per
@@ -182,7 +183,7 @@ Follows `design-system/README.md`; every value is a token, nothing screen-local.
 - A month-to-date or year-to-date figure is never compared against a full previous period; the card names the baseline it used.
 - Selecting a period updates the detail figures and the chart, and the screen states which period and which comparison it is showing.
 - A till whose cash has not been closed, whose best sellers are below minimum, or which has customer debt outstanding says so on this screen and links to the screen that resolves it.
-- All seven existing reports are still reachable from this screen, with their current labels and behaviour, both from the header button and from the list at the foot.
+- All six remaining reports are still reachable from this screen, with their current labels and behaviour, both from the header button and from the list at the foot.
 - The top products, categories and payment blocks are on the screen and each links into its detailed report.
 - The number of stamps redeemed in the period, and what they cost, is shown against last year's count, and the figure is correct for receipts taken before the flag existed.
 - No margin or cost-derived figure appears anywhere on the screen.

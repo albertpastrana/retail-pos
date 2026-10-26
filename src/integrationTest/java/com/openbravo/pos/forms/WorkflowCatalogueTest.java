@@ -11,9 +11,10 @@ public class WorkflowCatalogueTest {
 
 	@Test
 	public void containsEveryLiveWorkflowDestination() throws Exception {
-		assertThat(JPanelWelcome.workflowTaskNames()).hasSize(29).contains(
-				"com.openbravo.pos.forms.MenuSalesManagement", "com.openbravo.pos.forms.MenuStockManagement",
-				"com.openbravo.pos.reports.JPanelSalesSummary");
+		assertThat(JPanelWelcome.workflowTaskNames()).hasSize(28)
+				.contains("com.openbravo.pos.forms.MenuSalesManagement", "com.openbravo.pos.forms.MenuStockManagement",
+						"com.openbravo.pos.reports.JPanelTaxSummary", "com.openbravo.pos.reports.JPanelProductSales")
+				.doesNotContain("com.openbravo.pos.reports.JPanelSalesSummary");
 		for (String taskName : JPanelWelcome.workflowTaskNames()) {
 			if (!taskName.startsWith("Menu.") && !"com.openbravo.pos.forms.MenuSalesManagement".equals(taskName)
 					&& !"com.openbravo.pos.forms.MenuStockManagement".equals(taskName)) {

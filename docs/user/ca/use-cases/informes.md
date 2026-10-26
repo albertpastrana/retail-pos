@@ -6,7 +6,7 @@
 
 Al menú d'informes hi ha actualment:
 
-- **Resum de vendes:** tiquets, brut, devolucions, net, impostos i mitjana per tiquet.
+- **Com va el negoci:** vendes, tiquets, devolucions i mitjana per tiquet dels dies tancats.
 - **Vendes per producte:** referència, producte, categoria, unitats i import.
 - **Vendes per mètode de pagament:** vendes, devolucions i net per mètode.
 - **Estoc baix:** estoc actual, mínim, màxim i unitats a demanar.

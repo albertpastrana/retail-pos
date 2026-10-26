@@ -414,8 +414,6 @@ public class JPanelWelcome extends JPanel implements JPanelView, BeanFactoryApp 
 		result.add(category("Workflow.Category.Reports",
 				entry("Workflow.ReportsWelcome", "com.openbravo.pos.forms.MenuSalesManagement",
 						"/com/openbravo/images/menu-sales-reports.png", true, "reports", "sales", "informes", "vendes"),
-				entry("Workflow.SalesSummary", "com.openbravo.pos.reports.JPanelSalesSummary",
-						"/com/openbravo/images/menu-sales-reports.png", false, "sales", "summary", "vendes"),
 				entry("Workflow.ProductSales", "com.openbravo.pos.reports.JPanelProductSales",
 						"/com/openbravo/images/menu-product-sales.png", false, "sales", "product"),
 				entry("Workflow.PaymentSales", "com.openbravo.pos.reports.JPanelPaymentSales",
