@@ -15,9 +15,9 @@ The work is split into two phases:
 1. **Portable packages:** produce x86_64 `.tar.gz` for Linux, `.zip` for Windows, and `.tar.gz` for macOS. Include the application jars, Java 21 runtime, runtime dependencies, platform libraries, and launchers. A `v*` tag creates a GitHub Release and uploads the packages and checksums.
 2. **Native installers:** evaluate and add AppImage/deb/rpm for Linux, MSI or an equivalent installer for Windows, and DMG/PKG for macOS. Add platform signing and notarization where applicable, and validate native printer support on each target architecture.
 
-The first phase targets x86_64. Apple Silicon and Linux ARM64 need separate validation for any platform-specific libraries.
+The first phase targets x86_64. Apple Silicon macOS now has a separate arm64 package and runner; Linux ARM64 still needs separate validation for any platform-specific libraries.
 
-Phase 1 implementation uses `scripts/package-portable.sh`, a bundled JRE produced with `jlink`, and `.github/workflows/release.yml`. The workflow packages on Linux, Windows, and Intel macOS, then publishes the archives and checksums to GitHub Releases for `v*` tags.
+Phase 1 implementation uses `scripts/package-portable.sh`, a bundled JRE produced with `jlink`, and `.github/workflows/release.yml`. The workflow packages on Linux, Windows, Intel macOS, and Apple Silicon macOS, then publishes the archives and checksums to GitHub Releases for `v*` tags.
 
 ## Done when
 
@@ -30,4 +30,4 @@ Phase 1 implementation uses `scripts/package-portable.sh`, a bundled JRE produce
 
 ## Shipped
 
-Automated x86_64 portable packages for Linux, Windows, and Intel macOS, with GitHub Release publication and SHA256 checksums. Main paths: `scripts/package-portable.sh` and `.github/workflows/release.yml`. Native installers remain a future phase.
+Automated x86_64 portable packages for Linux, Windows, and Intel macOS plus an arm64 portable package for Apple Silicon macOS, with GitHub Release publication and SHA256 checksums. Main paths: `scripts/package-portable.sh` and `.github/workflows/release.yml`. Native installers remain a future phase.
