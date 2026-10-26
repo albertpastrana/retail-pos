@@ -115,7 +115,8 @@ class ReportsWelcomeScreenshotsTest {
 				layoutTree(body);
 				JPanel detail = (JPanel) body.getComponent(1);
 				JPanel overview = (JPanel) detail.getComponent(1);
-				SalesTrendChart chart = (SalesTrendChart) overview.getComponent(1);
+				JPanel chartContent = (JPanel) overview.getComponent(1);
+				SalesTrendChart chart = (SalesTrendChart) chartContent.getComponent(0);
 				assertTrue(chart.getHeight() >= 150,
 						"chart=" + chart.getBounds() + " overview=" + overview.getBounds() + " preferred="
 								+ overview.getPreferredSize() + " detail=" + detail.getBounds() + " detailPreferred="
