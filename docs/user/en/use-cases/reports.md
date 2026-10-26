@@ -6,7 +6,7 @@
 
 The reports menu currently includes:
 
-- **How the business is doing:** sales totals, receipts, refunds, and average receipt for completed days.
+- **How the business is doing:** sales totals, receipts, refunds, and average receipt through the last closed day.
 - **Sales by product:** reference, product, category, units, and amount.
 - **Sales by payment method:** sales, refunds, and net amount by payment method.
 - **Low stock:** current, minimum, and maximum stock, plus units to order.
