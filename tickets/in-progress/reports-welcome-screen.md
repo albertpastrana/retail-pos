@@ -11,9 +11,9 @@ year selected), `tickets/todo/reports-welcome-screen/Avall.html` (scrolled down)
 ## Goal
 
 Opening `Menu.SalesManagement` answers "how is the shop doing?" before the owner
-picks any report. Today it opens a `JPanelMenu` list of seven report entries,
-which answers nothing on its own: every question costs a click, a date range and
-a read of a table.
+picks any report. It previously opened a `JPanelMenu` list of seven report
+entries, which answered nothing on its own: every question cost a click, a date
+range and a read of a table.
 
 The new panel is the landing view for that submenu. The remaining six reports
 stay reachable from it at the bottom; the separate sales summary is retired in
@@ -200,19 +200,20 @@ Follows `design-system/README.md`; every value is a token, nothing screen-local.
   so icons and text do not touch the outline. Raise small supporting text only
   where labels still fit in English, Spanish, and Catalan.
 - Administration's common reports shortcut opens the reports welcome screen;
-  its existing sales-summary report remains available in the catalogue. Use a
+  the separate sales-summary report has since been retired. Use a
   full-sized house icon on the administration welcome navigation item;
   `gohome.png` is a small legacy exit arrow, not a home icon.
 - The inline loyalty count/discount and report-button inset pass the layout
   checks at 1000 px in English, Spanish, and Catalan. `WorkflowCatalogueTest`
-  confirms that the reports landing view and detailed sales summary are both
-  reachable. Manual visual verification in both themes remains open.
+  now confirms that the reports landing view and remaining reports are reachable
+  without the separate sales summary. Manual visual verification in both themes
+  remains open.
 
 The landing view is being implemented on the task branch:
 
 - `Menu.SalesManagement` opens a non-blocking welcome view with week, month,
   year and rolling-12-month totals, elapsed-matched previous periods, selected
-  period detail, and all seven existing report actions at the bottom.
+  period detail, and the six remaining report actions at the bottom.
 - The comparison is unavailable when the previous period has no sales. Monday
   is the week start, matching the mockups. The view uses the existing theme
   tokens and has English, Spanish and Catalan labels.
@@ -228,7 +229,7 @@ The landing view is being implemented on the task branch:
   date remains in the header so labels fit at the smallest tested width on CI.
   The indicators share one rounded strip. The paired-bar chart and cash, top-
   seller stock and customer-debt notices sit below that strip and before the
-  seven report links, using real data rather than mockup values. The week
+  six report links, using real data rather than mockup values. The week
   baseline aligns weekdays (364 days back); the rolling comparison ends where
   the current rolling window begins.
 - `V49__loyalty_redemption_flag` adds the queryable flag, writes it for newly
@@ -263,9 +264,8 @@ The empty Derby migration rerun, a historical loyalty-redemption XML backfill
 test, `./gradlew check`, and `git diff --check` pass. MySQL/PostgreSQL `ciCheck`
 could not run locally because the Docker daemon is not running. A live POS
 visual check against the mockup is still required; compilation/layout
-assertions are not a screenshot review. This partial PR delivers the implemented
-landing view and leaves the remaining slices tracked here. Move this ticket to
-`in-progress/` when work on those slices resumes.
+assertions are not a screenshot review. This partial PR delivered the implemented
+landing view and leaves the remaining slices tracked here.
 
 ## Open questions
 
