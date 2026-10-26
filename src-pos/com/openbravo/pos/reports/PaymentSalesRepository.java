@@ -10,6 +10,21 @@ import java.util.List;
 /** Database boundary for sales grouped by payment method. */
 public final class PaymentSalesRepository {
 
+	public static final String CARD = "card";
+	public static final String CASH = "cash";
+	public static final String OTHER = "other";
+
+	/** Keeps the landing screen aligned with the payment names stored by POS. */
+	public static String classify(String payment) {
+		if (payment != null && payment.startsWith("cash")) {
+			return CASH;
+		}
+		if (payment != null && payment.startsWith("magcard")) {
+			return CARD;
+		}
+		return OTHER;
+	}
+
 	private static final String SALES_SQL = "SELECT PM.PAYMENT, "
 			+ "SUM(CASE WHEN T.TICKETTYPE = 0 THEN PM.TOTAL ELSE 0 END), "
 			+ "SUM(CASE WHEN T.TICKETTYPE = 1 THEN PM.TOTAL ELSE 0 END) " + "FROM PAYMENTS PM "

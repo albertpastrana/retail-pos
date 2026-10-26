@@ -465,4 +465,196 @@ public class ReportsWelcomeLayoutTest {
 			AppLocal.setLocale(original);
 		}
 	}
+
+	@Test
+	public void whatSoldRowsStayCompactAndCategoryListFitsAtMinimumWidth() throws Exception {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es", "ES"), new Locale("ca", "ES")}) {
+				AppLocal.setLocale(locale);
+				SwingUtilities.invokeAndWait(() -> {
+					try {
+						JPanelReportsWelcome view = new JPanelReportsWelcome(null,
+								new MenuDefinition("Menu.SalesManagement"));
+						java.util.List<WelcomeSalesRepository.CategoryInsight> categories = new java.util.ArrayList<>();
+						for (int i = 0; i < 8; i++) {
+							categories.add(
+									new WelcomeSalesRepository.CategoryInsight("Category " + i, 100 - i * 5, 50 - i * 2,
+											i == 0
+													? java.util.List.of(new WelcomeSalesRepository.CategoryInsight(
+															"Subcategory", 40, 20, java.util.List.of()))
+													: java.util.List.of()));
+						}
+						java.util.List<WelcomeSalesRepository.ProductInsight> products = new java.util.ArrayList<>();
+						for (int i = 0; i < 6; i++) {
+							products.add(new WelcomeSalesRepository.ProductInsight(new ProductSalesRow("p" + i,
+									i == 0 ? "Long product name" : "Product " + i, "", "root", "", false, 7, 100 - i),
+									80.0 - i, "Root › Sub"));
+						}
+						java.util.List<WelcomeSalesRepository.PaymentInsight> payments = java.util.List.of(
+								new WelcomeSalesRepository.PaymentInsight(PaymentSalesRepository.CARD, 100, 80),
+								new WelcomeSalesRepository.PaymentInsight(PaymentSalesRepository.CASH, 50, 40),
+								new WelcomeSalesRepository.PaymentInsight(PaymentSalesRepository.OTHER, 0, 0));
+						Field data = JPanelReportsWelcome.class.getDeclaredField("whatSoldData");
+						Method show = JPanelReportsWelcome.class.getDeclaredMethod("showWhatSold");
+						data.setAccessible(true);
+						show.setAccessible(true);
+						data.set(view, new WelcomeSalesRepository.WelcomeSalesData(products, categories, payments));
+						show.invoke(view);
+						view.setSize(1000, 1800);
+						layoutTree(view);
+						JPanel cards = (JPanel) findNamed(view, "whatSoldCards");
+						JPanel whatSold = (JPanel) findNamed(view, "whatSold");
+						JPanel whatSoldTitle = (JPanel) ((JPanel) whatSold.getComponent(0)).getComponent(0);
+						JLabel whatSoldCaption = (JLabel) ((JPanel) whatSold.getComponent(0)).getComponent(1);
+						assertEquals(whatSoldTitle.getX(), whatSoldCaption.getX(), locale.toString());
+						assertTrue(cards.getComponent(2).getHeight() < cards.getComponent(1).getHeight(),
+								locale.toString());
+						JPanel product = (JPanel) cards.getComponent(0);
+						JPanel productRows = (JPanel) product.getClientProperty("rows");
+						assertEquals(6, productRows.getComponentCount(), locale.toString());
+						int rowHeight = productRows.getComponent(0).getHeight();
+						assertTrue(rowHeight >= 48, locale.toString());
+						for (Component row : productRows.getComponents()) {
+							assertEquals(rowHeight, row.getHeight(), locale.toString());
+							assertEquals(row.getPreferredSize().height, row.getMaximumSize().height, locale.toString());
+						}
+						JPanel category = (JPanel) cards.getComponent(1);
+						JPanel categoryRows = (JPanel) category.getClientProperty("rows");
+						java.util.List<Component> categoryButtons = java.util.Arrays
+								.stream(categoryRows.getComponents()).filter(component -> component instanceof JButton)
+								.collect(java.util.stream.Collectors.toList());
+						assertEquals(6, categoryButtons.size(), locale.toString());
+						for (Component component : categoryButtons)
+							assertEquals(rowHeight, component.getHeight(), locale.toString());
+						JPanel firstCategoryRow = (JPanel) ((JButton) categoryButtons.get(0)).getComponent(0);
+						int percentX = firstCategoryRow.getComponent(2).getX();
+						for (Component component : categoryButtons) {
+							JButton row = (JButton) component;
+							JPanel rowContent = (JPanel) row.getComponent(0);
+							assertEquals(percentX, rowContent.getComponent(2).getX(), locale.toString());
+							for (Component child : rowContent.getComponents()) {
+								assertTrue(child.getX() >= 0 && child.getX() + child.getWidth() <= row.getWidth(),
+										locale.toString());
+							}
+						}
+						Object paymentBar = findClass(cards, "PaymentStackBar");
+						Method widths = paymentBar.getClass().getDeclaredMethod("segmentWidths", int.class);
+						widths.setAccessible(true);
+						int[] segments = (int[]) widths.invoke(paymentBar, 100);
+						assertEquals(2, segments.length, locale.toString());
+						assertEquals(67, segments[0], locale.toString());
+						assertEquals(33, segments[1], locale.toString());
+						JPanel payment = (JPanel) cards.getComponent(2);
+						JPanel paymentRows = (JPanel) payment.getClientProperty("rows");
+						for (int i = 1; i < paymentRows.getComponentCount(); i++) {
+							JPanel row = (JPanel) paymentRows.getComponent(i);
+							assertEquals(rowHeight, row.getHeight(), locale.toString());
+							Component name = row.getComponent(1);
+							Component share = row.getComponent(2);
+							Component euros = row.getComponent(3);
+							assertTrue(name.getWidth() > 0, locale + " name=" + name.getBounds());
+							assertTrue(share.getWidth() > 0, locale + " share=" + share.getBounds());
+							assertTrue(euros.getWidth() > 0, locale + " euros=" + euros.getBounds());
+							assertTrue(name.getX() + name.getWidth() <= share.getX(), locale.toString());
+							assertTrue(share.getX() + share.getWidth() <= euros.getX(), locale.toString());
+						}
+						((JButton) categoryRows.getComponent(0)).doClick();
+						layoutTree(view);
+						JPanel expanded = (JPanel) ((JPanel) findNamed(view, "whatSoldCards")).getComponent(1);
+						JPanel expandedRows = (JPanel) expanded.getClientProperty("rows");
+						assertTrue(expandedRows.getHeight() >= expandedRows.getPreferredSize().height,
+								locale.toString());
+						for (Component row : expandedRows.getComponents()) {
+							assertTrue(row.getY() >= 0 && row.getY() + row.getHeight() <= expandedRows.getHeight(),
+									locale.toString());
+						}
+					} catch (ReflectiveOperationException ex) {
+						throw new AssertionError(ex);
+					}
+				});
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
+	public void categoryPointsColumnOnlyAppearsWhenAComparisonExists() throws Exception {
+		Locale original = Locale.getDefault();
+		try {
+			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es", "ES"), new Locale("ca", "ES")}) {
+				AppLocal.setLocale(locale);
+				SwingUtilities.invokeAndWait(() -> {
+					try {
+						JPanelReportsWelcome view = new JPanelReportsWelcome(null,
+								new MenuDefinition("Menu.SalesManagement"));
+						Field data = JPanelReportsWelcome.class.getDeclaredField("whatSoldData");
+						Method show = JPanelReportsWelcome.class.getDeclaredMethod("showWhatSold");
+						data.setAccessible(true);
+						show.setAccessible(true);
+						java.util.List<WelcomeSalesRepository.PaymentInsight> payments = java.util.List
+								.of(new WelcomeSalesRepository.PaymentInsight(PaymentSalesRepository.CASH, 1, 1));
+						data.set(view,
+								new WelcomeSalesRepository.WelcomeSalesData(java.util.List.of(),
+										java.util.List.of(new WelcomeSalesRepository.CategoryInsight("No history", 100,
+												0, java.util.List.of())),
+										payments));
+						show.invoke(view);
+						view.setSize(1000, 1200);
+						layoutTree(view);
+						JPanel cards = (JPanel) findNamed(view, "whatSoldCards");
+						JPanel category = (JPanel) cards.getComponent(1);
+						JPanel rows = (JPanel) category.getClientProperty("rows");
+						assertEquals(1, ((JButton) rows.getComponent(0)).getComponentCount(), locale.toString());
+						assertEquals(AppLocal.getIntString("reports.welcome.categoryNoPrevious"),
+								((JLabel) rows.getComponent(1)).getText(), locale.toString());
+
+						data.set(view,
+								new WelcomeSalesRepository.WelcomeSalesData(java.util.List.of(),
+										java.util.List.of(new WelcomeSalesRepository.CategoryInsight("With history",
+												100, 50, java.util.List.of())),
+										payments));
+						show.invoke(view);
+						layoutTree(view);
+						category = (JPanel) ((JPanel) findNamed(view, "whatSoldCards")).getComponent(1);
+						rows = (JPanel) category.getClientProperty("rows");
+						assertEquals(1, ((JButton) rows.getComponent(0)).getComponentCount(), locale.toString());
+						assertEquals(AppLocal.getIntString("reports.welcome.categoryHint"),
+								((JLabel) rows.getComponent(1)).getText(), locale.toString());
+					} catch (ReflectiveOperationException ex) {
+						throw new AssertionError(ex);
+					}
+				});
+			}
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	private static Component findNamed(Component component, String name) {
+		if (name.equals(component.getName()))
+			return component;
+		if (component instanceof Container) {
+			for (Component child : ((Container) component).getComponents()) {
+				Component result = findNamed(child, name);
+				if (result != null)
+					return result;
+			}
+		}
+		return null;
+	}
+
+	private static Object findClass(Component component, String simpleName) {
+		if (component.getClass().getSimpleName().equals(simpleName))
+			return component;
+		if (component instanceof Container) {
+			for (Component child : ((Container) component).getComponents()) {
+				Object result = findClass(child, simpleName);
+				if (result != null)
+					return result;
+			}
+		}
+		return null;
+	}
 }

@@ -47,6 +47,29 @@ public class ProductSalesTest {
 	}
 
 	@Test
+	public void formatsProductUnitsForTheCatalanCaption() {
+		Locale original = Locale.getDefault();
+		try {
+			AppLocal.setLocale(new Locale("ca", "ES"));
+			assertEquals("7 u.", JPanelReportsWelcome.formatUnits(7));
+			assertEquals("1,5 u.", JPanelReportsWelcome.formatUnits(1.5));
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
+	public void formatsSharesAsPercentagesForTheCatalanLocale() {
+		Locale original = Locale.getDefault();
+		try {
+			AppLocal.setLocale(new Locale("ca", "ES"));
+			assertEquals("76,8 %", JPanelReportsWelcome.formatShare(0.768));
+		} finally {
+			AppLocal.setLocale(original);
+		}
+	}
+
+	@Test
 	public void searchesReferencesNamesCategoryPathsAndBrandsWithoutChangingTotals() {
 		Map<String, ProductSalesRepository.Category> categories = new HashMap<>();
 		categories.put("root", new ProductSalesRepository.Category("root", "Home", null));
