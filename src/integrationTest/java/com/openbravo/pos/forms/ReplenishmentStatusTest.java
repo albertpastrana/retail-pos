@@ -159,6 +159,42 @@ class ReplenishmentStatusTest {
 	}
 
 	@Test
+	void storeReplenishmentAndCustomerOrderCanShareAProduct() throws Exception {
+		String url = "jdbc:derby:memory:replenishmentTypes" + UUID.randomUUID() + ";create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicReplenishment data = new DataLogicReplenishment();
+			data.init(session);
+			ReplenishmentEntry store = entry(null);
+			store.productId = "shared-product";
+			data.add(store);
+
+			ReplenishmentEntry order = entry("customer-1");
+			order.productId = "shared-product";
+			data.add(order);
+
+			assertEquals(2, data.list("", "ALL", "PENDING").size());
+			assertEquals(1, data.list("", "REPLENISHMENT", "PENDING").size());
+			assertEquals(1, data.list("", "ENCARGO", "PENDING").size());
+
+			ReplenishmentEntry secondOrder = entry("customer-2");
+			secondOrder.productId = "shared-product";
+			data.add(secondOrder);
+			assertEquals(3, data.list("", "ALL", "PENDING").size());
+			assertEquals(2, data.list("", "ENCARGO", "PENDING").size());
+			ReplenishmentEntry duplicateStore = entry(null);
+			duplicateStore.productId = "shared-product";
+			com.openbravo.basic.BasicException duplicate = assertThrows(com.openbravo.basic.BasicException.class,
+					() -> data.add(duplicateStore));
+			assertEquals("REPLENISHMENT_STORE_ALREADY_EXISTS", duplicate.getMessage());
+			assertEquals(3, data.list("", "ALL", "PENDING").size());
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	void editingSavedRequestPreservesProductAndStatusAndResolvesCreatorName() throws Exception {
 		String url = "jdbc:derby:memory:replenishmentEdit" + UUID.randomUUID() + ";create=true";
 		DatabaseMigrator.migrate(url, null, null);
