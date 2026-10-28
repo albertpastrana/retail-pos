@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class DataLogicReplenishment extends BeanFactoryDataSingle {
+	static final String STORE_REPLENISHMENT_EXISTS = "REPLENISHMENT_STORE_ALREADY_EXISTS";
 	private Session session;
 
 	@Override
@@ -89,25 +90,13 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 		try {
 			c.setAutoCommit(false);
-			if (e.productId != null) {
+			if (e.productId != null && e.customerId == null) {
 				try (PreparedStatement find = c
-						.prepareStatement("SELECT * FROM REPLENISHMENT_ENTRIES WHERE OPEN_PRODUCT_ID = ? FOR UPDATE")) {
-					find.setString(1, e.productId);
+						.prepareStatement("SELECT * FROM REPLENISHMENT_ENTRIES WHERE OPEN_UNIQUE_KEY = ? FOR UPDATE")) {
+					find.setString(1, openKey(e.productId, e.customerId, e.id));
 					try (ResultSet rs = find.executeQuery()) {
 						if (rs.next()) {
-							String id = rs.getString("ID");
-							try (PreparedStatement update = c.prepareStatement(
-									"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, UPDATED_AT=?, UPDATED_BY=? WHERE ID=?")) {
-								update.setString(1, e.note);
-								update.setString(2, e.customerId);
-								update.setString(3, e.customerName);
-								update.setTimestamp(4, new Timestamp(e.updatedAt.getTime()));
-								update.setString(5, e.updatedBy);
-								update.setString(6, id);
-								update.executeUpdate();
-							}
-							c.commit();
-							return get(id);
+							throw new BasicException(STORE_REPLENISHMENT_EXISTS);
 						}
 					}
 				}
@@ -115,6 +104,12 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			insert(c, e);
 			c.commit();
 			return e;
+		} catch (BasicException ex) {
+			try {
+				c.rollback();
+			} catch (SQLException ignored) {
+			}
+			throw ex;
 		} catch (SQLException ex) {
 			try {
 				c.rollback();
@@ -249,7 +244,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setString(12,
 					"RECEIVED".equals(e.status) || "DELIVERED".equals(e.status) || e.productId == null
 							? "I:" + e.id
-							: "P:" + e.productId);
+							: openKey(e.productId, e.customerId, e.id));
 			ps.setTimestamp(13, new Timestamp(System.currentTimeMillis()));
 			ps.setString(14, user);
 			ps.setString(15, e.id);
@@ -334,7 +329,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setTimestamp(16, new Timestamp(e.updatedAt.getTime()));
 			ps.setString(17, e.createdBy);
 			ps.setString(18, e.updatedBy);
-			ps.setString(19, e.productId == null ? "I:" + e.id : "P:" + e.productId);
+			ps.setString(19, openKey(e.productId, e.customerId, e.id));
 			ps.executeUpdate();
 		}
 	}
@@ -375,8 +370,12 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 	private String openKeyExpression() throws SQLException {
 		return connection().getMetaData().getDatabaseProductName().equalsIgnoreCase("MySQL")
-				? "CASE WHEN PRODUCT_ID IS NULL THEN CONCAT('I:', ID) ELSE CONCAT('P:', PRODUCT_ID) END"
-				: "CASE WHEN PRODUCT_ID IS NULL THEN 'I:' || ID ELSE 'P:' || PRODUCT_ID END";
+				? "CASE WHEN PRODUCT_ID IS NULL OR CUSTOMER_ID IS NOT NULL OR STATUS IN ('RECEIVED', 'DELIVERED') THEN CONCAT('I:', ID) ELSE CONCAT('P:R:', PRODUCT_ID) END"
+				: "CASE WHEN PRODUCT_ID IS NULL OR CUSTOMER_ID IS NOT NULL OR STATUS IN ('RECEIVED', 'DELIVERED') THEN 'I:' || ID ELSE 'P:R:' || PRODUCT_ID END";
+	}
+
+	private String openKey(String productId, String customerId, String id) {
+		return productId != null && customerId == null ? "P:R:" + productId : "I:" + id;
 	}
 
 	private boolean isValidStatus(String status) {

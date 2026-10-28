@@ -984,7 +984,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			}
 		} catch (BasicException ex) {
 			logStatusFailure("save", formStatus, editingEntry == null ? null : editingEntry.id, ex);
-			JOptionPane.showMessageDialog(this, AppLocal.getIntString("Replenishment.StatusUpdateFailed"));
+			String message = DataLogicReplenishment.STORE_REPLENISHMENT_EXISTS.equals(ex.getMessage())
+					? AppLocal.getIntString("Replenishment.StoreAlreadyExists")
+					: AppLocal.getIntString("Replenishment.StatusUpdateFailed");
+			JOptionPane.showMessageDialog(this, message);
 		}
 	}
 	private void loadEntry(ReplenishmentEntry entry) {
