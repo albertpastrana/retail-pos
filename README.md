@@ -184,7 +184,7 @@ Gradle compiles them against Derby. **Quit the POS first** — with embedded Der
 | `python3 data/apply-model-price.py Avet 3267 --cost 3.66 --price 5.95 --apply --insert` | Sets cost and ticket price on every variant of a model, then inserts them.                                                                       |
 | `updateResource` / `dumpResource` / `dumpAllResources` / `showResource`                 | Inspect or replace `RESOURCES` rows. See `./gradlew tasks --group pos`.                                                                          |
 
-### Startup catalog imports
+### Startup catalog and database imports
 
 The POS can import signed catalog files automatically when it starts. Configure
 these properties in the local POS configuration:
@@ -211,6 +211,26 @@ catalog. Imports never delete rows or modify stock. Invalid signatures,
 unknown columns, duplicate barcodes, missing categories, and database errors
 reject the complete file and are written to the application log.
 
+The same directory also accepts signed ad-hoc SQL migrations. SQL files use the
+`migration-*` prefix and the same detached signature convention:
+
+```text
+migration-2026-10-28-repair-products.sql
+migration-2026-10-28-repair-products.sql.sig
+```
+
+SQL migrations run after the regular Flyway migrations and are applied only
+once. Each file runs in its own transaction; a failure rolls back the complete
+file and moves both files to `rejected/`. A successful file is recorded in the
+database and moved to `processed/`, so copying it to the directory again does
+not execute it twice. The importer accepts only signed `migration-*.sql` files
+and rejects unsigned, malformed, or unsupported files.
+
+SQL migrations must target the database engine used by the till (Derby,
+MySQL, or PostgreSQL) and should be reviewed for idempotence before signing.
+Take a database backup before applying a migration that changes data. Do not
+put passwords, other secrets, or unreviewed destructive SQL in these files.
+
 Generate the key pair once on a trusted machine. Keep the private key in
 LastPass and install only the public key on each till:
 
@@ -224,6 +244,15 @@ Sign a file before copying both files to the import directory:
 ```sh
 openssl pkeyutl -sign -rawin -inkey catalog-import-private.pem \
   -in products-2026-10-05.tsv -out products-2026-10-05.tsv.sig
+```
+
+Use the same command for a SQL migration, replacing the input and output
+names:
+
+```sh
+openssl pkeyutl -sign -rawin -inkey catalog-import-private.pem \
+  -in migration-2026-10-28-repair-products.sql \
+  -out migration-2026-10-28-repair-products.sql.sig
 ```
 
 Never copy `catalog-import-private.pem` to a till or commit either private key

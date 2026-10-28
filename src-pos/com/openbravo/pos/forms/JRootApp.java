@@ -192,6 +192,7 @@ public class JRootApp extends JPanel implements AppView {
 
 		m_dlSystem = getBean(DataLogicSystem.class);
 		CatalogFileImporter.importAtStartup(session, m_props);
+		AdHocSqlMigrationImporter.importAtStartup(session, m_props);
 
 		if (m_props instanceof AppConfig) {
 			Properties localLoyalty = new Properties();
