@@ -97,10 +97,20 @@ public class DatabaseMigratorIT {
 						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
 						+ "VALUES ('fallback-blank-family-1', '9990000000401', '26222', 'Variant without family', "
 						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Ysabel Mora', '')");
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+						+ "VALUES ('fallback-blank-family-2', '9990000000402', '26223', 'Variant without family', "
+						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Ysabel Mora', '   ')");
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+						+ "VALUES ('fallback-blank-family-3', '9990000000403', '26224', 'Variant without family', "
+						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Ysabel Mora', NULL)");
 			}
 			DataLogicSales sales = new DataLogicSales();
 			sales.init(session);
 			assertEquals(0, sales.getCatalogProductFamily("9990000000401", null, null).size());
+			assertEquals(0, sales.getCatalogProductFamily("9990000000402", null, null).size());
+			assertEquals(0, sales.getCatalogProductFamily("9990000000403", null, null).size());
 		} finally {
 			session.close();
 		}
