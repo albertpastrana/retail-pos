@@ -273,7 +273,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						return family;
 					}
 					String familyKey = scanned.getString("FAMILY");
-					if (familyKey == null) {
+					if (familyKey == null || familyKey.trim().isEmpty()) {
 						return family;
 					}
 					products.setString(1, familyKey);

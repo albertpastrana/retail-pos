@@ -87,6 +87,26 @@ public class DatabaseMigratorIT {
 	}
 
 	@Test
+	public void doesNotTreatBlankFallbackFamilyAsFamilyKey() throws Exception {
+		String url = "jdbc:derby:memory:fallbackCatalogBlankFamilyIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CATALOG_FALLBACK_PRODUCTS "
+						+ "(ID, BARCODE, REFERENCE, NAME, CATEGORY_ID, CATEGORY_NAME, PRICE_BUY, PRICE_SELL, BRAND, FAMILY) "
+						+ "VALUES ('fallback-blank-family-1', '9990000000401', '26222', 'Variant without family', "
+						+ "'cat-1', 'Shirts', 10.0, 20.0, 'Ysabel Mora', '')");
+			}
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			assertEquals(0, sales.getCatalogProductFamily("9990000000401", null, null).size());
+		} finally {
+			session.close();
+		}
+	}
+
+	@Test
 	public void adoptsDerbySchemaCreatedBeforeFlyway() throws Exception {
 		String url = "jdbc:derby:memory:flywayLegacyIT;create=true";
 		DatabaseMigrator.migrate(url, null, null);
