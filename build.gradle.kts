@@ -1,4 +1,5 @@
 import org.apache.tools.ant.filters.ReplaceTokens
+import java.time.Duration
 
 plugins {
     java
@@ -184,13 +185,158 @@ tasks.named("spotlessJava") {
     mustRunAfter(syncRunJars)
 }
 
+val integrationTestClasspath = sourceSets["integrationTest"].runtimeClasspath + files("locales")
+
+fun registerTestLane(
+	taskName: String,
+	description: String,
+	testPatterns: List<String>,
+	needsExternalDatabase: Boolean = false,
+) = tasks.register<Test>(taskName) {
+	group = "verification"
+	this.description = description
+	maxHeapSize = "1g"
+	testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+	classpath = integrationTestClasspath
+	useJUnitPlatform()
+	systemProperty("pos.test.lane", taskName)
+	systemProperty("pos.projectDir", layout.projectDirectory.asFile.absolutePath)
+	systemProperty("pos.test.outputDir", layout.buildDirectory.get().asFile.absolutePath)
+	filter {
+		testPatterns.forEach { includeTestsMatching(it) }
+	}
+	if (needsExternalDatabase) {
+		timeout.set(Duration.ofMinutes(10))
+		systemProperty("pos.mysql.url", "jdbc:mysql://127.0.0.1:13306/pos")
+		systemProperty("pos.mysql.user", "root")
+		systemProperty("pos.mysql.password", "pos")
+		systemProperty("pos.postgres.url", "jdbc:postgresql://127.0.0.1:15432/pos")
+		systemProperty("pos.postgres.user", "pos")
+		systemProperty("pos.postgres.password", "pos")
+	}
+}
+
+val fastTestPatterns = listOf(
+	"com.openbravo.data.loader.DatabaseLoggingTest",
+	"com.openbravo.data.loader.ImageUtilsTest",
+	"com.openbravo.pos.admin.AdminEditorLayoutTest",
+	"com.openbravo.pos.admin.ResourceOriginalTest",
+	"com.openbravo.pos.admin.RolePermissionsTest",
+	"com.openbravo.pos.config.TerminalConfigurationUiTest",
+	"com.openbravo.pos.customers.CustomersPanelLayoutTest",
+	"com.openbravo.pos.customers.CustomersPanelSelectionTest",
+	"com.openbravo.pos.forms.AdministrationWelcomeCatalogueEntryTest",
+	"com.openbravo.pos.forms.CatalogTsvParserTest",
+	"com.openbravo.pos.forms.ConfigurationStoreTest",
+	"com.openbravo.pos.forms.DemoModeTest",
+	"com.openbravo.pos.forms.InitialScreenLayoutTest",
+	"com.openbravo.pos.forms.LoggingTest",
+	"com.openbravo.pos.forms.SellerSalesPermissionsTest",
+	"com.openbravo.pos.forms.SupervisorAuthorizationTest",
+	"com.openbravo.pos.forms.TypeSafeBeanLookupTest",
+	"com.openbravo.pos.forms.UpdateCheckerTest",
+	"com.openbravo.pos.forms.WorkflowCatalogueTest",
+	"com.openbravo.pos.inventory.CatalogVariantModelTest",
+	"com.openbravo.pos.inventory.ProductBatchDraftTest",
+	"com.openbravo.pos.inventory.ProductPriceMathTest",
+	"com.openbravo.pos.inventory.ReplenishmentFailureLoggingTest",
+	"com.openbravo.pos.inventory.StockWelcomeLayoutTest",
+	"com.openbravo.pos.panels.JProductFinderPriceTest",
+	"com.openbravo.pos.panels.SalesCatalogLayoutTest",
+	"com.openbravo.pos.reports.LowStockTest",
+	"com.openbravo.pos.reports.PaymentSalesTest",
+	"com.openbravo.pos.reports.ReportsWelcomeLabelsTest",
+	"com.openbravo.pos.reports.ReportsWelcomeLayoutTest",
+	"com.openbravo.pos.reports.ReportsWelcomePeriodTest",
+	"com.openbravo.pos.reports.SalesSummaryTest",
+	"com.openbravo.pos.reports.SalesTrendChartTest",
+	"com.openbravo.pos.reports.TaxSummaryTest",
+	"com.openbravo.pos.reports.ProductSalesTest.keepsRefundsAsNegativeProductSales",
+	"com.openbravo.pos.reports.ProductSalesTest.formatsProductUnitsForTheCatalanCaption",
+	"com.openbravo.pos.reports.ProductSalesTest.formatsSharesAsPercentagesForTheCatalanLocale",
+	"com.openbravo.pos.reports.ProductSalesTest.searchesReferencesNamesCategoryPathsAndBrandsWithoutChangingTotals",
+	"com.openbravo.pos.reports.ProductSalesTest.categoryAndProductOrderUsesAmountAndLeavesManualLinesLast",
+	"com.openbravo.pos.reports.ProductSalesTest.categoryHierarchyRollsUpSubcategoriesWithoutCountingProductsTwice",
+	"com.openbravo.pos.reports.ProductSalesTest.presetSelectionLoadsOnceAndSharedSelectorKeepsManualButtonMode",
+	"com.openbravo.pos.reports.ProductSalesTest.reportControlsAndAmountsFitMinimumWidthInAllLanguages",
+	"com.openbravo.pos.reports.ProductSalesTest.groupShareUsesOneDecimalAndTheLanguagePercentSuffix",
+	"com.openbravo.pos.reports.ProductSalesTest.stripsOnlyTheStoredReferenceSuffixInThisReport",
+	"com.openbravo.pos.reports.ProductSalesTest.reportTableKeepsManualRowsAtEndWithTotalsAndSortIndicators",
+	"com.openbravo.pos.sales.GiftReceiptSelectionTest",
+	"com.openbravo.pos.ticket.GiftVoucherProductTest",
+	"com.openbravo.pos.ticket.LineDiscountTest",
+	"com.openbravo.pos.ticket.LoyaltyStampsTest",
+	"com.openbravo.pos.ticket.ProductFilterTest",
+	"com.openbravo.pos.ticket.ReceiptBarcodeTest",
+	"com.openbravo.pos.ticket.TicketLineTaxTest",
+	"com.openbravo.pos.util.XmlParserFactoryTest",
+	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.importsSignedMigrationOnceAndRecordsChecksum",
+	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.rollsBackWholeMigrationWhenAStatementFails",
+	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.rejectsUnsignedMigration",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.migratesEmptyDerby",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.readsFallbackCatalogPriceOverlay",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.readsFallbackCatalogFamilyByFamilyKey",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.doesNotTreatBlankFallbackFamilyAsFamilyKey",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.adoptsDerbySchemaCreatedBeforeFlyway",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.ignoresObjectsLeftInOtherSchemas",
+	"com.openbravo.pos.forms.TerminalConfigurationIT.failedCashCreationRollsBackAndClaimCanBeRetried",
+	"com.openbravo.pos.forms.TerminalConfigurationIT.derby",
+)
+
+val derbyTestPatterns = listOf(
+	"db.migration.LoyaltyRedemptionFlagTest",
+	"db.migration.ProductNameCleanupTest",
+	"com.openbravo.pos.forms.CatalogFileImporterIT",
+	"com.openbravo.pos.forms.CategoryNamesIT",
+	"com.openbravo.pos.forms.AttributeManagementPersistenceTest",
+	"com.openbravo.pos.forms.DataLogicSalesPaymentValidationTest",
+	"com.openbravo.pos.forms.DataLogicSalesPersistenceIT",
+	"com.openbravo.pos.forms.DatabaseBackupTest",
+	"com.openbravo.pos.forms.ExchangePersistenceIT",
+	"com.openbravo.pos.forms.ReplenishmentPanelLayoutTest",
+	"com.openbravo.pos.forms.ReplenishmentStatusTest",
+	"com.openbravo.pos.forms.SharedTicketsIT",
+	"com.openbravo.pos.inventory.PriceRuleServiceTest",
+	"com.openbravo.pos.inventory.ProductBatchNavigatorUiTest",
+	"com.openbravo.pos.inventory.ProductBatchUpdateTest",
+	"com.openbravo.pos.inventory.ReplenishmentExportOrderTest",
+	"com.openbravo.pos.inventory.StockReceivingLayoutTest",
+	"com.openbravo.pos.inventory.StockSessionRepositoryTest",
+	"com.openbravo.pos.inventory.StockWelcomeRepositoryTest",
+	"com.openbravo.pos.reports.CashClosingTest",
+	"com.openbravo.pos.reports.CustomerDebtTest",
+	"com.openbravo.pos.reports.ReportsWelcomeElapsedComparisonTest",
+	"com.openbravo.pos.reports.ReportsWelcomeScreenshotsTest",
+	"com.openbravo.pos.reports.SalesTrendRepositoryTest",
+	"com.openbravo.pos.reports.WelcomeSalesRepositoryTest",
+	"com.openbravo.pos.reports.ProductSalesTest.repositoryLoadsManualLineCountsPathsBrandsAndPeriodBoundaries",
+)
+
+val externalDatabaseTestPatterns = listOf(
+	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.importsSignedMigrationOnConfiguredDatabaseServers",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.migratesEmptyMysql",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.migratesEmptyPostgres",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.repairsOldPostgresReplenishmentCheck",
+	"com.openbravo.pos.forms.TerminalConfigurationIT.mysql",
+	"com.openbravo.pos.forms.TerminalConfigurationIT.postgres",
+)
+
+registerTestLane("fastTest", "Run tests that do not require a database service.", fastTestPatterns)
+registerTestLane("derbyTest", "Run tests backed by local, in-memory or temporary Derby.", derbyTestPatterns)
+registerTestLane(
+	"externalDatabaseTest",
+	"Run MySQL and PostgreSQL integration tests. Start Compose first: docker compose up -d --wait",
+	externalDatabaseTestPatterns,
+	true,
+)
+
 val integrationTest by tasks.registering(Test::class) {
     group = "verification"
     description = "Apply Flyway to Derby, MySQL, and PostgreSQL. Start Compose first: docker compose up -d --wait"
     // The full suite retains in-memory Derby databases across test classes.
     maxHeapSize = "1g"
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-    classpath = sourceSets["integrationTest"].runtimeClasspath + files("locales")
+	classpath = integrationTestClasspath
     useJUnitPlatform()
     systemProperty("pos.mysql.url", "jdbc:mysql://127.0.0.1:13306/pos")
     systemProperty("pos.mysql.user", "root")
@@ -201,9 +347,9 @@ val integrationTest by tasks.registering(Test::class) {
 }
 
 tasks.register("ciCheck") {
-    group = "verification"
-    description = "Run the normal checks and the full database integration suite."
-    dependsOn(tasks.check, integrationTest)
+	group = "verification"
+	description = "Run the normal checks and all independent test lanes."
+	dependsOn(tasks.check, "fastTest", "derbyTest", "externalDatabaseTest")
 }
 
 fun dataHelper(

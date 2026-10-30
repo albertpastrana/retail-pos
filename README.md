@@ -26,9 +26,15 @@ Useful tasks:
 | `./gradlew check`           | That, plus data helpers, plus `spotlessCheck`               |
 | `./gradlew spotlessApply`   | Format Java in the source sets (do not format Java by hand) |
 | `./gradlew spotlessCheck`   | Fail if Java is not formatted                               |
-| `./gradlew integrationTest` | Flyway against Derby, Compose MySQL, and Compose PostgreSQL |
+| `./gradlew fastTest`       | Fast tests without database services                        |
+| `./gradlew derbyTest`      | Local Derby integration tests                               |
+| `./gradlew externalDatabaseTest` | MySQL/PostgreSQL integration tests; start Compose first |
+| `./gradlew ciCheck`        | Checks plus all three independent test lanes                |
 
-CI runs `./gradlew spotlessCheck` on its own job, and `./gradlew check integrationTest` on every push and pull request.
+CI runs the fast lane first, then the Derby and external database lanes. Each
+test job uploads its JUnit XML and Gradle HTML reports, and the external lane
+keeps Docker logs on failure. See `docs/testing/test-lanes.md` for the suite
+inventory.
 
 `./gradlew jar` copies `retail-pos.jar` and `locales.jar` next to `start.sh`. The `locales/` directory is also on the classpath, so a source checkout still runs after only the app jar is present:
 

@@ -17,6 +17,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Path;
 import java.lang.reflect.Proxy;
 import java.util.Locale;
 import java.util.UUID;
@@ -216,7 +217,7 @@ class ReplenishmentPanelLayoutTest {
 								table.doLayout();
 								image = new BufferedImage(width, 750, BufferedImage.TYPE_INT_RGB);
 								panel.paint(image.getGraphics());
-								File directory = new File("build/reports/replenishment-screenshots");
+								File directory = outputDirectory();
 								assertTrue(directory.isDirectory() || directory.mkdirs());
 								ImageIO.write(image, "png",
 										new File(directory, (theme instanceof FlatDarkLaf ? "dark" : "light") + "-"
@@ -251,9 +252,8 @@ class ReplenishmentPanelLayoutTest {
 								newRequestImage = new BufferedImage(width, 750, BufferedImage.TYPE_INT_RGB);
 								panel.paint(newRequestImage.getGraphics());
 								ImageIO.write(newRequestImage, "png",
-										new File("build/reports/replenishment-screenshots",
-												(theme instanceof FlatDarkLaf ? "dark" : "light") + "-"
-														+ locale.getLanguage() + "-new-" + width + ".png"));
+										new File(outputDirectory(), (theme instanceof FlatDarkLaf ? "dark" : "light")
+												+ "-" + locale.getLanguage() + "-new-" + width + ".png"));
 							}
 							data.updateStatus(request.id, "PENDING", "2");
 							data.updateDetails(request.id, "", null, null, "2");
@@ -273,8 +273,8 @@ class ReplenishmentPanelLayoutTest {
 								layout(panel);
 								BufferedImage blockedImage = new BufferedImage(980, 750, BufferedImage.TYPE_INT_RGB);
 								panel.paint(blockedImage.getGraphics());
-								ImageIO.write(blockedImage, "png", new File("build/reports/replenishment-screenshots",
-										"light-ca-blocked-980.png"));
+								ImageIO.write(blockedImage, "png",
+										new File(outputDirectory(), "light-ca-blocked-980.png"));
 							}
 							data.updateDetails(request.id, "", "customer",
 									"A customer with a long name that should wrap", "2");
@@ -343,8 +343,8 @@ class ReplenishmentPanelLayoutTest {
 									&& (Locale.ENGLISH.equals(locale) || "ca".equals(locale.getLanguage()))) {
 								BufferedImage nineRows = new BufferedImage(980, 750, BufferedImage.TYPE_INT_RGB);
 								panel.paint(nineRows.getGraphics());
-								ImageIO.write(nineRows, "png", new File("build/reports/replenishment-screenshots",
-										"light-" + locale.getLanguage() + "-nine-980.png"));
+								ImageIO.write(nineRows, "png",
+										new File(outputDirectory(), "light-" + locale.getLanguage() + "-nine-980.png"));
 							}
 							for (String id : extraIds)
 								data.delete(id);
@@ -365,6 +365,11 @@ class ReplenishmentPanelLayoutTest {
 		for (Component child : root.getComponents())
 			if (child instanceof Container)
 				layout((Container) child);
+	}
+
+	private static File outputDirectory() {
+		return Path.of(System.getProperty("pos.test.outputDir", "build"), "reports", "replenishment-screenshots")
+				.toFile();
 	}
 	private static <T extends Component> T first(Container root, Class<T> type) {
 		for (Component child : root.getComponents()) {

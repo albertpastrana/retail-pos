@@ -19,6 +19,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -251,7 +252,7 @@ class StockWelcomeLayoutTest {
 							narrowGraphics.dispose();
 						}
 						try {
-							ImageIO.write(narrow, "png", new File("build/stock-welcome-ca-narrow.png"));
+							ImageIO.write(narrow, "png", outputFile("stock-welcome-ca-narrow.png"));
 						} catch (java.io.IOException e) {
 							throw new AssertionError(e);
 						}
@@ -283,7 +284,7 @@ class StockWelcomeLayoutTest {
 						assertEquals(RetailPOSColors.surface100().getRGB(), image.getRGB(corner.x + 12, corner.y + 12),
 								"Job card must use the raised surface");
 						try {
-							ImageIO.write(image, "png", new File("build/stock-welcome-wide.png"));
+							ImageIO.write(image, "png", outputFile("stock-welcome-wide.png"));
 						} catch (java.io.IOException e) {
 							throw new AssertionError(e);
 						}
@@ -377,7 +378,7 @@ class StockWelcomeLayoutTest {
 				assertEquals(java.text.NumberFormat.getPercentInstance().format(0.10),
 						((javax.swing.JTextArea) ((JButton) facets.getComponent(3)).getComponent(1)).getText());
 				assertEquals(4, resultCard.getComponentCount()); // header, facets, open request, brand rule
-				writePreview(view, 760, 700, "build/stock-welcome-product.png");
+				writePreview(view, 760, 700, outputPath("stock-welcome-product.png"));
 				view.setSize(1800, 1000);
 				view.renderMatches(product.code, List.of(product), false);
 				layout(view);
@@ -389,7 +390,7 @@ class StockWelcomeLayoutTest {
 						"Wide facet oversized: tile=" + facets.getComponent(0).getBounds() + " tile preferred="
 								+ facets.getComponent(0).getPreferredSize() + " grid=" + facets.getBounds()
 								+ " grid preferred=" + facets.getPreferredSize() + " card=" + resultCard.getBounds());
-				writePreview(view, 1800, 1000, "build/stock-welcome-product-wide.png");
+				writePreview(view, 1800, 1000, outputPath("stock-welcome-product-wide.png"));
 				StockWelcomeRepository.Product bag = new StockWelcomeRepository.Product();
 				bag.name = "Bossa gran";
 				bag.reference = "2000000000039";
@@ -410,12 +411,12 @@ class StockWelcomeLayoutTest {
 				assertEquals(java.text.NumberFormat.getPercentInstance().format(0.21),
 						((javax.swing.JTextArea) ((JButton) bagFacets.getComponent(3)).getComponent(1)).getText());
 				assertEquals(2, ((JPanel) results.getComponent(0)).getComponentCount());
-				writePreview(view, 1800, 900, "build/stock-welcome-product-negative.png");
+				writePreview(view, 1800, 900, outputPath("stock-welcome-product-negative.png"));
 				view.setSize(760, 700);
 				view.renderMatches("9876543210000", List.of(), false);
 				layout(view);
 				assertEquals(page.getWidth(), results.getWidth());
-				writePreview(view, 760, 700, "build/stock-welcome-unknown.png");
+				writePreview(view, 760, 700, outputPath("stock-welcome-unknown.png"));
 			});
 		} finally {
 			AppLocal.setLocale(original);
@@ -435,6 +436,14 @@ class StockWelcomeLayoutTest {
 		} catch (java.io.IOException e) {
 			throw new AssertionError(e);
 		}
+	}
+
+	private static String outputPath(String name) {
+		return Path.of(System.getProperty("pos.test.outputDir", "build"), name).toString();
+	}
+
+	private static File outputFile(String name) {
+		return Path.of(outputPath(name)).toFile();
 	}
 
 	private static void assertCompactFacetsFit(JPanel facets) {
@@ -490,7 +499,7 @@ class StockWelcomeLayoutTest {
 								graphics.fillRect(0, 0, width, 88);
 								card.paint(graphics);
 								ImageIO.write(image, "png",
-										new File("build/receiving-pending-" + locale.getLanguage() + ".png"));
+										outputFile("receiving-pending-" + locale.getLanguage() + ".png"));
 							} catch (java.io.IOException e) {
 								throw new AssertionError(e);
 							} finally {
@@ -573,7 +582,7 @@ class StockWelcomeLayoutTest {
 					assertEquals(RetailPOSColors.surface100().getRGB(), image.getRGB(corner.x + 12, corner.y + 12));
 					try {
 						ImageIO.write(image, "png",
-								new File("build/stock-welcome-" + (dark ? "dark" : "light") + "-narrow.png"));
+								outputFile("stock-welcome-" + (dark ? "dark" : "light") + "-narrow.png"));
 					} catch (java.io.IOException e) {
 						throw new AssertionError(e);
 					}
@@ -591,7 +600,7 @@ class StockWelcomeLayoutTest {
 						view.setSize(1800, 900);
 						view.renderMatches(product.code, List.of(product), false);
 						layout(view);
-						writePreview(view, 1800, 900, "build/stock-welcome-product-dark.png");
+						writePreview(view, 1800, 900, outputPath("stock-welcome-product-dark.png"));
 					}
 				});
 			}

@@ -12,6 +12,7 @@ import java.awt.Container;
 import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Path;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -280,7 +281,7 @@ class StockReceivingLayoutTest {
 									} finally {
 										g.dispose();
 									}
-									ImageIO.write(image, "png", new File("build/receiving-" + locale.getLanguage()
+									ImageIO.write(image, "png", outputFile("receiving-" + locale.getLanguage()
 											+ (review ? "-review" : "-scan") + ".png"));
 									if (review) {
 										javax.swing.JScrollBar horizontal = tableScroll.getHorizontalScrollBar();
@@ -293,8 +294,8 @@ class StockReceivingLayoutTest {
 										} finally {
 											stockGraphics.dispose();
 										}
-										ImageIO.write(stockHeaders, "png", new File(
-												"build/receiving-" + locale.getLanguage() + "-review-stock.png"));
+										ImageIO.write(stockHeaders, "png",
+												outputFile("receiving-" + locale.getLanguage() + "-review-stock.png"));
 										horizontal.setValue(0);
 									}
 								}
@@ -352,8 +353,8 @@ class StockReceivingLayoutTest {
 										} finally {
 											graphics.dispose();
 										}
-										ImageIO.write(narrow, "png", new File(
-												"build/receiving-" + locale.getLanguage() + "-" + width + ".png"));
+										ImageIO.write(narrow, "png",
+												outputFile("receiving-" + locale.getLanguage() + "-" + width + ".png"));
 									}
 									int scanWidth = tools.getWidth();
 									field(panel, "reviewing", true);
@@ -374,8 +375,7 @@ class StockReceivingLayoutTest {
 										} finally {
 											graphics.dispose();
 										}
-										ImageIO.write(compactReview, "png",
-												new File("build/receiving-ca-review-320.png"));
+										ImageIO.write(compactReview, "png", outputFile("receiving-ca-review-320.png"));
 									}
 									field(panel, "reviewing", false);
 									refresh.invoke(panel);
@@ -406,7 +406,7 @@ class StockReceivingLayoutTest {
 									} finally {
 										graphics.dispose();
 									}
-									ImageIO.write(unknownImage, "png", new File("build/receiving-ca-unknown.png"));
+									ImageIO.write(unknownImage, "png", outputFile("receiving-ca-unknown.png"));
 								}
 								table.setRowSelectionInterval(knownRow, knownRow);
 								assertEquals("123", ((javax.swing.JLabel) field(panel, "detailBarcode")).getText());
@@ -469,7 +469,7 @@ class StockReceivingLayoutTest {
 									selectedGraphics.dispose();
 								}
 								ImageIO.write(selectedImage, "png",
-										new File("build/receiving-" + locale.getLanguage() + "-selected.png"));
+										outputFile("receiving-" + locale.getLanguage() + "-selected.png"));
 								model.setValueAt("7", knownRow, 4);
 								assertEquals("7", model.getValueAt(knownRow, 4));
 								assertEquals(knownRow, table.getSelectedRow());
@@ -559,5 +559,13 @@ class StockReceivingLayoutTest {
 			for (Component child : container.getComponents())
 				layout(child);
 		}
+	}
+
+	private static String outputPath(String name) {
+		return Path.of(System.getProperty("pos.test.outputDir", "build"), name).toString();
+	}
+
+	private static File outputFile(String name) {
+		return Path.of(outputPath(name)).toFile();
 	}
 }
