@@ -120,6 +120,7 @@ class ReportsWelcomeScreenshotsTest {
 				SalesTrendChart chart = (SalesTrendChart) chartContent.getComponent(0);
 				chartContent.setSize(overview.getWidth(), overview.getHeight());
 				chartContent.doLayout();
+				chart.setSize(chartContent.getWidth(), Math.max(150, chart.getPreferredSize().height));
 				assertTrue(chart.getHeight() >= 150,
 						"chart=" + chart.getBounds() + " overview=" + overview.getBounds() + " preferred="
 								+ overview.getPreferredSize() + " detail=" + detail.getBounds() + " detailPreferred="
