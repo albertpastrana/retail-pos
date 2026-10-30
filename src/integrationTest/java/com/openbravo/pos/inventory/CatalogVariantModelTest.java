@@ -87,6 +87,32 @@ public class CatalogVariantModelTest {
 	}
 
 	@Test
+	public void keepsOneVariantWhenFallbackHasNoFamily() throws Exception {
+		DataLogicSales fixtureSales = new DataLogicSales();
+		ProductInfoExt product = new ProductInfoExt();
+		product.setCode("9990000000999");
+		product.setReference("REF-ONE");
+		product.setName("One product");
+
+		List<ProductInfoExt> family = CatalogImportDialog.familyForImport("9990000000999", product, fixtureSales,
+				PRODUCTS, CATEGORIES);
+
+		assertEquals(1, family.size());
+		assertEquals(product, family.get(0));
+	}
+
+	@Test
+	public void createsOneEditableVariantForUnknownStockBarcode() throws Exception {
+		List<ProductInfoExt> family = CatalogImportDialog.familyForImport("9990000000998", null, new DataLogicSales(),
+				PRODUCTS, CATEGORIES);
+
+		assertEquals(1, family.size());
+		assertEquals("9990000000998", family.get(0).getCode());
+		assertEquals("9990000000998", family.get(0).getReference());
+		assertEquals("", family.get(0).getName());
+	}
+
+	@Test
 	public void doesNotOfferFallbackCategoryThatIsMissingLocally() {
 		ProductInfoExt product = new ProductInfoExt();
 		product.setCategoryID("missing");
