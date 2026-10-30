@@ -34,4 +34,8 @@ Use action meaning rather than literal labels: cancel, close, keep editing, or d
 
 The audit and first implementation pass cover administration delete/restore/XML editing, customer editing and archive actions, inventory category/replenishment/product/receiving flows, catalog import, demo mode, update prompts, and the shared find dialog. Existing shared confirmation flows and already-compliant payment, ticket, printer, product, and receipt dialogs were left unchanged. Native multi-choice dialogs that now use explicit option arrays were reordered with their result mappings updated.
 
-`./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.SupervisorAuthorizationTest` and `git diff --check` pass. Manual verification remains open for the concrete flows in English, Spanish, and Catalan, including keyboard focus, Enter/Escape, resize, and long labels.
+`./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.SupervisorAuthorizationTest` and `git diff --check` pass. Manual verification of the concrete flows in English, Spanish, and Catalan, including keyboard focus, Enter/Escape, resize, and long labels, passed.
+
+## Shipped
+
+Standardized secondary/safe-left and primary-right action ordering across the audited dialogs and action bars while preserving result mappings, defaults, shortcuts, and localized labels. Automated and manual verification passed.

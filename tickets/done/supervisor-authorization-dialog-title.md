@@ -18,4 +18,8 @@ When a cashier attempts a privileged operation, the supervisor selector has a me
 
 ## Verification
 
-The shared supervisor selector now uses `title.supervisorauthorization` with English, Spanish, and Catalan values. Its existing operation messages and authorization/cancellation logic are unchanged. `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.SupervisorAuthorizationTest` and `git diff --check` pass. A manual check of the selector after a privileged action in a Catalan cashier session (including focus and cancellation) and visual checks at supported window sizes in all three languages remain pending.
+The shared supervisor selector now uses `title.supervisorauthorization` with English, Spanish, and Catalan values. Its existing operation messages and authorization/cancellation logic are unchanged. `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.forms.SupervisorAuthorizationTest` and `git diff --check` pass. Manual checks after privileged actions, including focus and cancellation, passed in all three languages at supported window sizes.
+
+## Shipped
+
+Localized the shared supervisor authorization selector title without changing authorization or cancellation behaviour. Automated and multilingual manual verification passed.

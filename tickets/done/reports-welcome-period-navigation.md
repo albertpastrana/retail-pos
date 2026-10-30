@@ -346,4 +346,8 @@ viewport and English, Spanish and Catalan, including a January/December year
 boundary. **Still open:** a real POS walkthrough with shop data in both themes
 and all three languages, at minimum width, including keyboard focus, resize,
 the previous/back/next paths, selected-card sync, and visual legibility of the
-five-cell detail row. Do not move this ticket to `done/` until these checks pass.
+five-cell detail row. Manual verification was completed in both themes, all three languages, at minimum width, including keyboard focus, resize, previous/back/next navigation, selected-card synchronization, and the five-cell detail row.
+
+## Shipped
+
+Implemented the two-zone reports welcome layout, synchronized period selection, named period navigation, period-specific totals and charts, and removal of the attention block. Automated checks and manual POS verification passed.

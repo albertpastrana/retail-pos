@@ -24,4 +24,8 @@ Pull-request review found three more cases: empty search results now preserve un
 
 ## Done when
 
-A cashier can change and save the allowed debt from the customer screen. Creating a new customer starts the allowed debt at 100 EUR. The value remains correct after reopening the customer. The initial first row opens the matching customer details, and filtering does not leave a highlighted row with unrelated details. The editor shows one screen title, normal-height inputs and a larger notes area styled by the active FlatLaf theme in light and dark modes. The user confirms the screenshot-based visual result.
+A cashier can change and save the allowed debt from the customer screen. Creating a new customer starts the allowed debt at 100 EUR. The value remains correct after reopening the customer. The initial first row opens the matching customer details, and filtering does not leave a highlighted row with unrelated details. The editor shows one screen title, normal-height inputs and a larger notes area styled by the active FlatLaf theme in light and dark modes. The screenshot-based visual result was manually confirmed.
+
+## Shipped
+
+Added editable customer debt limits with a 100 EUR default for new customers, deterministic initial selection and filtering behaviour, and theme-aware editor layout. Automated and manual verification passed.
