@@ -1,28 +1,27 @@
-# Improve testing foundation and critical-path coverage
+# Improve testing foundation
 
 Captured: 2026-09-20
 
+Related:
+
+- `tickets/todo/critical-sale-and-stock-coverage.md`
+- `tickets/todo/database-compatibility-coverage.md`
+- `tickets/todo/ui-and-hardware-test-boundaries.md`
+- `tickets/todo/continuous-test-quality-measurement.md`
+
 ## Goal
 
-Build a reliable, measurable testing strategy that protects the POS's money, stock, database, and hardware-facing behaviour while keeping local and pull-request feedback fast.
+Build a reliable testing foundation with separate, diagnosable lanes that keep local and pull-request feedback fast.
 
 ## Context
 
-The repository currently has 19 test classes and approximately 73 JUnit 4 tests, all under `src/integrationTest/java`. The suite gives useful regression coverage to recent work such as Flyway migrations, shared tickets, loyalty, discounts, catalogue variants, price rules, backups, permissions, and selected reports.
+The repository currently has approximately 71 test classes and 245 JUnit Jupiter tests. They are all compiled from `src/integrationTest/java`, although many are fast unit or Derby-only tests. Existing coverage includes Flyway migrations, shared tickets, loyalty, discounts, catalogue variants, price rules, backups, permissions, reports, taxes, payments, cash closing, and stock workflows.
 
-There is no separate unit-test source set, code-coverage report, mutation testing, or coverage threshold. As a result, fast calculations and database integrations share the same test lane, and the actual production coverage is not measured.
+There is no separate fast unit-test lane, Derby integration lane, or external-database lane. `ciCheck` runs the complete `integrationTest` task after starting MySQL and PostgreSQL. The default Gradle test source set is empty. CI does not upload JUnit or Gradle test reports.
 
-The highest-risk gaps are the core shop flows:
+Several tests use caller-relative files or write generated screenshots under `build/`. Multiple UI and formatting tests change locale or other global state. These behaviours need explicit isolation before parallel execution or reliable diagnosis can be introduced.
 
-- Complete sales from ticket creation through payment, change, persistence, and stock updates.
-- Cash, card, mixed payments, refunds, voids, and cash closing.
-- Tax calculations and persistence across Derby, MySQL, and PostgreSQL.
-- Product, stock, customer, and sales persistence beyond migration-only checks.
-- Receipt generation, preview, reprint, drawer, printer, barcode scanner, scale, and other configured peripherals.
-- Critical Swing workflows, permissions as observed in the UI, and EDT/threading behaviour.
-- Invalid input, malformed TSV files, duplicate data, missing resources, connection failures, and rollback paths.
-
-Current CI runs `./gradlew ciCheck` after starting MySQL and PostgreSQL, so every pull request depends on Docker, fixed local ports, and external database startup. It does not publish Gradle test reports. The release workflow now runs the same integration gate before packaging, but still needs the broader test-lane and reporting work described below.
+The release workflow already runs `ciCheck` with clean MySQL and PostgreSQL containers before packaging. That release gate is retained and is not part of this foundation slice.
 
 Relevant current configuration:
 
@@ -35,14 +34,11 @@ Do not attempt to automate every Swing interaction or raise global coverage targ
 
 ## Slices
 
-1. **Separate the test lanes.** Introduce a fast unit-test lane, a local Derby integration lane, and an external-database lane for MySQL/PostgreSQL. Classify the existing tests without weakening their assertions or duplicating expensive setup unnecessarily.
-2. **Stabilise the test infrastructure.** Resolve fixtures from `projectDir` or the classpath, isolate tests that mutate `Locale` or global formatting state, add explicit database timeouts and diagnostics, and publish JUnit/Gradle reports from CI.
-3. **Protect the money and stock paths.** Add representative tests for ticket creation, taxes, line and total discounts, cash/card/mixed payments, change, refunds, voids, cash closing, sale persistence, stock mutation, and transaction rollback.
-4. **Expand database compatibility coverage.** Test critical queries and representative existing data on Derby, MySQL, and PostgreSQL. Cover empty databases, existing databases, malformed or duplicate data, constraints, indexes, and running migrations twice.
-5. **Strengthen assertions and fixtures.** Replace fragile `contains` checks with parsed XML or structured assertions where practical. Verify backup contents can be restored. Add builders or factories for recurring tickets, products, users, payments, and database fixtures.
-6. **Cover critical UI and hardware boundaries.** Add focused tests for permission-driven UI behaviour, receipt rendering, preview/reprint, drawer commands, printer/scanner/scale adapters, and error handling using fakes rather than physical devices.
-7. **Measure quality continuously.** Add JaCoCo with initial package-specific thresholds, then increase them as critical paths are covered. Consider mutation testing for monetary calculations, tax rules, discounts, and inventory changes. Track suite duration and flaky tests.
-8. **Align release guarantees.** Make the release workflow run the same relevant integration guarantee as pull requests, or document and enforce an equivalent release gate before publishing packages.
+1. **Inventory and classify the current suite.** Record the real test counts and classify tests as fast, Derby, or external database without weakening assertions or duplicating expensive setup.
+2. **Separate the test lanes.** Introduce independently runnable Gradle tasks for fast tests, local Derby integration, and MySQL/PostgreSQL integration. Prefer tags or source sets based on the smallest change that gives reliable selection.
+3. **Stabilise test infrastructure.** Resolve fixtures from `projectDir`, classpath, or `@TempDir`; isolate tests that mutate locale or global formatting state; and avoid caller-relative generated output.
+4. **Improve failure diagnosis.** Add explicit external-database connection and test timeouts, include the database engine and test task in diagnostics, and retain useful Gradle/JUnit reports on CI failures.
+5. **Publish the lanes in CI.** Run the fast lane before Docker-dependent checks, run the slower lanes explicitly, upload JUnit and Gradle reports with `if: always()`, and keep database logs on failure.
 
 The first release-gate slice is implemented: the tag-triggered release workflow
 runs `ciCheck` with clean MySQL and PostgreSQL containers before any platform
@@ -51,7 +47,7 @@ not require a versioned release-notes file.
 
 ## Verification
 
-Run the fast lane independently from Docker and confirm it provides useful feedback without external services.
+Run the fast lane independently from Docker and confirm it provides useful feedback without external services. Run each Derby and external-database lane independently and verify that selecting one lane does not execute another.
 
 Run the complete database verification with:
 
@@ -63,23 +59,20 @@ docker compose down -v
 
 Also verify:
 
-- JUnit and coverage reports are generated and uploaded by CI.
+- JUnit and Gradle test reports are generated and uploaded by CI.
 - A failed test leaves enough logs to identify the database, test class, and failure cause.
-- Critical money and stock scenarios pass on all supported database engines.
-- Migration tests cover empty, existing, and repeat-run databases.
-- Backup tests create and restore representative data.
 - Fixtures work regardless of the caller's working directory.
 - Tests that alter global locale or formatting state are isolated and safe from parallel execution.
 - The release workflow cannot publish a package without the agreed integration gate.
 
 ## Done when
 
-- Fast unit tests, Derby integration tests, and external database tests are separate and documented.
-- The pull-request pipeline runs a fast lane before the slower external-database lane and publishes test reports.
-- Critical sale, payment, tax, stock, rollback, and cash-closing behaviours have automated regression coverage.
-- Critical persistence and migration paths are verified on Derby, MySQL, and PostgreSQL, including existing databases and repeat migrations.
-- Fixtures and assertions are deterministic, structurally meaningful, and independent of the caller's working directory.
-- Receipt, preview/reprint, permissions, and configured hardware boundaries have focused automated coverage using test doubles where physical devices are unnecessary.
-- JaCoCo reports coverage and enforces agreed initial thresholds for critical packages; any threshold increase is based on measured progress.
-- CI and release checks expose failures with actionable reports and do not rely on undocumented local state.
+- The current suite is inventoried accurately and every test belongs to a documented lane.
+- Fast tests, Derby integration tests, and external database tests are independently runnable and do not require unnecessary services.
+- The pull-request pipeline runs the fast lane before Docker-dependent lanes and uploads JUnit/Gradle reports for every test job.
+- Fixtures and generated output are deterministic and independent of the caller's working directory.
+- Tests that alter locale or global formatting state cannot interfere with one another when the selected lane runs in parallel.
+- External database failures expose the engine, connection context, test class, and database logs.
 - The complete verification commands pass, including `./gradlew ciCheck` with clean database containers.
+
+Critical business coverage, database compatibility, UI/hardware boundaries, and coverage metrics are tracked in the related follow-up tickets rather than being required to close this foundation slice.
