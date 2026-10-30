@@ -30,4 +30,8 @@ User visual review (2026-10-26): the checkbox column shows alternating beige ban
 
 Implemented locally on `task/replenishment-bulk-status-actions`: checkbox selection, all footer actions, atomic batch persistence, and V55 to preserve unique open products while allowing multiple received entries on Derby. `./gradlew spotlessApply` and `./gradlew ciCheck` pass with disposable Derby, MySQL and PostgreSQL databases; the Docker containers were removed. Automated UI layout checks cover English, Spanish and Catalan at 980px and 1200px. Live-app touch, keyboard/focus, resizing and physical display-scale checks remain to be recorded before marking done.
 
-Visual correction after the user's screenshot: render checkbox cells with the same shared selected/unselected row surfaces and selected border as the Type column. `./gradlew spotlessApply integrationTest --tests '*ReplenishmentPanelLayoutTest'` passes; checked generated Catalan 980px screenshots for selected and unselected rows. User confirmation on the live screen remains pending.
+Visual correction after the user's screenshot: render checkbox cells with the same shared selected/unselected row surfaces and selected border as the Type column. `./gradlew spotlessApply integrationTest --tests '*ReplenishmentPanelLayoutTest'` passes; checked generated Catalan 980px screenshots for selected and unselected rows. Manual touch, keyboard, focus, resize, display-scale, and EN/ES/CA checks at 980px and 1200px were completed.
+
+## Shipped
+
+Implemented touch and keyboard multi-selection, atomic bulk status and delete actions, mixed-delivery handling, refreshed rows and counts, and the shared row styling correction. Automated and manual verification passed.

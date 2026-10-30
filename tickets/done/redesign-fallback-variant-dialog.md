@@ -34,4 +34,8 @@ Latest cashier request: make the default dialog a little taller. Increased the v
 
 Code review identified a selection regression: full-table refreshes during editing could clear the selected row. Refresh only the edited row during keystrokes and use row-update events for family-wide changes so the cashier keeps the current variant selected.
 
-Invalid catalogue prices are treated as missing while loading a variant, so the family editor remains open and the existing missing-price validation can guide the cashier instead of throwing on the Swing event thread.
+Invalid catalogue prices are treated as missing while loading a variant, so the family editor remains open and the existing missing-price validation can guide the cashier instead of throwing on the Swing event thread. Manual receipt, stock, receiving, focus, keyboard, row/stepper, resize, display-scale, and EN/ES/CA checks passed.
+
+## Shipped
+
+Implemented the compact fallback-family editor, synchronized stock controls, price validation, selected-variant preservation, localized scanned-EAN labels, and the expanded default list height. Automated and manual verification passed.

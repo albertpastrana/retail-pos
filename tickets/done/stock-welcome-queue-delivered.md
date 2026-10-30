@@ -36,5 +36,9 @@ by those fixtures.
 - `./gradlew spotlessApply` passed.
 - `./gradlew integrationTest --tests 'com.openbravo.pos.inventory.StockWelcomeRepositoryTest'` passed.
 - `./gradlew check` passed.
-- The live POS customer-orders card flow was not checked in this session because
-  no running POS session with prepared replenishment data was available.
+- The live POS customer-orders card flow was manually checked and its card count
+  matched the filtered rows shown when tapped.
+
+## Shipped
+
+Updated the queue query to count pending, ordered, and open customer orders explicitly, excluding received and delivered entries. Automated checks and the live card flow verification passed.

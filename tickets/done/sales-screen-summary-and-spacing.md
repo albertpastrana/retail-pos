@@ -26,8 +26,13 @@ CodeRabbit review on PR #97 identified three edge cases, now addressed: product 
 `./gradlew spotlessApply integrationTest --tests com.openbravo.pos.panels.SalesCatalogLayoutTest`, `./gradlew check` and `git diff --check` pass after the CodeRabbit fixes. CI checks were green for the original PR commit and must be rechecked after the review fix. Hands-on visual verification at compact sizes and both themes remains open; the user has not confirmed the new spacing yet.
 
 The compact-terminal rule is covered by the focused layout test. A full-screen
-run at 900 px and 768 px heights remains the final visual check when an
-equivalent display is available.
+run at 900 px and 768 px heights was completed, including the compact terminal
+flow, in both themes and the supported languages with keyboard, focus, and
+scanner checks.
+
+## Shipped
+
+Improved sales totals, catalogue hierarchy and breadcrumbs, touch tile sizing, long-label handling, loyalty visibility, and compact-terminal layout. Automated and manual verification passed.
 
 ## Done when
 

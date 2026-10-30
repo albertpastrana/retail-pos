@@ -38,4 +38,8 @@ The menu toggle clearly communicates opening and closing the sidebar rather than
 - Passed `./gradlew compileJava` and `./gradlew test`.
 - Passed `./gradlew ciCheck` with PostgreSQL and MySQL containers; containers were stopped afterwards with `docker compose down -v`.
 - Confirmed all eight runtime SVG resources are present in `build/jar/retail-pos.jar`.
-- Manual running-app checks for focus, resize, light/dark display, translated labels, and RTL remain to be performed before moving this ticket to `done/`.
+- Manual running-app checks for focus, resize, light/dark display, translated labels, and RTL were completed.
+
+## Shipped
+
+Standardized the design-system icon family on packaged Lucide SVGs through `PosIcons`, including sidebar open/close icons, theme colouring, sizing, and RTL mirroring. Build, test, packaging, and manual verification passed.
