@@ -168,53 +168,39 @@ public final class CatalogImportDialog {
 			LOGGER.log(Level.INFO, "event=catalog_fallback_match import_id={0} code=\"{1}\" family=\"{2}\"",
 					new Object[]{importId, code, catalogProduct.getFamily()});
 		}
-		// Receiving only adds the scanned product to the receipt. The selected
-		// family variants are still created in the catalogue for later scans.
+		// Always use the variant screen, including when the fallback has one row or
+		// no family information. Receiving only adds the scanned product to the
+		// receipt; selected siblings are still created for later scans.
 		List<ProductInfoExt> family = familyForImport(code, catalogProduct, dlSales);
-		if (family.size() > 1) {
-			LOGGER.log(Level.INFO,
-					"event=catalog_fallback_family_match import_id={0} code=\"{1}\" family=\"{2}\" variants={3}",
-					new Object[]{importId, code, catalogProduct.getFamily(), family.size()});
-			List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family);
-			if (editedFamily == null) {
-				cancelled = true;
-				LOGGER.log(Level.INFO, "event=catalog_import_cancelled import_id={0} code=\"{1}\" reason=family_edit",
-						new Object[]{importId, code});
-				return null;
-			}
-			List<ProductInfoExt> existingFamily = new ArrayList<ProductInfoExt>();
-			for (ProductInfoExt variant : editedFamily)
-				existingFamily.add(dlSales.getProductInfoByCode(variant.getCode()));
-			dlSales.importProducts(editedFamily, null);
-			for (int i = 0; i < editedFamily.size(); i++) {
-				ProductInfoExt imported = editedFamily.get(i);
-				ProductInfoExt localProduct = dlSales.getProductInfoByCode(imported.getCode());
-				logFallbackProductOperation(importId, code, localProduct,
-						existingFamily.get(i) == null ? "created" : "updated");
-				applyImportedStock(imported);
-			}
-			LOGGER.log(Level.INFO, "event=catalog_import_family_success import_id={0} code=\"{1}\" variants={2}",
-					new Object[]{importId, code, editedFamily.size()});
-			if (copy == Copy.RECEIVING) {
-				ProductInfoExt scannedVariant = receivingVariant(editedFamily, code);
-				if (scannedVariant != null)
-					return importedByExactCode(scannedVariant.getCode());
-			}
-			return dlSales.getProductInfoByCode(code);
-		}
-		ProductInfoExt editedProduct = editProductForImport(code, catalogProduct);
-		if (editedProduct == null) {
+		LOGGER.log(Level.INFO,
+				"event=catalog_fallback_family_match import_id={0} code=\"{1}\" family=\"{2}\" variants={3}",
+				new Object[]{importId, code, catalogProduct == null ? "" : catalogProduct.getFamily(), family.size()});
+		List<ProductInfoExt> editedFamily = editProductFamilyForImport(code, family, catalogProduct != null);
+		if (editedFamily == null) {
 			cancelled = true;
-			LOGGER.log(Level.INFO, "event=catalog_import_cancelled import_id={0} code=\"{1}\" reason=product_edit",
+			LOGGER.log(Level.INFO, "event=catalog_import_cancelled import_id={0} code=\"{1}\" reason=family_edit",
 					new Object[]{importId, code});
 			return null;
 		}
-		product = dlSales.importProduct(editedProduct, editedProduct.getProperty("catalog.brand"), null);
-		logFallbackProductOperation(importId, code, product, "created");
-		applyImportedStock(editedProduct);
-		LOGGER.log(Level.INFO, "event=catalog_import_success import_id={0} code=\"{1}\" family=\"{2}\"",
-				new Object[]{importId, code, editedProduct.getFamily()});
-		return copy == Copy.RECEIVING ? importedByExactCode(editedProduct.getCode()) : product;
+		List<ProductInfoExt> existingFamily = new ArrayList<ProductInfoExt>();
+		for (ProductInfoExt variant : editedFamily)
+			existingFamily.add(dlSales.getProductInfoByCode(variant.getCode()));
+		dlSales.importProducts(editedFamily, null);
+		for (int i = 0; i < editedFamily.size(); i++) {
+			ProductInfoExt imported = editedFamily.get(i);
+			ProductInfoExt localProduct = dlSales.getProductInfoByCode(imported.getCode());
+			logFallbackProductOperation(importId, code, localProduct,
+					existingFamily.get(i) == null ? "created" : "updated");
+			applyImportedStock(imported);
+		}
+		LOGGER.log(Level.INFO, "event=catalog_import_family_success import_id={0} code=\"{1}\" variants={2}",
+				new Object[]{importId, code, editedFamily.size()});
+		if (copy == Copy.RECEIVING) {
+			ProductInfoExt scannedVariant = receivingVariant(editedFamily, code);
+			if (scannedVariant != null)
+				return importedByExactCode(scannedVariant.getCode());
+		}
+		return dlSales.getProductInfoByCode(code);
 	}
 
 	private void logFallbackProductOperation(String importId, String scannedCode, ProductInfoExt product,
@@ -233,9 +219,20 @@ public final class CatalogImportDialog {
 
 	static List<ProductInfoExt> familyForImport(String code, ProductInfoExt catalogProduct, DataLogicSales dlSales,
 			String productsPath, String categoriesPath) throws BasicException {
-		return catalogProduct == null
+		List<ProductInfoExt> family = catalogProduct == null
 				? new ArrayList<ProductInfoExt>()
 				: dlSales.getCatalogProductFamily(code, productsPath, categoriesPath);
+		if (family.isEmpty()) {
+			ProductInfoExt single = catalogProduct == null ? new ProductInfoExt() : catalogProduct;
+			if (catalogProduct == null || single.getCode() == null || single.getCode().isEmpty())
+				single.setCode(code);
+			if (catalogProduct == null || single.getReference() == null || single.getReference().isEmpty())
+				single.setReference(code);
+			if (catalogProduct == null || single.getName() == null)
+				single.setName("");
+			family.add(single);
+		}
+		return family;
 	}
 
 	static ProductInfoExt receivingVariant(List<ProductInfoExt> importedFamily, String code) {
@@ -284,8 +281,8 @@ public final class CatalogImportDialog {
 		return fromCatalog ? "message.importproduct" : "message.importproduct.unknown";
 	}
 
-	private List<ProductInfoExt> editProductFamilyForImport(String code, List<ProductInfoExt> family)
-			throws BasicException {
+	private List<ProductInfoExt> editProductFamilyForImport(String code, List<ProductInfoExt> family,
+			boolean fromCatalog) throws BasicException {
 		LOGGER.log(Level.INFO, "event=catalog_family_editor_start code=\"{0}\" variants={1}",
 				new Object[]{code, family.size()});
 		// The checkbox follows the cashier from variant to variant.
@@ -314,7 +311,8 @@ public final class CatalogImportDialog {
 					editor.stock.setText(value);
 			}
 		};
-		final JButton confirm = touchButton(confirmLabel(true));
+		final boolean multipleVariants = family.size() > 1;
+		final JButton confirm = touchButton(confirmLabel(multipleVariants));
 		confirm.setBackground(RetailPOSColors.brand());
 		confirm.setForeground(RetailPOSColors.onBrand());
 		final JLabel status = new JLabel();
@@ -570,7 +568,7 @@ public final class CatalogImportDialog {
 		JLabel heading = new JLabel(AppLocal.getIntString("title.importproductfamily"));
 		heading.setFont(heading.getFont().deriveFont(Font.BOLD, 20f));
 		intro.add(heading, BorderLayout.NORTH);
-		intro.add(buildFamilyImportMessage(), BorderLayout.SOUTH);
+		intro.add(buildFamilyImportMessage(code, fromCatalog, family.size()), BorderLayout.SOUTH);
 		header.add(intro, BorderLayout.CENTER);
 		JLabel ean = new JLabel("<html><div style='text-align:right'><small>"
 				+ AppLocal.getIntString("label.variants.scannedean") + "</small><br>" + code + "</div></html>");
@@ -661,128 +659,15 @@ public final class CatalogImportDialog {
 		}
 	}
 
-	private JLabel buildFamilyImportMessage() {
+	private JLabel buildFamilyImportMessage(String code, boolean fromCatalog, int variantCount) {
+		if (variantCount == 1)
+			return buildImportMessage(code, fromCatalog);
 		return new JLabel(AppLocal.getIntString(familyMessageKey()));
-	}
-
-	private ProductInfoExt editProductForImport(String code, ProductInfoExt catalogProduct) throws BasicException {
-		ProductInfoExt availableProduct = catalogProduct;
-		if (availableProduct == null) {
-			availableProduct = new ProductInfoExt();
-			availableProduct.setCode(code);
-			availableProduct.setReference(code);
-			availableProduct.setName("");
-		}
-		final JTextField name = new JTextField(availableProduct.getName(), 32);
-		name.setCaretPosition(0);
-		String initialReference = availableProduct.getReference();
-		if (initialReference == null || initialReference.trim().isEmpty()) {
-			initialReference = availableProduct.getCode();
-		}
-		final JTextField reference = new JTextField(initialReference, 16);
-		reference.setCaretPosition(0);
-		final JComboBox<CategoryInfo> category = createImportCategoryCombo(availableProduct);
-		final ProductPriceFields prices = createImportPrices(availableProduct);
-		final JTextField stock = ProductFormLayout.numberField(true);
-
-		// What the item is, then what it costs and sells for, then how many. The
-		// price rule goes above the price it suggests, and each read-only number
-		// under the field it comes from.
-		JPanel fields = new JPanel(new GridBagLayout());
-		ProductFormLayout.addRow(fields, 0, AppLocal.getIntString("label.prodname") + ":", name);
-		ProductFormLayout.addRow(fields, 1, AppLocal.getIntString("label.prodcategory") + ":", category);
-		ProductFormLayout.addRow(fields, 2, AppLocal.getIntString("label.prodref") + ":", reference);
-		ProductFormLayout.addRow(fields, 3, AppLocal.getIntString("label.prodpricebuy") + ":", prices.buy);
-		ProductFormLayout.addRow(fields, 4, prices.secondaryLabel() + ":", prices.secondary);
-		GridBagConstraints constraints = new GridBagConstraints();
-		constraints.insets = ProductFormLayout.ROW_INSETS;
-		constraints.anchor = GridBagConstraints.WEST;
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 1;
-		constraints.gridy = 5;
-		fields.add(prices.offer, constraints);
-		ProductFormLayout.addRow(fields, 6, AppLocal.getIntString("label.prodpriceselltax") + ":", prices.priceBlock());
-		ProductFormLayout.addRow(fields, 7, AppLocal.getIntString("label.taxcategory") + ":", prices.tax);
-		if (copy != Copy.RECEIVING)
-			ProductFormLayout.addRow(fields, 8, AppLocal.getIntString("label.prodstock") + ":", stock);
-
-		JPanel content = new JPanel(new BorderLayout(0, 12));
-		content.add(buildImportMessage(code, catalogProduct != null), BorderLayout.NORTH);
-		content.add(ProductFormLayout.topAligned(fields), BorderLayout.CENTER);
-		focusImportField(stock);
-		enlargeDialogFont(content);
-
-		String title = AppLocal.getIntString("title.importproduct");
-		Object[] options = new Object[]{AppLocal.getIntString("button.skipitem"), confirmLabel(false)};
-		while (true) {
-			int result = showImportOptionDialog(content, title, options);
-			if (result == 0) {
-				return null;
-			}
-
-			if (hasInvalidImportStock(stock.getText())) {
-				JOptionPane.showMessageDialog(parent, AppLocal.getIntString("message.stockaddpositive"), title,
-						JOptionPane.WARNING_MESSAGE);
-				continue;
-			}
-			ProductInfoExt edited = buildEditedProduct(availableProduct, catalogProduct, reference, name, category,
-					prices, stock);
-			if (edited == null) {
-				JOptionPane.showMessageDialog(parent, AppLocal.getIntString("message.importproductrequired"), title,
-						JOptionPane.WARNING_MESSAGE);
-				continue;
-			}
-			return edited;
-		}
 	}
 
 	private JLabel buildImportMessage(String code, boolean fromCatalog) {
 		String message = AppLocal.getIntString(importMessageKey(fromCatalog), code);
 		return new JLabel("<html><body style='width: 320px'>" + message + "</body></html>");
-	}
-
-	private int showImportOptionDialog(JComponent content, String title, Object[] options) {
-		final JOptionPane optionPane = new JOptionPane(content, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION,
-				null, options, null);
-		final JDialog dialog = optionPane.createDialog(parent, title);
-		dialog.getRootPane().setDefaultButton(null);
-		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ENTER"),
-				"ignoreEnter");
-		dialog.getRootPane().getActionMap().put("ignoreEnter", new javax.swing.AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-			}
-		});
-		dialog.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ctrl ENTER"),
-				"confirmImport");
-		dialog.getRootPane().getActionMap().put("confirmImport", new javax.swing.AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				optionPane.setValue(options[1]);
-				dialog.dispose();
-			}
-		});
-		dialog.setVisible(true);
-		Object value = optionPane.getValue();
-		return options[1].equals(value) ? 1 : 0;
-	}
-
-	private void enlargeDialogFont(JComponent component) {
-		Font font = component.getFont();
-		if (font != null) {
-			component.setFont(font.deriveFont(16f));
-		}
-		if (component instanceof JTable) {
-			JTable table = (JTable) component;
-			if (table.getTableHeader() != null && table.getTableHeader().getFont() != null) {
-				table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(16f));
-			}
-		}
-		for (Component child : component.getComponents()) {
-			if (child instanceof JComponent) {
-				enlargeDialogFont((JComponent) child);
-			}
-		}
 	}
 
 	private JButton touchButton(String label) {
@@ -1334,7 +1219,8 @@ public final class CatalogImportDialog {
 			if (stockInvalid) {
 				return null;
 			}
-			return buildEditedProduct(current.product, current.product, reference, name, category, prices, stock);
+			ProductInfoExt catalogProduct = current.product.getID() == null ? null : current.product;
+			return buildEditedProduct(current.product, catalogProduct, reference, name, category, prices, stock);
 		}
 	}
 
