@@ -118,6 +118,8 @@ class ReportsWelcomeScreenshotsTest {
 				JPanel overview = (JPanel) detail.getComponent(1);
 				JPanel chartContent = (JPanel) overview.getComponent(1);
 				SalesTrendChart chart = (SalesTrendChart) chartContent.getComponent(0);
+				chartContent.setSize(overview.getWidth(), overview.getHeight());
+				chartContent.doLayout();
 				assertTrue(chart.getHeight() >= 150,
 						"chart=" + chart.getBounds() + " overview=" + overview.getBounds() + " preferred="
 								+ overview.getPreferredSize() + " detail=" + detail.getBounds() + " detailPreferred="
