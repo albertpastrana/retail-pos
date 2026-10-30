@@ -321,6 +321,38 @@ val externalDatabaseTestPatterns = listOf(
 	"com.openbravo.pos.forms.TerminalConfigurationIT.postgres",
 )
 
+val allTestLanePatterns = fastTestPatterns + derbyTestPatterns + externalDatabaseTestPatterns
+
+tasks.register("verifyTestLaneCoverage") {
+	group = "verification"
+	description = "Fail when an integration test method is missing from, or duplicated across, a test lane."
+	doLast {
+		val methodPattern = Regex(
+			"""@Test[\s\S]*?(?:public\s+|protected\s+|private\s+)?(?:static\s+)?[\w<>\[\], ?]+\s+(\w+)\s*\(""",
+		)
+		val classPattern = Regex("""(?:public\s+)?class\s+(\w+)""")
+		val packagePattern = Regex("""package\s+([\w.]+)\s*;""")
+		val tests = project.fileTree("src/integrationTest/java")
+			.matching { include("**/*.java") }
+			.files
+			.flatMap { file ->
+				val source = file.readText()
+				val packageName = packagePattern.find(source)?.groupValues?.get(1)
+					?: error("Missing package declaration in $file")
+				val className = classPattern.find(source)?.groupValues?.get(1)
+					?: error("Missing test class declaration in $file")
+				val qualifiedName = "$packageName.$className"
+				methodPattern.findAll(source).map { "$qualifiedName.${it.groupValues[1]}" }.toList()
+			}
+		val uncovered = tests.filter { test -> allTestLanePatterns.count { pattern ->
+			pattern == test || test.startsWith("$pattern.")
+		} != 1 }
+		if (tests.size != 245 || uncovered.isNotEmpty()) {
+			error("Expected 245 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
+		}
+	}
+}
+
 registerTestLane("fastTest", "Run tests that do not require a database service.", fastTestPatterns)
 registerTestLane("derbyTest", "Run tests backed by local, in-memory or temporary Derby.", derbyTestPatterns)
 registerTestLane(
@@ -349,7 +381,7 @@ val integrationTest by tasks.registering(Test::class) {
 tasks.register("ciCheck") {
 	group = "verification"
 	description = "Run the normal checks and all independent test lanes."
-	dependsOn(tasks.check, "fastTest", "derbyTest", "externalDatabaseTest")
+	dependsOn(tasks.check, "verifyTestLaneCoverage", "fastTest", "derbyTest", "externalDatabaseTest")
 }
 
 fun dataHelper(

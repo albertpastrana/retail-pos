@@ -29,7 +29,7 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - run: ./gradlew fastTest
+      - run: ./gradlew verifyTestLaneCoverage fastTest
 
       - if: always()
         uses: actions/upload-artifact@v7
@@ -52,7 +52,7 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - run: ./gradlew derbyTest
+      - run: ./gradlew verifyTestLaneCoverage derbyTest
 
       - if: always()
         uses: actions/upload-artifact@v7
@@ -79,7 +79,7 @@ jobs:
 
       - run: docker compose up -d --wait --wait-timeout 120
 
-      - run: ./gradlew externalDatabaseTest
+      - run: ./gradlew verifyTestLaneCoverage externalDatabaseTest
 
       - if: failure()
         run: docker compose logs
@@ -95,3 +95,28 @@ jobs:
 
       - if: always()
         run: docker compose down -v
+
+  check:
+    needs: fast-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - run: ./gradlew check
+
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: check-reports
+          path: |
+            build/test-results/test
+            build/reports/tests/test
+          if-no-files-found: warn
