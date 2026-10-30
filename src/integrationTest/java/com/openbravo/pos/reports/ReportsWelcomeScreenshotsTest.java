@@ -30,7 +30,8 @@ class ReportsWelcomeScreenshotsTest {
 	@Test
 	void capturesCurrentYearRollingYearAndPreviousMonth() throws Exception {
 		Locale original = Locale.getDefault();
-		Path output = Path.of("build", "reports", "reports-welcome", "screenshots");
+		Path output = Path.of(System.getProperty("pos.test.outputDir", "build"), "reports", "reports-welcome",
+				"screenshots");
 		Files.createDirectories(output);
 		try (Connection connection = DriverManager
 				.getConnection("jdbc:derby:memory:reportsScreenshotsIT;create=true")) {

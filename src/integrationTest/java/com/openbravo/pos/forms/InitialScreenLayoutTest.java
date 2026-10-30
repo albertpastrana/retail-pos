@@ -131,7 +131,8 @@ class InitialScreenLayoutTest {
 		Graphics2D graphics = image.createGraphics();
 		app.printAll(graphics);
 		graphics.dispose();
-		Path destination = Path.of("build/reports/initial-screen", name + ".png");
+		Path destination = Path.of(System.getProperty("pos.test.outputDir", "build"), "reports", "initial-screen",
+				name + ".png");
 		Files.createDirectories(destination.getParent());
 		ImageIO.write(image, "png", destination.toFile());
 	}

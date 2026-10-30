@@ -405,7 +405,13 @@ public class DatabaseMigratorIT {
 				}
 			}
 		}
-		throw new AssertionError("Database not reachable: " + url, last);
+		throw new AssertionError("Database not reachable for " + System.getProperty("pos.test.lane", "unknown")
+				+ " (engine=" + databaseEngine(url) + ", url=" + url + ")", last);
+	}
+
+	private static String databaseEngine(String url) {
+		int separator = url.indexOf(':', "jdbc:".length());
+		return separator > 0 ? url.substring("jdbc:".length(), separator) : "unknown";
 	}
 
 	private static Connection open(String url, String user, String password) throws SQLException {

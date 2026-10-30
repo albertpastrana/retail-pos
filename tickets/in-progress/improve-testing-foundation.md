@@ -45,6 +45,18 @@ runs `ciCheck` with clean MySQL and PostgreSQL containers before any platform
 package job can start. Releases use GitHub-generated notes from the tag and do
 not require a versioned release-notes file.
 
+## Decisions
+
+- Keep the existing `integrationTest` source set so existing test fixtures and
+  targeted commands remain compatible; define the three lanes as filtered,
+  independently runnable Gradle tasks.
+- Keep lane membership explicit in `build.gradle.kts`, including method-level
+  selection for classes that contain both local and external database tests.
+- Use Gradle-provided project and output directories for fixtures and generated
+  screenshots rather than changing the tests' working directory.
+- Run fast tests first in CI, then Derby and external database jobs, and upload
+  each job's JUnit XML and Gradle HTML reports with `if: always()`.
+
 ## Verification
 
 Run the fast lane independently from Docker and confirm it provides useful feedback without external services. Run each Derby and external-database lane independently and verify that selecting one lane does not execute another.

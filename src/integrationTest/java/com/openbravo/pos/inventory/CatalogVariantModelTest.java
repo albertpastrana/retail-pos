@@ -15,8 +15,10 @@ import com.openbravo.pos.ticket.ProductInfoExt;
 
 public class CatalogVariantModelTest {
 
-	private static final String PRODUCTS = "src/integrationTest/fixtures/catalog/import-products.tsv";
-	private static final String CATEGORIES = "src/integrationTest/fixtures/catalog/import-categories.tsv";
+	private static final String FIXTURE_DIR = System.getProperty("pos.projectDir", ".")
+			+ "/src/integrationTest/fixtures/catalog/";
+	private static final String PRODUCTS = FIXTURE_DIR + "import-products.tsv";
+	private static final String CATEGORIES = FIXTURE_DIR + "import-categories.tsv";
 
 	@Test
 	public void groupsSupplierReferencesByModel() {
