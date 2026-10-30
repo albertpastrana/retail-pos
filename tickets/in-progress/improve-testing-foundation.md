@@ -56,6 +56,8 @@ not require a versioned release-notes file.
   screenshots rather than changing the tests' working directory.
 - Run fast tests first in CI, then Derby and external database jobs, and upload
   each job's JUnit XML and Gradle HTML reports with `if: always()`.
+- Keep the normal `check` job in pull-request CI and guard the explicit lane
+  inventory with `verifyTestLaneCoverage` before each lane runs.
 
 ## Verification
 

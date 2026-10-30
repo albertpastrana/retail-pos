@@ -22,6 +22,10 @@ decision rather than silently coupling a fast test to Docker. Every lane has
 separate JUnit XML and Gradle HTML reports under `build/test-results/<task>`
 and `build/reports/tests/<task>`.
 
+`./gradlew verifyTestLaneCoverage` scans the current `@Test` methods and fails
+if a method is missing from, or assigned to more than one, lane. `ciCheck` and
+each CI lane run this guard before executing tests.
+
 Tests receive `pos.projectDir` and `pos.test.outputDir` from Gradle. Repository
 fixtures and generated screenshots therefore do not depend on the caller's
 working directory. External tasks also have a ten-minute task timeout and
