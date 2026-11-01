@@ -1,6 +1,6 @@
 # Test lanes
 
-The 71 classes and 245 Jupiter tests under `src/integrationTest/java` are
+The 71 classes and 246 Jupiter tests under `src/integrationTest/java` are
 selected into three independent Gradle lanes. The class and method patterns
 below are the source-of-truth inventory; a test is deliberately not inferred
 from its filename because four classes contain more than one kind of test.
@@ -8,7 +8,7 @@ from its filename because four classes contain more than one kind of test.
 | Lane | Tests | Services | Gradle task |
 | --- | ---: | --- | --- |
 | Fast | 161 | None | `./gradlew fastTest` |
-| Derby | 78 | None; in-memory or temporary Derby | `./gradlew derbyTest` |
+| Derby | 79 | None; in-memory or temporary Derby | `./gradlew derbyTest` |
 | External database | 6 | MySQL and PostgreSQL | `./gradlew externalDatabaseTest` |
 
 The fast lane contains pure service, formatting, layout, and model tests. The
