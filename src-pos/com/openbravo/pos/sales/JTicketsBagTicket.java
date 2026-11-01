@@ -351,9 +351,19 @@ public class JTicketsBagTicket extends JTicketsBag {
 				case 3 :
 					return Formats.STRING.formatValue(ticket.getName());
 				case 4 :
-					return ticket.getPayment() == null
-							? ""
-							: AppLocal.getIntString("transpayment." + ticket.getPayment());
+					if (ticket.hasMultiplePayments()) {
+						return AppLocal.getIntString("label.paymentmixed");
+					}
+					String payment = ticket.getPayment();
+					if (payment == null) {
+						return "";
+					}
+					if ("cashrefund".equals(payment)) {
+						payment = "cash";
+					} else if ("magcardrefund".equals(payment)) {
+						payment = "magcard";
+					}
+					return AppLocal.getIntString("transpayment." + payment);
 				default :
 					return "";
 			}
