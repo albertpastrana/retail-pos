@@ -37,6 +37,7 @@ public class FindTicketsInfo implements SerializableRead {
 	private String name;
 	private String customer;
 	private double total;
+	private int paymentCount;
 	private String payment;
 
 	/** Creates new ProductInfo */
@@ -53,7 +54,8 @@ public class FindTicketsInfo implements SerializableRead {
 		name = dr.getString(4);
 		customer = dr.getString(5);
 		total = (dr.getObject(6) == null) ? 0.0 : dr.getDouble(6).doubleValue();
-		payment = dr.getString(7);
+		paymentCount = dr.getInt(7);
+		payment = dr.getString(8);
 	}
 
 	@Override
@@ -95,6 +97,10 @@ public class FindTicketsInfo implements SerializableRead {
 
 	public String getPayment() {
 		return payment;
+	}
+
+	public boolean hasMultiplePayments() {
+		return paymentCount > 1;
 	}
 
 }
