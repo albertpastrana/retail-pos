@@ -31,6 +31,7 @@ public class CustomerSheet extends JDialog {
 	public static final int CLOSED = 0;
 	public static final int CHANGE = 1;
 	public static final int REMOVE = 2;
+	public static final int UPDATED = 3;
 
 	private int result = CLOSED;
 	private final AppView app;
@@ -124,6 +125,7 @@ public class CustomerSheet extends JDialog {
 		try {
 			dlSales.saveTicket(ticket, app.getInventoryLocation());
 			customer = dlSales.loadCustomerExt(customer.getId());
+			result = UPDATED;
 			debt.setText(formatDebt(customer));
 		} catch (BasicException exception) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.payerror"),
@@ -146,7 +148,8 @@ public class CustomerSheet extends JDialog {
 		String previousName = customer.getName();
 		customer.setName(name);
 		try {
-			dlCustomers.updateCustomer(customer);
+			dlCustomers.updateCustomerName(customer.getId(), name);
+			result = UPDATED;
 			nameValue.setText(name);
 		} catch (BasicException exception) {
 			customer.setName(previousName);
