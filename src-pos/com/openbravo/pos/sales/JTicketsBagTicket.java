@@ -26,6 +26,8 @@ import com.openbravo.pos.ticket.LoyaltyStamps;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,7 +77,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	private JPanelTicketEdits m_panelticketedit;
 
-	private static final int RECENT_TICKETS = 10;
+	private static final int RECENT_TICKETS = 30;
 	private static final int GIFT_RECEIPT_DIALOG_WIDTH = 760;
 	private static final int GIFT_RECEIPT_PRODUCT_WIDTH = 560;
 	private JTable m_jRecentTickets;
@@ -181,8 +183,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 	private void initRecentTickets() {
 		m_jRecentTickets = new JTable(new RecentTicketsTableModel());
-		m_jRecentTickets.setFocusable(false);
-		m_jRecentTickets.setRequestFocusEnabled(false);
+		m_jRecentTickets.setFocusable(true);
+		m_jRecentTickets.setRequestFocusEnabled(true);
 		m_jRecentTickets.setRowHeight(40);
 		m_jRecentTickets.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		m_jRecentTickets.getTableHeader().setReorderingAllowed(false);
@@ -270,7 +272,19 @@ public class JTicketsBagTicket extends JTicketsBag {
 		List<FindTicketsInfo> tickets = new ArrayList<FindTicketsInfo>();
 		long queryStarted = System.nanoTime();
 		try {
-			tickets = m_dlSales.getRecentTickets(jrbSales.isSelected() ? 0 : 1, RECENT_TICKETS);
+			int ticketType = jrbSales.isSelected() ? 0 : 1;
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(Calendar.HOUR_OF_DAY, 0);
+			calendar.set(Calendar.MINUTE, 0);
+			calendar.set(Calendar.SECOND, 0);
+			calendar.set(Calendar.MILLISECOND, 0);
+			Date today = calendar.getTime();
+			calendar.add(Calendar.DATE, 1);
+			Date tomorrow = calendar.getTime();
+			tickets = m_dlSales.getRecentTickets(ticketType, today, tomorrow);
+			if (tickets.size() < RECENT_TICKETS) {
+				tickets = m_dlSales.getRecentTickets(ticketType, RECENT_TICKETS);
+			}
 		} catch (BasicException e) {
 			MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotloadticket"),
 					e);
@@ -295,7 +309,8 @@ public class JTicketsBagTicket extends JTicketsBag {
 	}
 
 	private static class RecentTicketsTableModel extends AbstractTableModel {
-		private final String[] columns = {"label.ticketid", "label.date", "label.totalcash", "Empleada", "Clienta"};
+		private final String[] columns = {"label.ticketid", "label.date", "label.totalcash", "Empleada",
+				"label.paymentmethod"};
 		private List<FindTicketsInfo> tickets = new ArrayList<FindTicketsInfo>();
 		private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yy - HH:mm");
 
@@ -320,7 +335,7 @@ public class JTicketsBagTicket extends JTicketsBag {
 
 		@Override
 		public String getColumnName(int column) {
-			return column < 3 ? AppLocal.getIntString(columns[column]) : columns[column];
+			return column < 3 || column == 4 ? AppLocal.getIntString(columns[column]) : columns[column];
 		}
 
 		@Override
@@ -336,7 +351,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 				case 3 :
 					return Formats.STRING.formatValue(ticket.getName());
 				case 4 :
-					return ticket.getCustomer() == null ? "" : ticket.getCustomer();
+					return ticket.getPayment() == null
+							? ""
+							: AppLocal.getIntString("transpayment." + ticket.getPayment());
 				default :
 					return "";
 			}

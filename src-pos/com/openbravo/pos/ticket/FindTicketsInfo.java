@@ -37,6 +37,7 @@ public class FindTicketsInfo implements SerializableRead {
 	private String name;
 	private String customer;
 	private double total;
+	private String payment;
 
 	/** Creates new ProductInfo */
 	public FindTicketsInfo() {
@@ -52,6 +53,7 @@ public class FindTicketsInfo implements SerializableRead {
 		name = dr.getString(4);
 		customer = dr.getString(5);
 		total = (dr.getObject(6) == null) ? 0.0 : dr.getDouble(6).doubleValue();
+		payment = dr.getString(7);
 	}
 
 	@Override
@@ -89,6 +91,10 @@ public class FindTicketsInfo implements SerializableRead {
 
 	public double getTotal() {
 		return total;
+	}
+
+	public String getPayment() {
+		return payment;
 	}
 
 }
