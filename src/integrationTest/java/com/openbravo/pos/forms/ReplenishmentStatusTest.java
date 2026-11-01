@@ -2,6 +2,8 @@ package com.openbravo.pos.forms;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import com.openbravo.data.loader.Session;
@@ -11,6 +13,7 @@ import com.openbravo.pos.inventory.ReplenishmentEntry;
 import com.openbravo.pos.inventory.ReplenishmentPanel;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.event.MouseEvent;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
 import javax.swing.JTable;
@@ -20,6 +23,65 @@ import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 class ReplenishmentStatusTest {
+	@Test
+	void checkboxColumnTogglesRowsWithoutModifierKeys() throws Exception {
+		String url = "jdbc:derby:memory:replenishmentCheckboxClick" + UUID.randomUUID() + ";create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicReplenishment data = new DataLogicReplenishment();
+			data.init(session);
+			ReplenishmentEntry first = entry(null);
+			ReplenishmentEntry second = entry("customer");
+			first.productId = "checkbox-product-one";
+			second.productId = "checkbox-product-two";
+			data.add(first);
+			data.add(second);
+			AppUser user = new AppUser("user", "Employee", null, null, "2", null);
+			AppUserView userView = (AppUserView) Proxy.newProxyInstance(getClass().getClassLoader(),
+					new Class<?>[]{AppUserView.class},
+					(proxy, method, args) -> "getUser".equals(method.getName()) ? user : null);
+			AppView app = (AppView) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{AppView.class},
+					(proxy, method, args) -> {
+						if ("getAppUserView".equals(method.getName()))
+							return userView;
+						if ("getBean".equals(method.getName())) {
+							if (args[0] == DataLogicReplenishment.class)
+								return data;
+							if (args[0] == DataLogicSales.class)
+								return new DataLogicSales();
+							if (args[0] == DataLogicCustomers.class)
+								return new DataLogicCustomers();
+							throw new BeanFactoryException();
+						}
+						return null;
+					});
+			SwingUtilities.invokeAndWait(() -> {
+				try {
+					ReplenishmentPanel panel = new ReplenishmentPanel();
+					panel.init(app);
+					panel.activate();
+					JTable table = first(panel, JTable.class);
+					table.setSize(800, 200);
+					table.doLayout();
+					clickCheckbox(table, 0);
+					assertEquals(1, table.getSelectedRowCount());
+					assertTrue((Boolean) table.getValueAt(0, 0));
+					clickCheckbox(table, 0);
+					assertEquals(0, table.getSelectedRowCount());
+					assertFalse((Boolean) table.getValueAt(0, 0));
+					clickCheckbox(table, 0);
+					clickCheckbox(table, 1);
+					assertEquals(2, table.getSelectedRowCount());
+				} catch (Exception e) {
+					throw new AssertionError(e);
+				}
+			});
+		} finally {
+			session.close();
+		}
+	}
+
 	@Test
 	void bulkStatusIsAtomicAndRespectsDeliveryRules() throws Exception {
 		String url = "jdbc:derby:memory:replenishmentBulk" + UUID.randomUUID() + ";create=true";
@@ -118,6 +180,14 @@ class ReplenishmentStatusTest {
 			}
 		}
 		return null;
+	}
+	private static void clickCheckbox(JTable table, int row) {
+		java.awt.Rectangle cell = table.getCellRect(row, 0, true);
+		long when = System.currentTimeMillis();
+		table.dispatchEvent(new MouseEvent(table, MouseEvent.MOUSE_PRESSED, when, 0, cell.x + cell.width / 2,
+				cell.y + cell.height / 2, 1, false, MouseEvent.BUTTON1));
+		table.dispatchEvent(new MouseEvent(table, MouseEvent.MOUSE_RELEASED, when, 0, cell.x + cell.width / 2,
+				cell.y + cell.height / 2, 1, false, MouseEvent.BUTTON1));
 	}
 	private static JTextArea editableArea(Container root) {
 		for (Component child : root.getComponents()) {

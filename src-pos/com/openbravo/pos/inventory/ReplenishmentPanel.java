@@ -89,7 +89,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private final JTable table = new JTable(model) {
 		@Override
 		protected void processMouseEvent(java.awt.event.MouseEvent event) {
-			if (event.getID() == java.awt.event.MouseEvent.MOUSE_PRESSED && columnAtPoint(event.getPoint()) == 0) {
+			if (event.getID() == java.awt.event.MouseEvent.MOUSE_PRESSED && isCheckboxColumn(event.getPoint())) {
 				int row = rowAtPoint(event.getPoint());
 				if (row >= 0) {
 					if (isRowSelected(row))
@@ -100,9 +100,13 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				}
 				return;
 			}
-			if (event.getID() == java.awt.event.MouseEvent.MOUSE_RELEASED && columnAtPoint(event.getPoint()) == 0)
+			if (event.getID() == java.awt.event.MouseEvent.MOUSE_RELEASED && isCheckboxColumn(event.getPoint()))
 				return;
 			super.processMouseEvent(event);
+		}
+		private boolean isCheckboxColumn(java.awt.Point point) {
+			int viewColumn = columnAtPoint(point);
+			return viewColumn >= 0 && convertColumnIndexToModel(viewColumn) == 0;
 		}
 		@Override
 		public void doLayout() {
