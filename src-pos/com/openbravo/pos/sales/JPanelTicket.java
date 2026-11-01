@@ -1865,6 +1865,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				if (action == CustomerSheet.REMOVE) {
 					m_oTicket.setCustomer(null);
 					openFinder = false;
+				} else if (action == CustomerSheet.UPDATED) {
+					m_oTicket.setCustomer(dlSales.loadCustomerExt(m_oTicket.getCustomer().getId()));
+					openFinder = false;
 				} else if (action != CustomerSheet.CHANGE) {
 					return;
 				} else {
