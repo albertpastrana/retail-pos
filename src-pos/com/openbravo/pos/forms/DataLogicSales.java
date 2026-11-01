@@ -819,7 +819,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// Tickets and Receipt list
 	public SentenceList getTicketsList() {
 		return new StaticSentence(s, new QBFBuilder(
-				"SELECT T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME, SUM(PM.TOTAL) "
+				"SELECT T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME, SUM(PM.TOTAL), MAX(PM.PAYMENT) "
 						+ "FROM RECEIPTS R JOIN TICKETS T ON R.ID = T.ID LEFT OUTER JOIN PAYMENTS PM ON R.ID = PM.RECEIPT LEFT OUTER JOIN CUSTOMERS C ON C.ID = T.CUSTOMER LEFT OUTER JOIN PEOPLE P ON T.PERSON = P.ID "
 						+ "WHERE ?(QBF_FILTER) GROUP BY T.ID, T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME ORDER BY R.DATENEW DESC, T.TICKETID",
 				new String[]{"T.TICKETID", "T.TICKETTYPE", "PM.TOTAL", "R.DATENEW", "R.DATENEW", "P.NAME", "C.NAME"}),
@@ -834,6 +834,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				Integer.valueOf(tickettype), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null,
 				QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null};
 		return getTicketsList().listPage(afilter, 0, max);
+	}
+
+	public List getRecentTickets(int tickettype, Date start, Date end) throws BasicException {
+		Object[] afilter = new Object[]{QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_EQUALS,
+				Integer.valueOf(tickettype), QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_GREATEROREQUALS, start,
+				QBFCompareEnum.COMP_LESS, end, QBFCompareEnum.COMP_NONE, null, QBFCompareEnum.COMP_NONE, null};
+		return getTicketsList().list(afilter);
 	}
 
 	// User list
