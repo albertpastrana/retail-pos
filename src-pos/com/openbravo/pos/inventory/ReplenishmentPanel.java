@@ -1083,7 +1083,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			table.clearSelection();
 			entries = refreshed;
 			model.setRowCount(0);
-			DateFormat f = new SimpleDateFormat("dd/MM/yy-HH:mm");
+			DateFormat f = new SimpleDateFormat("dd/MM/yy");
 			int selectedRow = -1;
 			for (ReplenishmentEntry e : entries) {
 				if (e.id.equals(selectId))
