@@ -24,28 +24,23 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 public class CustomerSheet extends JDialog {
 
 	public static final int CLOSED = 0;
 	public static final int CHANGE = 1;
 	public static final int REMOVE = 2;
-	public static final int UPDATED = 3;
 
 	private int result = CLOSED;
 	private final AppView app;
 	private final DataLogicSales dlSales;
-	private final DataLogicCustomers dlCustomers;
 	private CustomerInfoExt customer;
-	private final JLabel nameValue = new JLabel();
 	private final JLabel debt = new JLabel();
 
 	private CustomerSheet(Window parent, AppView app, CustomerInfoExt customer) {
 		super(parent, ModalityType.APPLICATION_MODAL);
 		this.app = app;
 		this.dlSales = app.getBean(DataLogicSales.class);
-		this.dlCustomers = app.getBean(DataLogicCustomers.class);
 		this.customer = customer;
 		setTitle(AppLocal.getIntString("customer.title"));
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -53,8 +48,7 @@ public class CustomerSheet extends JDialog {
 
 		JPanel details = new JPanel(new GridLayout(0, 2, 8, 8));
 		details.add(new JLabel(AppLocal.getIntString("customer.name")));
-		nameValue.setText(customer.getName());
-		details.add(nameValue);
+		details.add(new JLabel(customer.getName()));
 		details.add(new JLabel(AppLocal.getIntString("customer.phone")));
 		details.add(new JLabel(customer.getPhone() == null ? "" : customer.getPhone()));
 		details.add(new JLabel(AppLocal.getIntString("customer.debt")));
@@ -65,12 +59,10 @@ public class CustomerSheet extends JDialog {
 
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton pay = new JButton(AppLocal.getIntString("customer.paydebt"));
-		JButton edit = new JButton(AppLocal.getIntString("customer.edit"));
 		JButton change = new JButton(AppLocal.getIntString("customer.change"));
 		JButton remove = new JButton(AppLocal.getIntString("customer.remove"));
 		JButton close = new JButton(AppLocal.getIntString("customer.close"));
 		actions.add(pay);
-		actions.add(edit);
 		actions.add(change);
 		actions.add(remove);
 		actions.add(close);
@@ -78,7 +70,6 @@ public class CustomerSheet extends JDialog {
 
 		pay.setEnabled(customer.getCurdebt() != null && customer.getCurdebt().doubleValue() > 0.0);
 		pay.addActionListener(e -> payDebt());
-		edit.addActionListener(e -> editName());
 		change.addActionListener(e -> {
 			result = CHANGE;
 			dispose();
@@ -89,7 +80,7 @@ public class CustomerSheet extends JDialog {
 		});
 		close.addActionListener(e -> dispose());
 		pack();
-		setSize(520, 230);
+		setSize(390, 230);
 	}
 
 	public static int showDialog(Component parent, AppView app, CustomerInfoExt customer) {
@@ -125,35 +116,9 @@ public class CustomerSheet extends JDialog {
 		try {
 			dlSales.saveTicket(ticket, app.getInventoryLocation());
 			customer = dlSales.loadCustomerExt(customer.getId());
-			result = UPDATED;
 			debt.setText(formatDebt(customer));
 		} catch (BasicException exception) {
 			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.payerror"),
-					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
-		}
-	}
-
-	private void editName() {
-		JTextField input = new JTextField(customer.getName(), 24);
-		int answer = JOptionPane.showConfirmDialog(this, input, AppLocal.getIntString("customer.edit"),
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (answer != JOptionPane.OK_OPTION)
-			return;
-		String name = input.getText().trim();
-		if (name.isEmpty()) {
-			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.name.required"),
-					AppLocal.getIntString("customer.edit"), JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-		String previousName = customer.getName();
-		customer.setName(name);
-		try {
-			dlCustomers.updateCustomerName(customer.getId(), name);
-			result = UPDATED;
-			nameValue.setText(name);
-		} catch (BasicException exception) {
-			customer.setName(previousName);
-			JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.updateerror"),
 					AppLocal.getIntString("customer.title"), JOptionPane.WARNING_MESSAGE);
 		}
 	}

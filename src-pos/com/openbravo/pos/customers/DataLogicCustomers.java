@@ -210,16 +210,6 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
 				});
 	}
 
-	public int updateCustomerName(final String id, final String name) throws BasicException {
-		return new PreparedSentence(s, "UPDATE CUSTOMERS SET NAME = ? WHERE ID = ?", SerializerWriteParams.INSTANCE)
-				.exec(new DataParams() {
-					public void writeValues() throws BasicException {
-						setString(1, name);
-						setString(2, id);
-					}
-				});
-	}
-
 	public int deleteCustomer(final String id) throws BasicException {
 		return new PreparedSentence(s, "UPDATE CUSTOMERS SET VISIBLE = " + s.DB.FALSE() + " WHERE ID = ?",
 				SerializerWriteParams.INSTANCE).exec(new DataParams() {
