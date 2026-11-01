@@ -21,11 +21,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class JCustomerFinder extends JDialog {
 
 	private final DataLogicCustomers dlCustomers;
 	private final JTextField searchField = new JTextField();
+	private final Timer searchTimer;
 	private final DefaultListModel<CustomerInfo> customersModel = new DefaultListModel<CustomerInfo>();
 	private final JList<CustomerInfo> customers = new JList<CustomerInfo>(customersModel);
 	private final JButton removeButton = new JButton();
@@ -35,6 +39,8 @@ public class JCustomerFinder extends JDialog {
 	private JCustomerFinder(Window parent, DataLogicCustomers dlCustomers) {
 		super(parent, ModalityType.APPLICATION_MODAL);
 		this.dlCustomers = dlCustomers;
+		searchTimer = new Timer(300, e -> executeSearch());
+		searchTimer.setRepeats(false);
 		setTitle(AppLocal.getIntString("customer.title"));
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLayout(new BorderLayout(8, 8));
@@ -43,9 +49,8 @@ public class JCustomerFinder extends JDialog {
 		JPanel search = new JPanel(new BorderLayout(5, 5));
 		search.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 		search.add(new JLabel(AppLocal.getIntString("customer.find")), BorderLayout.WEST);
+		searchField.putClientProperty("JTextField.placeholderText", AppLocal.getIntString("customer.find"));
 		search.add(searchField, BorderLayout.CENTER);
-		JButton searchButton = new JButton(AppLocal.getIntString("customer.search"));
-		search.add(searchButton, BorderLayout.EAST);
 		add(search, BorderLayout.NORTH);
 
 		customers.setVisibleRowCount(7);
@@ -65,8 +70,23 @@ public class JCustomerFinder extends JDialog {
 		actions.add(selectButton);
 		add(actions, BorderLayout.SOUTH);
 
-		searchButton.addActionListener(e -> executeSearch());
 		searchField.addActionListener(e -> executeSearch());
+		searchField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent event) {
+				searchTimer.restart();
+			}
+		});
 		selectButton.addActionListener(e -> selectCustomer());
 		customers.addListSelectionListener(e -> selectButton.setEnabled(customers.getSelectedValue() != null));
 		customers.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -114,11 +134,13 @@ public class JCustomerFinder extends JDialog {
 		if (customer != null) {
 			removeButton.setVisible(true);
 		}
+		searchTimer.stop();
 		customersModel.clear();
 		searchField.requestFocusInWindow();
 	}
 
 	private void executeSearch() {
+		searchTimer.stop();
 		try {
 			customersModel.clear();
 			List<CustomerInfo> result = dlCustomers.searchCustomers(searchField.getText());
