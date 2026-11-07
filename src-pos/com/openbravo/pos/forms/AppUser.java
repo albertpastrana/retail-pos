@@ -116,6 +116,9 @@ public class AppUser {
 	public void setAdministrationMode(boolean value) {
 		m_administrationMode = value;
 	}
+	public boolean isAdministrationMode() {
+		return m_administrationMode;
+	}
 
 	public void setSellerSession(boolean value) {
 		m_sellerSession = value;

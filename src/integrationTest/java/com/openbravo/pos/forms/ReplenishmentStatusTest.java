@@ -38,6 +38,7 @@ class ReplenishmentStatusTest {
 			data.add(first);
 			data.add(second);
 			AppUser user = new AppUser("user", "Employee", null, null, "2", null);
+			user.setAdministrationMode(true);
 			AppUserView userView = (AppUserView) Proxy.newProxyInstance(getClass().getClassLoader(),
 					new Class<?>[]{AppUserView.class},
 					(proxy, method, args) -> "getUser".equals(method.getName()) ? user : null);
@@ -129,6 +130,7 @@ class ReplenishmentStatusTest {
 			ReplenishmentEntry request = entry(null);
 			data.add(request);
 			AppUser user = new AppUser("user", "Employee", null, null, "2", null);
+			user.setAdministrationMode(true);
 			AppUserView userView = (AppUserView) Proxy.newProxyInstance(getClass().getClassLoader(),
 					new Class<?>[]{AppUserView.class},
 					(proxy, method, args) -> "getUser".equals(method.getName()) ? user : null);

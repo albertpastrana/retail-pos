@@ -4,8 +4,10 @@ import java.util.Date;
 
 public class ReplenishmentEntry {
 	public String id, productId, reference, name, ean, size, colour, manualDescription, manualEan, note;
-	public String customerId, customerName, status, createdBy, updatedBy, openProductId;
+	public String customerId, customerName, customerPhone, status, createdBy, updatedBy, openProductId;
 	public String creatorName;
+	public String supplierId;
+	public String brand, family;
 	public Date createdAt, updatedAt;
 
 	public String displayName() {

@@ -27,6 +27,23 @@ public final class PosIcons {
 		return icon("printer.svg", 24);
 	}
 
+	public static FlatSVGIcon edit() {
+		return icon("pencil.svg", 20);
+	}
+
+	public static FlatSVGIcon plus() {
+		return icon("plus.svg", 20);
+	}
+
+	public static FlatSVGIcon trash() {
+		return icon("trash-2.svg", 20)
+				.setColorFilter(new FlatSVGIcon.ColorFilter(color -> RetailPOSColors.dangerText()));
+	}
+
+	public static FlatSVGIcon chevronDown() {
+		return icon("chevron-down.svg", 16);
+	}
+
 	public static FlatSVGIcon cardPayment() {
 		return icon("credit-card.svg", 24);
 	}

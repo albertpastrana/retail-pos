@@ -2,6 +2,7 @@ package com.openbravo.pos.inventory;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.data.loader.Session;
+import com.openbravo.pos.customers.CustomerInfo;
 import com.openbravo.pos.forms.BeanFactoryDataSingle;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,31 +28,49 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 
 	public List<ReplenishmentEntry> list(String search, String type, String status) throws BasicException {
-		return list(search, type, status, false);
+		return list(search, type, status, false, null);
 	}
 
 	public List<ReplenishmentEntry> listForExport(String search, String type, String status) throws BasicException {
-		return list(search, type, status, true);
+		return list(search, type, status, true, null);
 	}
 
-	private List<ReplenishmentEntry> list(String search, String type, String status, boolean exportOrder)
+	public List<ReplenishmentEntry> list(String search, String type, String status, String supplierId)
 			throws BasicException {
+		return list(search, type, status, supplierId != null && !"ALL".equals(supplierId) && !"NONE".equals(supplierId),
+				supplierId);
+	}
+
+	public List<ReplenishmentEntry> listForExport(String search, String type, String status, String supplierId)
+			throws BasicException {
+		return list(search, type, status, true, supplierId);
+	}
+
+	private List<ReplenishmentEntry> list(String search, String type, String status, boolean exportOrder,
+			String supplierId) throws BasicException {
 		List<ReplenishmentEntry> result = new ArrayList<ReplenishmentEntry>();
 		String term = search == null ? "" : search.trim();
 		String pattern = "%" + term + "%";
-		String sql = "SELECT R.*, P.NAME AS CREATOR_NAME FROM REPLENISHMENT_ENTRIES R "
-				+ (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "")
-				+ "LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY WHERE ("
+		String digits = CustomerInfo.normalizePhone(term);
+		String phonePattern = digits.isEmpty() ? "!" : "%" + digits + "%";
+		String sql = "SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE "
+				+ (exportOrder ? ", C.BRAND AS CATALOGUE_BRAND, C.FAMILY AS CATALOGUE_FAMILY " : "")
+				+ "FROM REPLENISHMENT_ENTRIES R " + (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "")
+				+ "LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY "
+				+ "LEFT JOIN CUSTOMERS CU ON CU.ID = R.CUSTOMER_ID WHERE ("
 				+ "UPPER(COALESCE(PRODUCT_REFERENCE,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_NAME,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_EAN,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(MANUAL_DESCRIPTION,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(MANUAL_EAN,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(CUSTOMER_NAME,'')) LIKE UPPER(?) " + "OR UPPER(COALESCE(NOTE,'')) LIKE UPPER(?) "
-				+ ") "
+				+ "OR UPPER(COALESCE(CU.PHONE,'')) LIKE UPPER(?) OR CU.PHONE LIKE ? " + ") "
 				+ ("REPLENISHMENT".equals(type)
 						? "AND CUSTOMER_ID IS NULL "
 						: "ENCARGO".equals(type) ? "AND CUSTOMER_ID IS NOT NULL " : "")
+				+ (supplierId == null || "ALL".equals(supplierId)
+						? ""
+						: "NONE".equals(supplierId) ? "AND R.SUPPLIER_ID IS NULL " : "AND R.SUPPLIER_ID = ? ")
 				+ ("OPEN".equals(status)
 						? "AND STATUS NOT IN ('RECEIVED', 'DELIVERED') "
 						: "PENDING".equals(status) || "ORDERED".equals(status) || "RECEIVED".equals(status)
@@ -64,14 +83,172 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		try (PreparedStatement ps = connection().prepareStatement(sql)) {
 			for (int i = 1; i <= 7; i++)
 				ps.setString(i, pattern);
+			ps.setString(8, pattern);
+			ps.setString(9, phonePattern);
+			if (supplierId != null && !"ALL".equals(supplierId) && !"NONE".equals(supplierId))
+				ps.setString(10, supplierId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					result.add(read(rs));
+					result.add(read(rs, exportOrder));
 			}
 		} catch (SQLException e) {
 			throw new BasicException(e);
 		}
 		return result;
+	}
+
+	public List<ReplenishmentSupplier> suppliers() throws BasicException {
+		List<ReplenishmentSupplier> result = new ArrayList<>();
+		try (PreparedStatement ps = connection()
+				.prepareStatement("SELECT ID, NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, EMAIL "
+						+ "FROM REPLENISHMENT_SUPPLIERS ORDER BY UPPER(NAME), ID");
+				ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				ReplenishmentSupplier supplier = new ReplenishmentSupplier();
+				supplier.id = rs.getString(1);
+				supplier.name = rs.getString(2);
+				supplier.contactFirstName = rs.getString(3);
+				supplier.contactLastName = rs.getString(4);
+				supplier.whatsapp = rs.getString(5);
+				supplier.email = rs.getString(6);
+				result.add(supplier);
+			}
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+		return result;
+	}
+
+	public void saveSupplier(ReplenishmentSupplier supplier) throws BasicException {
+		if (supplier.name == null || supplier.name.isBlank() || supplier.contactFirstName == null
+				|| supplier.contactFirstName.isBlank() || supplier.contactLastName == null
+				|| supplier.contactLastName.isBlank())
+			throw new BasicException("Supplier name and contact are required");
+		boolean insert = supplier.id == null;
+		if (insert)
+			supplier.id = UUID.randomUUID().toString();
+		String sql = insert
+				? "INSERT INTO REPLENISHMENT_SUPPLIERS (NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, EMAIL, ID) VALUES (?,?,?,?,?,?)"
+				: "UPDATE REPLENISHMENT_SUPPLIERS SET NAME=?, CONTACT_FIRST_NAME=?, CONTACT_LAST_NAME=?, WHATSAPP=?, EMAIL=? WHERE ID=?";
+		try (PreparedStatement ps = connection().prepareStatement(sql)) {
+			ps.setString(1, supplier.name.trim());
+			ps.setString(2, supplier.contactFirstName.trim());
+			ps.setString(3, supplier.contactLastName.trim());
+			ps.setString(4, supplier.whatsapp == null ? null : supplier.whatsapp.trim());
+			ps.setString(5, supplier.email == null ? null : supplier.email.trim());
+			ps.setString(6, supplier.id);
+			if (ps.executeUpdate() != 1)
+				throw new BasicException("Supplier no longer exists");
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
+	/**
+	 * Unassign requests before removing a contact, leaving their history intact.
+	 */
+	public void deleteSupplier(String id, String user) throws BasicException {
+		Connection c;
+		try {
+			c = connection();
+			boolean autoCommit = c.getAutoCommit();
+			try {
+				c.setAutoCommit(false);
+				try (PreparedStatement unassign = c.prepareStatement("UPDATE REPLENISHMENT_ENTRIES SET "
+						+ "SUPPLIER_ID=NULL, UPDATED_AT=?, UPDATED_BY=? WHERE SUPPLIER_ID=?");
+						PreparedStatement delete = c
+								.prepareStatement("DELETE FROM REPLENISHMENT_SUPPLIERS WHERE ID=?")) {
+					unassign.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+					unassign.setString(2, user);
+					unassign.setString(3, id);
+					unassign.executeUpdate();
+					delete.setString(1, id);
+					if (delete.executeUpdate() != 1)
+						throw new SQLException("Supplier no longer exists");
+				}
+				c.commit();
+			} catch (SQLException | RuntimeException failure) {
+				c.rollback();
+				throw failure;
+			} finally {
+				c.setAutoCommit(autoCommit);
+			}
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
+	/**
+	 * Change only pending selected entries, without affecting their customer or
+	 * status.
+	 */
+	public void assignSupplier(List<String> ids, String supplierId, String user) throws BasicException {
+		if (ids.isEmpty())
+			return;
+		Connection c;
+		try {
+			c = connection();
+			boolean autoCommit = c.getAutoCommit();
+			try {
+				c.setAutoCommit(false);
+				try (PreparedStatement ps = c.prepareStatement("UPDATE REPLENISHMENT_ENTRIES SET SUPPLIER_ID=?, "
+						+ "UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND STATUS='PENDING'")) {
+					Timestamp now = new Timestamp(System.currentTimeMillis());
+					for (String id : ids) {
+						ps.setString(1, supplierId);
+						ps.setTimestamp(2, now);
+						ps.setString(3, user);
+						ps.setString(4, id);
+						if (ps.executeUpdate() != 1)
+							throw new SQLException("Selected request is no longer pending");
+					}
+				}
+				c.commit();
+			} catch (SQLException | RuntimeException failure) {
+				c.rollback();
+				throw failure;
+			} finally {
+				c.setAutoCommit(autoCommit);
+			}
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
+	}
+
+	/**
+	 * Mark the included pending requests as ordered; other statuses are untouched.
+	 */
+	public void markExportedPending(List<ReplenishmentEntry> exported, String user) throws BasicException {
+		if (exported.isEmpty())
+			return;
+		Connection c;
+		try {
+			c = connection();
+			boolean autoCommit = c.getAutoCommit();
+			try {
+				c.setAutoCommit(false);
+				try (PreparedStatement ps = c.prepareStatement("UPDATE REPLENISHMENT_ENTRIES "
+						+ "SET STATUS='ORDERED', UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND STATUS='PENDING'")) {
+					Timestamp now = new Timestamp(System.currentTimeMillis());
+					for (ReplenishmentEntry entry : exported) {
+						if (!"PENDING".equals(entry.status))
+							continue;
+						ps.setTimestamp(1, now);
+						ps.setString(2, user);
+						ps.setString(3, entry.id);
+						ps.executeUpdate();
+					}
+				}
+				c.commit();
+			} catch (SQLException | RuntimeException failure) {
+				c.rollback();
+				throw failure;
+			} finally {
+				c.setAutoCommit(autoCommit);
+			}
+		} catch (SQLException ex) {
+			throw new BasicException(ex);
+		}
 	}
 
 	public ReplenishmentEntry add(ReplenishmentEntry e) throws BasicException {
@@ -282,23 +459,38 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	 */
 	public void updateDetailsAndStatus(String id, String note, String customerId, String customerName, String status,
 			String user) throws BasicException {
+		updateDetailsSupplierAndStatus(id, note, customerId, customerName, null, status, user, false);
+	}
+
+	public void updateDetailsSupplierAndStatus(String id, String note, String customerId, String customerName,
+			String supplierId, String status, String user) throws BasicException {
+		updateDetailsSupplierAndStatus(id, note, customerId, customerName, supplierId, status, user, true);
+	}
+
+	private void updateDetailsSupplierAndStatus(String id, String note, String customerId, String customerName,
+			String supplierId, String status, String user, boolean changeSupplier) throws BasicException {
 		if (!isValidStatus(status) || ("DELIVERED".equals(status) && customerId == null))
 			throw new BasicException("Invalid customer order status");
-		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+		try (PreparedStatement ps = connection()
+				.prepareStatement("UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, "
+						+ (changeSupplier ? "SUPPLIER_ID=?, " : "")
+						+ "STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
 						+ openKeyExpression()
 						+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR STATUS IN ('RECEIVED', 'DELIVERED'))")) {
-			ps.setString(1, note);
-			ps.setString(2, customerId);
-			ps.setString(3, customerName);
-			ps.setString(4, status);
-			ps.setString(5, status);
-			ps.setString(6, status);
-			ps.setString(7, "I:" + id);
-			ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
-			ps.setString(9, user);
-			ps.setString(10, id);
-			ps.setString(11, status);
+			int param = 1;
+			ps.setString(param++, note);
+			ps.setString(param++, customerId);
+			ps.setString(param++, customerName);
+			if (changeSupplier)
+				ps.setString(param++, supplierId);
+			ps.setString(param++, status);
+			ps.setString(param++, status);
+			ps.setString(param++, status);
+			ps.setString(param++, "I:" + id);
+			ps.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+			ps.setString(param++, user);
+			ps.setString(param++, id);
+			ps.setString(param, status);
 			if (ps.executeUpdate() == 0)
 				throw new BasicException("Invalid customer order status");
 		} catch (SQLException ex) {
@@ -334,16 +526,18 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 	}
 	private ReplenishmentEntry get(String id) throws SQLException {
-		try (PreparedStatement ps = connection().prepareStatement(
-				"SELECT R.*, P.NAME AS CREATOR_NAME FROM REPLENISHMENT_ENTRIES R LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY WHERE R.ID=?")) {
+		try (PreparedStatement ps = connection()
+				.prepareStatement("SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE "
+						+ "FROM REPLENISHMENT_ENTRIES R LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY "
+						+ "LEFT JOIN CUSTOMERS CU ON CU.ID = R.CUSTOMER_ID WHERE R.ID=?")) {
 			ps.setString(1, id);
 			try (ResultSet rs = ps.executeQuery()) {
 				rs.next();
-				return read(rs);
+				return read(rs, false);
 			}
 		}
 	}
-	private ReplenishmentEntry read(ResultSet r) throws SQLException {
+	private ReplenishmentEntry read(ResultSet r, boolean catalogue) throws SQLException {
 		ReplenishmentEntry e = new ReplenishmentEntry();
 		e.id = r.getString("ID");
 		e.productId = r.getString("PRODUCT_ID");
@@ -357,12 +551,18 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		e.note = r.getString("NOTE");
 		e.customerId = r.getString("CUSTOMER_ID");
 		e.customerName = r.getString("CUSTOMER_NAME");
+		e.customerPhone = r.getString("CUSTOMER_PHONE");
 		e.status = r.getString("STATUS");
 		e.createdAt = r.getTimestamp("CREATED_AT");
 		e.updatedAt = r.getTimestamp("UPDATED_AT");
 		e.createdBy = r.getString("CREATED_BY");
 		e.creatorName = r.getString("CREATOR_NAME");
 		e.updatedBy = r.getString("UPDATED_BY");
+		e.supplierId = r.getString("SUPPLIER_ID");
+		if (catalogue) {
+			e.brand = r.getString("CATALOGUE_BRAND");
+			e.family = r.getString("CATALOGUE_FAMILY");
+		}
 		return e;
 	}
 	private Connection connection() throws SQLException {
