@@ -27,7 +27,7 @@ jobs:
         run: docker compose up -d --wait --wait-timeout 120
 
       - name: Run integration checks
-        run: ./gradlew ciCheck
+        run: xvfb-run -a ./gradlew ciCheck
 
       - if: failure()
         name: Show database logs
