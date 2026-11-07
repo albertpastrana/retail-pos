@@ -52,7 +52,7 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - run: ./gradlew verifyTestLaneCoverage derbyTest
+      - run: xvfb-run -a ./gradlew verifyTestLaneCoverage derbyTest
 
       - if: always()
         uses: actions/upload-artifact@v7
