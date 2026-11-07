@@ -294,6 +294,10 @@ val derbyTestPatterns = listOf(
 	"com.openbravo.pos.forms.DatabaseBackupTest",
 	"com.openbravo.pos.forms.ExchangePersistenceIT",
 	"com.openbravo.pos.forms.ReplenishmentPanelLayoutTest",
+	"com.openbravo.pos.forms.ReplenishmentModesLayoutTest",
+	"com.openbravo.pos.forms.ReplenishmentPanelScaleTest",
+	"com.openbravo.pos.forms.ReplenishmentSupplierFlowTest",
+	"com.openbravo.pos.forms.ReplenishmentSupplierTest",
 	"com.openbravo.pos.forms.ReplenishmentStatusTest",
 	"com.openbravo.pos.forms.SharedTicketsIT",
 	"com.openbravo.pos.inventory.PriceRuleServiceTest",
@@ -347,8 +351,8 @@ tasks.register("verifyTestLaneCoverage") {
 		val uncovered = tests.filter { test -> allTestLanePatterns.count { pattern ->
 			pattern == test || test.startsWith("$pattern.")
 		} != 1 }
-		if (tests.size != 246 || uncovered.isNotEmpty()) {
-			error("Expected 246 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
+		if (tests.size != 253 || uncovered.isNotEmpty()) {
+			error("Expected 253 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
 		}
 	}
 }

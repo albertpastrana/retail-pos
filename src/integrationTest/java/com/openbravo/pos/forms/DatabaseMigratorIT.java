@@ -14,6 +14,7 @@ import com.openbravo.data.loader.Session;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import com.openbravo.pos.inventory.DataLogicReplenishment;
 import com.openbravo.pos.inventory.ReplenishmentEntry;
+import com.openbravo.pos.inventory.ReplenishmentSupplier;
 import db.migration.V53__repair_postgres_replenishment_status;
 import java.util.UUID;
 import org.flywaydb.core.api.migration.Context;
@@ -305,6 +306,7 @@ public class DatabaseMigratorIT {
 			assertEquals(1, count(connection, "LOYALTY_SETTINGS"));
 			assertEquals(0, count(connection, "TERMINALS"));
 			assertEquals(0, count(connection, "TERMINAL_SETTINGS"));
+			assertEquals(0, count(connection, "REPLENISHMENT_SUPPLIERS"));
 			assertEquals(1, queryInt(connection, "SELECT COUNT(*) FROM BACKUP_POLICY WHERE ID = '0' "
 					+ "AND ENABLED = 0 AND HOUR_OF_DAY = 2 AND RETENTION_DAYS = 30"));
 			assertEquals(1,
@@ -341,7 +343,15 @@ public class DatabaseMigratorIT {
 			second.createdBy = "user";
 			data.add(first);
 			data.add(second);
+			ReplenishmentSupplier supplier = new ReplenishmentSupplier();
+			supplier.name = "Sample supplier";
+			supplier.contactFirstName = "Ada";
+			supplier.contactLastName = "Lovelace";
+			supplier.whatsapp = "+34600000000";
+			supplier.email = "ada@example.com";
+			data.saveSupplier(supplier);
 			try {
+				data.assignSupplier(java.util.List.of(first.id), supplier.id, "user");
 				data.updateStatuses(java.util.List.of(first.id, second.id), "RECEIVED", "user");
 				assertEquals(2, data.list("", "ALL", "RECEIVED").stream()
 						.filter(entry -> first.id.equals(entry.id) || second.id.equals(entry.id)).count());
@@ -351,6 +361,10 @@ public class DatabaseMigratorIT {
 						.findFirst().orElseThrow().status);
 				DatabaseMigrator.migrate(url, user, password);
 				assertTrue(indexExists(session.getConnection(), "REPLENISHMENT_ENTRIES", "REPLENISHMENT_OPEN_KEY_INX"));
+				assertEquals(supplier.id, data.list("", "ALL", "ALL", supplier.id).stream()
+						.filter(entry -> first.id.equals(entry.id)).findFirst().orElseThrow().supplierId);
+				assertEquals("ada@example.com", data.suppliers().stream().filter(s -> supplier.id.equals(s.id))
+						.findFirst().orElseThrow().email);
 			} finally {
 				data.deleteAll(java.util.List.of(first.id, second.id));
 			}

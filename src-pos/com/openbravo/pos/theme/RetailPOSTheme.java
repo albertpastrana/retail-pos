@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
+import javax.swing.JComponent;
 import com.formdev.flatlaf.FlatLaf;
 
 /**
@@ -81,6 +82,16 @@ public final class RetailPOSTheme {
 		UIManager.put("Table.font", PLEX_MONO_REGULAR);
 		UIManager.put("Label.font", MANROPE_MEDIUM);
 		UIManager.put("TitledBorder.font", MANROPE_SEMIBOLD);
+	}
+
+	/** Set a scale-aware touch minimum without freezing content-derived width. */
+	public static void touchHeight(JComponent component, int minimum) {
+		String style = component.getClientProperty("FlatLaf.style") instanceof String
+				? (String) component.getClientProperty("FlatLaf.style")
+				: "";
+		if (!style.contains("minimumHeight:"))
+			component.putClientProperty("FlatLaf.style",
+					style.isEmpty() ? "minimumHeight: " + minimum : style + "; minimumHeight: " + minimum);
 	}
 
 	private static Font loadFont(String fileName, float size) {
