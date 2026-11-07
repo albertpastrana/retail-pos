@@ -1678,8 +1678,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		content.add(explanation, BorderLayout.CENTER);
 		JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
 		actions.setOpaque(false);
-		JButton notYet = new JButton(AppLocal.getIntString("Replenishment.NotYet"));
-		JButton yes = new JButton(AppLocal.getIntString("Replenishment.YesMarkOrdered"));
+		JButton notYet = touchButton(AppLocal.getIntString("Replenishment.NotYet"), 48);
+		JButton yes = touchButton(AppLocal.getIntString("Replenishment.YesMarkOrdered"), 48);
 		RetailPOSColors.primaryButton(yes);
 		for (JButton button : new JButton[]{notYet, yes}) {
 			button.setMargin(new Insets(8, 20, 8, 20));
@@ -1892,6 +1892,22 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	private static JTextField touchField(int columns, int minimumHeight) {
 		return new JTextField(columns) {
+			@Override
+			public Dimension getPreferredSize() {
+				Dimension size = super.getPreferredSize();
+				size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(minimumHeight));
+				return size;
+			}
+			@Override
+			public Dimension getMinimumSize() {
+				Dimension size = super.getMinimumSize();
+				size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(minimumHeight));
+				return size;
+			}
+		};
+	}
+	private static JButton touchButton(String text, int minimumHeight) {
+		return new JButton(text) {
 			@Override
 			public Dimension getPreferredSize() {
 				Dimension size = super.getPreferredSize();

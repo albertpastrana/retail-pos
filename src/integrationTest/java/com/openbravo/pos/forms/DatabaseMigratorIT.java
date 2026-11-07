@@ -366,7 +366,11 @@ public class DatabaseMigratorIT {
 				assertEquals("ada@example.com", data.suppliers().stream().filter(s -> supplier.id.equals(s.id))
 						.findFirst().orElseThrow().email);
 			} finally {
-				data.deleteAll(java.util.List.of(first.id, second.id));
+				try {
+					data.deleteAll(java.util.List.of(first.id, second.id));
+				} finally {
+					data.deleteSupplier(supplier.id, "user");
+				}
 			}
 		} finally {
 			session.close();
