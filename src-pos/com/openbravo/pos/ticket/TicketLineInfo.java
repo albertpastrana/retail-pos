@@ -280,6 +280,18 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 	/** Product title without the trailing [reference] used on receipts. */
 	public String printTicketName() {
 		String name = attributes.getProperty("product.name", "");
+		return ticketNameWithoutReference(name);
+	}
+
+	/**
+	 * Receipt title without the percent suffix, when the discount has its own line.
+	 */
+	public String printTicketBaseName() {
+		return ticketNameWithoutReference(
+				attributes.getProperty("discount.line.basename", attributes.getProperty("product.name", "")));
+	}
+
+	private String ticketNameWithoutReference(String name) {
 		int open = name.lastIndexOf(" [");
 		if (open >= 0 && name.endsWith("]")) {
 			name = name.substring(0, open);
@@ -316,6 +328,29 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 	/** Line amounts without the currency symbol (kept on the ticket total). */
 	public String printPriceTaxAmount() {
 		return stripCurrency(printPriceTax());
+	}
+
+	public boolean hasLineDiscount() {
+		return attributes.getProperty("discount.line.baseprice") != null
+				&& attributes.getProperty("discount.line.percent") != null;
+	}
+
+	public String printOriginalPriceTaxAmount() {
+		if (!hasLineDiscount()) {
+			return printPriceTaxAmount();
+		}
+		double basePrice = Double.parseDouble(attributes.getProperty("discount.line.baseprice"));
+		return stripCurrency(Formats.CURRENCY.formatValue(basePrice * (1.0 + getTaxRate())));
+	}
+
+	public String printLineDiscountPercent() {
+		return LineDiscount.formatPercentage(Double.parseDouble(attributes.getProperty("discount.line.percent")));
+	}
+
+	public String printLineDiscountAmount() {
+		double basePrice = Double.parseDouble(attributes.getProperty("discount.line.baseprice"));
+		double saving = (getPrice() - basePrice) * multiply * (1.0 + getTaxRate());
+		return stripCurrency(Formats.CURRENCY.formatValue(saving));
 	}
 
 	public String printValueAmount() {
