@@ -24,3 +24,4 @@ Use the agreed format: original price in the Preu column, discounted amount in T
 - `TicketLineInfo` supplies the original tax-included unit price and signed total savings; both shipped printer templates display the additional 42-column discount row without changing regular or total-discount rows.
 - Existing database resources stay in place; the bundled defaults are available through Restore original in Resources. See the English and Catalan receipt-template guides for opt-in steps.
 - Velocity rendering, XML parsing, discount arithmetic, refund sign, and related ticket tests passed. A physical printer test remains for a shop till.
+- The integration-test lane inventory was updated for the four new tests.

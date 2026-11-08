@@ -351,8 +351,8 @@ tasks.register("verifyTestLaneCoverage") {
 		val uncovered = tests.filter { test -> allTestLanePatterns.count { pattern ->
 			pattern == test || test.startsWith("$pattern.")
 		} != 1 }
-		if (tests.size != 253 || uncovered.isNotEmpty()) {
-			error("Expected 253 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
+		if (tests.size != 257 || uncovered.isNotEmpty()) {
+			error("Expected 257 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
 		}
 	}
 }
