@@ -330,11 +330,15 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		return stripCurrency(printPriceTax());
 	}
 
+	/**
+	 * Whether this line retains both the original price and discount percentage.
+	 */
 	public boolean hasLineDiscount() {
 		return attributes.getProperty("discount.line.baseprice") != null
 				&& attributes.getProperty("discount.line.percent") != null;
 	}
 
+	/** Original unit price including tax, without the currency symbol. */
 	public String printOriginalPriceTaxAmount() {
 		if (!hasLineDiscount()) {
 			return printPriceTaxAmount();
@@ -343,10 +347,15 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 		return stripCurrency(Formats.CURRENCY.formatValue(basePrice * (1.0 + getTaxRate())));
 	}
 
+	/** Formatted percentage for the separate receipt discount row. */
 	public String printLineDiscountPercent() {
 		return LineDiscount.formatPercentage(Double.parseDouble(attributes.getProperty("discount.line.percent")));
 	}
 
+	/**
+	 * Signed discount on the full quantity including tax, without the currency
+	 * symbol.
+	 */
 	public String printLineDiscountAmount() {
 		double basePrice = Double.parseDouble(attributes.getProperty("discount.line.baseprice"));
 		double saving = (getPrice() - basePrice) * multiply * (1.0 + getTaxRate());
