@@ -25,6 +25,14 @@ normalment s’han de mantenir coordinats. Si només se’n modifica un, la
 previsualització o el tiquet regal poden tenir un format diferent del tiquet
 normal.
 
+La plantilla original de `Printer.Ticket` i `Printer.TicketPreview` mostra el
+preu original i una línia amb el percentatge i l'import del descompte per a
+articles rebaixats. És la predeterminada en instal·lacions noves. En una
+instal·lació existent, els recursos de la base de dades no canvien en
+actualitzar l'aplicació: si vols aquest format, copia primer les plantilles
+actuals i restaura l'original d'aquests dos recursos a **Administració →
+Recursos**. Revisa qualsevol personalització abans de desar-los.
+
 ## Estructura mínima
 
 Una plantilla és un document XML amb un element arrel `output`:

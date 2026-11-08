@@ -22,6 +22,13 @@ Keep `Printer.Ticket`, `Printer.TicketPreview`, and `Printer.TicketGift` in
 sync. Otherwise the normal receipt, preview, and gift receipt can have
 different formats.
 
+The shipped originals for `Printer.Ticket` and `Printer.TicketPreview` show
+the original price and a separate percent-and-amount discount line for sale
+items. New installations use these by default. Updating an existing
+installation does not replace its database resources: to opt in, back up
+both current templates, then restore their originals in **Administration ->
+Resources** and review any customizations before saving.
+
 ## XML structure
 
 Every template has an `output` root. `display` is the customer display and

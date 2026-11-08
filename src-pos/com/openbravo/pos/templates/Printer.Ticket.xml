@@ -59,16 +59,24 @@
         <line>
              #if ($ticketline.isProductCom())
                  <text align ="left" length="42">*${ticketline.printTicketName()}</text>
+             #elseif ($ticketline.hasLineDiscount())
+                 <text align ="left" length="42">${ticketline.printTicketBaseName()}</text>
              #else
                  <text align ="left" length="42">${ticketline.printTicketName()}</text>
              #end
         </line>
         <line>
             <text align ="left" length="25">${ticketline.printTicketReference()}</text>
-            <text align ="right" length="7">${ticketline.printPriceTaxAmount()}</text>
+            <text align ="right" length="7">${ticketline.printOriginalPriceTaxAmount()}</text>
             <text align ="right" length="3">${ticketline.printMultiply()}</text>
             <text align ="right" length="7">${ticketline.printValueAmount()}</text>
         </line>
+        #if ($ticketline.hasLineDiscount())
+        <line>
+            <text align="left" length="35">Descompte aplicat (-${ticketline.printLineDiscountPercent()})</text>
+            <text align="right" length="7">${ticketline.printLineDiscountAmount()}</text>
+        </line>
+        #end
         #if ($ticketline.hasGiftVoucherCodes())
         <line>
             <text align="left" length="42" bold="true">Codi: ${ticketline.printGiftVoucherCodes()}</text>
