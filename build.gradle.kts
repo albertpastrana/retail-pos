@@ -75,7 +75,7 @@ dependencies {
         "commons-discovery:commons-discovery:0.5",
         "commons-lang:commons-lang:2.6",
         "commons-logging:commons-logging:1.4.0",
-        "com.formdev:flatlaf:3.7.2",
+        "com.formdev:flatlaf:3.8",
         "oro:oro:2.0.8",
         "org.apache.velocity:velocity:1.7",
         "wsdl4j:wsdl4j:1.6.3",
