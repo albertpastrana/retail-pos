@@ -3,7 +3,7 @@ import java.time.Duration
 
 plugins {
     java
-    id("com.diffplug.spotless") version "8.10.4"
+    id("com.diffplug.spotless") version "8.11.0"
 }
 
 version = providers.gradleProperty("appVersion").orElse("3.0.0-RC1").get()
