@@ -85,10 +85,20 @@ public final class WelcomeSalesRepository {
 			CategoryTotals root = roots.computeIfAbsent(rootId, ignored -> new CategoryTotals());
 			root.add(row.getAmount(), current);
 			if (!rootId.equals(categoryId)) {
-				CategoryTotals child = children.computeIfAbsent(categoryId, ignored -> new CategoryTotals());
+				String directChildId = directChildId(categoryId, rootId, categories);
+				CategoryTotals child = children.computeIfAbsent(directChildId, ignored -> new CategoryTotals());
 				child.add(row.getAmount(), current);
 			}
 		}
+	}
+
+	private String directChildId(String categoryId, String rootId,
+			Map<String, ProductSalesRepository.Category> categories) {
+		String childId = categoryId;
+		while (!rootId.equals(categories.get(childId).parentId)) {
+			childId = categories.get(childId).parentId;
+		}
+		return childId;
 	}
 
 	private List<PaymentInsight> paymentSales(List<PaymentSalesRow> current, List<PaymentSalesRow> previous) {
