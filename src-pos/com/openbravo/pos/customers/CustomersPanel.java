@@ -8,6 +8,7 @@ import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.theme.RetailPOSColors;
+import com.openbravo.pos.theme.RetailPOSTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -19,6 +20,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.text.Collator;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -42,6 +44,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -50,6 +53,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowSorter;
 
@@ -61,13 +65,12 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private final JTable table = new JTable(model);
 	private final TableRowSorter<CustomersTableModel> sorter = new TableRowSorter<CustomersTableModel>(model);
 	private final HintTextField search = new HintTextField("Cerca per nom o telèfon…");
-	private final JButton clearSearch = new JButton("×");
 	private final JCheckBox debtOnly = new JCheckBox("Només amb deute");
 	private final JCheckBox inactive = new JCheckBox("Mostra inactives");
 	private final JTextField name = new JTextField();
 	private final JTextField phone = new JTextField();
 	private final JTextField maxDebt = new JTextField();
-	private final JTextArea notes = new JTextArea(6, 20);
+	private final JTextArea notes = new JTextArea(3, 20);
 	private final JLabel detailTitle = new JLabel();
 	private final JLabel detailStatus = new JLabel();
 	private final JLabel debtValue = new JLabel();
@@ -77,7 +80,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private final JLabel totalDebt = new JLabel();
 	private final JButton save = new JButton("Desa");
 	private final JButton cancel = new JButton("Cancel·la");
-	private final JButton archive = new JButton();
+	private final JButton archive = new JButton("Arxiva la fitxa…");
 	private final JButton newCustomer = new JButton("+ Nova clienta");
 	private DataLogicCustomers customers;
 	private CustomerInfoExt selected;
@@ -134,7 +137,6 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			if (!resettingFilters)
 				loadCustomers();
 		});
-		clearSearch.addActionListener(e -> search.setText(""));
 		debtOnly.setFont(debtOnly.getFont().deriveFont(Font.PLAIN, debtOnly.getFont().getSize2D() + 1f));
 		inactive.setFont(inactive.getFont().deriveFont(Font.PLAIN, inactive.getFont().getSize2D() + 1f));
 		save.addActionListener(e -> saveCustomer());
@@ -160,29 +162,18 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 
 	private JPanel buildBody() {
 		JPanel left = new JPanel(new BorderLayout(0, 6));
-		JPanel tools = new JPanel(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.gridy = 0;
-		c.insets = new Insets(0, 0, 0, 8);
-		c.fill = GridBagConstraints.HORIZONTAL;
-		search.setMinimumSize(new Dimension(200, search.getPreferredSize().height));
-		JPanel searchBox = new JPanel(new BorderLayout());
-		searchBox.add(search, BorderLayout.CENTER);
-		clearSearch.setMargin(new Insets(0, 7, 0, 7));
-		clearSearch.setToolTipText("Neteja la cerca");
-		searchBox.add(clearSearch, BorderLayout.EAST);
-		c.weightx = 1;
-		tools.add(searchBox, c);
-		c.weightx = 0;
-		tools.add(debtOnly, c);
-		tools.add(inactive, c);
-		c.weightx = 1;
-		tools.add(BoxPanel.glue(), c);
-		c.weightx = 0;
+		JPanel tools = new JPanel(new BorderLayout(0, 4));
+		JPanel searchRow = new JPanel(new BorderLayout(8, 0));
+		searchRow.add(search, BorderLayout.CENTER);
 		newCustomer.setMargin(new Insets(9, 14, 9, 14));
 		RetailPOSColors.primaryButton(newCustomer);
 		newCustomer.setFont(newCustomer.getFont().deriveFont(Font.BOLD));
-		tools.add(newCustomer, c);
+		searchRow.add(newCustomer, BorderLayout.EAST);
+		tools.add(searchRow, BorderLayout.NORTH);
+		JPanel filters = new JPanel(new FlowLayout(FlowLayout.LEADING, 8, 0));
+		filters.add(debtOnly);
+		filters.add(inactive);
+		tools.add(filters, BorderLayout.SOUTH);
 		left.add(tools, BorderLayout.NORTH);
 		table.setRowSorter(sorter);
 		sorter.setComparator(0, Collator.getInstance(new Locale("ca")));
@@ -200,6 +191,32 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		});
 		table.getColumnModel().getColumn(2).setCellRenderer(new DebtRenderer());
 		table.getColumnModel().getColumn(0).setCellRenderer(new NameRenderer());
+		DefaultTableCellRenderer phoneRenderer = new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int r,
+					int c) {
+				super.getTableCellRendererComponent(t, v, sel, focus, r, c);
+				setFont(RetailPOSTheme.PLEX_MONO_REGULAR);
+				setHorizontalAlignment(SwingConstants.LEFT);
+				setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+				return this;
+			}
+		};
+		table.getColumnModel().getColumn(1).setCellRenderer(phoneRenderer);
+		TableCellRenderer defaultHeader = table.getTableHeader().getDefaultRenderer();
+		for (int column = 0; column < table.getColumnCount(); column++) {
+			int alignment = column == 2 ? SwingConstants.RIGHT : SwingConstants.LEFT;
+			table.getColumnModel().getColumn(column)
+					.setHeaderRenderer((source, value, selected, focused, row, viewColumn) -> {
+						Component component = defaultHeader.getTableCellRendererComponent(source, value, selected,
+								focused, row, viewColumn);
+						if (component instanceof JLabel label) {
+							label.setHorizontalAlignment(alignment);
+							label.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+						}
+						return component;
+					});
+		}
 		left.add(new JScrollPane(table), BorderLayout.CENTER);
 		JPanel footer = new JPanel(new BorderLayout());
 		footer.setBorder(BorderFactory.createEmptyBorder(5, 8, 0, 8));
@@ -217,8 +234,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		detailHead.add(detailTitle);
 		detailHead.add(detailStatus);
 		detail.add(detailHead, BorderLayout.NORTH);
-		JPanel content = new JPanel(new GridBagLayout());
-		content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
+		JPanel content = new ScrollableForm();
+		content.setBorder(BorderFactory.createEmptyBorder(6, 14, 8, 14));
 		GridBagConstraints f = new GridBagConstraints();
 		f.gridx = 0;
 		f.weightx = 1;
@@ -232,44 +249,41 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		f.gridy = 5;
 		JScrollPane notesScroll = new JScrollPane(notes);
 		notesScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		// Preserve the three content-derived rows when GridBagLayout narrows the form.
 		notesScroll.setMinimumSize(new Dimension(0, notesScroll.getPreferredSize().height));
 		content.add(notesScroll, f);
 		addField(content, f, 6, "Deute permès (€)", maxDebt);
 		f.gridy = 8;
 		content.add(debtBlock(), f);
-		f.gridy = 9;
-		f.weighty = 1;
-		f.fill = GridBagConstraints.BOTH;
-		content.add(BoxPanel.glue(), f);
-		detail.add(content, BorderLayout.CENTER);
+		JScrollPane detailScroll = new JScrollPane(content, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		detailScroll.setBorder(null);
+		detail.add(detailScroll, BorderLayout.CENTER);
 		JPanel bottom = new JPanel(new BorderLayout());
 		bottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(210, 210, 210)));
-		JPanel actions = new JPanel(new GridLayout(1, 2, 8, 0));
-		actions.setBorder(BorderFactory.createEmptyBorder(12, 14, 6, 14));
-		save.setMargin(new Insets(10, 12, 10, 12));
-		cancel.setMargin(new Insets(10, 12, 10, 12));
+		JPanel actions = new JPanel(new BorderLayout(8, 0));
+		actions.setBorder(BorderFactory.createEmptyBorder(8, 14, 4, 14));
+		save.setMargin(new Insets(8, 10, 8, 10));
+		cancel.setMargin(new Insets(8, 10, 8, 10));
 		RetailPOSColors.primaryButton(save);
 		save.setFont(save.getFont().deriveFont(Font.BOLD));
 		cancel.setContentAreaFilled(false);
-		actions.add(save);
-		actions.add(cancel);
-		bottom.add(actions, BorderLayout.NORTH);
-		JPanel statePanel = new JPanel(new BorderLayout());
-		statePanel.setBorder(BorderFactory.createEmptyBorder(0, 14, 8, 14));
-		statePanel.add(state, BorderLayout.WEST);
-		bottom.add(statePanel, BorderLayout.CENTER);
+		JPanel editActions = new JPanel(new GridLayout(1, 2, 8, 0));
+		editActions.add(save);
+		editActions.add(cancel);
+		actions.add(editActions, BorderLayout.WEST);
 		archive.setBorderPainted(false);
 		archive.setContentAreaFilled(false);
-		archive.setForeground(DARK_RED);
-		JPanel archivePanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-		archivePanel.add(archive);
-		bottom.add(archivePanel, BorderLayout.SOUTH);
+		archive.setForeground(RetailPOSColors.dangerText());
+		actions.add(archive, BorderLayout.EAST);
+		bottom.add(actions, BorderLayout.NORTH);
+		JPanel statePanel = new JPanel(new BorderLayout());
+		statePanel.setBorder(BorderFactory.createEmptyBorder(0, 14, 4, 14));
+		statePanel.add(state, BorderLayout.WEST);
+		bottom.add(statePanel, BorderLayout.CENTER);
 		detail.add(bottom, BorderLayout.SOUTH);
 		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, detail);
 		split.setResizeWeight(1.0);
-		split.setDividerLocation(-390);
-		detail.setMinimumSize(new Dimension(340, 0));
-		detail.setPreferredSize(new Dimension(390, 0));
 		return panelWith(split);
 	}
 
@@ -292,10 +306,35 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		debtValue.setFont(debtValue.getFont().deriveFont(Font.BOLD, 20f));
 		debtValue.setForeground(RetailPOSColors.ink());
 		p.add(debtValue, BorderLayout.EAST);
-		JLabel note = new JLabel("<html>El deute acumulat es calcula a partir dels albarans.</html>");
-		note.setForeground(Color.GRAY);
+		JTextArea note = new JTextArea("El deute acumulat es calcula a partir dels albarans.", 2, 22);
+		note.setLineWrap(true);
+		note.setWrapStyleWord(true);
+		note.setEditable(false);
+		note.setFocusable(false);
+		note.setOpaque(false);
+		note.setForeground(RetailPOSColors.inkMuted());
 		p.add(note, BorderLayout.SOUTH);
 		return p;
+	}
+	private static class ScrollableForm extends JPanel implements Scrollable {
+		ScrollableForm() {
+			super(new GridBagLayout());
+		}
+		public Dimension getPreferredScrollableViewportSize() {
+			return getPreferredSize();
+		}
+		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+			return getFontMetrics(getFont()).getHeight();
+		}
+		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+			return visibleRect.height - getScrollableUnitIncrement(visibleRect, orientation, direction);
+		}
+		public boolean getScrollableTracksViewportWidth() {
+			return true;
+		}
+		public boolean getScrollableTracksViewportHeight() {
+			return false;
+		}
 	}
 
 	private void installActions() {
@@ -652,10 +691,12 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private static class DebtRenderer extends DefaultTableCellRenderer {
 		DebtRenderer() {
 			setHorizontalAlignment(SwingConstants.RIGHT);
-			setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
+			setFont(RetailPOSTheme.PLEX_MONO_SEMIBOLD);
+			setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 		}
 		public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int r, int c) {
 			super.getTableCellRendererComponent(t, v, sel, focus, r, c);
+			setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 			double d = v == null ? 0 : ((Number) v).doubleValue();
 			setText(MONEY.format(d));
 			if (!sel)
@@ -664,8 +705,13 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		}
 	}
 	private static class NameRenderer extends DefaultTableCellRenderer {
+		NameRenderer() {
+			setHorizontalAlignment(SwingConstants.LEFT);
+			setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+		}
 		public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int r, int c) {
 			super.getTableCellRendererComponent(t, v, sel, focus, r, c);
+			setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
 			if (!sel && v != null && v.toString().endsWith("(arxivada)"))
 				setForeground(Color.GRAY);
 			return this;
@@ -682,11 +728,6 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 				g.setColor(RetailPOSColors.inkMuted());
 				g.drawString(hint, getInsets().left + 2, (getHeight() + g.getFontMetrics().getAscent()) / 2 - 2);
 			}
-		}
-	}
-	private static class BoxPanel {
-		static Component glue() {
-			return new JPanel();
 		}
 	}
 }
