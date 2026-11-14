@@ -78,6 +78,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactoryApp {
+	private static String pendingCustomerId;
+	public static synchronized void requestCustomer(String id) {
+		pendingCustomerId = id;
+	}
 	private static final Logger logger = Logger.getLogger(ReplenishmentPanel.class.getName());
 	private static final Pattern CONSTRAINT = Pattern.compile("(?i)constraint [\"']([a-z0-9_]+)[\"']");
 	private AppView app;
@@ -1886,8 +1890,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		input.setForeground(RetailPOSColors.ink());
 		if (input instanceof JTextField) {
 			input.putClientProperty("FlatLaf.style",
-					"arc: 6; borderColor: " + RetailPOSColors.toHex(RetailPOSColors.border()) + "; focusedBorderColor: "
-							+ RetailPOSColors.toHex(RetailPOSColors.borderStrong()));
+					"arc: 6; borderColor: " + RetailPOSColors.toHex(RetailPOSColors.border()));
 		}
 	}
 	private static JTextField touchField(int columns, int minimumHeight) {
@@ -1979,10 +1982,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		button.setRolloverEnabled(true);
 		button.setOpaque(false);
 		button.setForeground(RetailPOSColors.ink());
-		button.putClientProperty("FlatLaf.style",
-				"background: " + RetailPOSColors.toHex(RetailPOSColors.surface100()) + "; hoverBackground: "
-						+ RetailPOSColors.toHex(RetailPOSColors.surface200()) + "; focusedBorderColor: "
-						+ RetailPOSColors.toHex(RetailPOSColors.borderStrong()));
+		button.putClientProperty("FlatLaf.style", "background: " + RetailPOSColors.toHex(RetailPOSColors.surface100())
+				+ "; hoverBackground: " + RetailPOSColors.toHex(RetailPOSColors.surface200()));
 		button.addFocusListener(new java.awt.event.FocusAdapter() {
 			@Override
 			public void focusGained(java.awt.event.FocusEvent event) {
@@ -2632,8 +2633,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			assign.setHorizontalAlignment(JButton.LEFT);
 			assign.putClientProperty("FlatLaf.style",
 					"background: " + RetailPOSColors.toHex(RetailPOSColors.surface100()) + "; hoverBackground: "
-							+ RetailPOSColors.toHex(RetailPOSColors.surface200()) + "; focusedBorderColor: "
-							+ RetailPOSColors.toHex(RetailPOSColors.borderStrong()));
+							+ RetailPOSColors.toHex(RetailPOSColors.surface200()));
 			assign.setMargin(new Insets(8, 12, 8,
 					new JLabel().getFontMetrics(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f)).stringWidth(countText)
 							+ 24));
@@ -3325,7 +3325,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				table.setRowHeight(row, height);
 		}
 	}
-	static String displayProductName(String name, String reference) {
+	public static String displayProductName(String name, String reference) {
 		String text = valueOrEmpty(name).trim();
 		String code = valueOrEmpty(reference).trim();
 		if (!code.isEmpty() && text.endsWith(" [" + code + "]"))
@@ -3785,7 +3785,22 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		if (!hasDraftContent())
 			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		load("", false);
-		javax.swing.SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
+		String id;
+		synchronized (ReplenishmentPanel.class) {
+			id = pendingCustomerId;
+			pendingCustomerId = null;
+		}
+		if (id != null) {
+			CustomerInfo customer = customers.getCustomer(id);
+			if (customer != null) {
+				clearForm();
+				formCustomer = customer;
+				setFormCustomerText(customerDisplayName(customer), customer.getPhone());
+				updateCustomerButton();
+				updateSaveState();
+			}
+		} else
+			javax.swing.SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
 	}
 
 	/** Open the list for one of the landing screen's waiting-work figures. */

@@ -86,12 +86,7 @@ public final class RetailPOSTheme {
 
 	/** Set a scale-aware touch minimum without freezing content-derived width. */
 	public static void touchHeight(JComponent component, int minimum) {
-		String style = component.getClientProperty("FlatLaf.style") instanceof String
-				? (String) component.getClientProperty("FlatLaf.style")
-				: "";
-		if (!style.contains("minimumHeight:"))
-			component.putClientProperty("FlatLaf.style",
-					style.isEmpty() ? "minimumHeight: " + minimum : style + "; minimumHeight: " + minimum);
+		component.putClientProperty(com.formdev.flatlaf.FlatClientProperties.MINIMUM_HEIGHT, minimum);
 	}
 
 	private static Font loadFont(String fileName, float size) {

@@ -45,6 +45,15 @@ public class FindTicketsInfo implements SerializableRead {
 
 	}
 
+	public FindTicketsInfo(int id, int type, Date date, String payment, int paymentCount, double total) {
+		this.ticketid = id;
+		this.tickettype = type;
+		this.date = date;
+		this.payment = payment;
+		this.paymentCount = paymentCount;
+		this.total = total;
+	}
+
 	@Override
 	public void readValues(DataRead dr) throws BasicException {
 
