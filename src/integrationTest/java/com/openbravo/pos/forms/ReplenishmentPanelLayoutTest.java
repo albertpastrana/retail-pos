@@ -47,6 +47,23 @@ import org.junit.jupiter.api.Test;
 class ReplenishmentPanelLayoutTest {
 	@Test
 	void fourContextCardsAndSupplierNavigationFitBothThemesAndThreeLanguages() throws Exception {
+		java.util.List<java.util.logging.LogRecord> styleErrors = new java.util.concurrent.CopyOnWriteArrayList<>();
+		java.util.logging.Logger flatLaf = java.util.logging.Logger.getLogger("com.formdev.flatlaf.FlatLaf");
+		java.util.logging.Handler styleHandler = new java.util.logging.Handler() {
+			@Override
+			public void publish(java.util.logging.LogRecord record) {
+				if (record.getThrown() != null
+						&& record.getThrown().getClass().getSimpleName().equals("UnknownStyleException"))
+					styleErrors.add(record);
+			}
+			@Override
+			public void flush() {
+			}
+			@Override
+			public void close() {
+			}
+		};
+		flatLaf.addHandler(styleHandler);
 		String url = "jdbc:derby:memory:replenishmentLayout" + UUID.randomUUID() + ";create=true";
 		DatabaseMigrator.migrate(url, null, null);
 		Session session = new Session(url, null, null);
@@ -489,7 +506,9 @@ class ReplenishmentPanelLayoutTest {
 					throw new AssertionError(ex);
 				}
 			});
+			assertTrue(styleErrors.isEmpty(), () -> "Unsupported FlatLaf styles: " + styleErrors);
 		} finally {
+			flatLaf.removeHandler(styleHandler);
 			AppLocal.setLocale(previous);
 			UIManager.setLookAndFeel(previousTheme);
 			session.close();

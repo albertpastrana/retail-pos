@@ -843,6 +843,27 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 		return getTicketsList().list(afilter);
 	}
 
+	/** Fetch all customer histories in one pass for the customer list. */
+	public Map<String, List<FindTicketsInfo>> getCustomerTicketHistory() throws BasicException {
+		List<Object[]> rows = new StaticSentence(s,
+				"SELECT T.CUSTOMER, T.TICKETID, T.TICKETTYPE, R.DATENEW, SUM(PM.TOTAL), "
+						+ "COUNT(DISTINCT PM.PAYMENT), MAX(PM.PAYMENT) "
+						+ "FROM TICKETS T JOIN RECEIPTS R ON R.ID = T.ID "
+						+ "LEFT JOIN PAYMENTS PM ON PM.RECEIPT = R.ID "
+						+ "WHERE T.CUSTOMER IS NOT NULL AND T.TICKETTYPE = 0 "
+						+ "GROUP BY T.ID, T.CUSTOMER, T.TICKETID, T.TICKETTYPE, R.DATENEW "
+						+ "ORDER BY R.DATENEW DESC, T.TICKETID DESC",
+				null, new SerializerReadBasic(new Datas[]{Datas.STRING, Datas.INT, Datas.INT, Datas.TIMESTAMP,
+						Datas.DOUBLE, Datas.INT, Datas.STRING}))
+				.list();
+		Map<String, List<FindTicketsInfo>> result = new HashMap<>();
+		for (Object[] row : rows)
+			result.computeIfAbsent((String) row[0], id -> new ArrayList<>())
+					.add(new FindTicketsInfo((Integer) row[1], (Integer) row[2], (Date) row[3], (String) row[6],
+							(Integer) row[5], row[4] == null ? 0.0 : (Double) row[4]));
+		return result;
+	}
+
 	// User list
 	public final SentenceList getUserList() {
 		return new StaticSentence(s, "SELECT ID, NAME FROM PEOPLE ORDER BY NAME", null, new SerializerRead() {

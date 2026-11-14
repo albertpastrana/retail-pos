@@ -33,6 +33,11 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 
 public class JPanelTicketSales extends JPanelTicket {
+	private static String pendingCustomerId;
+
+	public static synchronized void requestCustomer(String id) {
+		pendingCustomerId = id;
+	}
 
 	private static final int COMPACT_SCREEN_HEIGHT = 900;
 	private static final int COMPACT_CATALOG_HEIGHT = 245;
@@ -93,6 +98,15 @@ public class JPanelTicketSales extends JPanelTicket {
 	public void activate() throws BasicException {
 		super.activate();
 		m_cat.loadCatalog();
+		String id;
+		synchronized (JPanelTicketSales.class) {
+			id = pendingCustomerId;
+			pendingCustomerId = null;
+		}
+		if (id != null && getActiveTicket() != null) {
+			getActiveTicket().setCustomer(dlSales.loadCustomerExt(id));
+			setActiveTicket(getActiveTicket(), null);
+		}
 	}
 
 	private class CatalogListener implements ActionListener {
