@@ -3,9 +3,14 @@ package com.openbravo.pos.customers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.openbravo.basic.BasicException;
+import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.inventory.DataLogicReplenishment;
+import com.openbravo.pos.inventory.ReplenishmentEntry;
+import com.openbravo.pos.ticket.FindTicketsInfo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -58,6 +63,7 @@ class CustomersPanelSelectionTest {
 				return value.isEmpty() ? List.of(first, second) : value.equals("Berta") ? List.of(second) : List.of();
 			}
 		});
+		setActivitySources(panel);
 		JTable table = field(panel, "table", JTable.class);
 		JLabel title = field(panel, "detailTitle", JLabel.class);
 		JTextField search = field(panel, "search", JTextField.class);
@@ -107,6 +113,7 @@ class CustomersPanelSelectionTest {
 				return List.of(customer);
 			}
 		});
+		setActivitySources(panel);
 		JLabel title = field(panel, "detailTitle", JLabel.class);
 		JTextField search = field(panel, "search", JTextField.class);
 		JTextField name = field(panel, "name", JTextField.class);
@@ -157,5 +164,24 @@ class CustomersPanelSelectionTest {
 		Field field = CustomersPanel.class.getDeclaredField(name);
 		field.setAccessible(true);
 		return type.cast(field.get(panel));
+	}
+
+	private static void setActivitySources(CustomersPanel panel) throws Exception {
+		Field sales = CustomersPanel.class.getDeclaredField("sales");
+		sales.setAccessible(true);
+		sales.set(panel, new DataLogicSales() {
+			@Override
+			public Map<String, List<FindTicketsInfo>> getCustomerTicketHistory() {
+				return Map.of();
+			}
+		});
+		Field replenishment = CustomersPanel.class.getDeclaredField("replenishment");
+		replenishment.setAccessible(true);
+		replenishment.set(panel, new DataLogicReplenishment() {
+			@Override
+			public List<ReplenishmentEntry> list(String search, String type, String status) {
+				return List.of();
+			}
+		});
 	}
 }
