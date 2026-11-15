@@ -1214,11 +1214,17 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		columns.getColumn(3).setPreferredWidth(115);
 		columns.getColumn(3).setMinWidth(110);
 		columns.getColumn(3).setMaxWidth(135);
-		int dateWidth = tabularDateWidth(table.getFontMetrics(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f)),
-				"00/00/00") + 8;
-		columns.getColumn(4).setMinWidth(dateWidth);
-		columns.getColumn(4).setPreferredWidth(dateWidth);
-		columns.getColumn(4).setMaxWidth(dateWidth);
+		java.awt.FontMetrics waitMetrics = table.getFontMetrics(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
+		int dateWidth = tabularDateWidth(waitMetrics, "00/00/00") + 8;
+		int waitWidth = dateWidth;
+		for (String unit : new String[]{"Replenishment.WaitingMinutes", "Replenishment.WaitingHours",
+				"Replenishment.WaitingDays"})
+			waitWidth = Math.max(waitWidth,
+					waitMetrics.stringWidth(String.format(AppLocal.getIntString("Replenishment.WaitingFor"),
+							String.format(AppLocal.getIntString(unit), 999))) + 8);
+		columns.getColumn(4).setMinWidth(waitWidth);
+		columns.getColumn(4).setPreferredWidth(waitWidth);
+		columns.getColumn(4).setMaxWidth(waitWidth);
 		// The optional supplier column is present only in the All suppliers view.
 		table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
 			@Override
