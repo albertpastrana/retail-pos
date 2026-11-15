@@ -243,7 +243,9 @@ public class ProductInfoExt {
 				product.family = dr.getString(14);
 				product.createdAt = dr.getTimestamp(15);
 				product.updatedAt = dr.getTimestamp(16);
-				product.setProperty("catalog.brand", dr.getString(17));
+				String brand = dr.getString(17);
+				if (brand != null)
+					product.setProperty("catalog.brand", brand);
 				return product;
 			}
 		};
