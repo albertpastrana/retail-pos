@@ -38,7 +38,7 @@ checksums passed and the containers are stopped.
 
 ## Shipped
 
-Added `RECEIVED_AT` in V59, persisted it across individual, bulk, and form
+Added `RECEIVED_AT` in V60, persisted it across individual, bulk, and form
 status changes, and cleared it when orders are reopened. The replenishment list,
 order detail, and customer order cards now show the localized pickup wait time.
 Key paths include `DataLogicReplenishment`, `ReplenishmentPanel`,
