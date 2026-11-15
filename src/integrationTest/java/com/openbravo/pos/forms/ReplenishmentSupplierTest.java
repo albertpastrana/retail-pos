@@ -33,6 +33,7 @@ class ReplenishmentSupplierTest {
 			supplier.contactFirstName = "Ada";
 			supplier.contactLastName = "Lovelace";
 			supplier.whatsapp = "+34 600 000 000";
+			supplier.whatsapp2 = "+34 611 111 111";
 			supplier.email = "ada@example.com";
 			data.saveSupplier(supplier);
 			ReplenishmentEntry pending = request("Blue jumper", "Customer private");
@@ -66,6 +67,7 @@ class ReplenishmentSupplierTest {
 			data.saveSupplier(supplier);
 			DatabaseMigrator.migrate(url, null, null);
 			assertEquals("Byron", data.suppliers().get(0).contactLastName);
+			assertEquals("+34 611 111 111", data.suppliers().get(0).whatsapp2);
 			assertEquals("ada@example.com", data.suppliers().get(0).email);
 			assertEquals(2, data.list("", "ALL", "ALL", supplier.id).size());
 			data.updateDetailsSupplierAndStatus(unassigned.id, "Check", null, null, supplier.id, "PENDING", "user");

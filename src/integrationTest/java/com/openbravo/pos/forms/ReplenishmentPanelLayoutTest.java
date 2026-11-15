@@ -645,7 +645,7 @@ class ReplenishmentPanelLayoutTest {
 						assertTrue(action.getParent().getLayout() instanceof FlowLayout);
 						assertTrue(action.getHeight() <= com.formdev.flatlaf.util.UIScale.scale(44) + 4);
 					}
-					assertEquals(5, components(dialog.getContentPane(), JTextField.class).size());
+					assertEquals(6, components(dialog.getContentPane(), JTextField.class).size());
 					for (JTextField field : components(dialog.getContentPane(), JTextField.class))
 						assertEquals(RetailPOSColors.surface100(), field.getBackground());
 					captureOverlay(panel, dialog.getContentPane(), width, id == null ? "supplier-new" : "supplier-edit",

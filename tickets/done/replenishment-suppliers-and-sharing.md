@@ -14,6 +14,8 @@ Assign shared supplier contacts to pending replenishments and customer orders, n
 ## Current decisions
 
 - Suppliers have a business name, contact first/last names, WhatsApp number and optional email. Administration shows a 200–232px supplier rail at widths ≥980px and a combo below that width; sales mode hides supplier, assignment and export tools. The mode-specific list/detail layout is defined in the related sales/admin ticket. The application bar owns the screen title.
+- A supplier may have a second mobile/WhatsApp number; sending an order lets the operator choose either stored number.
+- Supplier and customer assignment controls say “Assign” rather than “Change”.
 - The rail contains All suppliers, Unassigned, then named suppliers with active-status counts. Active/focused and hovered rows use shared rounded surfaces and tokens. Show a ghost + New supplier below the list. Each named row exposes a 36px ghost ellipsis when active/hovered; its Edit action opens the same packed single-form dialog used for creation, while Delete confirms that N requests for that supplier become Unassigned. Deletion unassigns before deleting the contact; when the active supplier is deleted, return to All suppliers. The supplier header's Edit action also opens the form. New supplier from a selected detail's Change menu or bulk Assign to action assigns the newly saved contact immediately.
 - Only selected *pending* requests can be assigned/reassigned in bulk. Preserve their customer and status. The unassigned view stays newest-first; a named supplier view groups by catalogue brand/family and places entries with neither last. Show Supplier as a separate table column only in a non-compact All suppliers administration view; narrow administration lists include supplier/customer in the product caption.
 - Status filters form a single horizontally scrollable row (Pending, Ordered, Received, Delivered, All); no labels wrap or clip. Details offer a branded next-step action and anchored keyboard-accessible status/supplier menus. Delivery requires a customer; status changes save unsaved detail edits together. Content derives widths from labels and uses scale-aware touch minimums (40px segments within a 48px shell, 44px search/new-request, 48px primary action). Preserve shared light/dark design tokens.
@@ -27,6 +29,21 @@ Assign shared supplier contacts to pending replenishments and customer orders, n
 - Supplier and Unassigned filters, named-supplier grouping, pending-only assignment and new-supplier-from-Change/Assign flows work; the single supplier form and ellipsis menu are accessible by keyboard and pointer.
 - Selected visible requests—or all visible requests if none selected—appear in the correctly sorted outgoing text, without any customer/phone/note/seller data. Text-file success or confirmed WhatsApp send updates only included pending statuses; cancellation, printing and failures do not.
 - CA/ES/EN labels, supported widths/scales, both themes and the actual sales/admin screens are checked. Record MacBook Air/TPV tests of keyboard focus, supplier menus, WhatsApp handoff, file chooser and printing before closing.
+- The second supplier mobile survives migration, editing, restart, and can be selected for WhatsApp sharing.
+
+## Shipped
+
+Supplier contacts now support a second mobile number through migration V59. The
+WhatsApp share dialog lets the operator choose either stored number and adds a
+translated greeting before the order list. Supplier and customer detail actions
+use Assign labels, and the supplier rail rows use a more compact vertical
+density while retaining the action control target.
+
+Verification: `./gradlew ciCheck` passed with Derby, MySQL, and PostgreSQL after
+`docker compose up -d --wait`; containers were removed with
+`docker compose down -v`. Focused supplier, migration, form-flow, layout, and
+checksum checks also pass. The earlier local MySQL/PostgreSQL test attempt
+failed only because those containers were not running.
 
 ## Verification and open checks
 
