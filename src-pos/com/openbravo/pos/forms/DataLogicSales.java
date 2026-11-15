@@ -1430,11 +1430,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	private void applyWholesalePrice(Object[] values) throws BasicException {
-		if (values.length <= 21) {
+		if (values.length <= 22) {
 			return;
 		}
 		new PreparedSentence(s, "UPDATE PRODUCTS SET PRICEBUY_WHOLESALE = ? WHERE ID = ?",
-				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[21], values[0]);
+				new SerializerWriteBasic(Datas.DOUBLE, Datas.STRING)).exec(values[22], values[0]);
 	}
 
 	private static double unitsOf(Double value) {

@@ -3049,7 +3049,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			formProduct.setReference(entry.reference);
 			formProduct.setName(entry.name);
 			formProduct.setCode(entry.ean);
-			formProduct.setProperty("catalog.brand", entry.brand);
+			if (entry.brand != null)
+				formProduct.setProperty("catalog.brand", entry.brand);
 		}
 		formDescription.setText(entry.productId == null
 				? (entry.manualDescription == null ? "" : entry.manualDescription)
