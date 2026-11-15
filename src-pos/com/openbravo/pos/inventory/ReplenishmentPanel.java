@@ -34,9 +34,11 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.Container;
+import java.time.Duration;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,7 +88,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	private DataLogicCustomers customers;
 	private final DefaultTableModel model = new DefaultTableModel(new Object[]{"",
 			AppLocal.getIntString("Replenishment.RequestColumn"), AppLocal.getIntString("Replenishment.CustomerColumn"),
-			AppLocal.getIntString("Replenishment.Status"), AppLocal.getIntString("Replenishment.Added"),
+			AppLocal.getIntString("Replenishment.Status"), AppLocal.getIntString("Replenishment.AddedOrWaiting"),
 			AppLocal.getIntString("Replenishment.Supplier")}, 0) {
 		@Override
 		public boolean isCellEditable(int row, int column) {
@@ -3037,8 +3039,11 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				: displayProductName(entry.name, entry.reference));
 		resizeDetailHeading();
 		detailProduct.setToolTipText(entry.displayName());
-		detailCreated.setText(String.format(AppLocal.getIntString("Replenishment.DetailAddedBy"),
-				new SimpleDateFormat("dd/MM/yy").format(entry.createdAt), creatorName(entry)));
+		String created = String.format(AppLocal.getIntString("Replenishment.DetailAddedBy"),
+				new SimpleDateFormat("dd/MM/yy").format(entry.createdAt), creatorName(entry));
+		detailCreated.setText("RECEIVED".equals(entry.status) && entry.receivedAt != null
+				? created + " · " + pickupWait(entry.receivedAt)
+				: created);
 		detailStatus.setText(statusLabel(entry.status));
 		detailStatus.setForeground(RetailPOSColors.ink());
 		detailStatus.setIcon(new javax.swing.Icon() {
@@ -3243,7 +3248,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 					selectedRow = model.getRowCount();
 				visibleRows.add(e);
 				model.addRow(new Object[]{false, e.displayName(), valueOrEmpty(e.customerName), statusLabel(e.status),
-						f.format(e.createdAt), supplierName(e.supplierId)});
+						"RECEIVED".equals(e.status) ? pickupWait(e.receivedAt) : f.format(e.createdAt),
+						supplierName(e.supplierId)});
 			}
 			resizeRows();
 			displayedSearch = search;
@@ -3301,6 +3307,17 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			if (id.equals(supplierFilter.getItemAt(i).id))
 				return supplierFilter.getItemAt(i).name;
 		return AppLocal.getIntString("Replenishment.NoSupplier");
+	}
+	public static String pickupWait(Date receivedAt) {
+		if (receivedAt == null)
+			return "";
+		long minutes = Math.max(1, Duration.between(receivedAt.toInstant(), java.time.Instant.now()).toMinutes());
+		String elapsed = minutes < 60
+				? String.format(AppLocal.getIntString("Replenishment.WaitingMinutes"), minutes)
+				: minutes < 1440
+						? String.format(AppLocal.getIntString("Replenishment.WaitingHours"), minutes / 60)
+						: String.format(AppLocal.getIntString("Replenishment.WaitingDays"), minutes / 1440);
+		return String.format(AppLocal.getIntString("Replenishment.WaitingFor"), elapsed);
 	}
 	private String statusLabel(String status) {
 		return "DELIVERED".equals(status)

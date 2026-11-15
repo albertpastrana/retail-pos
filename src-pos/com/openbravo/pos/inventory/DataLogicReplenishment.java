@@ -305,17 +305,21 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (!isValidStatus(status))
 			throw new BasicException("Invalid replenishment status");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+				"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, RECEIVED_AT=CASE WHEN ?='RECEIVED' AND RECEIVED_AT IS NULL THEN ? WHEN ? NOT IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE RECEIVED_AT END, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
 						+ openKeyExpression()
 						+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, status);
 			ps.setString(2, status);
-			ps.setString(3, status);
-			ps.setString(4, "I:" + id);
-			ps.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
-			ps.setString(6, user);
-			ps.setString(7, id);
-			ps.setString(8, status);
+			Timestamp now = new Timestamp(System.currentTimeMillis());
+			ps.setTimestamp(3, now);
+			ps.setString(4, status);
+			ps.setString(5, status);
+			ps.setString(6, status);
+			ps.setString(7, "I:" + id);
+			ps.setTimestamp(8, now);
+			ps.setString(9, user);
+			ps.setString(10, id);
+			ps.setString(11, status);
 			if (ps.executeUpdate() == 0 && "DELIVERED".equals(status))
 				throw new BasicException("Only customer orders can be delivered");
 		} catch (SQLException e) {
@@ -338,19 +342,22 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			try {
 				c.setAutoCommit(false);
 				try (PreparedStatement ps = c.prepareStatement(
-						"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+						"UPDATE REPLENISHMENT_ENTRIES SET STATUS=?, RECEIVED_AT=CASE WHEN ?='RECEIVED' AND RECEIVED_AT IS NULL THEN ? WHEN ? NOT IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE RECEIVED_AT END, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
 								+ openKeyExpression()
 								+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 					Timestamp now = new Timestamp(System.currentTimeMillis());
 					for (String id : ids) {
 						ps.setString(1, status);
 						ps.setString(2, status);
-						ps.setString(3, status);
-						ps.setString(4, "I:" + id);
-						ps.setTimestamp(5, now);
-						ps.setString(6, user);
-						ps.setString(7, id);
-						ps.setString(8, status);
+						ps.setTimestamp(3, now);
+						ps.setString(4, status);
+						ps.setString(5, status);
+						ps.setString(6, status);
+						ps.setString(7, "I:" + id);
+						ps.setTimestamp(8, now);
+						ps.setString(9, user);
+						ps.setString(10, id);
+						ps.setString(11, status);
 						if (ps.executeUpdate() != 1)
 							throw new SQLException("Selected request changed or is no longer eligible");
 					}
@@ -406,7 +413,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (!isValidStatus(e.status) || ("DELIVERED".equals(e.status) && e.customerId == null))
 			throw new BasicException("Only customer orders can be delivered");
 		try (PreparedStatement ps = connection().prepareStatement(
-				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=?, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
+				"UPDATE REPLENISHMENT_ENTRIES SET PRODUCT_ID=?, PRODUCT_REFERENCE=?, PRODUCT_NAME=?, PRODUCT_EAN=?, MANUAL_DESCRIPTION=?, MANUAL_EAN=?, NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, STATUS=?, RECEIVED_AT=CASE WHEN ?='RECEIVED' AND RECEIVED_AT IS NULL THEN ? WHEN ? NOT IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE RECEIVED_AT END, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=?, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR (CUSTOMER_ID IS NOT NULL AND STATUS='RECEIVED'))")) {
 			ps.setString(1, e.productId);
 			ps.setString(2, e.reference);
 			ps.setString(3, e.name);
@@ -418,14 +425,18 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 			ps.setString(9, e.customerName);
 			ps.setString(10, e.status);
 			ps.setString(11, e.status);
-			ps.setString(12,
+			Timestamp now = new Timestamp(System.currentTimeMillis());
+			ps.setTimestamp(12, now);
+			ps.setString(13, e.status);
+			ps.setString(14, e.status);
+			ps.setString(15,
 					"RECEIVED".equals(e.status) || "DELIVERED".equals(e.status) || e.productId == null
 							? "I:" + e.id
 							: openKey(e.productId, e.customerId, e.id));
-			ps.setTimestamp(13, new Timestamp(System.currentTimeMillis()));
-			ps.setString(14, user);
-			ps.setString(15, e.id);
-			ps.setString(16, e.status);
+			ps.setTimestamp(16, now);
+			ps.setString(17, user);
+			ps.setString(18, e.id);
+			ps.setString(19, e.status);
 			ps.executeUpdate();
 		} catch (SQLException ex) {
 			throw new BasicException(ex);
@@ -474,7 +485,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		try (PreparedStatement ps = connection()
 				.prepareStatement("UPDATE REPLENISHMENT_ENTRIES SET NOTE=?, CUSTOMER_ID=?, CUSTOMER_NAME=?, "
 						+ (changeSupplier ? "SUPPLIER_ID=?, " : "")
-						+ "STATUS=?, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
+						+ "STATUS=?, RECEIVED_AT=CASE WHEN ?='RECEIVED' AND RECEIVED_AT IS NULL THEN ? WHEN ? NOT IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE RECEIVED_AT END, OPEN_PRODUCT_ID=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN NULL ELSE PRODUCT_ID END, OPEN_UNIQUE_KEY=CASE WHEN ? IN ('RECEIVED', 'DELIVERED') THEN ? ELSE "
 						+ openKeyExpression()
 						+ " END, UPDATED_AT=?, UPDATED_BY=? WHERE ID=? AND (? <> 'DELIVERED' OR STATUS IN ('RECEIVED', 'DELIVERED'))")) {
 			int param = 1;
@@ -485,9 +496,13 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 				ps.setString(param++, supplierId);
 			ps.setString(param++, status);
 			ps.setString(param++, status);
+			Timestamp now = new Timestamp(System.currentTimeMillis());
+			ps.setTimestamp(param++, now);
+			ps.setString(param++, status);
+			ps.setString(param++, status);
 			ps.setString(param++, status);
 			ps.setString(param++, "I:" + id);
-			ps.setTimestamp(param++, new Timestamp(System.currentTimeMillis()));
+			ps.setTimestamp(param++, now);
 			ps.setString(param++, user);
 			ps.setString(param++, id);
 			ps.setString(param, status);
@@ -510,18 +525,20 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	}
 
 	private void insert(Connection c, ReplenishmentEntry e) throws SQLException {
-		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY,OPEN_UNIQUE_KEY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		String sql = "INSERT INTO REPLENISHMENT_ENTRIES (ID,PRODUCT_ID,PRODUCT_REFERENCE,PRODUCT_NAME,PRODUCT_EAN,VARIANT_SIZE,VARIANT_COLOUR,MANUAL_DESCRIPTION,MANUAL_EAN,NOTE,CUSTOMER_ID,CUSTOMER_NAME,STATUS,RECEIVED_AT,OPEN_PRODUCT_ID,CREATED_AT,UPDATED_AT,CREATED_BY,UPDATED_BY,OPEN_UNIQUE_KEY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		try (PreparedStatement ps = c.prepareStatement(sql)) {
 			String[] values = {e.id, e.productId, e.reference, e.name, e.ean, e.size, e.colour, e.manualDescription,
 					e.manualEan, e.note, e.customerId, e.customerName, e.status, e.openProductId, e.createdBy,
 					e.updatedBy};
-			for (int i = 0; i < 14; i++)
+			for (int i = 0; i < 13; i++)
 				ps.setString(i + 1, values[i]);
-			ps.setTimestamp(15, new Timestamp(e.createdAt.getTime()));
-			ps.setTimestamp(16, new Timestamp(e.updatedAt.getTime()));
-			ps.setString(17, e.createdBy);
-			ps.setString(18, e.updatedBy);
-			ps.setString(19, openKey(e.productId, e.customerId, e.id));
+			ps.setTimestamp(14, e.receivedAt == null ? null : new Timestamp(e.receivedAt.getTime()));
+			ps.setString(15, e.openProductId);
+			ps.setTimestamp(16, new Timestamp(e.createdAt.getTime()));
+			ps.setTimestamp(17, new Timestamp(e.updatedAt.getTime()));
+			ps.setString(18, e.createdBy);
+			ps.setString(19, e.updatedBy);
+			ps.setString(20, openKey(e.productId, e.customerId, e.id));
 			ps.executeUpdate();
 		}
 	}
@@ -554,6 +571,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		e.customerName = r.getString("CUSTOMER_NAME");
 		e.customerPhone = r.getString("CUSTOMER_PHONE");
 		e.status = r.getString("STATUS");
+		e.receivedAt = r.getTimestamp("RECEIVED_AT");
 		e.createdAt = r.getTimestamp("CREATED_AT");
 		e.updatedAt = r.getTimestamp("UPDATED_AT");
 		e.createdBy = r.getString("CREATED_BY");

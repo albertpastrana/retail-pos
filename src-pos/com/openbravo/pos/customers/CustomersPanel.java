@@ -786,7 +786,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			JPanel card = new JPanel(new BorderLayout(8, 4));
 			card.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(RetailPOSColors.border()),
 					BorderFactory.createEmptyBorder(8, 10, 8, 10)));
-			JLabel status = new JLabel("● " + text("status." + order.status));
+			String statusText = "● " + text("status." + order.status);
+			if ("RECEIVED".equals(order.status) && order.receivedAt != null)
+				statusText += " · " + ReplenishmentPanel.pickupWait(order.receivedAt);
+			JLabel status = new JLabel(statusText);
 			status.setForeground("RECEIVED".equals(order.status) || "DELIVERED".equals(order.status)
 					? RetailPOSColors.success()
 					: RetailPOSColors.warning());
