@@ -98,7 +98,7 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 	public List<ReplenishmentSupplier> suppliers() throws BasicException {
 		List<ReplenishmentSupplier> result = new ArrayList<>();
 		try (PreparedStatement ps = connection()
-				.prepareStatement("SELECT ID, NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, EMAIL "
+				.prepareStatement("SELECT ID, NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, WHATSAPP_2, EMAIL "
 						+ "FROM REPLENISHMENT_SUPPLIERS ORDER BY UPPER(NAME), ID");
 				ResultSet rs = ps.executeQuery()) {
 			while (rs.next()) {
@@ -108,7 +108,8 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 				supplier.contactFirstName = rs.getString(3);
 				supplier.contactLastName = rs.getString(4);
 				supplier.whatsapp = rs.getString(5);
-				supplier.email = rs.getString(6);
+				supplier.whatsapp2 = rs.getString(6);
+				supplier.email = rs.getString(7);
 				result.add(supplier);
 			}
 		} catch (SQLException ex) {
@@ -126,15 +127,16 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		if (insert)
 			supplier.id = UUID.randomUUID().toString();
 		String sql = insert
-				? "INSERT INTO REPLENISHMENT_SUPPLIERS (NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, EMAIL, ID) VALUES (?,?,?,?,?,?)"
-				: "UPDATE REPLENISHMENT_SUPPLIERS SET NAME=?, CONTACT_FIRST_NAME=?, CONTACT_LAST_NAME=?, WHATSAPP=?, EMAIL=? WHERE ID=?";
+				? "INSERT INTO REPLENISHMENT_SUPPLIERS (NAME, CONTACT_FIRST_NAME, CONTACT_LAST_NAME, WHATSAPP, WHATSAPP_2, EMAIL, ID) VALUES (?,?,?,?,?,?,?)"
+				: "UPDATE REPLENISHMENT_SUPPLIERS SET NAME=?, CONTACT_FIRST_NAME=?, CONTACT_LAST_NAME=?, WHATSAPP=?, WHATSAPP_2=?, EMAIL=? WHERE ID=?";
 		try (PreparedStatement ps = connection().prepareStatement(sql)) {
 			ps.setString(1, supplier.name.trim());
 			ps.setString(2, supplier.contactFirstName.trim());
 			ps.setString(3, supplier.contactLastName.trim());
 			ps.setString(4, supplier.whatsapp == null ? null : supplier.whatsapp.trim());
-			ps.setString(5, supplier.email == null ? null : supplier.email.trim());
-			ps.setString(6, supplier.id);
+			ps.setString(5, supplier.whatsapp2 == null ? null : supplier.whatsapp2.trim());
+			ps.setString(6, supplier.email == null ? null : supplier.email.trim());
+			ps.setString(7, supplier.id);
 			if (ps.executeUpdate() != 1)
 				throw new BasicException("Supplier no longer exists");
 		} catch (SQLException ex) {

@@ -453,7 +453,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				@Override
 				public Dimension getPreferredSize() {
 					Dimension size = super.getPreferredSize();
-					size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(44));
+					size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(40));
 					return size;
 				}
 			};
@@ -506,7 +506,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				@Override
 				public Dimension getPreferredSize() {
 					Dimension size = super.getPreferredSize();
-					size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(48));
+					size.height = Math.max(size.height, com.formdev.flatlaf.util.UIScale.scale(40));
 					return size;
 				}
 				@Override
@@ -1510,6 +1510,10 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JLabel phoneLabel = new JLabel();
 		phoneLabel.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 		phoneLabel.setForeground(RetailPOSColors.inkMuted());
+		JComboBox<String> recipientPhone = new JComboBox<>();
+		recipientPhone.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
+		recipientPhone.setPreferredSize(new Dimension(180, 44));
+		recipientPhone.setVisible(false);
 		center.add(options, BorderLayout.NORTH);
 		JTextArea message = new JTextArea(13, 45);
 		message.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(15f));
@@ -1538,6 +1542,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		JPanel footer = new JPanel(new BorderLayout(8, 0));
 		footer.setOpaque(false);
 		footer.add(phoneLabel, BorderLayout.WEST);
+		footer.add(recipientPhone, BorderLayout.CENTER);
 		footer.add(actions, BorderLayout.EAST);
 		body.add(footer, BorderLayout.SOUTH);
 		styleOverlayDialog(dialog, body);
@@ -1547,17 +1552,25 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			ReplenishmentSupplier supplier = singleSupplier(scope);
 			eyebrow.setText(String.format(AppLocal.getIntString("Replenishment.OrderSupplierEyebrow"),
 					supplier == null ? AppLocal.getIntString("Replenishment.AllSuppliers") : supplier.name));
-			String phone = supplier == null ? "" : valueOrEmpty(supplier.whatsapp).replaceAll("\\D", "");
 			boolean whatsapp = channelButtons.get("WHATSAPP").isSelected();
+			recipientPhone.removeAllItems();
+			if (supplier != null) {
+				for (String candidate : new String[]{supplier.whatsapp, supplier.whatsapp2})
+					if (hasWhatsAppPhone(candidate))
+						recipientPhone.addItem(formatWhatsApp(candidate));
+			}
+			recipientPhone.setVisible(whatsapp && recipientPhone.getItemCount() > 1);
+			String selectedPhone = selectedPhone(supplier, recipientPhone);
+			String phone = selectedPhone.replaceAll("\\D", "");
 			for (JToggleButton button : channelButtons.values())
 				updateSegmentStyle(button);
-			phoneLabel.setVisible(whatsapp || supplier != null && !hasWhatsAppPhone(supplier.whatsapp));
+			phoneLabel.setVisible(whatsapp || supplier != null && !hasWhatsAppPhone(selectedPhone));
 			phoneLabel.setText(supplier == null
 					? AppLocal.getIntString("Replenishment.OneSupplierRequired")
 					: AppLocal.getIntString("Replenishment.ToPhone") + " "
-							+ (!hasWhatsAppPhone(supplier.whatsapp)
+							+ (!hasWhatsAppPhone(selectedPhone)
 									? AppLocal.getIntString("Replenishment.MissingWhatsApp")
-									: formatWhatsApp(supplier.whatsapp)));
+									: formatWhatsApp(selectedPhone)));
 			confirm.setText(channelButtons.get("TEXT").isSelected()
 					? AppLocal.getIntString("Replenishment.SaveTextFile")
 					: whatsapp
@@ -1566,12 +1579,15 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			confirm.setEnabled(!scope.isEmpty() && (!whatsapp || phone.length() >= 8 && phone.length() <= 15));
 		};
 		Runnable scopeChanged = () -> {
-			message.setText(ReplenishmentOrderText.format(selectedScope.isSelected() ? chosen : all));
+			String order = ReplenishmentOrderText.format(selectedScope.isSelected() ? chosen : all);
+			message.setText(channelButtons.get("WHATSAPP").isSelected()
+					? AppLocal.getIntString("Replenishment.WhatsAppIntro") + "\n\n" + order
+					: order);
 			message.setCaretPosition(0);
 			refresh.run();
 		};
 		for (JToggleButton button : channelButtons.values())
-			button.addActionListener(e -> refresh.run());
+			button.addActionListener(e -> scopeChanged.run());
 		allScope.addActionListener(e -> scopeChanged.run());
 		selectedScope.addActionListener(e -> scopeChanged.run());
 		cancel.addActionListener(e -> dialog.dispose());
@@ -1579,7 +1595,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			List<ReplenishmentEntry> scope = selectedScope.isSelected() ? chosen : all;
 			if (channelButtons.get("WHATSAPP").isSelected()) {
 				ReplenishmentSupplier supplier = singleSupplier(scope);
-				if (supplier != null && sendWhatsApp(scope, supplier, message.getText()))
+				String phone = selectedPhone(supplier, recipientPhone);
+				if (supplier != null && sendWhatsApp(scope, supplier, phone, message.getText()))
 					dialog.dispose();
 			} else if (channelButtons.get("TEXT").isSelected()) {
 				if (exportVisibleEntries(scope, message.getText()))
@@ -1609,6 +1626,16 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				return supplierFilter.getItemAt(i);
 		return null;
 	}
+	private static String selectedPhone(ReplenishmentSupplier supplier, JComboBox<String> recipientPhone) {
+		if (supplier == null)
+			return "";
+		List<String> phones = new ArrayList<>();
+		for (String candidate : new String[]{supplier.whatsapp, supplier.whatsapp2})
+			if (hasWhatsAppPhone(candidate))
+				phones.add(candidate);
+		int selected = recipientPhone.getSelectedIndex();
+		return selected >= 0 && selected < phones.size() ? phones.get(selected) : "";
+	}
 	private boolean exportVisibleEntries(List<ReplenishmentEntry> exported, String text) {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setSelectedFile(new File(String.format(AppLocal.getIntString("Replenishment.ExportFileName"),
@@ -1630,8 +1657,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			return false;
 		}
 	}
-	private boolean sendWhatsApp(List<ReplenishmentEntry> scope, ReplenishmentSupplier supplier, String text) {
-		String phone = valueOrEmpty(supplier.whatsapp).replaceAll("\\D", "");
+	private boolean sendWhatsApp(List<ReplenishmentEntry> scope, ReplenishmentSupplier supplier, String selectedPhone,
+			String text) {
+		String phone = valueOrEmpty(selectedPhone).replaceAll("\\D", "");
 		if (phone.length() < 8 || phone.length() > 15)
 			return false;
 		try {
@@ -1760,7 +1788,9 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			JTextField first = touchField(22, 44);
 			JTextField last = touchField(22, 44);
 			JTextField phone = touchField(22, 44);
+			JTextField phone2 = touchField(22, 44);
 			phone.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
+			phone2.setFont(RetailPOSTheme.PLEX_MONO_REGULAR.deriveFont(13f));
 			JTextField email = touchField(22, 44);
 			JPanel fields = new JPanel(new GridBagLayout());
 			fields.setOpaque(false);
@@ -1773,7 +1803,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			int row = 0;
 			for (Object[] field : new Object[][]{{"Replenishment.SupplierName", name},
 					{"Replenishment.ContactFirstName", first}, {"Replenishment.ContactLastName", last},
-					{"Replenishment.WhatsAppNumber", phone}, {"Replenishment.SupplierEmail", email}}) {
+					{"Replenishment.WhatsAppNumber", phone}, {"Replenishment.WhatsAppNumber2", phone2},
+					{"Replenishment.SupplierEmail", email}}) {
 				cell.gridy = row++;
 				fields.add(sectionLabel((String) field[0]), cell);
 				JTextField input = (JTextField) field[1];
@@ -1781,7 +1812,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				input.setBackground(RetailPOSColors.surface100());
 				cell.gridy = row++;
 				fields.add(input, cell);
-				if (input == phone) {
+				if (input == phone || input == phone2) {
 					JTextArea hint = hintArea();
 					hint.setFont(RetailPOSTheme.MANROPE_MEDIUM.deriveFont(13f));
 					hint.setText(AppLocal.getIntString("Replenishment.SupplierPhoneHint"));
@@ -1808,9 +1839,12 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				first.setText(valueOrEmpty(existing.contactFirstName));
 				last.setText(valueOrEmpty(existing.contactLastName));
 				phone.setText(formatWhatsApp(existing.whatsapp));
+				phone2.setText(formatWhatsApp(existing.whatsapp2));
 				email.setText(valueOrEmpty(existing.email));
-			} else
+			} else {
 				phone.setText("+34 ");
+				phone2.setText("+34 ");
+			}
 			ReplenishmentSupplier original = existing;
 			saveSupplier.addActionListener(e -> {
 				if (name.getText().isBlank() || first.getText().isBlank() || last.getText().isBlank()) {
@@ -1824,6 +1858,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				item.contactFirstName = first.getText();
 				item.contactLastName = last.getText();
 				item.whatsapp = phone.getText().replaceAll("\\D", "").length() <= 2 ? null : phone.getText();
+				item.whatsapp2 = phone2.getText().replaceAll("\\D", "").length() <= 2 ? null : phone2.getText();
 				item.email = email.getText();
 				try {
 					data.saveSupplier(item);
@@ -2419,14 +2454,14 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		RetailPOSTheme.touchHeight(changeStatus, 44);
 		changeStatus.addActionListener(e -> showStatusMenu(changeStatus));
 		detailSupplierName = new JLabel();
-		detailSupplierChange = new JButton(AppLocal.getIntString("Replenishment.Change"));
+		detailSupplierChange = new JButton(AppLocal.getIntString("Replenishment.AssignSupplier"));
 		detailSupplierChange.addActionListener(e -> showSupplierMenu(detailSupplierChange));
 		JPanel supplierLine = detailLine("Replenishment.Supplier", detailSupplierName, detailSupplierChange);
 		detailCustomer = new JLabel();
 		detailCustomerPhone = customerPhoneLabel();
 		detailCustomer.setVerticalAlignment(JLabel.CENTER);
 		detailCustomer.setForeground(RetailPOSColors.ink());
-		detailCustomerButton = new JButton(AppLocal.getIntString("Replenishment.Change"));
+		detailCustomerButton = new JButton(AppLocal.getIntString("Replenishment.AssignCustomer"));
 		detailCustomerButton.addActionListener(e -> chooseDetailCustomer());
 		JPanel customerLine = detailLine("Replenishment.CustomerColumn",
 				customerValuePanel(detailCustomer, detailCustomerPhone), detailCustomerButton);
@@ -2915,8 +2950,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 	}
 	private void updateCustomerButton() {
-		customerButton.setText(AppLocal
-				.getIntString(formCustomer == null ? "Replenishment.Customer" : "Replenishment.ChangeCustomer"));
+		customerButton.setText(AppLocal.getIntString("Replenishment.AssignCustomer"));
 	}
 	private void setFormCustomerText(String value) {
 		setFormCustomerText(value, null);

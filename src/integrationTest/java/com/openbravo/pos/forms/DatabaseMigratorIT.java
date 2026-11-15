@@ -348,6 +348,7 @@ public class DatabaseMigratorIT {
 			supplier.contactFirstName = "Ada";
 			supplier.contactLastName = "Lovelace";
 			supplier.whatsapp = "+34600000000";
+			supplier.whatsapp2 = "+34611111111";
 			supplier.email = "ada@example.com";
 			data.saveSupplier(supplier);
 			try {
@@ -365,6 +366,8 @@ public class DatabaseMigratorIT {
 						.filter(entry -> first.id.equals(entry.id)).findFirst().orElseThrow().supplierId);
 				assertEquals("ada@example.com", data.suppliers().stream().filter(s -> supplier.id.equals(s.id))
 						.findFirst().orElseThrow().email);
+				assertEquals("+34611111111", data.suppliers().stream().filter(s -> supplier.id.equals(s.id)).findFirst()
+						.orElseThrow().whatsapp2);
 			} finally {
 				try {
 					data.deleteAll(java.util.List.of(first.id, second.id));
