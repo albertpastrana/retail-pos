@@ -8,7 +8,7 @@ public class ReplenishmentEntry {
 	public String creatorName;
 	public String supplierId;
 	public String brand, family;
-	public Date createdAt, updatedAt;
+	public Date createdAt, updatedAt, receivedAt;
 
 	public String displayName() {
 		if (productId == null)

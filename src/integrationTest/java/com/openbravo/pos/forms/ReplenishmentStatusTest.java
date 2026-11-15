@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
 
 import com.openbravo.data.loader.Session;
@@ -213,6 +214,8 @@ class ReplenishmentStatusTest {
 		ReplenishmentEntry replenishment = entry(null);
 		data.add(replenishment);
 		data.updateStatus(replenishment.id, "RECEIVED", "user");
+		java.util.Date receivedAt = data.list("", "ALL", "RECEIVED").get(0).receivedAt;
+		assertNotNull(receivedAt);
 		assertThrows(com.openbravo.basic.BasicException.class,
 				() -> data.updateStatus(replenishment.id, "DELIVERED", "user"));
 
@@ -222,12 +225,15 @@ class ReplenishmentStatusTest {
 		data.update(replenishment, "user");
 		data.updateStatus(replenishment.id, "DELIVERED", "user");
 		assertEquals("DELIVERED", data.list("", "ALL", "DELIVERED").get(0).status);
+		assertEquals(receivedAt, data.list("", "ALL", "DELIVERED").get(0).receivedAt);
 		assertThrows(com.openbravo.basic.BasicException.class,
 				() -> data.updateDetails(replenishment.id, "new note", null, null, "user"));
 		assertEquals("customer-1", data.list("", "ALL", "DELIVERED").get(0).customerId);
 		assertEquals(0, data.list("", "ENCARGO", "OPEN").size());
 		data.updateStatus(replenishment.id, "PENDING", "user");
-		assertEquals("PENDING", data.list("", "ENCARGO", "OPEN").get(0).status);
+		ReplenishmentEntry reopened = data.list("", "ENCARGO", "OPEN").get(0);
+		assertEquals("PENDING", reopened.status);
+		assertEquals(null, reopened.receivedAt);
 	}
 
 	@Test
@@ -277,6 +283,7 @@ class ReplenishmentStatusTest {
 		request.manualEan = "12345";
 		data.add(request);
 		data.updateStatus(request.id, "RECEIVED", "2");
+		java.util.Date receivedAt = data.list("", "ALL", "RECEIVED").get(0).receivedAt;
 		data.updateDetails(request.id, "Call on arrival", "customer-2", "Maria", "2");
 		ReplenishmentEntry saved = data.list("", "ALL", "RECEIVED").get(0);
 		assertEquals("12345", saved.manualEan);
@@ -284,6 +291,7 @@ class ReplenishmentStatusTest {
 		assertEquals("RECEIVED", saved.status);
 		assertEquals("Maria", saved.customerName);
 		assertEquals("Call on arrival", saved.note);
+		assertEquals(receivedAt, saved.receivedAt);
 		assertEquals("Employee", saved.creatorName);
 	}
 
