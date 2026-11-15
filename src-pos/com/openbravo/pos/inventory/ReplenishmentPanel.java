@@ -78,10 +78,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 
 public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactoryApp {
-	private static String pendingCustomerId;
-	public static synchronized void requestCustomer(String id) {
-		pendingCustomerId = id;
-	}
 	private static final Logger logger = Logger.getLogger(ReplenishmentPanel.class.getName());
 	private static final Pattern CONSTRAINT = Pattern.compile("(?i)constraint [\"']([a-z0-9_]+)[\"']");
 	private AppView app;
@@ -3760,6 +3756,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 	}
 	@Override
 	public void activate() throws BasicException {
+		boolean unfinishedDraft = creatingRequest && hasDraftContent();
 		boolean nextMode = app.getAppUserView().getUser().isAdministrationMode();
 		if (!modeInitialized || administrationMode != nextMode) {
 			modeInitialized = true;
@@ -3773,10 +3770,11 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		}
 		refreshSupplierFilter();
 		search.setText("");
+		filterTimer.stop();
 		selectedStatus = "PENDING";
 		selectedType = "ALL";
 		selectedSupplier = "ALL";
-		creatingRequest = false;
+		creatingRequest = unfinishedDraft;
 		supplierFilter.setSelectedIndex(0);
 		queueFilterLabel.setText(" ");
 		queueFilterLabel.setVisible(false);
@@ -3785,22 +3783,28 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		if (!hasDraftContent())
 			creatorLabel.setText(AppLocal.getIntString("Replenishment.CreatedBy") + ": " + selectedSellerName());
 		load("", false);
-		String id;
-		synchronized (ReplenishmentPanel.class) {
-			id = pendingCustomerId;
-			pendingCustomerId = null;
+		javax.swing.SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
+	}
+
+	/** Start a customer request only after navigation has reached this panel. */
+	public void startCustomerOrder(String customerId) throws BasicException {
+		CustomerInfo customer = customers.getCustomer(customerId);
+		if (customer == null)
+			throw new BasicException(AppLocal.getIntString("customer.loaderror"));
+		if ((creatingRequest && hasDraftContent()) || (editingEntry != null && save.isEnabled())) {
+			int answer = com.openbravo.data.gui.JConfirmationDialog.show(this,
+					AppLocal.getIntString("Replenishment.ReplaceDraftPrompt"),
+					AppLocal.getIntString("Replenishment.ReplaceDraftTitle"),
+					AppLocal.getIntString("Replenishment.KeepDraft"),
+					AppLocal.getIntString("Replenishment.StartCustomerOrder"), true);
+			if (answer != JOptionPane.YES_OPTION)
+				return;
 		}
-		if (id != null) {
-			CustomerInfo customer = customers.getCustomer(id);
-			if (customer != null) {
-				clearForm();
-				formCustomer = customer;
-				setFormCustomerText(customerDisplayName(customer), customer.getPhone());
-				updateCustomerButton();
-				updateSaveState();
-			}
-		} else
-			javax.swing.SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
+		clearForm();
+		formCustomer = customer;
+		setFormCustomerText(customerDisplayName(customer), customer.getPhone());
+		updateCustomerButton();
+		updateSaveState();
 	}
 
 	/** Open the list for one of the landing screen's waiting-work figures. */

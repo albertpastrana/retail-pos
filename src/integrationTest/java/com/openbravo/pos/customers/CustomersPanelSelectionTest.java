@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -63,7 +64,7 @@ class CustomersPanelSelectionTest {
 				return value.isEmpty() ? List.of(first, second) : value.equals("Berta") ? List.of(second) : List.of();
 			}
 		});
-		setActivitySources(panel);
+		AtomicInteger activityLoads = setActivitySources(panel);
 		JTable table = field(panel, "table", JTable.class);
 		JLabel title = field(panel, "detailTitle", JLabel.class);
 		JTextField search = field(panel, "search", JTextField.class);
@@ -84,6 +85,7 @@ class CustomersPanelSelectionTest {
 			search.setText("Berta");
 		});
 		awaitTitle(title, "Berta");
+		assertEquals(2, activityLoads.get(), "Searching reuses the loaded order and ticket snapshot");
 		SwingUtilities.invokeAndWait(() -> {
 			assertEquals(1, table.getRowCount());
 			assertEquals(0, table.getSelectedRow());
@@ -166,12 +168,14 @@ class CustomersPanelSelectionTest {
 		return type.cast(field.get(panel));
 	}
 
-	private static void setActivitySources(CustomersPanel panel) throws Exception {
+	private static AtomicInteger setActivitySources(CustomersPanel panel) throws Exception {
+		AtomicInteger loads = new AtomicInteger();
 		Field sales = CustomersPanel.class.getDeclaredField("sales");
 		sales.setAccessible(true);
 		sales.set(panel, new DataLogicSales() {
 			@Override
 			public Map<String, List<FindTicketsInfo>> getCustomerTicketHistory() {
+				loads.incrementAndGet();
 				return Map.of();
 			}
 		});
@@ -180,8 +184,10 @@ class CustomersPanelSelectionTest {
 		replenishment.set(panel, new DataLogicReplenishment() {
 			@Override
 			public List<ReplenishmentEntry> list(String search, String type, String status) {
+				loads.incrementAndGet();
 				return List.of();
 			}
 		});
+		return loads;
 	}
 }

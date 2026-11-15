@@ -179,6 +179,12 @@ class CustomersPanelLayoutTest {
 				assertNotNull(findLabel(cards, "Second order"));
 				assertEquals(null, findLabel(cards, "First order"));
 				assertEquals(null, findLabel(cards, "Another first order"));
+				assertEquals(Long.class, table.getModel().getColumnClass(2));
+				assertEquals(Date.class, table.getModel().getColumnClass(3));
+				assertEquals(2L, table.getModel().getValueAt(0, 2));
+				table.getRowSorter()
+						.setSortKeys(List.of(new javax.swing.RowSorter.SortKey(2, javax.swing.SortOrder.ASCENDING)));
+				assertEquals("Joana", table.getValueAt(0, 0));
 			} catch (ReflectiveOperationException e) {
 				throw new RuntimeException(e);
 			}
