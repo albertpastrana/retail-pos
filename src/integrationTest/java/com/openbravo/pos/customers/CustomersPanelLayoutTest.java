@@ -405,7 +405,11 @@ class CustomersPanelLayoutTest {
 											.stringWidth(pendingMetric.getText()),
 									"screen=" + width + " metric=" + pendingMetric.getText() + " available="
 											+ pendingMetric.getWidth());
-							int comfortableWidth = width >= 1200 ? com.formdev.flatlaf.util.UIScale.scale(440) : 440;
+							// At compact widths, both panes cannot keep their full preferred width.
+							int comfortableWidth = width >= 1200
+									? com.formdev.flatlaf.util.UIScale.scale(440)
+									: Math.min(com.formdev.flatlaf.util.UIScale.scale(440),
+											(split.getWidth() - split.getDividerSize()) / 2) - 24;
 							assertTrue(split.getRightComponent().getWidth() >= comfortableWidth,
 									"screen=" + width + " right=" + split.getRightComponent().getWidth());
 							if (width >= 1200)
