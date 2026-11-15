@@ -484,10 +484,13 @@ final class StockSessionRepository {
 								+ (connection.getMetaData().getDatabaseProductName().equalsIgnoreCase("MySQL")
 										? "CONCAT('I:', ID)"
 										: "'I:' || ID")
-								+ ",UPDATED_AT=?,UPDATED_BY=? " + "WHERE OPEN_PRODUCT_ID=? AND STATUS='ORDERED'")) {
-					ordered.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
-					ordered.setString(2, user);
-					ordered.setString(3, line.product);
+								+ ",RECEIVED_AT=?,UPDATED_AT=?,UPDATED_BY=? "
+								+ "WHERE OPEN_PRODUCT_ID=? AND STATUS='ORDERED'")) {
+					Timestamp now = new Timestamp(System.currentTimeMillis());
+					ordered.setTimestamp(1, now);
+					ordered.setTimestamp(2, now);
+					ordered.setString(3, user);
+					ordered.setString(4, line.product);
 					ordered.executeUpdate();
 				}
 			}
