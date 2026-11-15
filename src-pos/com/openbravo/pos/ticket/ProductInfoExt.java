@@ -187,7 +187,7 @@ public class ProductInfoExt {
 		return prefix + "ID, " + prefix + "REFERENCE, " + prefix + "CODE, " + prefix + "NAME, " + prefix + "ISCOM, "
 				+ prefix + "ISVOUCHER, " + prefix + "PRICEBUY, " + prefix + "PRICESELL, " + prefix + "TAXCAT, " + prefix
 				+ "CATEGORY, " + prefix + "IMAGE, " + prefix + "ATTRIBUTES, " + prefix + "SALE_PERCENT, " + prefix
-				+ "FAMILY, " + prefix + "CREATED_AT, " + prefix + "UPDATED_AT";
+				+ "FAMILY, " + prefix + "CREATED_AT, " + prefix + "UPDATED_AT, " + prefix + "BRAND";
 	}
 
 	public final double getPriceSellTax(TaxInfo tax) {
@@ -243,6 +243,7 @@ public class ProductInfoExt {
 				product.family = dr.getString(14);
 				product.createdAt = dr.getTimestamp(15);
 				product.updatedAt = dr.getTimestamp(16);
+				product.setProperty("catalog.brand", dr.getString(17));
 				return product;
 			}
 		};

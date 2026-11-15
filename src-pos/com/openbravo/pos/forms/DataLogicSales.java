@@ -112,7 +112,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				new Field("ISCATALOG", Datas.BOOLEAN, Formats.BOOLEAN), new Field("CATORDER", Datas.INT, Formats.INT),
 				new Field("PROPERTIES", Datas.BYTES, Formats.NULL),
 				new Field("ISVOUCHER", Datas.BOOLEAN, Formats.BOOLEAN),
-				new Field("FAMILY", Datas.STRING, Formats.STRING));
+				new Field("FAMILY", Datas.STRING, Formats.STRING),
+				new Field(AppLocal.getIntString("label.prodbrand"), Datas.STRING, Formats.STRING));
 
 		stockDiaryRow = new Row(new Field("ID", Datas.STRING, Formats.STRING),
 				new Field(AppLocal.getIntString("label.stockdate"), Datas.TIMESTAMP, Formats.TIMESTAMP, true, false,
@@ -1316,7 +1317,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 						+ s.DB.CHAR_NULL() + ", " + s.DB.CHAR_NULL()
 						+ ", PRODUCTS.STOCKCOST, PRODUCTS.STOCKVOLUME, CASE WHEN C.PRODUCT IS NULL THEN " + s.DB.FALSE()
 						+ " ELSE " + s.DB.TRUE() + " END, C.CATORDER, PRODUCTS.ATTRIBUTES "
-						+ ", PRODUCTS.ISVOUCHER, PRODUCTS.FAMILY " + "FROM PRODUCTS, PRODUCTS_CAT C "
+						+ ", PRODUCTS.ISVOUCHER, PRODUCTS.FAMILY, PRODUCTS.BRAND " + "FROM PRODUCTS, PRODUCTS_CAT C "
 						+ "WHERE ?(QBF_FILTER) AND PRODUCTS.ID = C.PRODUCT " + "ORDER BY PRODUCTS.REFERENCE",
 				new String[]{"PRODUCTS.NAME", "PRODUCTS.PRICEBUY", "PRODUCTS.PRICESELL", "PRODUCTS.CATEGORY",
 						"PRODUCTS.CODE", "PRODUCTS.BRAND", "PRODUCTS.REFERENCE", "PRODUCTS.FAMILY"}),
@@ -1331,9 +1332,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+						"INSERT INTO PRODUCTS (ID, REFERENCE, CODE, NAME, ISCOM, PRICEBUY, PRICESELL, CATEGORY, TAXCAT, IMAGE, STOCKCOST, STOCKVOLUME, ATTRIBUTES, ISVOUCHER, BRAND, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 15, 16}))
+								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 15, 16, 18}))
 						.exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
@@ -1354,9 +1355,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 			public int execInTransaction(Object params) throws BasicException {
 				Object[] values = (Object[]) params;
 				int i = new PreparedSentence(s,
-						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
+						"UPDATE PRODUCTS SET ID = ?, REFERENCE = ?, CODE = ?, NAME = ?, ISCOM = ?, PRICEBUY = ?, PRICESELL = ?, CATEGORY = ?, TAXCAT = ?, IMAGE = ?, STOCKCOST = ?, STOCKVOLUME = ?, ATTRIBUTES = ?, ISVOUCHER = ?, BRAND = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
 						new SerializerWriteBasicExt(productsRow.getDatas(),
-								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 15, 16, 0}))
+								new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 15, 16, 18, 0}))
 						.exec(params);
 				if (i > 0) {
 					applyWholesalePrice(values);
@@ -1402,12 +1403,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// much of that stock comes from units added rather than a correction
 	private void applyStockLevel(Object[] values) throws BasicException {
 
-		Double units = (Double) values[18];
-		String location = (String) values[19];
+		Double units = (Double) values[19];
+		String location = (String) values[20];
 		String product = (String) values[0];
-		Double addedFactory = values.length > 20 ? (Double) values[20] : null;
-		Double wholesale = values.length > 21 ? (Double) values[21] : null;
-		Double addedWholesale = values.length > 22 ? (Double) values[22] : null;
+		Double addedFactory = values.length > 21 ? (Double) values[21] : null;
+		Double wholesale = values.length > 22 ? (Double) values[22] : null;
+		Double addedWholesale = values.length > 23 ? (Double) values[23] : null;
 		Double pricebuy = (Double) values[5];
 		double added = unitsOf(addedFactory) + unitsOf(addedWholesale);
 

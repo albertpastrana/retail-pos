@@ -139,7 +139,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				return modelColumn == 1
 						? entry.productId == null
 								? entry.displayName()
-								: (displayReference(entry.name, entry.reference) + " "
+								: (displayReference(entry.name, entry.reference, entry.brand) + " "
 										+ displayProductName(entry.name, entry.reference)).trim()
 						: (valueOrEmpty(entry.customerName) + " " + valueOrEmpty(entry.customerPhone)).trim();
 			}
@@ -2868,7 +2868,8 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			formDescription.setEditable(true);
 		} else {
 			selectedProduct.setText(displayProductName(formProduct.getName(), formProduct.getReference()));
-			productCodes.setText(displayReference(formProduct.getName(), formProduct.getReference()) + " · EAN "
+			String brand = formProduct.getProperty("catalog.brand", "");
+			productCodes.setText(displayReference(formProduct.getName(), formProduct.getReference(), brand) + " · EAN "
 					+ valueOrEmpty(formProduct.getCode()));
 			formDescription.setText(valueOrEmpty(formProduct.getName()));
 			formDescription.setEditable(false);
@@ -2996,7 +2997,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 				? valueOrEmpty(entry.manualEan).isBlank()
 						? AppLocal.getIntString("Replenishment.Manual")
 						: entry.manualEan
-				: displayReference(entry.name, entry.reference));
+				: displayReference(entry.name, entry.reference, entry.brand));
 		detailProduct.setText(entry.productId == null
 				? valueOrEmpty(entry.manualDescription)
 				: displayProductName(entry.name, entry.reference));
@@ -3048,6 +3049,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			formProduct.setReference(entry.reference);
 			formProduct.setName(entry.name);
 			formProduct.setCode(entry.ean);
+			formProduct.setProperty("catalog.brand", entry.brand);
 		}
 		formDescription.setText(entry.productId == null
 				? (entry.manualDescription == null ? "" : entry.manualDescription)
@@ -3329,15 +3331,19 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 		return text;
 	}
 	static String displayReference(String name, String reference) {
+		return displayReference(name, reference, null);
+	}
+	static String displayReference(String name, String reference, String brand) {
 		String code = valueOrEmpty(reference).trim();
 		String displayName = displayProductName(name, reference);
 		int separator = displayName.lastIndexOf(" — ");
 		if (separator >= 0) {
 			String variant = displayName.substring(separator + 3).trim();
 			if (!variant.isEmpty() && code.endsWith(" " + variant))
-				return code.substring(0, code.length() - variant.length() - 1);
+				code = code.substring(0, code.length() - variant.length() - 1);
 		}
-		return code;
+		String visibleBrand = valueOrEmpty(brand).trim();
+		return visibleBrand.isEmpty() || code.isEmpty() ? code : visibleBrand + " - " + code;
 	}
 	private static int wrappedHeight(String text, int columnWidth) {
 		String visible = preview(text, columnWidth);
@@ -3456,7 +3462,7 @@ public class ReplenishmentPanel extends JPanel implements JPanelView, BeanFactor
 			reference.setForeground(RetailPOSColors.inkMuted());
 			reference.setText(entry.productId == null
 					? AppLocal.getIntString("Replenishment.Manual")
-					: displayReference(entry.name, entry.reference));
+					: displayReference(entry.name, entry.reference, entry.brand));
 			reference.setVisible(true);
 			metadata.setVisible(compactList);
 			metadata.setBackground(background);
