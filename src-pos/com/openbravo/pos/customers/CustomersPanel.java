@@ -9,6 +9,7 @@ import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.BeanFactoryApp;
 import com.openbravo.pos.forms.BeanFactoryException;
 import com.openbravo.pos.forms.DataLogicSales;
+import com.openbravo.pos.forms.JPrincipalApp;
 import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.forms.JRootApp;
 import com.openbravo.pos.inventory.DataLogicReplenishment;
@@ -171,6 +172,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private final JTable recentTable = ticketTable(recentModel);
 	private final Map<String, List<FindTicketsInfo>> ticketHistory = new HashMap<>();
 	private final Map<String, List<ReplenishmentEntry>> orderHistory = new HashMap<>();
+	private List<CustomerInfoExt> allCustomersSnapshot;
 	private long loadSequence;
 	private final JLabel state = new JLabel(" ");
 	private final JLabel count = new JLabel();
@@ -186,6 +188,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	private AppView app;
 	private CustomerInfoExt selected;
 	private boolean creating;
+	private boolean saving;
 	private boolean loading;
 	private boolean resettingFilters;
 	private String originalName = "", originalPhone = "", originalNotes = "";
@@ -259,9 +262,18 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			}
 		});
 		newOrder.addActionListener(e -> {
-			if (selected != null && confirmDiscard() && app != null) {
-				ReplenishmentPanel.requestCustomer(selected.getId());
-				app.getAppUserView().showTask(ReplenishmentPanel.class.getName(), ReplenishmentPanel.class);
+			if (selected == null || app == null)
+				return;
+			String customerId = selected.getId();
+			AppUserView destination = app.getAppUserView();
+			destination.showTask(ReplenishmentPanel.class.getName(), ReplenishmentPanel.class);
+			if (destination instanceof JPrincipalApp principal
+					&& principal.isCurrentTask(ReplenishmentPanel.class.getName())) {
+				try {
+					app.getBean(ReplenishmentPanel.class).startCustomerOrder(customerId);
+				} catch (BasicException | BeanFactoryException ex) {
+					JOptionPane.showMessageDialog(this, text("loadError"), getTitle(), JOptionPane.WARNING_MESSAGE);
+				}
 			}
 		});
 		installActions();
@@ -316,14 +328,28 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		});
 		table.getColumnModel().getColumn(4).setCellRenderer(new DebtRenderer());
 		table.getColumnModel().getColumn(0).setCellRenderer(new NameRenderer());
-		DefaultTableCellRenderer plain = new DefaultTableCellRenderer();
-		plain.setHorizontalAlignment(SwingConstants.CENTER);
-		plain.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
-		table.getColumnModel().getColumn(2).setCellRenderer(plain);
-		DefaultTableCellRenderer lastRenderer = new DefaultTableCellRenderer();
-		lastRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-		lastRenderer.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
-		table.getColumnModel().getColumn(3).setCellRenderer(lastRenderer);
+		table.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable source, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				super.getTableCellRendererComponent(source, value, selected, focused, row, column);
+				setHorizontalAlignment(SwingConstants.CENTER);
+				setText(value instanceof Number count && count.longValue() > 0 ? count.toString() : "");
+				setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+				return this;
+			}
+		});
+		table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable source, Object value, boolean selected,
+					boolean focused, int row, int column) {
+				super.getTableCellRendererComponent(source, value, selected, focused, row, column);
+				setHorizontalAlignment(SwingConstants.LEFT);
+				setText(value instanceof java.util.Date date ? relative(date) : "");
+				setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+				return this;
+			}
+		});
 		DefaultTableCellRenderer phoneRenderer = new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable t, Object v, boolean sel, boolean focus, int r,
@@ -657,17 +683,43 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			if (!(app instanceof JRootApp root))
 				return;
 			// Switching modes deactivates this view and handles unsaved changes.
-			root.openSalesView();
-			if (app.getAppUserView() == current)
-				return;
-		} else if (!confirmDiscard())
-			return;
-		AppUserView destination = app.getAppUserView();
-		if (destination != null && destination.getTaskAction(view.getName()) != null) {
 			prepare.run();
+			root.openSalesView();
+			if (app.getAppUserView() == current) {
+				clearSalesRequest(view);
+				return;
+			}
+		} else {
+			if (!confirmDiscard())
+				return;
+			prepare.run();
+		}
+		AppUserView destination = app.getAppUserView();
+		if (destination != null) {
 			destination.showTask(view.getName(), view);
-		} else if (destination != null)
-			destination.showTask(view.getName(), view);
+			if (destination instanceof JPrincipalApp principal) {
+				try {
+					if (!principal.isCurrentTask(view.getName()))
+						return;
+					if (view == JPanelTicketSales.class)
+						app.getBean(JPanelTicketSales.class).applyPendingCustomer();
+					else
+						app.getBean(JPanelTicketEdits.class).openRequestedReceipt();
+				} catch (BasicException | BeanFactoryException ex) {
+					JOptionPane.showMessageDialog(this, AppLocal.getIntString("customer.loaderror"), getTitle(),
+							JOptionPane.WARNING_MESSAGE);
+				} finally {
+					clearSalesRequest(view);
+				}
+			}
+		} else
+			clearSalesRequest(view);
+	}
+	private void clearSalesRequest(Class<? extends JPanelView> view) {
+		if (view == JPanelTicketSales.class)
+			JPanelTicketSales.requestCustomer(null);
+		else
+			JPanelTicketEdits.requestReceiptBarcode(null);
 	}
 	private void populateActivity(CustomerInfoExt customer) {
 		List<FindTicketsInfo> tickets = ticketHistory.getOrDefault(customer.getId(), Collections.emptyList());
@@ -854,6 +906,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 	}
 	public void activate() throws BasicException {
 		resetFilters();
+		allCustomersSnapshot = null;
 		loadCustomers();
 		SwingUtilities.invokeLater(() -> search.requestFocusInWindow());
 	}
@@ -868,7 +921,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		searchTimer.stop();
 	}
 	public boolean deactivate() {
-		return confirmDiscard();
+		return !saving && confirmDiscard();
 	}
 
 	private void loadCustomers() {
@@ -879,15 +932,26 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		final String query = search.getText();
 		final boolean debt = debtOnly.isSelected(), showInactive = inactive.isSelected(),
 				withOrders = orderOnly.isSelected();
+		final List<CustomerInfoExt> cachedAll = allCustomersSnapshot;
+		final Map<String, List<FindTicketsInfo>> cachedTickets = cachedAll == null
+				? Collections.emptyMap()
+				: new HashMap<>(ticketHistory);
+		final Map<String, List<ReplenishmentEntry>> cachedOrders = cachedAll == null
+				? Collections.emptyMap()
+				: new HashMap<>(orderHistory);
 		new SwingWorker<List<CustomerInfoExt>, Void>() {
 			private List<CustomerInfoExt> all;
-			private Map<String, List<FindTicketsInfo>> histories = new HashMap<>();
-			private Map<String, List<ReplenishmentEntry>> requests = new HashMap<>();
+			private Map<String, List<FindTicketsInfo>> histories = cachedTickets;
+			private Map<String, List<ReplenishmentEntry>> requests = cachedOrders;
 			protected List<CustomerInfoExt> doInBackground() throws Exception {
-				all = customers.searchCustomerSummaries("", false, true);
-				for (ReplenishmentEntry order : replenishment.list("", "ENCARGO", "ALL"))
-					requests.computeIfAbsent(order.customerId, id -> new ArrayList<>()).add(order);
-				histories = sales.getCustomerTicketHistory();
+				all = cachedAll;
+				if (all == null) {
+					all = customers.searchCustomerSummaries("", false, true);
+					requests = new HashMap<>();
+					for (ReplenishmentEntry order : replenishment.list("", "ENCARGO", "ALL"))
+						requests.computeIfAbsent(order.customerId, id -> new ArrayList<>()).add(order);
+					histories = sales.getCustomerTicketHistory();
+				}
 				List<CustomerInfoExt> result = customers.searchCustomerSummaries(query, debt, showInactive);
 				if (withOrders)
 					result.removeIf(customer -> requests.getOrDefault(customer.getId(), Collections.emptyList())
@@ -899,6 +963,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 					return;
 				try {
 					List<CustomerInfoExt> result = get();
+					allCustomersSnapshot = all;
 					ticketHistory.clear();
 					ticketHistory.putAll(histories);
 					orderHistory.clear();
@@ -949,6 +1014,13 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		int view = table.getSelectedRow();
 		if (view < 0)
 			return;
+		if (saving) {
+			loading = true;
+			if (selected == null || !selectId(selected.getId()))
+				table.clearSelection();
+			loading = false;
+			return;
+		}
 		if (!confirmDiscard()) {
 			loading = true;
 			if (selected == null || !selectId(selected.getId()))
@@ -994,7 +1066,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		return s == null ? "" : s;
 	}
 	private void startNewCustomer() {
-		if (!confirmDiscard())
+		if (saving || !confirmDiscard())
 			return;
 		selected = null;
 		creating = true;
@@ -1051,6 +1123,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		return value == null ? 0.0 : value.doubleValue();
 	}
 	private boolean confirmDiscard() {
+		if (saving)
+			return false;
 		if (!isDirty())
 			return true;
 		String who = creating ? text("newCustomer") : originalName;
@@ -1059,6 +1133,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		return answer == JOptionPane.YES_OPTION;
 	}
 	private void cancelEdit() {
+		if (saving)
+			return;
 		if (creating) {
 			clearDetail();
 			return;
@@ -1067,7 +1143,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			showCustomer(selected);
 	}
 	private void saveCustomer() {
-		if (!isDirty())
+		if (saving || !isDirty())
 			return;
 		final boolean wasCreating = creating;
 		final String n = name.getText().trim(), p = CustomerInfo.normalizePhone(phone.getText()), nt = notes.getText();
@@ -1084,6 +1160,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 			state.setText(text("requiredName"));
 			return;
 		}
+		saving = true;
 		setDetailEnabled(false);
 		save.setEnabled(false);
 		cancel.setEnabled(false);
@@ -1099,6 +1176,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 				return selected;
 			}
 			protected void done() {
+				saving = false;
 				try {
 					selected = get();
 					creating = false;
@@ -1106,6 +1184,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 					state.setForeground(RetailPOSColors.success());
 					state.setText(text(wasCreating ? "created" : "saved") + " · "
 							+ new java.text.SimpleDateFormat("HH:mm").format(new java.util.Date()));
+					allCustomersSnapshot = null;
 					loadCustomers();
 				} catch (Exception e) {
 					setDetailEnabled(true);
@@ -1116,7 +1195,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		}.execute();
 	}
 	private void toggleArchive() {
-		if (selected == null || creating)
+		if (saving || selected == null || creating)
 			return;
 		int answer = JConfirmationDialog.show(this, text("archivePrompt"), text("archiveTitle"),
 				AppLocal.getIntString("customer.cancel"),
@@ -1135,6 +1214,7 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 					state.setForeground(RetailPOSColors.success());
 					state.setText(text(visible ? "restored" : "archivedSuccess") + " · "
 							+ new java.text.SimpleDateFormat("HH:mm").format(new java.util.Date()));
+					allCustomersSnapshot = null;
 					loadCustomers();
 				} catch (Exception e) {
 					state.setForeground(RetailPOSColors.dangerText());
@@ -1170,8 +1250,8 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		setDetailEnabled(false);
 	}
 	private void updateActions() {
-		save.setEnabled((creating || selected != null) && isDirty());
-		cancel.setEnabled(creating || (selected != null && isDirty()));
+		save.setEnabled(!saving && (creating || selected != null) && isDirty());
+		cancel.setEnabled(!saving && (creating || (selected != null && isDirty())));
 	}
 	private void setDetailEnabled(boolean enabled) {
 		name.setEnabled(enabled);
@@ -1179,10 +1259,10 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 		maxDebt.setEnabled(enabled);
 		notes.setEnabled(enabled);
 		updateActions();
-		archive.setEnabled(enabled && !creating);
+		archive.setEnabled(enabled && !creating && !saving);
 		archive.setVisible(enabled && !creating);
-		newSale.setEnabled(enabled && !creating && selected.isVisible());
-		newOrder.setEnabled(enabled && !creating && selected.isVisible());
+		newSale.setEnabled(enabled && !creating && selected != null && selected.isVisible() && !saving);
+		newOrder.setEnabled(enabled && !creating && selected != null && selected.isVisible() && !saving);
 	}
 
 	private class CustomersTableModel extends AbstractTableModel {
@@ -1206,18 +1286,20 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 				case 0 -> x.getName() + (x.isVisible() ? "" : "  (" + text("archived") + ")");
 				case 1 -> x.getPhone();
 				case 2 -> orderHistory.getOrDefault(x.getId(), Collections.emptyList()).stream()
-						.filter(o -> !"DELIVERED".equals(o.status)).count() == 0
-								? ""
-								: Long.toString(orderHistory.get(x.getId()).stream()
-										.filter(o -> !"DELIVERED".equals(o.status)).count());
+						.filter(o -> !"DELIVERED".equals(o.status)).count();
 				case 3 -> ticketHistory.getOrDefault(x.getId(), Collections.emptyList()).isEmpty()
-						? ""
-						: relative(ticketHistory.get(x.getId()).get(0).getDate());
+						? null
+						: ticketHistory.get(x.getId()).get(0).getDate();
 				default -> x.getCurdebt() == null ? 0.0 : x.getCurdebt();
 			};
 		}
 		public Class<?> getColumnClass(int c) {
-			return c == 4 ? Double.class : String.class;
+			return switch (c) {
+				case 2 -> Long.class;
+				case 3 -> java.util.Date.class;
+				case 4 -> Double.class;
+				default -> String.class;
+			};
 		}
 	}
 	private static class DebtRenderer extends DefaultTableCellRenderer {

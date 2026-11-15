@@ -44,10 +44,14 @@ public class JPanelTicketEdits extends JPanelTicket {
 	public void activate() throws BasicException {
 		super.activate();
 		m_catandlines.loadCatalog();
+		openRequestedReceipt();
+	}
+
+	/** Handle a receipt handoff even if this view was already active. */
+	public void openRequestedReceipt() {
 		String barcode = consumeReceiptBarcode();
-		if (barcode != null) {
+		if (barcode != null)
 			scanReceipt(barcode);
-		}
 	}
 
 	public static synchronized void requestReceiptBarcode(String barcode) {

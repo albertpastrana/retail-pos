@@ -27,6 +27,8 @@ import com.openbravo.basic.BasicException;
 import com.openbravo.pos.catalog.CatalogSelector;
 import com.openbravo.pos.catalog.JCatalog;
 import com.openbravo.pos.forms.AppView;
+import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.ticket.ProductInfoExt;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -98,13 +100,25 @@ public class JPanelTicketSales extends JPanelTicket {
 	public void activate() throws BasicException {
 		super.activate();
 		m_cat.loadCatalog();
+		applyPendingCustomer();
+	}
+
+	/**
+	 * Also handles navigation when Sales was already activated as the first task.
+	 */
+	public void applyPendingCustomer() throws BasicException {
 		String id;
 		synchronized (JPanelTicketSales.class) {
 			id = pendingCustomerId;
 			pendingCustomerId = null;
 		}
-		if (id != null && getActiveTicket() != null) {
-			getActiveTicket().setCustomer(dlSales.loadCustomerExt(id));
+		if (id != null) {
+			if (getActiveTicket() == null)
+				throw new BasicException(AppLocal.getIntString("message.notactive"));
+			CustomerInfoExt customer = dlSales.loadCustomerExt(id);
+			if (customer == null)
+				throw new BasicException(AppLocal.getIntString("customer.loaderror"));
+			getActiveTicket().setCustomer(customer);
 			setActiveTicket(getActiveTicket(), null);
 		}
 	}

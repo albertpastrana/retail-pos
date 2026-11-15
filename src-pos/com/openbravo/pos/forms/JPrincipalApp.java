@@ -544,6 +544,11 @@ public class JPrincipalApp extends javax.swing.JPanel implements AppUserView {
 		return m_appuser.hasPermission(sTaskClass) ? m_menuActions.get(sTaskClass) : null;
 	}
 
+	/** Whether task navigation actually reached the requested view. */
+	public boolean isCurrentTask(String taskClass) {
+		return m_jLastView != null && m_jLastView == m_aCreatedViews.get(taskClass);
+	}
+
 	public void showTask(String sTaskClass, Class<? extends JPanelView> viewClass) {
 
 		logger.info("event=task_open_start task=" + sTaskClass + " userId=" + m_appuser.getId() + " role="
