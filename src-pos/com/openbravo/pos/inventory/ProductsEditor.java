@@ -275,6 +275,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setText(null);
 		m_jName.setText(null);
 		m_jFamily.setText(null);
+		m_jBrand.setText(null);
 		m_jComment.setSelected(false);
 		m_jVoucher.setSelected(false);
 		m_CategoryModel.setSelectedKey(null);
@@ -297,6 +298,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setEnabled(false);
 		m_jName.setEnabled(false);
 		m_jFamily.setEnabled(false);
+		m_jBrand.setEnabled(false);
 		m_jComment.setEnabled(false);
 		m_jVoucher.setEnabled(false);
 		m_jCategory.setEnabled(false);
@@ -340,6 +342,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setText(null);
 		m_jName.setText(null);
 		m_jFamily.setText(null);
+		m_jBrand.setText(null);
 		m_jComment.setSelected(false);
 		m_jVoucher.setSelected(false);
 		m_CategoryModel.setSelectedKey(null);
@@ -361,6 +364,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setEnabled(true);
 		m_jName.setEnabled(true);
 		m_jFamily.setEnabled(false);
+		m_jBrand.setEnabled(false);
 		m_jComment.setEnabled(true);
 		m_jVoucher.setEnabled(true);
 		m_jCategory.setEnabled(true);
@@ -405,6 +409,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setText(Formats.STRING.formatValue(myprod[2]));
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
 		m_jFamily.setText(Formats.STRING.formatValue(myprod[17]));
+		m_jBrand.setText(Formats.STRING.formatValue(myprod[18]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jVoucher.setSelected(((Boolean) myprod[16]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[5]));
@@ -510,6 +515,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jCode.setText(Formats.STRING.formatValue(myprod[2]));
 		m_jName.setText(Formats.STRING.formatValue(myprod[3]));
 		m_jFamily.setText(Formats.STRING.formatValue(myprod[17]));
+		m_jBrand.setText(Formats.STRING.formatValue(myprod[18]));
 		m_jComment.setSelected(((Boolean) myprod[4]).booleanValue());
 		m_jVoucher.setSelected(((Boolean) myprod[16]).booleanValue());
 		m_jPriceBuy.setText(Formats.CURRENCY.formatValue(myprod[5]));
@@ -569,7 +575,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		if (m_jStockAdd.getText() != null && m_jStockAdd.getText().trim().length() > 0) {
 			throw new BasicException(AppLocal.getIntString("message.stockaddselectsource"));
 		}
-		Object[] myprod = new Object[23];
+		Object[] myprod = new Object[24];
 		myprod[0] = m_id;
 		myprod[1] = m_jRef.getText();
 		myprod[2] = m_jCode.getText();
@@ -587,13 +593,15 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		myprod[14] = Formats.INT.parseValue(m_jCatalogOrder.getText());
 		myprod[15] = Formats.BYTEA.parseValue(txtAttributes.getText());
 		myprod[16] = Boolean.valueOf(m_jVoucher.isSelected());
-		// Keep the editor extras after the products row fields; FAMILY is field 17.
+		// Keep the editor extras after the products row fields; FAMILY and BRAND are
+		// fields 17 and 18.
 		myprod[17] = m_jFamily.getText();
-		myprod[18] = Formats.DOUBLE.parseValue(m_jStock.getText());
-		myprod[19] = m_App.getInventoryLocation();
-		myprod[20] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
-		myprod[21] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
-		myprod[22] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
+		myprod[18] = m_jBrand.getText();
+		myprod[19] = Formats.DOUBLE.parseValue(m_jStock.getText());
+		myprod[20] = m_App.getInventoryLocation();
+		myprod[21] = m_pendingFactory > 0.0 ? new Double(m_pendingFactory) : null;
+		myprod[22] = Formats.CURRENCY.parseValue(m_jPriceBuyWholesale.getText());
+		myprod[23] = m_pendingWholesale > 0.0 ? new Double(m_pendingWholesale) : null;
 
 		return myprod;
 	}
@@ -986,6 +994,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		m_jRef = new javax.swing.JTextField(14);
 		m_jName = new javax.swing.JTextField(32);
 		m_jFamily = new javax.swing.JTextField(14);
+		m_jBrand = new javax.swing.JTextField(14);
 		m_jCode = new javax.swing.JTextField(14);
 		m_jImage = new com.openbravo.data.gui.JImageEditor();
 		m_jImage.setPreferredSize(new Dimension(200, 180));
@@ -1078,10 +1087,11 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 		title.gridwidth = 2;
 		title.weightx = 1.0;
 		header.add(m_jTitle, title);
-		ProductFormLayout.addRow(header, 1, AppLocal.getIntString("label.prodref"),
-				ProductFormLayout.inline(m_jRef, new JLabel(AppLocal.getIntString("label.prodfamily")), m_jFamily));
-		ProductFormLayout.addRow(header, 2, AppLocal.getIntString("label.prodname"), m_jName);
-		ProductFormLayout.addRow(header, 3, AppLocal.getIntString("label.prodbarcode"),
+		ProductFormLayout.addRow(header, 1, AppLocal.getIntString("label.prodref"), m_jRef);
+		ProductFormLayout.addRow(header, 2, AppLocal.getIntString("label.prodbrand"),
+				ProductFormLayout.inline(m_jBrand, new JLabel(AppLocal.getIntString("label.prodfamily")), m_jFamily));
+		ProductFormLayout.addRow(header, 3, AppLocal.getIntString("label.prodname"), m_jName);
+		ProductFormLayout.addRow(header, 4, AppLocal.getIntString("label.prodbarcode"),
 				ProductFormLayout.inline(m_jCode, buildOtherCodesButton()));
 		return header;
 	}
@@ -1334,6 +1344,7 @@ public class ProductsEditor extends JPanel implements EditorRecord {
 	private javax.swing.JCheckBox m_jInCatalog;
 	private javax.swing.JTextField m_jName;
 	private javax.swing.JTextField m_jFamily;
+	private javax.swing.JTextField m_jBrand;
 	private javax.swing.JTextField m_jPriceBuy;
 	private javax.swing.JTextField m_jPriceBuyWholesale;
 	private javax.swing.JTextField m_jPriceSecondary;

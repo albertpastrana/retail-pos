@@ -53,14 +53,13 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		String pattern = "%" + term + "%";
 		String digits = CustomerInfo.normalizePhone(term);
 		String phonePattern = digits.isEmpty() ? "!" : "%" + digits + "%";
-		String sql = "SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE "
-				+ (exportOrder ? ", C.BRAND AS CATALOGUE_BRAND, C.FAMILY AS CATALOGUE_FAMILY " : "")
-				+ "FROM REPLENISHMENT_ENTRIES R " + (exportOrder ? "LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID " : "")
+		String sql = "SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE, C.BRAND AS CATALOGUE_BRAND, C.FAMILY AS CATALOGUE_FAMILY "
+				+ "FROM REPLENISHMENT_ENTRIES R LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID "
 				+ "LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY "
 				+ "LEFT JOIN CUSTOMERS CU ON CU.ID = R.CUSTOMER_ID WHERE ("
 				+ "UPPER(COALESCE(PRODUCT_REFERENCE,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(PRODUCT_NAME,'')) LIKE UPPER(?) "
-				+ "OR UPPER(COALESCE(PRODUCT_EAN,'')) LIKE UPPER(?) "
+				+ "OR UPPER(COALESCE(PRODUCT_EAN,'')) LIKE UPPER(?) " + "OR UPPER(COALESCE(C.BRAND,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(MANUAL_DESCRIPTION,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(MANUAL_EAN,'')) LIKE UPPER(?) "
 				+ "OR UPPER(COALESCE(CUSTOMER_NAME,'')) LIKE UPPER(?) " + "OR UPPER(COALESCE(NOTE,'')) LIKE UPPER(?) "
@@ -81,15 +80,14 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 								+ "UPPER(C.FAMILY), R.CREATED_AT DESC, R.ID"
 						: "ORDER BY R.CREATED_AT DESC");
 		try (PreparedStatement ps = connection().prepareStatement(sql)) {
-			for (int i = 1; i <= 7; i++)
+			for (int i = 1; i <= 9; i++)
 				ps.setString(i, pattern);
-			ps.setString(8, pattern);
-			ps.setString(9, phonePattern);
+			ps.setString(10, phonePattern);
 			if (supplierId != null && !"ALL".equals(supplierId) && !"NONE".equals(supplierId))
-				ps.setString(10, supplierId);
+				ps.setString(11, supplierId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					result.add(read(rs, exportOrder));
+					result.add(read(rs, true));
 			}
 		} catch (SQLException e) {
 			throw new BasicException(e);
@@ -526,14 +524,15 @@ public class DataLogicReplenishment extends BeanFactoryDataSingle {
 		}
 	}
 	private ReplenishmentEntry get(String id) throws SQLException {
-		try (PreparedStatement ps = connection()
-				.prepareStatement("SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE "
-						+ "FROM REPLENISHMENT_ENTRIES R LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY "
+		try (PreparedStatement ps = connection().prepareStatement(
+				"SELECT R.*, P.NAME AS CREATOR_NAME, CU.PHONE AS CUSTOMER_PHONE, C.BRAND AS CATALOGUE_BRAND, C.FAMILY AS CATALOGUE_FAMILY "
+						+ "FROM REPLENISHMENT_ENTRIES R LEFT JOIN PRODUCTS C ON C.ID = R.PRODUCT_ID "
+						+ "LEFT JOIN PEOPLE P ON P.ID = R.CREATED_BY "
 						+ "LEFT JOIN CUSTOMERS CU ON CU.ID = R.CUSTOMER_ID WHERE R.ID=?")) {
 			ps.setString(1, id);
 			try (ResultSet rs = ps.executeQuery()) {
 				rs.next();
-				return read(rs, false);
+				return read(rs, true);
 			}
 		}
 	}
