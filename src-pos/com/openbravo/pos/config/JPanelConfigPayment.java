@@ -32,7 +32,6 @@ public class JPanelConfigPayment extends javax.swing.JPanel implements PanelConf
 
 	private final DirtyManager dirty = new DirtyManager();
 	private final JTextField externalVoucherName = new JTextField(22);
-	private String originalName = "";
 
 	public JPanelConfigPayment() {
 		setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("Label.Payment")));
@@ -61,17 +60,13 @@ public class JPanelConfigPayment extends javax.swing.JPanel implements PanelConf
 	}
 
 	public void loadProperties(AppConfig config) {
-		originalName = config.getProperty(ExternalVoucher.NAME_KEY);
-		if (originalName == null) {
-			originalName = "";
-		}
-		externalVoucherName.setText(ExternalVoucher.name(originalName));
+		externalVoucherName.setText(ExternalVoucher.name(config.getProperty(ExternalVoucher.NAME_KEY)));
 		dirty.setDirty(false);
 	}
 
 	public void saveProperties(AppConfig config) {
 		config.setProperty(ExternalVoucher.NAME_KEY,
-				dirty.isDirty() ? ExternalVoucher.name(externalVoucherName.getText()) : originalName);
+				dirty.isDirty() ? ExternalVoucher.name(externalVoucherName.getText()) : null);
 		// Remove settings from installations that used the deleted integrations.
 		config.setProperty("payment.magcardreader", null);
 		config.setProperty("payment.gateway", null);
@@ -80,9 +75,6 @@ public class JPanelConfigPayment extends javax.swing.JPanel implements PanelConf
 
 	@Override
 	public void markSaved() {
-		if (dirty.isDirty()) {
-			originalName = ExternalVoucher.name(externalVoucherName.getText());
-		}
 		dirty.setDirty(false);
 	}
 }

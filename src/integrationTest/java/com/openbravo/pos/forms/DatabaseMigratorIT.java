@@ -3,6 +3,7 @@ package com.openbravo.pos.forms;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,6 +19,7 @@ import com.openbravo.pos.inventory.ReplenishmentSupplier;
 import db.migration.V53__repair_postgres_replenishment_status;
 import java.util.UUID;
 import org.flywaydb.core.api.migration.Context;
+import db.migration.V62__external_voucher_custom_receipts;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,6 +35,52 @@ public class DatabaseMigratorIT {
 		String url = "jdbc:derby:memory:flywayIT;create=true";
 		assertFreshInstall(url, null, null);
 		assertIdempotent(url, null, null);
+	}
+
+	@Test
+	public void addsExternalVoucherToCustomizedReceiptConditionsOnlyOnce() throws Exception {
+		String url = "jdbc:derby:memory:externalVoucherCustomReceiptsIT;create=true";
+		try (Connection connection = open(url, null, null); Statement statement = connection.createStatement()) {
+			statement.execute("CREATE TABLE RESOURCES (NAME VARCHAR(255) PRIMARY KEY, CONTENT BLOB)");
+			try (PreparedStatement insert = connection
+					.prepareStatement("INSERT INTO RESOURCES (NAME, CONTENT) VALUES (?, ?)")) {
+				insert.setString(1, "Printer.Ticket");
+				insert.setBytes(2,
+						"#foreach ($paymentline in $ticket.payments)\n#if( $paymentline.name == 'cash' )\n#end\n#end"
+								.getBytes(StandardCharsets.UTF_8));
+				insert.executeUpdate();
+				insert.setString(1, "Printer.TicketPreview");
+				insert.setBytes(2,
+						"#foreach ($paymentline in $ticket.payments)\n#if ( $paymentline.name  ==  \"cash\" )\n#end\n#end"
+								.getBytes(StandardCharsets.UTF_8));
+				insert.executeUpdate();
+			}
+			Context context = new Context() {
+				@Override
+				public org.flywaydb.core.api.configuration.Configuration getConfiguration() {
+					return null;
+				}
+
+				@Override
+				public Connection getConnection() {
+					return connection;
+				}
+			};
+			V62__external_voucher_custom_receipts repair = new V62__external_voucher_custom_receipts();
+			repair.migrate(context);
+			repair.migrate(context);
+			for (String resource : new String[]{"Printer.Ticket", "Printer.TicketPreview"}) {
+				try (PreparedStatement select = connection
+						.prepareStatement("SELECT CONTENT FROM RESOURCES WHERE NAME = ?")) {
+					select.setString(1, resource);
+					try (ResultSet result = select.executeQuery()) {
+						assertTrue(result.next());
+						String content = new String(result.getBytes(1), StandardCharsets.UTF_8);
+						assertEquals(1, content.split("paymentline.printLabel\\(\\)", -1).length - 1);
+					}
+				}
+			}
+		}
 	}
 
 	@Test

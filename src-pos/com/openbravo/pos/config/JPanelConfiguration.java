@@ -47,6 +47,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private AppConfig config;
 	private DataLogicSystem loyaltyDataLogic;
+	private JPanelConfigPayment paymentPanel;
 	private Session loyaltySession;
 	private Session settingsSession;
 
@@ -67,7 +68,8 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		m_panelconfig.add(new JPanelConfigGeneral());
 		m_panelconfig.add(new JPanelConfigLoyalty());
 		m_panelconfig.add(new JPanelConfigLocale());
-		m_panelconfig.add(new JPanelConfigPayment());
+		paymentPanel = new JPanelConfigPayment();
+		m_panelconfig.add(paymentPanel);
 
 		// paneles auxiliares
 		for (PanelConfig c : m_panelconfig) {
@@ -116,6 +118,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private boolean saveProperties() {
 		AppConfig pending = config.copy();
+		boolean voucherNameChanged = paymentPanel.hasChanged();
 
 		// paneles auxiliares
 		for (PanelConfig c : m_panelconfig) {
@@ -147,12 +150,15 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 				TerminalConfiguration.save(pending, settingsSession);
 				BackupPolicy.save(settingsSession, "true".equals(pending.getProperty("backup.daily")), hour, retention,
 						owner);
-				if (loyaltyDataLogic != null) {
+				if (loyaltyDataLogic != null || voucherNameChanged) {
 					DataLogicSystem logic = new DataLogicSystem();
 					logic.init(settingsSession);
-					saveLoyaltyDatabaseProperties(logic, pending);
-					String voucherName = pending.getProperty(ExternalVoucher.NAME_KEY);
-					logic.setExternalVoucherName(voucherName == null ? "" : voucherName);
+					if (loyaltyDataLogic != null) {
+						saveLoyaltyDatabaseProperties(logic, pending);
+					}
+					if (voucherNameChanged) {
+						logic.setExternalVoucherName(pending.getProperty(ExternalVoucher.NAME_KEY));
+					}
 				}
 				settingsSession.commit();
 			} catch (SQLException | BasicException e) {
@@ -202,8 +208,13 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 	}
 
 	private void loadExternalVoucherDatabaseProperties() {
-		config.setProperty(ExternalVoucher.NAME_KEY,
-				loyaltyDataLogic == null ? null : loyaltyDataLogic.getExternalVoucherName());
+		if (settingsSession == null) {
+			config.setProperty(ExternalVoucher.NAME_KEY, null);
+		} else {
+			DataLogicSystem logic = new DataLogicSystem();
+			logic.init(settingsSession);
+			config.setProperty(ExternalVoucher.NAME_KEY, logic.getExternalVoucherName());
+		}
 	}
 
 	private void saveLoyaltyDatabaseProperties(DataLogicSystem logic, AppConfig pending) throws BasicException {
