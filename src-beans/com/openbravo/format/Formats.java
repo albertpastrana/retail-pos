@@ -55,6 +55,22 @@ public abstract class Formats {
 		return m_currencyformat.getMaximumFractionDigits();
 	}
 
+	public static char getCurrencyDecimalSeparator() {
+		return m_currencyformat instanceof DecimalFormat
+				? ((DecimalFormat) m_currencyformat).getDecimalFormatSymbols().getDecimalSeparator()
+				: DecimalFormatSymbols.getInstance().getDecimalSeparator();
+	}
+
+	/**
+	 * Returns no separator when the active currency format does not group digits.
+	 */
+	public static char getCurrencyGroupingSeparator() {
+		if (!(m_currencyformat instanceof DecimalFormat) || !m_currencyformat.isGroupingUsed()) {
+			return '\0';
+		}
+		return ((DecimalFormat) m_currencyformat).getDecimalFormatSymbols().getGroupingSeparator();
+	}
+
 	public String formatValue(Object value) {
 		if (value == null) {
 			return "";
