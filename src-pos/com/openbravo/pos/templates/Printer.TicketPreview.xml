@@ -109,6 +109,12 @@
         </line>
 
         #foreach ($paymentline in $ticket.payments)
+         #if ($paymentline.name == "externalvoucher")
+        <line>
+            <text align="left" length="22" bold="true">${paymentline.printLabel()}</text>
+            <text align="right" length="20" bold="true">${paymentline.printTotal()}</text>
+        </line>
+         #end
          #if ($paymentline.name == "cash")
          <line>
              <text bold="true">Efectiu</text>

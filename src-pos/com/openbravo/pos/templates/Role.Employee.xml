@@ -8,6 +8,7 @@
     <class name="sales.PrintTicket"/>
     <class name="sales.Total"/>
     <class name="payment.cash"/>
+    <class name="payment.externalvoucher"/>
     <class name="payment.paper"/>
     <class name="payment.magcard"/>
     <class name="payment.debt"/>

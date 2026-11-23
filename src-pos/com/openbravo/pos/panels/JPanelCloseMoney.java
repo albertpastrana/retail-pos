@@ -23,7 +23,6 @@ import com.openbravo.pos.forms.JPanelView;
 import com.openbravo.pos.forms.AppView;
 import com.openbravo.pos.forms.AppLocal;
 import java.awt.*;
-import java.text.ParseException;
 import javax.swing.*;
 import java.util.Date;
 import java.util.UUID;
@@ -77,7 +76,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 		m_TTP = new TicketParser(m_App.getDeviceTicket(), m_dlSystem);
 
 		m_jTicketTable.setDefaultRenderer(Object.class,
-				new TableRendererBasic(new Formats[]{new FormatsPayment(), Formats.CURRENCY}));
+				new TableRendererBasic(new Formats[]{Formats.STRING, Formats.CURRENCY}));
 		m_jTicketTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		m_jScrollTableTicket.getVerticalScrollBar().setPreferredSize(new Dimension(25, 25));
 		m_jTicketTable.getTableHeader().setReorderingAllowed(false);
@@ -192,18 +191,6 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 						AppLocal.getIntString("message.cannotprintticket"), e);
 				msg.show(this);
 			}
-		}
-	}
-
-	private class FormatsPayment extends Formats {
-		protected String formatValueInt(Object value) {
-			return AppLocal.getIntString("transpayment." + (String) value);
-		}
-		protected Object parseValueInt(String value) throws ParseException {
-			return value;
-		}
-		public int getAlignment() {
-			return javax.swing.SwingConstants.LEFT;
 		}
 	}
 

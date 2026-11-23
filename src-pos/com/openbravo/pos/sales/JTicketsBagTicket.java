@@ -358,6 +358,9 @@ public class JTicketsBagTicket extends JTicketsBag {
 					if (payment == null) {
 						return "";
 					}
+					if (com.openbravo.pos.payment.ExternalVoucher.PAYMENT.equals(payment)) {
+						return com.openbravo.pos.payment.ExternalVoucher.name(ticket.getPaymentLabel());
+					}
 					if ("cashrefund".equals(payment)) {
 						payment = "cash";
 					} else if ("magcardrefund".equals(payment)) {

@@ -25,12 +25,12 @@ public final class PaymentSalesRepository {
 		return OTHER;
 	}
 
-	private static final String SALES_SQL = "SELECT PM.PAYMENT, "
+	private static final String SALES_SQL = "SELECT PM.PAYMENT, PM.PAYMENTLABEL, "
 			+ "SUM(CASE WHEN T.TICKETTYPE = 0 THEN PM.TOTAL ELSE 0 END), "
 			+ "SUM(CASE WHEN T.TICKETTYPE = 1 THEN PM.TOTAL ELSE 0 END) " + "FROM PAYMENTS PM "
 			+ "JOIN RECEIPTS R ON R.ID = PM.RECEIPT " + "JOIN TICKETS T ON T.ID = R.ID "
-			+ "WHERE R.DATENEW >= ? AND R.DATENEW < ? " + "AND T.TICKETTYPE IN (0, 1) " + "GROUP BY PM.PAYMENT "
-			+ "ORDER BY PM.PAYMENT";
+			+ "WHERE R.DATENEW >= ? AND R.DATENEW < ? " + "AND T.TICKETTYPE IN (0, 1) "
+			+ "GROUP BY PM.PAYMENT, PM.PAYMENTLABEL ORDER BY PM.PAYMENT, PM.PAYMENTLABEL";
 
 	public List<PaymentSalesRow> load(Connection connection, SalesSummaryParameters parameters) throws SQLException {
 		List<PaymentSalesRow> rows = new ArrayList<PaymentSalesRow>();
@@ -39,7 +39,8 @@ public final class PaymentSalesRepository {
 			statement.setTimestamp(2, new java.sql.Timestamp(parameters.getEndExclusive().getTime()));
 			try (ResultSet result = statement.executeQuery()) {
 				while (result.next()) {
-					rows.add(new PaymentSalesRow(result.getString(1), result.getDouble(2), result.getDouble(3)));
+					rows.add(new PaymentSalesRow(result.getString(1), result.getDouble(3), result.getDouble(4),
+							result.getString(2)));
 				}
 			}
 		}

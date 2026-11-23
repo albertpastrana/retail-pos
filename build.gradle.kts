@@ -243,6 +243,7 @@ val fastTestPatterns = listOf(
 	"com.openbravo.pos.inventory.StockWelcomeLayoutTest",
 	"com.openbravo.pos.panels.JProductFinderPriceTest",
 	"com.openbravo.pos.panels.SalesCatalogLayoutTest",
+	"com.openbravo.pos.payment.JPaymentExternalVoucherTest",
 	"com.openbravo.pos.reports.LowStockTest",
 	"com.openbravo.pos.reports.PaymentSalesTest",
 	"com.openbravo.pos.reports.ReportsWelcomeLabelsTest",
@@ -351,8 +352,8 @@ tasks.register("verifyTestLaneCoverage") {
 		val uncovered = tests.filter { test -> allTestLanePatterns.count { pattern ->
 			pattern == test || test.startsWith("$pattern.")
 		} != 1 }
-		if (tests.size != 259 || uncovered.isNotEmpty()) {
-			error("Expected 259 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
+		if (tests.size != 263 || uncovered.isNotEmpty()) {
+			error("Expected 263 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
 		}
 	}
 }

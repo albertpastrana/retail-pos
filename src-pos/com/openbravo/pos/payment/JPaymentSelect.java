@@ -30,6 +30,7 @@ import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.format.Formats;
 import com.openbravo.pos.customers.CustomerInfoExt;
 import com.openbravo.pos.forms.DataLogicSystem;
+import com.openbravo.pos.util.PosIcons;
 import java.awt.ComponentOrientation;
 import java.util.HashMap;
 import java.util.List;
@@ -183,7 +184,14 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 			jpayinterface.getComponent().applyComponentOrientation(getComponentOrientation());
 			m_jTabPayment.addTab(AppLocal.getIntString(jpay.getLabelKey()),
-					new javax.swing.ImageIcon(getClass().getResource(jpay.getIconKey())), jpayinterface.getComponent());
+					jpay instanceof JPaymentExternalVoucherCreator
+							? PosIcons.ticketCheck()
+							: new javax.swing.ImageIcon(getClass().getResource(jpay.getIconKey())),
+					jpayinterface.getComponent());
+			if (jpay instanceof JPaymentExternalVoucherCreator) {
+				m_jTabPayment.setTitleAt(m_jTabPayment.getTabCount() - 1,
+						ExternalVoucher.name(dlSystem.getExternalVoucherName()));
+			}
 		}
 	}
 
@@ -230,6 +238,24 @@ public abstract class JPaymentSelect extends javax.swing.JDialog implements JPay
 
 		public String getIconKey() {
 			return "/com/openbravo/images/knotes.png";
+		}
+	}
+
+	public class JPaymentExternalVoucherCreator implements JPaymentCreator {
+		public JPaymentInterface createJPayment() {
+			return new JPaymentExternalVoucher(JPaymentSelect.this, dlSystem);
+		}
+
+		public String getKey() {
+			return "payment.externalvoucher";
+		}
+
+		public String getLabelKey() {
+			return "tab.externalvoucher";
+		}
+
+		public String getIconKey() {
+			return "/com/openbravo/images/icons/ticket-check.svg";
 		}
 	}
 

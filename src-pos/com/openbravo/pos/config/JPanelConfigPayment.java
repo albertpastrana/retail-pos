@@ -22,17 +22,34 @@ package com.openbravo.pos.config;
 import com.openbravo.data.user.DirtyManager;
 import com.openbravo.pos.forms.AppConfig;
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.payment.ExternalVoucher;
 import java.awt.Component;
 import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 /** Configuration page for the manual external-terminal card flow. */
 public class JPanelConfigPayment extends javax.swing.JPanel implements PanelConfig {
 
 	private final DirtyManager dirty = new DirtyManager();
+	private final JTextField externalVoucherName = new JTextField(22);
+	private String originalName = "";
 
 	public JPanelConfigPayment() {
 		setBorder(javax.swing.BorderFactory.createTitledBorder(AppLocal.getIntString("Label.Payment")));
-		add(new JLabel(AppLocal.getIntString("message.paymentmanualterminal")));
+		setLayout(new java.awt.GridBagLayout());
+		java.awt.GridBagConstraints c = new java.awt.GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.anchor = java.awt.GridBagConstraints.LINE_START;
+		c.insets = new java.awt.Insets(8, 8, 8, 8);
+		add(new JLabel(AppLocal.getIntString("message.paymentmanualterminal")), c);
+		c.gridy = 1;
+		c.gridwidth = 1;
+		add(new JLabel(AppLocal.getIntString("label.externalvoucher.name")), c);
+		c.gridx = 1;
+		add(externalVoucherName, c);
+		externalVoucherName.getDocument().addDocumentListener(dirty);
 	}
 
 	public boolean hasChanged() {
@@ -44,12 +61,28 @@ public class JPanelConfigPayment extends javax.swing.JPanel implements PanelConf
 	}
 
 	public void loadProperties(AppConfig config) {
+		originalName = config.getProperty(ExternalVoucher.NAME_KEY);
+		if (originalName == null) {
+			originalName = "";
+		}
+		externalVoucherName.setText(ExternalVoucher.name(originalName));
+		dirty.setDirty(false);
 	}
 
 	public void saveProperties(AppConfig config) {
+		config.setProperty(ExternalVoucher.NAME_KEY,
+				dirty.isDirty() ? ExternalVoucher.name(externalVoucherName.getText()) : originalName);
 		// Remove settings from installations that used the deleted integrations.
 		config.setProperty("payment.magcardreader", null);
 		config.setProperty("payment.gateway", null);
 		config.setProperty("payment.testmode", null);
+	}
+
+	@Override
+	public void markSaved() {
+		if (dirty.isDirty()) {
+			originalName = ExternalVoucher.name(externalVoucherName.getText());
+		}
+		dirty.setDirty(false);
 	}
 }

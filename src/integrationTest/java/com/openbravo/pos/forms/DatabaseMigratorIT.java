@@ -260,6 +260,16 @@ public class DatabaseMigratorIT {
 			assertEquals(4, countWhereNotNull(connection, "ROLES", "PERMISSIONS"));
 			assertEquals(4, count(connection, "ROLES"));
 			assertTrue(indexExists(connection, "PAYMENTS", "PAYMENTS_RECEIPT_INX"));
+			assertEquals(1, queryInt(connection,
+					"SELECT COUNT(*) FROM EXTERNAL_VOUCHER_SETTINGS " + "WHERE ID = '0' AND NAME = ''"));
+			assertTrue(roleContains(connection, "0", "payment.externalvoucher"));
+			assertTrue(roleContains(connection, "1", "payment.externalvoucher"));
+			assertTrue(roleContains(connection, "2", "payment.externalvoucher"));
+			assertTrue(resourceContains(connection, "Printer.Ticket", "paymentline.printLabel()"));
+			assertTrue(resourceContains(connection, "Printer.TicketPreview", "paymentline.printLabel()"));
+			try (Statement column = connection.createStatement()) {
+				column.executeQuery("SELECT PAYMENTLABEL FROM PAYMENTS WHERE 1 = 0").close();
+			}
 			assertEquals(0, queryInt(connection, "SELECT COUNT(*) FROM TICKETLINES WHERE LOYALTYREDEMPTION = TRUE"));
 			assertEquals(1,
 					queryInt(connection, "SELECT COUNT(*) FROM ROLES WHERE ID = '0' AND NAME = 'Administrator'"));

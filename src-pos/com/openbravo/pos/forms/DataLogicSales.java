@@ -44,6 +44,7 @@ import com.openbravo.pos.inventory.MovementReason;
 import com.openbravo.pos.inventory.CatalogVariantModel;
 import com.openbravo.pos.inventory.TaxCategoryInfo;
 import com.openbravo.pos.payment.GiftVoucherInfo;
+import com.openbravo.pos.payment.ExternalVoucher;
 import com.openbravo.pos.payment.PaymentInfo;
 import com.openbravo.pos.payment.PaymentInfoTicket;
 import com.openbravo.pos.ticket.FindTicketsInfo;
@@ -820,7 +821,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	// Tickets and Receipt list
 	public SentenceList getTicketsList() {
 		return new StaticSentence(s, new QBFBuilder(
-				"SELECT T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME, SUM(PM.TOTAL), COUNT(DISTINCT PM.PAYMENT), MAX(PM.PAYMENT) "
+				"SELECT T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME, SUM(PM.TOTAL), COUNT(DISTINCT PM.PAYMENT), MAX(PM.PAYMENT), MAX(PM.PAYMENTLABEL) "
 						+ "FROM RECEIPTS R JOIN TICKETS T ON R.ID = T.ID LEFT OUTER JOIN PAYMENTS PM ON R.ID = PM.RECEIPT LEFT OUTER JOIN CUSTOMERS C ON C.ID = T.CUSTOMER LEFT OUTER JOIN PEOPLE P ON T.PERSON = P.ID "
 						+ "WHERE ?(QBF_FILTER) GROUP BY T.ID, T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME ORDER BY R.DATENEW DESC, T.TICKETID",
 				new String[]{"T.TICKETID", "T.TICKETTYPE", "PM.TOTAL", "R.DATENEW", "R.DATENEW", "P.NAME", "C.NAME"}),
@@ -848,20 +849,20 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	public Map<String, List<FindTicketsInfo>> getCustomerTicketHistory() throws BasicException {
 		List<Object[]> rows = new StaticSentence(s,
 				"SELECT T.CUSTOMER, T.TICKETID, T.TICKETTYPE, R.DATENEW, SUM(PM.TOTAL), "
-						+ "COUNT(DISTINCT PM.PAYMENT), MAX(PM.PAYMENT) "
+						+ "COUNT(DISTINCT PM.PAYMENT), MAX(PM.PAYMENT), MAX(PM.PAYMENTLABEL) "
 						+ "FROM TICKETS T JOIN RECEIPTS R ON R.ID = T.ID "
 						+ "LEFT JOIN PAYMENTS PM ON PM.RECEIPT = R.ID "
 						+ "WHERE T.CUSTOMER IS NOT NULL AND T.TICKETTYPE = 0 "
 						+ "GROUP BY T.ID, T.CUSTOMER, T.TICKETID, T.TICKETTYPE, R.DATENEW "
 						+ "ORDER BY R.DATENEW DESC, T.TICKETID DESC",
 				null, new SerializerReadBasic(new Datas[]{Datas.STRING, Datas.INT, Datas.INT, Datas.TIMESTAMP,
-						Datas.DOUBLE, Datas.INT, Datas.STRING}))
+						Datas.DOUBLE, Datas.INT, Datas.STRING, Datas.STRING}))
 				.list();
 		Map<String, List<FindTicketsInfo>> result = new HashMap<>();
 		for (Object[] row : rows)
 			result.computeIfAbsent((String) row[0], id -> new ArrayList<>())
 					.add(new FindTicketsInfo((Integer) row[1], (Integer) row[2], (Date) row[3], (String) row[6],
-							(Integer) row[5], row[4] == null ? 0.0 : (Double) row[4]));
+							(Integer) row[5], row[4] == null ? 0.0 : (Double) row[4], (String) row[7]));
 		return result;
 	}
 
@@ -962,7 +963,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 					SerializerWriteString.INSTANCE, new SerializerReadClass(TicketLineInfo.class))
 					.list(ticket.getId()));
 			ticket.setPayments(new PreparedSentence(s,
-					"SELECT PM.PAYMENT, PM.TOTAL, PM.TRANSID, V.BALANCE "
+					"SELECT PM.PAYMENT, PM.TOTAL, PM.TRANSID, V.BALANCE, PM.PAYMENTLABEL "
 							+ "FROM PAYMENTS PM LEFT JOIN GIFTVOUCHERS V ON PM.TRANSID = V.CODE WHERE PM.RECEIPT = ?",
 					SerializerWriteString.INSTANCE, new SerializerReadClass(PaymentInfoTicket.class))
 					.list(ticket.getId()));
@@ -1073,9 +1074,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 				}
 
 				SentenceExec paymentinsert = new PreparedSentence(s,
-						"INSERT INTO PAYMENTS (ID, RECEIPT, PAYMENT, TOTAL, TRANSID, RETURNMSG) VALUES (?, ?, ?, ?, ?, ?)",
+						"INSERT INTO PAYMENTS (ID, RECEIPT, PAYMENT, TOTAL, TRANSID, RETURNMSG, PAYMENTLABEL) VALUES (?, ?, ?, ?, ?, ?, ?)",
 						SerializerWriteParams.INSTANCE);
 				for (final PaymentInfo p : ticket.getPayments()) {
+					if (ExternalVoucher.PAYMENT.equals(p.getName())
+							&& (ticket.getTicketType() != TicketInfo.RECEIPT_NORMAL
+									|| !ExternalVoucher.valid(p.getTotal(), ticket.getTotal()))) {
+						throw new BasicException(AppLocal.getIntString("message.invalidexternalvoucher"));
+					}
 					if ("paperin".equals(p.getName())) {
 						if (p.getTransactionID() == null) {
 							throw new BasicException(AppLocal.getIntString("message.vouchercoderequired"));
@@ -1106,6 +1112,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 							setDouble(4, p.getTotal());
 							setString(5, p.getTransactionID());
 							setBytes(6, (byte[]) Formats.BYTEA.parseValue(ticket.getReturnMessage()));
+							setString(7,
+									ExternalVoucher.PAYMENT.equals(p.getName()) && p instanceof PaymentInfoTicket
+											? ((PaymentInfoTicket) p).getLabel()
+											: null);
 						}
 					});
 
@@ -1258,6 +1268,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 	}
 
 	static void validatePaymentTotals(TicketInfo ticket) throws BasicException {
+		double vouchers = 0.0;
+		for (PaymentInfo payment : ticket.getPayments()) {
+			if (ExternalVoucher.PAYMENT.equals(payment.getName())) {
+				vouchers += payment.getTotal();
+				if (ticket.getTicketType() != TicketInfo.RECEIPT_NORMAL
+						|| !ExternalVoucher.valid(payment.getTotal(), ticket.getTotal())
+						|| !ExternalVoucher.valid(vouchers, ticket.getTotal())) {
+					throw new BasicException(AppLocal.getIntString("message.invalidexternalvoucher"));
+				}
+			}
+		}
 		if (ticket.getTicketType() != TicketInfo.RECEIPT_NORMAL
 				&& ticket.getTicketType() != TicketInfo.RECEIPT_REFUND) {
 			return;

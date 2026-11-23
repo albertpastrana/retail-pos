@@ -39,6 +39,7 @@ public class FindTicketsInfo implements SerializableRead {
 	private double total;
 	private int paymentCount;
 	private String payment;
+	private String paymentLabel;
 
 	/** Creates new ProductInfo */
 	public FindTicketsInfo() {
@@ -46,10 +47,16 @@ public class FindTicketsInfo implements SerializableRead {
 	}
 
 	public FindTicketsInfo(int id, int type, Date date, String payment, int paymentCount, double total) {
+		this(id, type, date, payment, paymentCount, total, null);
+	}
+
+	public FindTicketsInfo(int id, int type, Date date, String payment, int paymentCount, double total,
+			String paymentLabel) {
 		this.ticketid = id;
 		this.tickettype = type;
 		this.date = date;
 		this.payment = payment;
+		this.paymentLabel = paymentLabel;
 		this.paymentCount = paymentCount;
 		this.total = total;
 	}
@@ -65,6 +72,7 @@ public class FindTicketsInfo implements SerializableRead {
 		total = (dr.getObject(6) == null) ? 0.0 : dr.getDouble(6).doubleValue();
 		paymentCount = dr.getInt(7);
 		payment = dr.getString(8);
+		paymentLabel = dr.getString(9);
 	}
 
 	@Override
@@ -106,6 +114,10 @@ public class FindTicketsInfo implements SerializableRead {
 
 	public String getPayment() {
 		return payment;
+	}
+
+	public String getPaymentLabel() {
+		return paymentLabel;
 	}
 
 	public boolean hasMultiplePayments() {

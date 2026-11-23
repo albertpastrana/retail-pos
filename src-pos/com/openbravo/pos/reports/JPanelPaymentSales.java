@@ -151,7 +151,9 @@ public final class JPanelPaymentSales extends javax.swing.JPanel implements JPan
 			PaymentSalesRow value = rows.get(row);
 			switch (column) {
 				case 0 :
-					return AppLocal.getIntString("transpayment." + value.getPaymentType());
+					return com.openbravo.pos.payment.ExternalVoucher.PAYMENT.equals(value.getPaymentType())
+							? com.openbravo.pos.payment.ExternalVoucher.name(value.getLabel())
+							: AppLocal.getIntString("transpayment." + value.getPaymentType());
 				case 1 :
 					return Formats.CURRENCY.formatValue(value.getSales());
 				case 2 :

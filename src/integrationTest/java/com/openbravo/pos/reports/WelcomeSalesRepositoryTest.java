@@ -31,7 +31,8 @@ public class WelcomeSalesRepositoryTest {
 				statement.executeUpdate(
 						"INSERT INTO TICKETLINES VALUES ('now', 'p-current', 1, 100), ('last', 'p-current', 1, 80),"
 								+ " ('last', 'p-old', 1, 50)");
-				statement.executeUpdate("INSERT INTO PAYMENTS VALUES ('now', 'cash', 100), ('last', 'cash', 80)");
+				statement.executeUpdate("INSERT INTO PAYMENTS (RECEIPT, PAYMENT, TOTAL) "
+						+ "VALUES ('now', 'cash', 100), ('last', 'cash', 80)");
 			}
 
 			WelcomeSalesRepository.WelcomeSalesData data = load(connection);
@@ -54,8 +55,8 @@ public class WelcomeSalesRepositoryTest {
 				statement.executeUpdate("INSERT INTO TICKETS VALUES ('sale', 0), ('refund', 1)");
 				statement.executeUpdate(
 						"INSERT INTO RECEIPTS VALUES ('sale', '2026-10-10 12:00:00'), ('refund', '2025-10-10 12:00:00')");
-				statement.executeUpdate(
-						"INSERT INTO PAYMENTS VALUES ('sale', 'cash', 100), ('refund', 'cashrefund', -20)");
+				statement.executeUpdate("INSERT INTO PAYMENTS (RECEIPT, PAYMENT, TOTAL) "
+						+ "VALUES ('sale', 'cash', 100), ('refund', 'cashrefund', -20)");
 			}
 			WelcomeSalesRepository.WelcomeSalesData data = load(connection);
 			WelcomeSalesRepository.PaymentInsight cash = data.getPayments().stream()
@@ -99,7 +100,8 @@ public class WelcomeSalesRepositoryTest {
 					"CREATE TABLE TICKETLINES (TICKET VARCHAR(255), PRODUCT VARCHAR(255), UNITS DOUBLE, PRICE DOUBLE)");
 			statement.executeUpdate("CREATE TABLE TICKETS (ID VARCHAR(255), TICKETTYPE INTEGER)");
 			statement.executeUpdate("CREATE TABLE RECEIPTS (ID VARCHAR(255), DATENEW TIMESTAMP)");
-			statement.executeUpdate("CREATE TABLE PAYMENTS (RECEIPT VARCHAR(255), PAYMENT VARCHAR(255), TOTAL DOUBLE)");
+			statement.executeUpdate("CREATE TABLE PAYMENTS (RECEIPT VARCHAR(255), PAYMENT VARCHAR(255), "
+					+ "TOTAL DOUBLE, PAYMENTLABEL VARCHAR(255))");
 		}
 	}
 }

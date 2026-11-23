@@ -31,6 +31,7 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 	private String m_sName;
 	private String m_transactionID;
 	private Double m_voucherBalance;
+	private String m_label;
 
 	/** Creates a new instance of PaymentInfoCash */
 	public PaymentInfoTicket(double dTicket, String sName) {
@@ -51,11 +52,17 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 		m_voucherBalance = new Double(voucherBalance);
 	}
 
+	public PaymentInfoTicket(double dTicket, String sName, String transactionID, String label) {
+		this(dTicket, sName, transactionID);
+		m_label = label;
+	}
+
 	public PaymentInfoTicket() {
 		m_sName = null;
 		m_dTicket = 0.0;
 		m_transactionID = null;
 		m_voucherBalance = null;
+		m_label = null;
 	}
 
 	public void readValues(DataRead dr) throws BasicException {
@@ -63,9 +70,13 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 		m_dTicket = dr.getDouble(2).doubleValue();
 		m_transactionID = dr.getString(3);
 		m_voucherBalance = dr.getDouble(4);
+		m_label = dr.getString(5);
 	}
 
 	public PaymentInfo copyPayment() {
+		if (ExternalVoucher.PAYMENT.equals(m_sName)) {
+			return new PaymentInfoExternalVoucher(m_dTicket, getLabel());
+		}
 		return m_voucherBalance == null
 				? new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID)
 				: new PaymentInfoTicket(m_dTicket, m_sName, m_transactionID, m_voucherBalance.doubleValue());
@@ -73,6 +84,14 @@ public class PaymentInfoTicket extends PaymentInfo implements SerializableRead {
 
 	public String getName() {
 		return m_sName;
+	}
+
+	public String getLabel() {
+		return ExternalVoucher.name(m_label);
+	}
+
+	public String printLabel() {
+		return com.openbravo.pos.util.StringUtils.encodeXML(getLabel());
 	}
 
 	public double getTotal() {
