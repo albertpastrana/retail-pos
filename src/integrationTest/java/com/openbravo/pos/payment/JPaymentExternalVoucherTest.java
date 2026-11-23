@@ -29,6 +29,12 @@ public class JPaymentExternalVoucherTest {
 	public void partialAmountAllowsNextTenderWithoutAcceptingInvalidValuesInAllLanguages() throws Exception {
 		Locale before = Locale.getDefault();
 		try {
+			assertEquals("1234", JPaymentExternalVoucher.normalizedAmount("1.234", 2, ',', '.'));
+			assertEquals("1234,56", JPaymentExternalVoucher.normalizedAmount("1.234,56", 2, ',', '.'));
+			assertEquals("12,50", JPaymentExternalVoucher.normalizedAmount("12.50", 2, ',', '.'));
+			assertNull(JPaymentExternalVoucher.normalizedAmount("5..00", 2, ',', '.'));
+			assertEquals("1234", JPaymentExternalVoucher.normalizedAmount("1.234", 0, ',', '.'));
+			assertNull(JPaymentExternalVoucher.normalizedAmount("5.50", 0, ',', '.'));
 			assertTrue(PosIcons.ticketCheck().getIconWidth() > 0);
 			assertEquals(PosIcons.ticketCheck().getIconWidth(), PosIcons.ticketCheck().getIconHeight());
 			for (Locale locale : new Locale[]{Locale.ENGLISH, new Locale("es"), new Locale("ca")}) {
