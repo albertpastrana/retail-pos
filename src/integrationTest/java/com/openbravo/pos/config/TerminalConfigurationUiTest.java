@@ -2,6 +2,7 @@ package com.openbravo.pos.config;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.openbravo.pos.forms.AppLocal;
 import com.openbravo.pos.forms.AppConfig;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.Test;
 class TerminalConfigurationUiTest {
 	@Test
 	void recoverySavesRetainUneditedExternalVoucherName() throws Exception {
+		String override = System.getenv(ConfigurationStore.CONFIG_ENVIRONMENT_VARIABLE);
+		assumeTrue(override == null || override.isBlank(), "Do not write to the configured application file");
 		String originalHome = System.getProperty("user.home");
 		Path home = Files.createTempDirectory("voucher-recovery");
 		try {

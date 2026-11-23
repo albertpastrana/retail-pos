@@ -165,13 +165,9 @@ public final class JPaymentExternalVoucher extends JPanel implements JPaymentInt
 
 	private static String normalizedAmount(String text) {
 		// Formats.CURRENCY accepts numeric prefixes; check the entire input against
-		// its configured separators before using its parsed value.
-		String sample = Formats.CURRENCY.formatValue(12345.67);
-		int decimals = Formats.getCurrencyDecimals();
-		char lastSeparator = sample.lastIndexOf(',') > sample.lastIndexOf('.') ? ',' : '.';
-		char decimal = lastSeparator;
-		char grouping = decimals == 0 ? lastSeparator : decimal == ',' ? '.' : ',';
-		return normalizedAmount(text, decimals, decimal, grouping);
+		// the active formatter's separators before using its parsed value.
+		return normalizedAmount(text, Formats.getCurrencyDecimals(), Formats.getCurrencyDecimalSeparator(),
+				Formats.getCurrencyGroupingSeparator());
 	}
 
 	static String normalizedAmount(String text, int decimals, char decimal, char grouping) {
@@ -181,9 +177,11 @@ public final class JPaymentExternalVoucher extends JPanel implements JPaymentInt
 		String fraction = decimals > 0
 				? "(?:" + Pattern.quote(Character.toString(decimal)) + "\\p{Nd}{1," + decimals + "})?"
 				: "";
-		String grouped = "\\p{Nd}{1,3}(?:" + Pattern.quote(Character.toString(grouping)) + "\\p{Nd}{3})+";
-		if (text.matches(grouped + fraction)) {
-			return text.replace(Character.toString(grouping), "");
+		if (grouping != '\0') {
+			String grouped = "\\p{Nd}{1,3}(?:" + Pattern.quote(Character.toString(grouping)) + "\\p{Nd}{3})+";
+			if (text.matches(grouped + fraction)) {
+				return text.replace(Character.toString(grouping), "");
+			}
 		}
 		String normalized = decimals > 0 && decimal == ',' && !text.contains(",") ? text.replace('.', ',') : text;
 		return normalized.matches("\\p{Nd}+" + fraction) ? normalized : null;
