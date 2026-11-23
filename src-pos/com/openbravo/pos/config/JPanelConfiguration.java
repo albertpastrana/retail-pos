@@ -127,6 +127,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 		try {
 			if (settingsSession == null) {
+				preserveRecoveryVoucherName(config, pending, voucherNameChanged);
 				ConfigurationStore.saveForDatabaseRecovery(pending);
 				config.apply(pending);
 				for (PanelConfig c : m_panelconfig) {
@@ -185,6 +186,12 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 		}
 	}
 
+	static void preserveRecoveryVoucherName(AppConfig current, AppConfig pending, boolean edited) {
+		if (!edited) {
+			pending.setProperty(ExternalVoucher.NAME_KEY, current.getProperty(ExternalVoucher.NAME_KEY));
+		}
+	}
+
 	private void loadLoyaltyDatabaseProperties() {
 		try {
 			if (loyaltyDataLogic == null) {
@@ -209,7 +216,9 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 
 	private void loadExternalVoucherDatabaseProperties() {
 		if (settingsSession == null) {
-			config.setProperty(ExternalVoucher.NAME_KEY, null);
+			// A recovery-mode edit may have been saved in the local configuration.
+			// Keep it until a database connection can persist the shared name.
+			return;
 		} else {
 			DataLogicSystem logic = new DataLogicSystem();
 			logic.init(settingsSession);

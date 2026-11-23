@@ -1,11 +1,17 @@
 package com.openbravo.pos.config;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.openbravo.pos.forms.AppLocal;
+import com.openbravo.pos.forms.AppConfig;
+import com.openbravo.pos.forms.ConfigurationStore;
+import com.openbravo.pos.payment.ExternalVoucher;
 import java.awt.Component;
 import java.awt.Container;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,6 +19,29 @@ import javax.swing.SwingUtilities;
 import org.junit.jupiter.api.Test;
 
 class TerminalConfigurationUiTest {
+	@Test
+	void recoverySavesRetainUneditedExternalVoucherName() throws Exception {
+		String originalHome = System.getProperty("user.home");
+		Path home = Files.createTempDirectory("voucher-recovery");
+		try {
+			System.setProperty("user.home", home.toString());
+			AppConfig current = ConfigurationStore.load();
+			current.setProperty(ExternalVoucher.NAME_KEY, "iBons");
+			JPanelConfigPayment panel = new JPanelConfigPayment();
+			panel.loadProperties(current);
+			for (int save = 0; save < 2; save++) {
+				AppConfig pending = current.copy();
+				panel.saveProperties(pending);
+				JPanelConfiguration.preserveRecoveryVoucherName(current, pending, panel.hasChanged());
+				ConfigurationStore.saveForDatabaseRecovery(pending);
+				current = ConfigurationStore.load();
+				assertEquals("iBons", current.getProperty(ExternalVoucher.NAME_KEY));
+				panel.loadProperties(current);
+			}
+		} finally {
+			System.setProperty("user.home", originalHome);
+		}
+	}
 	@Test
 	void backupControlsAndConnectionFailureReadInAllLocalesAtTillWidth() throws Exception {
 		Locale previous = Locale.getDefault();
