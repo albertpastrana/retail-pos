@@ -3,6 +3,7 @@ package com.openbravo.pos.payment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Component;
@@ -72,6 +73,17 @@ public class JPaymentExternalVoucherTest {
 					amount.setText("0");
 					assertFalse(status.positive);
 					assertEquals(AppLocal.getIntString("message.externalvoucher.invalidamount"), feedback.getText());
+					amount.setText("-5");
+					assertEquals("-5", amount.getText());
+					assertFalse(status.positive);
+					assertNull(panel.executePayment());
+					amount.setText("5..00");
+					assertFalse(status.positive);
+					assertFalse(partial.isEnabled());
+					assertEquals(AppLocal.getIntString("message.externalvoucher.invalidamount"), feedback.getText());
+					assertNull(panel.executePayment());
+					String grouped = Formats.CURRENCY.formatValue(1234.56).replaceAll("[^\\p{Nd}.,]", "");
+					assertEquals(1234.56, JPaymentExternalVoucher.parseAmount(grouped), 0.001);
 				});
 			}
 			assertCompactAtLargeDisplayFont();

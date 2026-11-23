@@ -106,11 +106,13 @@ public class DataLogicSalesPaymentValidationTest {
 		for (double amount : new double[]{0.0, -1.0, 21.0, Double.NaN}) {
 			ticket.getPayments().clear();
 			ticket.getPayments().add(new PaymentInfoExternalVoucher(amount, "Voucher"));
-			assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class);
+			assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class)
+					.hasMessage(AppLocal.getIntString("message.invalidexternalvoucher"));
 		}
 		ticket.getPayments().clear();
 		ticket.setTicketType(TicketInfo.RECEIPT_REFUND);
 		ticket.getPayments().add(new PaymentInfoExternalVoucher(20.0, "Voucher"));
-		assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class);
+		assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class)
+				.hasMessage(AppLocal.getIntString("message.invalidexternalvoucher"));
 	}
 }

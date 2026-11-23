@@ -275,6 +275,7 @@ val fastTestPatterns = listOf(
 	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.rollsBackWholeMigrationWhenAStatementFails",
 	"com.openbravo.pos.forms.AdHocSqlMigrationImporterIT.rejectsUnsignedMigration",
 	"com.openbravo.pos.forms.DatabaseMigratorIT.migratesEmptyDerby",
+	"com.openbravo.pos.forms.DatabaseMigratorIT.addsExternalVoucherToCustomizedReceiptConditionsOnlyOnce",
 	"com.openbravo.pos.forms.DatabaseMigratorIT.readsFallbackCatalogPriceOverlay",
 	"com.openbravo.pos.forms.DatabaseMigratorIT.readsFallbackCatalogFamilyByFamilyKey",
 	"com.openbravo.pos.forms.DatabaseMigratorIT.doesNotTreatBlankFallbackFamilyAsFamilyKey",
@@ -352,8 +353,8 @@ tasks.register("verifyTestLaneCoverage") {
 		val uncovered = tests.filter { test -> allTestLanePatterns.count { pattern ->
 			pattern == test || test.startsWith("$pattern.")
 		} != 1 }
-		if (tests.size != 263 || uncovered.isNotEmpty()) {
-			error("Expected 263 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
+		if (tests.size != 265 || uncovered.isNotEmpty()) {
+			error("Expected 265 uniquely assigned integration tests; found ${tests.size}. Unassigned or duplicated: $uncovered")
 		}
 	}
 }

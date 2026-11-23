@@ -7,6 +7,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.util.regex.Pattern;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -146,12 +147,34 @@ public final class JPaymentExternalVoucher extends JPanel implements JPaymentInt
 	}
 
 	private double enteredAmount() {
+		return parseAmount(amount.getText());
+	}
+
+	static double parseAmount(String text) {
+		if (!completeAmount(text)) {
+			return Double.NaN;
+		}
 		try {
-			Double value = (Double) Formats.CURRENCY.parseValue(amount.getText());
+			Double value = (Double) Formats.CURRENCY.parseValue(text);
 			return value == null ? Double.NaN : value.doubleValue();
 		} catch (Exception e) {
 			return Double.NaN;
 		}
+	}
+
+	private static boolean completeAmount(String text) {
+		if (text == null || text.isEmpty()) {
+			return false;
+		}
+		// Formats.CURRENCY accepts numeric prefixes; check the entire input against
+		// its configured separators before using its parsed value.
+		String sample = Formats.CURRENCY.formatValue(12345.67);
+		char decimal = sample.lastIndexOf(',') > sample.lastIndexOf('.') ? ',' : '.';
+		char grouping = decimal == ',' ? '.' : ',';
+		String normalized = decimal == ',' && !text.contains(",") ? text.replace('.', ',') : text;
+		String integer = "(?:\\p{Nd}+|\\p{Nd}{1,3}(?:" + Pattern.quote(Character.toString(grouping)) + "\\p{Nd}{3})+)";
+		return normalized.matches(integer + "(?:" + Pattern.quote(Character.toString(decimal)) + "\\p{Nd}{1,"
+				+ Formats.getCurrencyDecimals() + "})?");
 	}
 
 	private void updateState() {
@@ -197,7 +220,7 @@ public final class JPaymentExternalVoucher extends JPanel implements JPaymentInt
 			StringBuilder result = new StringBuilder();
 			for (int i = 0; i < text.length(); i++) {
 				char ch = text.charAt(i);
-				if (Character.isDigit(ch) || ch == '.' || ch == ',') {
+				if (Character.isDigit(ch) || ch == '.' || ch == ',' || ch == '-') {
 					result.append(ch);
 				}
 			}

@@ -7,6 +7,8 @@ import java.util.Date;
 import org.junit.jupiter.api.Test;
 
 import com.openbravo.data.loader.Session;
+import com.openbravo.pos.payment.ExternalVoucher;
+import com.openbravo.pos.payment.PaymentInfo;
 import com.openbravo.pos.payment.PaymentInfoCash;
 import com.openbravo.pos.payment.PaymentInfoExternalVoucher;
 import com.openbravo.pos.payment.PaymentInfoTicket;
@@ -62,7 +64,9 @@ public class DataLogicSalesPersistenceIT {
 			sales.saveTicket(later, "0");
 
 			TicketInfo loaded = sales.loadTicket(TicketInfo.RECEIPT_NORMAL, ticket.getTicketId());
-			assertThat(((PaymentInfoTicket) loaded.getPayments().get(0)).getLabel()).isEqualTo("iBons");
+			PaymentInfo savedVoucher = loaded.getPayments().stream()
+					.filter(payment -> ExternalVoucher.PAYMENT.equals(payment.getName())).findFirst().orElseThrow();
+			assertThat(((PaymentInfoTicket) savedVoucher).getLabel()).isEqualTo("iBons");
 			assertThat(sales.getRecentTickets(TicketInfo.RECEIPT_NORMAL, 10))
 					.extracting(row -> ((FindTicketsInfo) row).getPaymentLabel())
 					.containsExactlyInAnyOrder("iBons", "Other campaign");
