@@ -72,6 +72,8 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 	private SentenceExec m_resourcebytesupdate;
 	private SentenceFind m_loyaltysettings;
 	private SentenceExec m_loyaltysettingsupdate;
+	private SentenceFind m_externalvouchername;
+	private SentenceExec m_externalvouchernameupdate;
 
 	protected SentenceFind m_sequencecash;
 	protected SentenceFind m_activecash;
@@ -124,6 +126,10 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 				"UPDATE LOYALTY_SETTINGS SET ENABLED = ?, NAME = ?, ELIGIBLE_SPEND_PER_STAMP = ?, "
 						+ "REDEMPTION_VALUE = ? WHERE ID = '0'",
 				new SerializerWriteBasic(new Datas[]{Datas.BOOLEAN, Datas.STRING, Datas.DOUBLE, Datas.DOUBLE}));
+		m_externalvouchername = new StaticSentence(s, "SELECT NAME FROM EXTERNAL_VOUCHER_SETTINGS WHERE ID = '0'", null,
+				SerializerReadString.INSTANCE);
+		m_externalvouchernameupdate = new StaticSentence(s,
+				"UPDATE EXTERNAL_VOUCHER_SETTINGS SET NAME = ? WHERE ID = '0'", SerializerWriteString.INSTANCE);
 
 		m_rolepermissions = new PreparedSentence(s, "SELECT PERMISSIONS FROM ROLES WHERE ID = ?",
 				SerializerWriteString.INSTANCE, SerializerReadBytes.INSTANCE);
@@ -311,6 +317,18 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
 	public final void setLoyaltySettings(LoyaltySettings settings) throws BasicException {
 		m_loyaltysettingsupdate.exec(new Object[]{settings.isEnabled(), settings.getName(),
 				settings.getEligibleSpendPerStamp(), settings.getRedemptionValue()});
+	}
+
+	public final String getExternalVoucherName() {
+		try {
+			return (String) m_externalvouchername.find();
+		} catch (BasicException e) {
+			return null;
+		}
+	}
+
+	public final void setExternalVoucherName(String name) throws BasicException {
+		m_externalvouchernameupdate.exec(name);
 	}
 
 	public final Properties getResourceAsProperties(String sName) {

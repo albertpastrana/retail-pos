@@ -52,6 +52,10 @@ public final class PosIcons {
 		return icon("tag.svg", 24);
 	}
 
+	public static FlatSVGIcon ticketCheck() {
+		return icon("ticket-check.svg", 24);
+	}
+
 	public static FlatSVGIcon search() {
 		return icon("search.svg", 24);
 	}

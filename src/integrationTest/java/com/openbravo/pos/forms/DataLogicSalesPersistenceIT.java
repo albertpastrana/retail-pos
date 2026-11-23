@@ -8,6 +8,11 @@ import org.junit.jupiter.api.Test;
 
 import com.openbravo.data.loader.Session;
 import com.openbravo.pos.payment.PaymentInfoCash;
+import com.openbravo.pos.payment.PaymentInfoExternalVoucher;
+import com.openbravo.pos.payment.PaymentInfoTicket;
+import com.openbravo.pos.reports.PaymentSalesRepository;
+import com.openbravo.pos.reports.SalesSummaryParameters;
+import com.openbravo.pos.ticket.FindTicketsInfo;
 import com.openbravo.pos.ticket.TaxInfo;
 import com.openbravo.pos.ticket.TicketInfo;
 import com.openbravo.pos.ticket.TicketLineInfo;
@@ -16,6 +21,67 @@ import com.openbravo.pos.ticket.UserInfo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DataLogicSalesPersistenceIT {
+	@Test
+	public void externalVoucherNameSurvivesConfigChangesInSalesAndClosing() throws Exception {
+		String url = "jdbc:derby:memory:externalVoucherIT;create=true";
+		DatabaseMigrator.migrate(url, null, null);
+		Session session = new Session(url, null, null);
+		try {
+			DataLogicSystem system = new DataLogicSystem();
+			system.init(session);
+			assertThat(system.getExternalVoucherName()).isEmpty();
+			system.setExternalVoucherName("iBons");
+			Session secondTill = new Session(url, null, null);
+			try {
+				DataLogicSystem shared = new DataLogicSystem();
+				shared.init(secondTill);
+				assertThat(shared.getExternalVoucherName()).isEqualTo("iBons");
+			} finally {
+				secondTill.close();
+			}
+			DataLogicSales sales = new DataLogicSales();
+			sales.init(session);
+			try (Statement statement = session.getConnection().createStatement()) {
+				statement.executeUpdate("INSERT INTO CLOSEDCASH VALUES ('voucher-cash', 'test-host', 1, "
+						+ "TIMESTAMP('2026-09-24 10:00:00'), NULL)");
+			}
+			TaxInfo tax = new TaxInfo("000", "Tax Exempt", "000", new Date(0L), null, null, 0.0, false, null);
+			TicketInfo ticket = new TicketInfo();
+			ticket.setUser(new UserInfo("0", "Administrator"));
+			ticket.setActiveCash("voucher-cash");
+			ticket.addLine(new TicketLineInfo("gift-voucher-10", "Test product", "000", 2.0, 10.0, tax));
+			ticket.getPayments().add(new PaymentInfoExternalVoucher(8.0, system.getExternalVoucherName()));
+			ticket.getPayments().add(new PaymentInfoCash(12.0, 12.0));
+			sales.saveTicket(ticket, "0");
+			system.setExternalVoucherName("Other campaign");
+			TicketInfo later = new TicketInfo();
+			later.setUser(new UserInfo("0", "Administrator"));
+			later.setActiveCash("voucher-cash");
+			later.addLine(new TicketLineInfo("gift-voucher-10", "Test product", "000", 1.0, 10.0, tax));
+			later.getPayments().add(new PaymentInfoExternalVoucher(10.0, system.getExternalVoucherName()));
+			sales.saveTicket(later, "0");
+
+			TicketInfo loaded = sales.loadTicket(TicketInfo.RECEIPT_NORMAL, ticket.getTicketId());
+			assertThat(((PaymentInfoTicket) loaded.getPayments().get(0)).getLabel()).isEqualTo("iBons");
+			assertThat(sales.getRecentTickets(TicketInfo.RECEIPT_NORMAL, 10))
+					.extracting(row -> ((FindTicketsInfo) row).getPaymentLabel())
+					.containsExactlyInAnyOrder("iBons", "Other campaign");
+			assertThat(new PaymentSalesRepository().load(session.getConnection(),
+					new SalesSummaryParameters(new Date(0L), new Date(System.currentTimeMillis() + 86_400_000L))))
+					.filteredOn(row -> "externalvoucher".equals(row.getPaymentType())).extracting(row -> row.getLabel())
+					.containsExactlyInAnyOrder("iBons", "Other campaign");
+			try (Statement statement = session.getConnection().createStatement();
+					ResultSet result = statement.executeQuery("SELECT PAYMENTLABEL, TOTAL FROM PAYMENTS "
+							+ "WHERE RECEIPT = '" + ticket.getId() + "' AND PAYMENT = 'externalvoucher'")) {
+				assertThat(result.next()).isTrue();
+				assertThat(result.getString(1)).isEqualTo("iBons");
+				assertThat(result.getDouble(2)).isEqualTo(8.0);
+			}
+			assertThat(sales.getCashTotal("voucher-cash")).isEqualTo(12.0);
+		} finally {
+			session.close();
+		}
+	}
 
 	@Test
 	public void savesAndLoadsSaleWithStockMovement() throws Exception {

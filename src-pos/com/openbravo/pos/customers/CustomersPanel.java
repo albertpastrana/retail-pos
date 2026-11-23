@@ -838,7 +838,9 @@ public class CustomersPanel extends JPanel implements JPanelView, BeanFactoryApp
 						? AppLocal.getIntString("label.paymentmixed")
 						: ticket.getPayment() == null
 								? ""
-								: AppLocal.getIntString("transpayment." + ticket.getPayment());
+								: com.openbravo.pos.payment.ExternalVoucher.PAYMENT.equals(ticket.getPayment())
+										? com.openbravo.pos.payment.ExternalVoucher.name(ticket.getPaymentLabel())
+										: AppLocal.getIntString("transpayment." + ticket.getPayment());
 				default -> MONEY.format(ticket.getTotal()) + " €";
 			};
 		}

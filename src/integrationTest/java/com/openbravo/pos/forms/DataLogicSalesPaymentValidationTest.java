@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.openbravo.basic.BasicException;
 import com.openbravo.pos.payment.PaymentInfoCash;
+import com.openbravo.pos.payment.PaymentInfoExternalVoucher;
 import com.openbravo.pos.payment.PaymentInfoMagcard;
 import com.openbravo.pos.ticket.TicketInfo;
 import org.junit.jupiter.api.Test;
@@ -76,5 +77,40 @@ public class DataLogicSalesPaymentValidationTest {
 		ticket.getPayments().add(new PaymentInfoCash(-20.00, -20.00));
 
 		assertThatCode(() -> DataLogicSales.validatePaymentTotals(ticket)).doesNotThrowAnyException();
+	}
+
+	@Test
+	public void acceptsMixedExternalVoucherAndCardAndPreservesNameOnCopy() {
+		TicketInfo ticket = new TicketInfo() {
+			@Override
+			public double getTotal() {
+				return 89.60;
+			}
+		};
+		PaymentInfoExternalVoucher voucher = new PaymentInfoExternalVoucher(20.00, "iBons");
+		ticket.getPayments().add(voucher);
+		ticket.getPayments().add(new PaymentInfoMagcard("terminal", 69.60));
+		assertThatCode(() -> DataLogicSales.validatePaymentTotals(ticket)).doesNotThrowAnyException();
+		org.assertj.core.api.Assertions.assertThat(((PaymentInfoExternalVoucher) voucher.copyPayment()).getLabel())
+				.isEqualTo("iBons");
+	}
+
+	@Test
+	public void rejectsVoucherRefundAndAmountsOutsideSale() {
+		TicketInfo ticket = new TicketInfo() {
+			@Override
+			public double getTotal() {
+				return 20.0;
+			}
+		};
+		for (double amount : new double[]{0.0, -1.0, 21.0, Double.NaN}) {
+			ticket.getPayments().clear();
+			ticket.getPayments().add(new PaymentInfoExternalVoucher(amount, "Voucher"));
+			assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class);
+		}
+		ticket.getPayments().clear();
+		ticket.setTicketType(TicketInfo.RECEIPT_REFUND);
+		ticket.getPayments().add(new PaymentInfoExternalVoucher(20.0, "Voucher"));
+		assertThatThrownBy(() -> DataLogicSales.validatePaymentTotals(ticket)).isInstanceOf(BasicException.class);
 	}
 }

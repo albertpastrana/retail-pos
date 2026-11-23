@@ -35,6 +35,7 @@ import com.openbravo.data.gui.JConfirmationDialog;
 import com.openbravo.pos.ticket.LoyaltyConfiguration;
 import com.openbravo.pos.ticket.LoyaltyStamps;
 import com.openbravo.pos.ticket.LoyaltySettings;
+import com.openbravo.pos.payment.ExternalVoucher;
 
 /**
  *
@@ -105,6 +106,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 					AppLocal.getIntString("message.startupdatabase", e.getMessage()), e));
 		}
 		loadLoyaltyDatabaseProperties();
+		loadExternalVoucherDatabaseProperties();
 
 		// paneles auxiliares
 		for (PanelConfig c : m_panelconfig) {
@@ -149,6 +151,8 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 					DataLogicSystem logic = new DataLogicSystem();
 					logic.init(settingsSession);
 					saveLoyaltyDatabaseProperties(logic, pending);
+					String voucherName = pending.getProperty(ExternalVoucher.NAME_KEY);
+					logic.setExternalVoucherName(voucherName == null ? "" : voucherName);
 				}
 				settingsSession.commit();
 			} catch (SQLException | BasicException e) {
@@ -159,6 +163,7 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 			pending.setProperty(LoyaltyStamps.NAME_KEY, null);
 			pending.setProperty(LoyaltyStamps.ELIGIBLE_SPEND_PER_STAMP_KEY, null);
 			pending.setProperty(LoyaltyStamps.REDEMPTION_VALUE_KEY, null);
+			pending.setProperty(ExternalVoucher.NAME_KEY, null);
 			ConfigurationStore.save(pending);
 			config.apply(pending);
 			for (PanelConfig c : m_panelconfig) {
@@ -194,6 +199,11 @@ public class JPanelConfiguration extends JPanel implements JPanelView {
 			config.setProperty(LoyaltyStamps.ENABLED_KEY, "false");
 			config.setProperty(LoyaltyStamps.NAME_KEY, "");
 		}
+	}
+
+	private void loadExternalVoucherDatabaseProperties() {
+		config.setProperty(ExternalVoucher.NAME_KEY,
+				loyaltyDataLogic == null ? null : loyaltyDataLogic.getExternalVoucherName());
 	}
 
 	private void saveLoyaltyDatabaseProperties(DataLogicSystem logic, AppConfig pending) throws BasicException {

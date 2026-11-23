@@ -109,8 +109,9 @@ public class PaymentsModel {
 		}
 
 		List l = new StaticSentence(app.getSession(),
-				"SELECT PAYMENTS.PAYMENT, SUM(PAYMENTS.TOTAL) " + "FROM PAYMENTS, RECEIPTS "
-						+ "WHERE PAYMENTS.RECEIPT = RECEIPTS.ID AND RECEIPTS.MONEY = ? " + "GROUP BY PAYMENTS.PAYMENT",
+				"SELECT PAYMENTS.PAYMENT, SUM(PAYMENTS.TOTAL), PAYMENTS.PAYMENTLABEL " + "FROM PAYMENTS, RECEIPTS "
+						+ "WHERE PAYMENTS.RECEIPT = RECEIPTS.ID AND RECEIPTS.MONEY = ? "
+						+ "GROUP BY PAYMENTS.PAYMENT, PAYMENTS.PAYMENTLABEL",
 				SerializerWriteString.INSTANCE, new SerializerReadClass(PaymentsModel.PaymentsLine.class)) // new
 																											// SerializerReadBasic(new
 																											// Datas[]
@@ -163,7 +164,7 @@ public class PaymentsModel {
 		Object[] recbilling = (Object[]) new StaticSentence(app.getSession(),
 				"SELECT SUM(PAYMENTS.TOTAL) FROM PAYMENTS, RECEIPTS "
 						+ "WHERE PAYMENTS.RECEIPT = RECEIPTS.ID AND RECEIPTS.MONEY = ? "
-						+ "AND PAYMENTS.PAYMENT IN ('cash', 'magcard', 'cheque', 'cashrefund', 'magcardrefund', 'chequerefund')",
+						+ "AND PAYMENTS.PAYMENT IN ('cash', 'magcard', 'cheque', 'externalvoucher', 'cashrefund', 'magcardrefund', 'chequerefund')",
 				SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.DOUBLE})).find(money);
 		double moneyIn = (recbilling == null || recbilling[0] == null) ? 0.0 : ((Double) recbilling[0]).doubleValue();
 		double origBase = p.m_dSalesBase == null ? 0.0 : p.m_dSalesBase.doubleValue();
@@ -287,7 +288,7 @@ public class PaymentsModel {
 				PaymentsLine l = m_lpayments.get(row);
 				switch (column) {
 					case 0 :
-						return l.getType();
+						return l.printType();
 					case 1 :
 						return l.getValue();
 					default :
@@ -362,14 +363,18 @@ public class PaymentsModel {
 
 		private String m_PaymentType;
 		private Double m_PaymentValue;
+		private String m_PaymentLabel;
 
 		public void readValues(DataRead dr) throws BasicException {
 			m_PaymentType = dr.getString(1);
 			m_PaymentValue = dr.getDouble(2);
+			m_PaymentLabel = dr.getString(3);
 		}
 
 		public String printType() {
-			return AppLocal.getIntString("transpayment." + m_PaymentType);
+			return com.openbravo.pos.payment.ExternalVoucher.PAYMENT.equals(m_PaymentType)
+					? com.openbravo.pos.payment.ExternalVoucher.name(m_PaymentLabel)
+					: AppLocal.getIntString("transpayment." + m_PaymentType);
 		}
 
 		public String getType() {
