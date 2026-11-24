@@ -971,6 +971,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 	}
 
 	private void stateTransition(char cTrans) {
+		// Ignore spaces from scanners and keyboards, including within a barcode.
+		// A space must never open payment, even when the code field is empty.
+		if (cTrans == ' ') {
+			return;
+		}
 
 		if (readsNumberInput(cTrans)) {
 			typeNumberInput();
@@ -1204,7 +1209,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 				addTicketLine(product, getPorValue(), -product.getPriceSell());
 
 				// Totals() Igual;
-			} else if (cTrans == ' ' || cTrans == '=') {
+			} else if (cTrans == '=') {
 				closeCurrentTicket();
 			}
 		}
