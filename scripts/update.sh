@@ -34,6 +34,14 @@ for candidate in "$staging"/*; do
   if [ -d "$candidate" ]; then new_dir="$candidate"; break; fi
 done
 [ -n "$new_dir" ] || fail "Package has no application directory"
+if [ -f "$new_dir/runtime/lib/jspawnhelper" ]; then
+  chmod 755 "$new_dir/runtime/lib/jspawnhelper" \
+    || fail "Could not make bundled jspawnhelper executable"
+  [ -x "$new_dir/runtime/lib/jspawnhelper" ] \
+    || fail "Bundled jspawnhelper is not executable"
+else
+  fail "Package is missing bundled runtime/lib/jspawnhelper"
+fi
 rm -rf "$backup"
 mv "$install_dir" "$backup" || fail "Could not move current installation to backup"
 if mv "$new_dir" "$install_dir"; then
