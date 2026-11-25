@@ -32,5 +32,21 @@ CP=$CP:$DIRNAME/locales
 # start Retail POS. Portable packages use the bundled runtime; source
 # checkouts continue to use java from PATH.
 JAVA=$DIRNAME/runtime/bin/java
-if [ ! -x "$JAVA" ]; then JAVA=java; fi
+if [ -d "$DIRNAME/runtime" ]; then
+  if [ ! -x "$JAVA" ]; then
+    echo "Bundled runtime Java is not executable: $JAVA" >&2
+    exit 1
+  fi
+  JSPAWNHELPER="$DIRNAME/runtime/lib/jspawnhelper"
+  if [ ! -f "$JSPAWNHELPER" ]; then
+    echo "Bundled runtime jspawnhelper is missing: $JSPAWNHELPER" >&2
+    exit 1
+  fi
+  if ! chmod 755 "$JSPAWNHELPER" || [ ! -x "$JSPAWNHELPER" ]; then
+    echo "Bundled runtime jspawnhelper is not executable: $JSPAWNHELPER" >&2
+    exit 1
+  fi
+else
+  JAVA=java
+fi
 "$JAVA" -cp "$CP" -Djava.util.logging.config.file="$DIRNAME/logging.properties" -Ddirname.path="$DIRNAME/" com.openbravo.pos.forms.StartPOS
