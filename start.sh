@@ -42,7 +42,11 @@ if [ -d "$DIRNAME/runtime" ]; then
     echo "Bundled runtime jspawnhelper is missing: $JSPAWNHELPER" >&2
     exit 1
   fi
-  if ! chmod 755 "$JSPAWNHELPER" || [ ! -x "$JSPAWNHELPER" ]; then
+  if [ ! -x "$JSPAWNHELPER" ] && ! chmod 755 "$JSPAWNHELPER"; then
+    echo "Could not make bundled runtime jspawnhelper executable: $JSPAWNHELPER" >&2
+    exit 1
+  fi
+  if [ ! -x "$JSPAWNHELPER" ]; then
     echo "Bundled runtime jspawnhelper is not executable: $JSPAWNHELPER" >&2
     exit 1
   fi
